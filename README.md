@@ -1,50 +1,72 @@
-# Welcome to your Expo app 👋
+# Cartaisy
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Cartaisy – A customizable, Shopify-powered mobile app solution that transforms online stores into fully branded mobile experiences. We handle everything from setup to store management (A–Z), letting merchants focus on sales while we deliver a seamless, high-performing shopping app tailored to their brand.
 
-## Get started
+## Features
 
-1. Install dependencies
+- **E-commerce Mobile App**: Built with React Native and Expo
+- **Modern UI/UX**: Customizable design system with Tamagui
+- **Authentication**: Complete user authentication flow
+- **Shopping Experience**: Cart, wishlist, and product browsing
+- **Multi-platform**: iOS and Android support
 
+## Tech Stack
+
+- **Frontend**: React Native, Expo Router
+- **UI Framework**: Tamagui
+- **Navigation**: Expo Router with file-based routing
+- **Forms**: React Hook Form
+- **Styling**: Custom design system with Figtree fonts
+
+## Getting Started
+
+1. Install dependencies:
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. Start the development server:
    ```bash
-   npx expo start
+   npm start
    ```
 
-In the output, you'll find options to open the app in a
+3. Run on your preferred platform:
+   ```bash
+   # iOS
+   npm run ios
+   
+   # Android
+   npm run android
+   
+   # Web
+   npm run web
+   ```
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Project Structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+Cartaisy/
+├── app/                    # Main app screens and navigation
+│   ├── (auth)/            # Authentication screens
+│   ├── (tabs)/            # Main tab navigation
+│   └── ...
+├── components/             # Reusable UI components
+│   ├── atoms/             # Basic UI components
+│   ├── molecules/         # Composite components
+│   └── organisms/         # Complex components
+├── assets/                # Images, fonts, and static files
+├── constants/             # App constants and styles
+└── tamagui/               # Tamagui configuration
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Development
 
-## Learn more
+This project uses:
+- **Expo Router** for navigation
+- **Tamagui** for UI components and theming
+- **TypeScript** for type safety
+- **ESLint** for code quality
 
-To learn more about developing your project with Expo, look at the following resources:
+## License
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Private - All rights reserved
