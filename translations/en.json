@@ -1,0 +1,153 @@
+{
+  "common": {
+    "companyName": "Cartaisy",
+    "continue": "Continue",
+    "login": "Login",
+    "signUp": "Sign Up",
+    "createAccount": "Create Account",
+    "or": "OR",
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "notification": "Enable Notifications",
+    "nopeMaybeLater": "Nope, maybe later",
+    "url": {
+      "help": "help@cartaisy.com"
+    }
+  },
+  "welcome": {
+    "title": "AI E-Commerce & Shopping App UI Kit",
+    "subtitle": "Smart shopping is the future of shopping. Save more money with Cartaisy!",
+    "signUp": "Sign Up",
+    "alreadyHaveAccount": "I already have an account",
+    "categories": [
+      "AI Shopping Assistant",
+      "Personalized E-Commerce",
+      "Open Your Own Store",
+      "Browse Millions of Products",
+      "BPoints, Rewards & More!"
+    ]
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In to Cartaisy",
+      "email": "Email Address",
+      "password": "Password",
+      "emailPlaceholder": "Enter your email address",
+      "passwordPlaceholder": "Enter your password",
+      "rememberMe": "Remember for 30 days",
+      "createNewAccount": "Create New Account",
+      "signInWithGoogle": "Sign in with Google",
+      "forgotPassword": "Forgot Password?"
+    },
+    "signup": {
+      "title": "Sign Up to Cartaisy",
+      "email": "Email Address",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "emailPlaceholder": "Enter your email address",
+      "passwordPlaceholder": "Enter your password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "alreadyHaveAccount": "Already have an account"
+    },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "subtitle": "Please enter your email address to reset your password.",
+      "email": "Email Address",
+      "emailPlaceholder": "Enter your email address",
+      "dontRememberEmail": "Don't remember your email?",
+      "contactSupport": "Contact Support",
+      "supportEmail": "help@cartaisy.com"
+    },
+    "passwordResetSent": {
+      "title": "Password Reset Sent.",
+      "subtitle": "Please check your email in a few minutes - we've sent you an email containing password recovery link.",
+      "openEmailApp": "Open Email App",
+      "dontRememberEmail": "Don't remember your email?",
+      "contactSupport": "Contact Support",
+      "supportEmail": "help@cartaisy.com"
+    }
+  },
+  "onboarding": {
+    "slides": [
+      {
+        "title": "Your Personalized Shopping Experience",
+        "description": "With your permission, we can help you shop in a completely new experience."
+      },
+      {
+        "title": "Carti AI Shopping Assistant Is Here.",
+        "description": "Your personal shopping guide to find products faster and shop smarter!"
+      },
+      {
+        "title": "Find Products You Love, And Buy It For Life",
+        "description": "Discover quality items made to last, perfectly suited to your style."
+      },
+      {
+        "title": "Create Your Customizable Wishlist",
+        "description": "Save and organize your favorite finds for easy access anytime."
+      },
+      {
+        "title": "Open Your Own Store Or Explore Millions",
+        "description": "Start selling in minutes or browse endless unique products from top sellers."
+      },
+      {
+        "title": "Manage Payments & Track Delivery Order",
+        "description": "Keep tabs on payments and stay updated with real-time delivery tracking."
+      },
+      {
+        "title": "Get The Latest Deals. Save More, Spend Less",
+        "description": "Access exclusive offers and maximize your savings every time you shop!"
+      }
+    ]
+  },
+  "profile": {
+    "fullName": {
+      "title": "What's your full name?",
+      "label": "Full name",
+      "placeholder": "Lily Vermillion",
+      "identityMessage": "Your identification is only used to verify payment and nothing else - it's completey safe"
+    },
+    "phoneNumber": {
+      "title": "What's your phone number?",
+      "label": "Telephone Number",
+      "placeholder": "(123) 456-7890",
+      "identityMessage": "Your identification is only used to verify payment and nothing else - it's completely safe"
+    }
+  },
+  "validation": {
+    "emailRequired": "Email is required",
+    "emailInvalid": "ERROR: Email address not found!",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "confirmPasswordRequired": "Confirm password is required",
+    "confirmPasswordMinLength": "Confirm password must be at least 6 characters",
+    "fullNameRequired": "Full name is required"
+  },
+  "errors": {
+    "fillAllFields": "Please fill in all fields",
+    "validEmail": "Please enter a valid email address",
+    "passwordLength": "Password must be at least 6 characters long",
+    "passwordsDontMatch": "Passwords do not match",
+    "loginFailed": "Login failed. Please try again.",
+    "signUpFailed": "Sign Up failed. Please try again."
+  },
+  "notification": {
+    "title": "Enable Notifications",
+    "subtitle": "Enable push notifications to stay on top of your finances with updates on balances and goals made for you.",
+    "notificationExample": "Your order of “Playstation 5 Pro” has been shipped and will arrice in Sep 23, 2027",
+    "changeSettings": "You can change the settings at anytime."
+  },
+  "home": {
+    "freeShippingCard": {
+      "title": "Get free shipping with no minimum order today!",
+      "subtitle": "Only available to Plus users. Terms apply.",
+      "buttonText": "Try Free for 30 days"
+    },
+    "sectionHeader": {
+      "dealOfTheDay": "Deal of the day",
+      "categoriesYouMightLike": "Categories you might like",
+      "forYou": "For you",
+      "computersAndAccesories": "Computers & Accesories"
+    }
+  }
+}

@@ -1,29 +1,47 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import "react-native-reanimated";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { TamaguiProvider } from "tamagui";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useColorScheme } from "@/hooks/useColorScheme";
+import config from "@/tamagui.config";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    "Figtree-Regular": require("../assets/fonts/Figtree-Regular.ttf"),
+    "Figtree-Medium": require("../assets/fonts/Figtree-Medium.ttf"),
+    "Figtree-Bold": require("../assets/fonts/Figtree-Bold.ttf"),
+    "Figtree-SemiBold": require("../assets/fonts/Figtree-SemiBold.ttf"),
+    "Figtree-ExtraBold": require("../assets/fonts/Figtree-ExtraBold.ttf"),
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+  if (!loaded) return null;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <TamaguiProvider config={config} defaultTheme={colorScheme ?? "light"}>
+        <Stack screenOptions={{ headerShown: false }} initialRouteName="splash">
+          <Stack.Screen name="splash" />
+          <Stack.Screen name="wellcome" />
+          <Stack.Screen name="onboardingSlides" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="notification" />
+          <Stack.Screen name="fullName" />
+          <Stack.Screen name="phoneNumber" />
+          <Stack.Screen
+            name="_modal"
+            options={{ presentation: "modal", headerShown: false }}
+          />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        {/* <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
+        </SafeAreaView> */}
+      </TamaguiProvider>
+    </SafeAreaProvider>
   );
 }

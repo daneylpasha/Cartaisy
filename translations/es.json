@@ -1,0 +1,154 @@
+{
+  "common": {
+    "continue": "Continuar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "skip": "Omitir",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "warning": "Advertencia",
+    "info": "Información"
+  },
+  "auth": {
+    "login": {
+      "title": "Bienvenido de Vuelta",
+      "subtitle": "Inicia sesión en tu cuenta",
+      "email": "Correo Electrónico",
+      "password": "Contraseña",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "signIn": "Iniciar Sesión",
+      "dontHaveAccount": "¿No tienes una cuenta?",
+      "signUp": "Registrarse",
+      "or": "o",
+      "continueWithGoogle": "Continuar con Google",
+      "emailPlaceholder": "Ingresa tu correo electrónico",
+      "passwordPlaceholder": "Ingresa tu contraseña"
+    },
+    "signup": {
+      "title": "Crear Cuenta",
+      "subtitle": "Regístrate para comenzar",
+      "fullName": "Nombre Completo",
+      "email": "Correo Electrónico",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar Contraseña",
+      "phoneNumber": "Número de Teléfono",
+      "agreeToTerms": "Acepto los Términos y Condiciones",
+      "signUp": "Registrarse",
+      "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+      "signIn": "Iniciar Sesión",
+      "fullNamePlaceholder": "Ingresa tu nombre completo",
+      "emailPlaceholder": "Ingresa tu correo electrónico",
+      "passwordPlaceholder": "Crea una contraseña",
+      "confirmPasswordPlaceholder": "Confirma tu contraseña",
+      "phonePlaceholder": "Ingresa tu número de teléfono"
+    },
+    "forgotPassword": {
+      "title": "Olvidé mi Contraseña",
+      "subtitle": "Ingresa tu correo para restablecer tu contraseña",
+      "email": "Correo Electrónico",
+      "sendResetLink": "Enviar Enlace de Restablecimiento",
+      "backToLogin": "Volver al Inicio de Sesión",
+      "emailPlaceholder": "Ingresa tu correo electrónico"
+    },
+    "passwordResetSent": {
+      "title": "Enlace Enviado",
+      "subtitle": "Revisa tu correo para las instrucciones de restablecimiento",
+      "checkEmail": "Revisa tu correo",
+      "resendEmail": "Reenviar Correo",
+      "backToLogin": "Volver al Inicio de Sesión"
+    }
+  },
+  "onboarding": {
+    "slide1": {
+      "title": "Bienvenido a la App de Donaciones",
+      "subtitle": "Haz la diferencia con cada donación"
+    },
+    "slide2": {
+      "title": "Donaciones Fáciles",
+      "subtitle": "Proceso de pago rápido y seguro"
+    },
+    "slide3": {
+      "title": "Rastrea el Impacto",
+      "subtitle": "Ve cómo tus donaciones ayudan a otros"
+    },
+    "slide4": {
+      "title": "Únete a la Comunidad",
+      "subtitle": "Conéctate con otros donantes y causas"
+    },
+    "slide5": {
+      "title": "Comienza",
+      "subtitle": "¿Listo para hacer tu primera donación?"
+    },
+    "slide6": {
+      "title": "Casi Listo",
+      "subtitle": "Solo unos pasos más para completar tu perfil"
+    },
+    "slide7": {
+      "title": "¡Todo Listo!",
+      "subtitle": "Bienvenido a la comunidad de donaciones"
+    }
+  },
+  "profile": {
+    "title": "Perfil",
+    "personalInfo": "Información Personal",
+    "fullName": "Nombre Completo",
+    "email": "Correo Electrónico",
+    "phoneNumber": "Número de Teléfono",
+    "editProfile": "Editar Perfil",
+    "settings": "Configuración",
+    "notifications": "Notificaciones",
+    "privacy": "Privacidad",
+    "help": "Ayuda y Soporte",
+    "logout": "Cerrar Sesión",
+    "deleteAccount": "Eliminar Cuenta"
+  },
+  "phoneNumber": {
+    "title": "¿Cuál es tu número de teléfono?",
+    "telephoneNumber": "Número de Teléfono",
+    "phonePlaceholder": "(123) 456-7890",
+    "identityMessage": "Tu identificación solo se usa para verificar el pago y nada más - es completamente seguro"
+  },
+  "validation": {
+    "required": "Este campo es obligatorio",
+    "email": "Por favor ingresa un correo electrónico válido",
+    "password": "La contraseña debe tener al menos 8 caracteres",
+    "passwordMatch": "Las contraseñas no coinciden",
+    "phoneNumber": "Por favor ingresa un número de teléfono válido",
+    "minLength": "Debe tener al menos {{min}} caracteres",
+    "maxLength": "No debe tener más de {{max}} caracteres"
+  },
+  "errors": {
+    "networkError": "Error de red. Por favor verifica tu conexión.",
+    "serverError": "Error del servidor. Por favor intenta de nuevo más tarde.",
+    "unknownError": "Ocurrió un error desconocido.",
+    "invalidCredentials": "Correo o contraseña inválidos.",
+    "emailAlreadyExists": "El correo ya existe.",
+    "weakPassword": "La contraseña es muy débil."
+  },
+  "donations": {
+    "title": "Donaciones",
+    "recentDonations": "Donaciones Recientes",
+    "totalDonated": "Total Donado",
+    "makeDonation": "Hacer una Donación",
+    "donationAmount": "Cantidad de Donación",
+    "donationMessage": "Mensaje de Donación",
+    "anonymous": "Donación Anónima",
+    "paymentMethod": "Método de Pago",
+    "confirmDonation": "Confirmar Donación",
+    "donationSuccess": "¡Gracias por tu donación!",
+    "donationFailed": "La donación falló. Por favor intenta de nuevo."
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "all": "Todas",
+    "donations": "Donaciones",
+    "updates": "Actualizaciones",
+    "markAllRead": "Marcar Todas como Leídas",
+    "noNotifications": "Aún no hay notificaciones"
+  }
+}
