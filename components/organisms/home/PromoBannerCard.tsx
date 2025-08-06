@@ -3,6 +3,7 @@ import { TextMDBold } from "@/components/atoms/texts";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import { tokens } from "@/tamagui/token";
+import { t } from "@/translations";
 import { StyleSheet } from "react-native";
 import { getTokenValue, Spacer, XStack, YStack } from "tamagui";
 
@@ -20,20 +21,20 @@ export const PromoBannerCard = () => {
         {/* Left Section */}
         <YStack padding={"$md"} width={215}>
           <TextMDBold color="$darkgrey">
-            Health & Fitness 25% OFF Promo Madness!
+            {t("home.promoBannerCard.title")}
           </TextMDBold>
 
           <Spacer size="$sm" />
 
           <ParagraphSM color="$textgrey">
-            Enhance your health and get healthier today.
+            {t("home.promoBannerCard.subtitle")}
           </ParagraphSM>
 
           <Spacer size="$reg" />
 
           <PrimaryButton
             width={150}
-            label="Browse Deals"
+            label={t("home.promoBannerCard.buttonText")}
             paddingVertical="xs"
             icon={
               <AppImage

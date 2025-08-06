@@ -163,19 +163,22 @@ const HomeScreen = () => {
           >
             <AppImage name="bagWhite" width={50} height={26} />
           </YStack>
+          <OpTouch></OpTouch>
           <YStack position="absolute" right={0}>
-            <AppImage name="cartIcon" size={24} />
-            <TextXSRegular
-              position="absolute"
-              backgroundColor="$white"
-              top={-8}
-              right={-10}
-              borderRadius="$full"
-              paddingHorizontal={"$xs-sm"}
-              color="$black"
-            >
-              2
-            </TextXSRegular>
+            <OpTouch>
+              <AppImage name="cartIcon" size={24} />
+              <TextXSRegular
+                position="absolute"
+                backgroundColor="$white"
+                top={-8}
+                right={-10}
+                borderRadius="$full"
+                paddingHorizontal={"$xs-sm"}
+                color="$black"
+              >
+                2
+              </TextXSRegular>
+            </OpTouch>
           </YStack>
         </XStack>
         <Spacer size={"$sm"} />

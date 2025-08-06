@@ -150,6 +150,11 @@
       "computersAndAccesories": "Computers & Accesories",
       "brandsYouMightLike": "Brands you might like",
       "flashSale": "Flash Sale"
+    },
+    "promoBannerCard": {
+      "title": "Health & Fitness 25% OFF Promo Madness!",
+      "subtitle": "Enhance your health and get healthier today.",
+      "buttonText": "Browse Deals"
     }
   }
 }

@@ -102,9 +102,7 @@ const ProductsGridScroller = () => {
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{
         paddingHorizontal: sidePadding,
-        // paddingBottom: tokens.space.md,
-        // paddingBottom: layout === "vertical" ? 0 : tokens.space.md,
-        gap: tokens.space.md,
+        // gap: tokens.space.md,
       }}
       columnWrapperStyle={{
         columnGap: columnGap,

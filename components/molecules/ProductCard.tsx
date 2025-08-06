@@ -4,6 +4,8 @@ import Icons from "@/assets/Icons";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
+import { BlurView } from "expo-blur";
+import { StyleSheet } from "react-native";
 import { XStack, YStack } from "tamagui";
 import {
   TextMDBold,
@@ -100,18 +102,7 @@ export const ProductCard = ({
 
           {/* Wishlist */}
           {!product.wishlist && (
-            <YStack
-              opacity={0.2}
-              backgroundColor="$black"
-              position="absolute"
-              bottom={12}
-              right={12}
-              width={40}
-              height={40}
-              justifyContent="center"
-              alignItems="center"
-              borderRadius="$full"
-            >
+            <BlurView style={styles.blurView} intensity={16} tint="dark">
               <OpTouch onPress={product.onToggleWishlist}>
                 <AppImage
                   name="heart"
@@ -120,7 +111,7 @@ export const ProductCard = ({
                   height={18}
                 />
               </OpTouch>
-            </YStack>
+            </BlurView>
           )}
         </YStack>
 
@@ -181,11 +172,24 @@ export const ProductCard = ({
               {product.progressValue}% Claimed
             </TextSMRegular>
           </XStack>
-        ) : (
-          <Spacer size="$reg" />
-        )}
+        ) : // <Spacer size="$reg" />
+        null}
       </YStack>
     </OpTouch>
   );
 };
 export { GRID_CARD_WIDTH, GRID_COLUMN_GAP, GRID_SIDE_PADDING };
+
+const styles = StyleSheet.create({
+  blurView: {
+    position: "absolute",
+    bottom: 12,
+    right: 12,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+});
