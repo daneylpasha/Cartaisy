@@ -9,7 +9,6 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { TextXSRegular } from "@/components/atoms/texts/TextXSRegular";
 import { CategorySuggestions } from "@/components/molecules/CategorySuggestions";
 import { CollectionsGrid } from "@/components/molecules/home/CollectionsGrid";
-import { ProductCard } from "@/components/molecules/ProductCard";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import {
   FeaturedPromotionsCarousel,
@@ -17,6 +16,13 @@ import {
 } from "@/components/organisms/home";
 
 import Icons from "@/assets/Icons";
+
+import CollectionsCardGrid from "@/components/organisms/CollectionsCardGrid";
+import BrandsCollections from "@/components/organisms/home/BrandsCollections";
+import { PromoBannerCard } from "@/components/organisms/home/PromoBannerCard";
+import ProductsGridScroller from "@/components/organisms/ProductsGridScroller";
+import ProductsHorizontalScroller from "@/components/organisms/ProductsHorizontalScroller";
+import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller";
 import { SearchBar } from "@/components/organisms/SearchBar";
 import { t } from "@/translations";
 import React from "react";
@@ -108,61 +114,6 @@ const HomeScreen = () => {
       dealEnds: "10:00:00",
     },
   ];
-  const productData = [
-    {
-      id: 1,
-      image: "product1",
-      title:
-        "Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones",
-      price: 100,
-      originalPrice: 150,
-      ratingValue: 4,
-      totalReviewCount: 1000,
-      showPrice: true,
-      currentPrice: 100,
-      // originalPrice: 150,
-      discountPercent: 50,
-      showRating: true,
-      showWishlistButton: true,
-      isWishlisted: false,
-      onToggleWishlist: () => {},
-    },
-    {
-      id: 2,
-      image: "product2",
-      title:
-        "Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones",
-      price: 100,
-      originalPrice: 150,
-      ratingValue: 4.5,
-      totalReviewCount: 100,
-      showPrice: true,
-      currentPrice: 100,
-      // originalPrice: 150,
-      discountPercent: 30,
-      showRating: true,
-      showWishlistButton: true,
-      isWishlisted: false,
-      onToggleWishlist: () => {},
-    },
-    {
-      id: 3,
-      image: "product3",
-      title:
-        "Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones",
-      price: 100,
-      originalPrice: 150,
-      ratingValue: 4.5,
-      totalReviewCount: 100,
-      showPrice: true,
-      currentPrice: 100,
-      // originalPrice: 150,
-      showRating: true,
-      showWishlistButton: true,
-      isWishlisted: false,
-      onToggleWishlist: () => {},
-    },
-  ];
 
   const categorySuggestionsData = [
     {
@@ -191,112 +142,7 @@ const HomeScreen = () => {
       title: "Health & Fitness",
     },
   ];
-  const forYouData = [
-    {
-      id: 1,
-      image: "productForyou1",
-      title:
-        "Filtrete 20x20x1 AC Furnace Air Filter, MERV 5, MPR 300, Capture Unwanted Particles",
 
-      originalPrice: 150,
-      ratingValue: 4,
-      totalReviewCount: 33,
-      showPrice: true,
-      currentPrice: 9.8,
-      // originalPrice: 150,
-      discountPercent: 50,
-      showRating: true,
-      showWishlistButton: true,
-      isWishlisted: false,
-      onToggleWishlist: () => {},
-    },
-    {
-      id: 2,
-      image: "productForyou2",
-      title:
-        "Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones",
-
-      originalPrice: 150,
-      ratingValue: 2.5,
-      totalReviewCount: 10,
-      showPrice: true,
-      currentPrice: 11.8,
-      // originalPrice: 150,
-      discountPercent: 30,
-      showRating: true,
-      showWishlistButton: true,
-      isWishlisted: false,
-      onToggleWishlist: () => {},
-    },
-    {
-      id: 3,
-      image: "productForyou3",
-      title:
-        "Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones",
-
-      originalPrice: 150,
-      ratingValue: 1.5,
-      totalReviewCount: 13,
-      showPrice: true,
-      currentPrice: 7.8,
-      // originalPrice: 150,
-      showRating: true,
-      showWishlistButton: true,
-      isWishlisted: false,
-      onToggleWishlist: () => {},
-    },
-    {
-      id: 4,
-      image: "productForyou4",
-      title:
-        "Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones",
-
-      originalPrice: 150,
-      ratingValue: 1.5,
-      totalReviewCount: 13,
-      showPrice: true,
-      currentPrice: 7.8,
-      // originalPrice: 150,
-      showRating: true,
-      showWishlistButton: true,
-      isWishlisted: false,
-      onToggleWishlist: () => {},
-    },
-    {
-      id: 5,
-      image: "productForyou5",
-      title:
-        "Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones",
-
-      originalPrice: 150,
-      ratingValue: 1.5,
-      totalReviewCount: 13,
-      showPrice: true,
-      currentPrice: 7.8,
-      // originalPrice: 150,
-      showRating: true,
-      showWishlistButton: true,
-      isWishlisted: false,
-      onToggleWishlist: () => {},
-    },
-    {
-      id: 6,
-      image: "productForyou6",
-      title:
-        "Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones",
-
-      originalPrice: 150,
-      ratingValue: 1.5,
-      totalReviewCount: 13,
-      showPrice: true,
-      currentPrice: 7.8,
-      // originalPrice: 150,
-      showRating: true,
-      showWishlistButton: true,
-      isWishlisted: false,
-      onToggleWishlist: () => {},
-    },
-  ];
   const { bottom: BOTTOM_INSET, top: TOP_INSET } = useSafeAreaInsets();
 
   return (
@@ -376,15 +222,13 @@ const HomeScreen = () => {
         onPressSeeAll={() => {}}
       />
       <Spacer size={"$xl"} />
-      <ProductCard item={productData} />
+      <ProductsHorizontalScroller />
       <Spacer size={"$xl"} />
       <SectionHeader
         title={t("home.sectionHeader.categoriesYouMightLike")}
         tintColor={"darkgrey"}
         image="bulb"
-        // seeAllText="See All"
         color="primary"
-        // onPressSeeAll={() => {}}
       />
       <Spacer size={"$sm"} />
       <ParagraphMD paddingHorizontal="$md">
@@ -402,13 +246,43 @@ const HomeScreen = () => {
         onPressSeeAll={() => {}}
       />
       <Spacer size={"$reg"} />
-      <ProductCard
-        item={forYouData}
-        layout="vertical"
-        width={163}
-        height={163}
+      <ProductsGridScroller />
+      <Spacer size={"$xl"} />
+      <PromoBannerCard />
+      <Spacer size={"$xl"} />
+      <SectionHeader
+        title={t("home.sectionHeader.computersAndAccesories")}
+        tintColor={"darkgrey"}
+        image="computer"
+        seeAllText="See All"
+        color="primary"
+        onPressSeeAll={() => {}}
       />
-
+      <Spacer size={"$reg"} />
+      <CollectionsCardGrid />
+      <Spacer size={"$xl"} />
+      <SectionHeader
+        title={t("home.sectionHeader.brandsYouMightLike")}
+        tintColor={"darkgrey"}
+        image="emptyStar"
+        seeAllText="See All"
+        color="primary"
+        onPressSeeAll={() => {}}
+      />
+      <Spacer size={"$md"} />
+      <BrandsCollections />
+      <Spacer size={"$xl"} />
+      <SectionHeader
+        title={t("home.sectionHeader.flashSale")}
+        tintColor={"darkgrey"}
+        image="flash"
+        seeAllText="See All"
+        color="primary"
+        onPressSeeAll={() => {}}
+      />
+      <Spacer size={"$reg"} />
+      <SalesHorizontalScroller />
+      <Spacer size={"$xl"} />
       <Spacer size={BOTTOM_INSET * 2} />
     </ScrollView>
   );

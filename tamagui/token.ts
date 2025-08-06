@@ -17,6 +17,7 @@ export const tokens = {
     location: "#C4B5FD",
     darkgrey: "#1F2937",
     shadow: "#1C1917",
+    yellow: "#F59E0B",
   },
 
   space: {

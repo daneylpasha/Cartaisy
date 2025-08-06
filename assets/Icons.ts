@@ -53,6 +53,7 @@ const Icons = {
   product5: require("./images/product-img-5.png"),
   star: require("./images/fullstar.png"),
   starHalf: require("./images/halfstar.png"),
+  emptyStar: require("./images/emptystar.png"),
   heart: require("./images/heart.png"),
   discount: require("./images/discount.png"),
   bulb: require("./images/bulb.png"),
@@ -68,6 +69,16 @@ const Icons = {
   productForyou5: require("./images/product-foryou-img-5.png"),
   productForyou6: require("./images/product-foryou-img-6.png"),
   productForyou7: require("./images/product-foryou-img-7.png"),
+  promoBanner: require("./images/promo.png"),
+  computer: require("./images/computer.png"),
+  apple: require("./images/apple.png"),
+  samsung: require("./images/samsaung.png"),
+  nike: require("./images/nike.png"),
+  nintendo: require("./images/nintendo.png"),
+  playstation: require("./images/playstation.png"),
+  flash: require("./images/flash.png"),
+  saleimg1: require("./images/sale-img-1.png"),
+  saleimg2: require("./images/sale-img-2.png"),
 };
 
 export default Icons;

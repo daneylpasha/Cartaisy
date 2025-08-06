@@ -1,3 +1,4 @@
+import { tokens } from "@/tamagui/token";
 import React from "react";
 import { ActivityIndicator, DimensionValue } from "react-native";
 import { XStack } from "tamagui";
@@ -11,6 +12,7 @@ type PrimaryButtonProps = {
   width?: DimensionValue;
   icon?: React.ReactNode;
   iconPosition?: "left" | "right";
+  paddingVertical?: keyof typeof tokens.space;
 };
 
 export const PrimaryButton = ({
@@ -20,6 +22,7 @@ export const PrimaryButton = ({
   width = "100%",
   icon,
   iconPosition = "right",
+  paddingVertical = "reg",
 }: PrimaryButtonProps) => {
   return (
     <OpTouch
@@ -27,7 +30,7 @@ export const PrimaryButton = ({
       alignItems="center"
       backgroundColor={"primary"}
       borderRadius={"full"}
-      paddingVertical={"reg"}
+      paddingVertical={paddingVertical}
       onPress={onPress}
       disabled={isLoading}
       width={width}
