@@ -9,6 +9,8 @@ interface SearchInputProps {
   placeholder?: string;
   width?: number | string;
   onClear?: () => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 export const SearchInput = ({
@@ -17,6 +19,8 @@ export const SearchInput = ({
   placeholder,
   width = "100%",
   onClear,
+  onFocus,
+  onBlur,
 }: SearchInputProps) => {
   const searchIcon = (
     <AppImage name="searchIcon" width={20} height={20} tintColor="$secondary" />
@@ -30,6 +34,8 @@ export const SearchInput = ({
       icon={searchIcon}
       width={width}
       paddingHorizontal={16}
+      onFocus={onFocus}
+      onBlur={onBlur}
     />
   );
 };

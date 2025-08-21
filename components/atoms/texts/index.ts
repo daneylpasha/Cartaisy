@@ -13,4 +13,5 @@ export * from "./TextSMMedium";
 export * from "./TextSMRegular";
 export * from "./TextSMSemiBold";
 export * from "./TextXLBold";
+export * from "./TextXLMedium";
 export * from "./TextXSRegular";

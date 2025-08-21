@@ -8,7 +8,7 @@ export const config = createTamagui({
   themes,
   tokens: {
     color: tokens.color,
-    size: tokens.size,
+    size: tokens.space, // Use space tokens for size
     space: tokens.space,
     radius: tokens.radius,
     zIndex: tokens.zIndex,

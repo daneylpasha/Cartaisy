@@ -89,8 +89,8 @@ export const FeaturedPromotionsCarousel = ({
             <YStack
               padding="$md"
               backgroundColor={"white"}
-              borderBottomRightRadius={16}
-              borderBottomLeftRadius={16}
+              borderBottomRightRadius={"$md"}
+              borderBottomLeftRadius={"$md"}
             >
               <TextXSRegular color="$icon">
                 Ends in {item.dealEnds}
@@ -123,7 +123,7 @@ export const FeaturedPromotionsCarousel = ({
                 {Array.from({ length: totalLength }, (_, index) => (
                   <YStack
                     key={index}
-                    width={36}
+                    width={"$1xl"}
                     height={4}
                     backgroundColor={
                       index === indexx ? "$primary" : "$lightgrey"

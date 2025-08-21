@@ -9,17 +9,19 @@ import { Spacer } from "../atoms/Spacer";
 
 type SectionHeaderProps = {
   title: string;
-  image: keyof typeof Icons;
+  image?: keyof typeof Icons;
+  showImage?: boolean;
   showSeeAll?: boolean;
   seeAllText?: string;
   onPressSeeAll?: () => void;
-  tintColor: keyof typeof tokens.color;
+  tintColor?: keyof typeof tokens.color;
   color?: keyof typeof tokens.color;
 };
 
 export const SectionHeader = ({
   title,
   image,
+  showImage = true,
   showSeeAll = true,
   seeAllText,
   onPressSeeAll,
@@ -33,12 +35,14 @@ export const SectionHeader = ({
       justifyContent="space-between"
     >
       <XStack alignItems="center">
-        <AppImage
-          tintColor={tokens.color[tintColor]}
-          name={image}
-          width={20}
-          height={20}
-        />
+        {showImage && (
+          <AppImage
+            tintColor={tintColor ? tokens.color[tintColor] : undefined}
+            name={image}
+            width={20}
+            height={20}
+          />
+        )}
         <Spacer size={"$xs-sm"} />
         <TextLGBold color={"$darkgrey"}>{title}</TextLGBold>
       </XStack>

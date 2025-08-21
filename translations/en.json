@@ -17,7 +17,7 @@
   },
   "welcome": {
     "title": "AI E-Commerce & Shopping App UI Kit",
-    "subtitle": "Smart shopping is the future of shopping. Save more money with Cartaisy!",
+    "subtitle": "Smart shopping is the future of shopping. Save more money with cartaisy!",
     "signUp": "Sign Up",
     "alreadyHaveAccount": "I already have an account",
     "categories": [
@@ -149,12 +149,31 @@
       "forYou": "For you",
       "computersAndAccesories": "Computers & Accesories",
       "brandsYouMightLike": "Brands you might like",
-      "flashSale": "Flash Sale"
+      "flashSale": "Flash Sale",
+      "youMightAlsoLike": "You might also like",
+      "productDetailsSpecs": "Product Details & Specifications"
     },
     "promoBannerCard": {
       "title": "Health & Fitness 25% OFF Promo Madness!",
       "subtitle": "Enhance your health and get healthier today.",
       "buttonText": "Browse Deals"
     }
+  },
+  "search": {
+    "emptySearches": {
+      "title": "We couldn’t find your keywords.",
+      "subtitle": "Unfortunately, we couldn’t find a match, please try browsing the following:"
+    }
+  },
+  "product": {
+    "productDetails": {}
+  },
+  "cart": {
+    "title": "Your cart is empty.",
+    "subtitle": "Browse product or add an item to see your cart."
+  },
+  "wishlist": {
+    "title": "You don’t have any wishlist yet.",
+    "subtitle": "Let’s add a new one by browsing our products."
   }
 }

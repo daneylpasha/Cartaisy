@@ -1,103 +1,120 @@
-import { TextSMRegular } from "@/components/atoms";
+import { TextMDSemiBold, TextSMRegular } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Tabs } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { getTokenValue } from "tamagui";
 
 export default function TabLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: getTokenValue("$primary"),
-        headerShown: false,
-        tabBarShowLabel: true,
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: getTokenValue("$primary"),
+          headerShown: false,
+          tabBarShowLabel: true,
 
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: "absolute",
-          },
-          default: {},
-        }),
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarLabel: ({ focused }) => (
-            <TextSMRegular color={focused ? "$primary" : "$icon"}>
-              {"Home"}
-            </TextSMRegular>
-          ),
-          tabBarIcon: ({ color, focused }) => (
-            <AppImage
-              tintColor={focused ? color : getTokenValue("$icon")}
-              name="homeIcon"
-              width={21}
-              height={19}
-            />
-          ),
+          tabBarStyle: Platform.select({
+            ios: {
+              // Use a transparent background on iOS to show the blur effect
+              position: "absolute",
+            },
+            default: {},
+          }),
         }}
-      />
-      <Tabs.Screen
-        name="cart"
-        options={{
-          title: "Cart",
-          tabBarLabel: ({ focused }) => (
-            <TextSMRegular color={focused ? "$primary" : "$icon"}>
-              {"Cart"}
-            </TextSMRegular>
-          ),
-          tabBarIcon: ({ color, focused }) => (
-            <AppImage
-              tintColor={focused ? color : getTokenValue("$icon")}
-              name="cartFill"
-              width={21}
-              height={19}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="wishlist"
-        options={{
-          title: "Wishlist",
-          tabBarLabel: ({ focused }) => (
-            <TextSMRegular color={focused ? "$primary" : "$icon"}>
-              {"Wishlist"}
-            </TextSMRegular>
-          ),
-          tabBarIcon: ({ color, focused }) => (
-            <AppImage
-              tintColor={focused ? color : getTokenValue("$icon")}
-              name="wishlistIcon"
-              width={21}
-              height={19}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarLabel: ({ focused }) => (
-            <TextSMRegular color={focused ? "$primary" : "$icon"}>
-              {"Account"}
-            </TextSMRegular>
-          ),
-          tabBarIcon: ({ color, focused }) => (
-            <AppImage
-              tintColor={focused ? color : getTokenValue("$icon")}
-              name="userFill"
-              width={21}
-              height={19}
-            />
-          ),
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Home",
+            tabBarLabel: ({ focused }) => (
+              <TextSMRegular color={focused ? "$primary" : "$icon"}>
+                {"Home"}
+              </TextSMRegular>
+            ),
+            tabBarIcon: ({ color, focused }) => (
+              <AppImage
+                tintColor={focused ? color : getTokenValue("$icon")}
+                name="homeIcon"
+                width={21}
+                height={19}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="cart"
+          options={{
+            title: "Cart",
+
+            headerShown: true,
+            headerTitle: () => <TextMDSemiBold>{"Cart"}</TextMDSemiBold>,
+            headerShadowVisible: false,
+
+            headerStyle: {
+              backgroundColor: getTokenValue("$background"),
+            },
+            tabBarLabel: ({ focused }) => (
+              <TextSMRegular color={focused ? "$primary" : "$icon"}>
+                {"Cart"}
+              </TextSMRegular>
+            ),
+            tabBarIcon: ({ color, focused }) => (
+              <AppImage
+                tintColor={focused ? color : getTokenValue("$icon")}
+                name="cartFill"
+                width={21}
+                height={19}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="wishlist"
+          options={{
+            title: "Wishlist",
+            // headerShown: true,
+            // headerTitle: () => <TextMDSemiBold>{"Wishlist"}</TextMDSemiBold>,
+
+            // headerStyle: {
+            //   backgroundColor: getTokenValue("$background"),
+            // },
+            tabBarLabel: ({ focused }) => (
+              <TextSMRegular color={focused ? "$primary" : "$icon"}>
+                {"Wishlist"}
+              </TextSMRegular>
+            ),
+            tabBarIcon: ({ color, focused }) => (
+              <AppImage
+                tintColor={focused ? color : getTokenValue("$icon")}
+                name="wishlistIcon"
+                width={21}
+                height={19}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: "Profile",
+            tabBarLabel: ({ focused }) => (
+              <TextSMRegular color={focused ? "$primary" : "$icon"}>
+                {"Account"}
+              </TextSMRegular>
+            ),
+            tabBarIcon: ({ color, focused }) => (
+              <AppImage
+                tintColor={focused ? color : getTokenValue("$icon")}
+                name="userFill"
+                width={21}
+                height={19}
+              />
+            ),
+          }}
+        />
+      </Tabs>
+    </GestureHandlerRootView>
   );
 }

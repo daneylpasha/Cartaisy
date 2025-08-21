@@ -5,6 +5,7 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { GRID_CARD_WIDTH } from "@/components/molecules/ProductCard";
 import { tokens } from "@/tamagui/token";
+import { router } from "expo-router";
 import { StyleSheet } from "react-native";
 import { YStack } from "tamagui";
 import { Spacer } from "../atoms/Spacer";
@@ -21,9 +22,16 @@ type CategoryCardListProps = {
 };
 
 export const CollectionCard = ({ item }: CategoryCardListProps) => {
-  console.log(item);
   return (
-    <OpTouch width={GRID_CARD_WIDTH} onPress={() => {}}>
+    <OpTouch
+      width={GRID_CARD_WIDTH}
+      onPress={() =>
+        router.push({
+          pathname: "/products",
+          params: { categoryName: item.name },
+        })
+      }
+    >
       <YStack borderRadius={"$2xl"}>
         <AppImage style={Styles.ImageStyle} name={item.image} />
         <Spacer size={"$sm"} />

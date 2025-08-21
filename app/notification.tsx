@@ -73,7 +73,7 @@ const Notification = () => {
         <Spacer size={"$2xl"} />
         <PrimaryButton
           label={t("common.notification")}
-          onPress={() => router.push("/phoneNumber")}
+          onPress={() => router.push("/fullName")}
           icon={<AppImage name="check" size={20} />}
           isLoading={isEnabled}
         />

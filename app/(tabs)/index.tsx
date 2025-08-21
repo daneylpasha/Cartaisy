@@ -6,28 +6,32 @@ import {
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
+import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
 import { TextXSRegular } from "@/components/atoms/texts/TextXSRegular";
+import {
+  BottomSheetModalWithView,
+  type BaseBottomSheetRef,
+} from "@/components/molecules/bottom-sheets";
 import { CategorySuggestions } from "@/components/molecules/CategorySuggestions";
 import { CollectionsGrid } from "@/components/molecules/home/CollectionsGrid";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
+import CollectionsCardGrid from "@/components/organisms/CollectionsCardGrid";
 import {
   FeaturedPromotionsCarousel,
   FreeShipping,
 } from "@/components/organisms/home";
-
-import Icons from "@/assets/Icons";
-
-import CollectionsCardGrid from "@/components/organisms/CollectionsCardGrid";
+import { AddressBottomSheetContent } from "@/components/organisms/home/AddressBottomSheetContent";
 import BrandsCollections from "@/components/organisms/home/BrandsCollections";
 import { PromoBannerCard } from "@/components/organisms/home/PromoBannerCard";
 import ProductsGridScroller from "@/components/organisms/ProductsGridScroller";
 import ProductsHorizontalScroller from "@/components/organisms/ProductsHorizontalScroller";
 import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller";
-import { SearchBar } from "@/components/organisms/SearchBar";
 import { t } from "@/translations";
-import React from "react";
+import { router } from "expo-router";
+import React, { useRef } from "react";
+import { FlatList } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getTokenValue, ScrollView, XStack, YStack } from "tamagui";
+import { getTokenValue, XStack, YStack } from "tamagui";
 
 const HomeScreen = () => {
   const collectionData = [
@@ -115,44 +119,157 @@ const HomeScreen = () => {
     },
   ];
 
-  const categorySuggestionsData = [
+  const { bottom: BOTTOM_INSET, top: TOP_INSET } = useSafeAreaInsets();
+  const bottomSheetRef = useRef<BaseBottomSheetRef>(null);
+
+  // Define sections for FlatList
+  const sections = [
     {
-      id: 1,
-      image: Icons.category1,
-      title: "Personal Care",
+      id: "collections",
+      content: <CollectionsGrid item={collectionData} />,
     },
     {
-      id: 2,
-      image: Icons.category2,
-      title: "Automotive",
+      id: "featuredPromotions",
+      content: <FeaturedPromotionsCarousel item={featuredPromotionsData} />,
     },
     {
-      id: 3,
-      image: Icons.category3,
-      title: "Electronics",
+      id: "freeShipping",
+      content: <FreeShipping />,
     },
     {
-      id: 4,
-      image: Icons.category4,
-      title: "Health & Fitness",
+      id: "dealOfTheDay",
+      content: (
+        <YStack>
+          <SectionHeader
+            title={t("home.sectionHeader.dealOfTheDay")}
+            tintColor={"darkgrey"}
+            image="dealIcon"
+            seeAllText="See All"
+            color="primary"
+            onPressSeeAll={() => {}}
+          />
+          <Spacer size={"$xl"} />
+          <ProductsHorizontalScroller />
+        </YStack>
+      ),
     },
     {
-      id: 5,
-      image: Icons.category2,
-      title: "Health & Fitness",
+      id: "categories",
+      content: (
+        <>
+          <SectionHeader
+            title={t("home.sectionHeader.categoriesYouMightLike")}
+            tintColor={"darkgrey"}
+            image="bulb"
+            color="primary"
+          />
+          <Spacer size={"$sm"} />
+          <ParagraphMD paddingHorizontal="$md">
+            {"Find the latest best deals by category"}
+          </ParagraphMD>
+          <YStack paddingHorizontal="$md">
+            <Spacer size={"$reg"} />
+            <CategorySuggestions />
+          </YStack>
+        </>
+      ),
+    },
+    {
+      id: "forYou",
+      content: (
+        <>
+          <SectionHeader
+            title={t("home.sectionHeader.forYou")}
+            tintColor={"darkgrey"}
+            image="forYou"
+            seeAllText="See All"
+            color="primary"
+            onPressSeeAll={() => {}}
+          />
+          <YStack paddingHorizontal="$md">
+            <Spacer size={"$reg"} />
+            <ProductsGridScroller />
+          </YStack>
+        </>
+      ),
+    },
+    {
+      id: "promoBanner",
+      content: <PromoBannerCard />,
+    },
+    {
+      id: "computersAndAccessories",
+      content: (
+        <>
+          <SectionHeader
+            title={t("home.sectionHeader.computersAndAccesories")}
+            tintColor={"darkgrey"}
+            image="computer"
+            seeAllText="See All"
+            color="primary"
+            onPressSeeAll={() => {}}
+          />
+          <YStack paddingHorizontal="$md">
+            <Spacer size={"$reg"} />
+            <CollectionsCardGrid />
+          </YStack>
+        </>
+      ),
+    },
+    {
+      id: "brands",
+      content: (
+        <YStack>
+          <SectionHeader
+            title={t("home.sectionHeader.brandsYouMightLike")}
+            tintColor={"darkgrey"}
+            image="emptyStar"
+            seeAllText="See All"
+            color="primary"
+            onPressSeeAll={() => {}}
+          />
+          <Spacer size={"$md"} />
+          <BrandsCollections />
+        </YStack>
+      ),
+    },
+    {
+      id: "flashSale",
+      content: (
+        <YStack>
+          <SectionHeader
+            title={t("home.sectionHeader.flashSale")}
+            tintColor={"darkgrey"}
+            image="flash"
+            seeAllText="See All"
+            color="primary"
+            onPressSeeAll={() => {}}
+          />
+          <Spacer size={"$reg"} />
+          <SalesHorizontalScroller />
+        </YStack>
+      ),
     },
   ];
 
-  const { bottom: BOTTOM_INSET, top: TOP_INSET } = useSafeAreaInsets();
+  const renderItem = ({
+    item,
+  }: {
+    item: { id: string; content: React.ReactNode };
+  }) => {
+    return (
+      <YStack>
+        {item.content}
+        <Spacer size={"$xl"} />
+      </YStack>
+    );
+  };
 
   return (
-    <ScrollView
-      backgroundColor={"$background"}
-      showsVerticalScrollIndicator={false}
-    >
+    <>
       <YStack backgroundColor={"$primary"} height={TOP_INSET} />
-      <YStack paddingHorizontal="$md" backgroundColor="$primary" height={140}>
-        <XStack alignItems="center" height={40} position="relative">
+      <YStack paddingHorizontal="$md" height={110} backgroundColor="$primary">
+        <XStack alignItems="center" paddingVertical={"$xs"} position="relative">
           <YStack position="absolute" left={0}>
             <TextMDSemiBold color="$white">{"Hello, Lily!"}</TextMDSemiBold>
           </YStack>
@@ -163,29 +280,59 @@ const HomeScreen = () => {
           >
             <AppImage name="bagWhite" width={50} height={26} />
           </YStack>
-          <OpTouch></OpTouch>
+
           <YStack position="absolute" right={0}>
             <OpTouch>
               <AppImage name="cartIcon" size={24} />
               <TextXSRegular
                 position="absolute"
-                backgroundColor="$white"
+                backgroundColor="$yellow"
+                color="$white"
                 top={-8}
                 right={-10}
                 borderRadius="$full"
                 paddingHorizontal={"$xs-sm"}
-                color="$black"
               >
-                2
+                {"2"}
               </TextXSRegular>
             </OpTouch>
           </YStack>
         </XStack>
+        <Spacer size={"$md"} />
+
+        <OpTouch
+          activeOpacity={0.9}
+          onPress={() => router.push("/search")}
+          hitSlop={10}
+        >
+          <XStack
+            backgroundColor="$white"
+            borderRadius="$full"
+            paddingHorizontal="$md"
+            height={50}
+            padding={"$sm-reg"}
+            // paddingVertical={"$reg"}
+            alignItems="center"
+            gap={"$md"}
+          >
+            <AppImage
+              name="searchIcon"
+              width={20}
+              height={20}
+              tintColor="$secondary"
+            />
+
+            <TextMDRegular color="$textgrey">
+              {`Search ${t("common.companyName")}`}
+            </TextMDRegular>
+          </XStack>
+        </OpTouch>
         <Spacer size={"$sm"} />
 
-        <SearchBar onSearch={(query) => console.log("Search:", query)} />
-        <Spacer size={"$sm"} />
-        <OpTouch hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        <OpTouch
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          onPress={() => bottomSheetRef.current?.handleOpenPress()}
+        >
           <XStack justifyContent="space-between" alignItems="center">
             <XStack alignItems="center" gap={"$xs"}>
               <AppImage
@@ -209,85 +356,22 @@ const HomeScreen = () => {
           </XStack>
         </OpTouch>
       </YStack>
-      <Spacer size={"$xl"} />
-      <CollectionsGrid item={collectionData} />
-      <Spacer size={"$xl"} />
-      <FeaturedPromotionsCarousel item={featuredPromotionsData} />
-      <Spacer size={"$xl"} />
-      <FreeShipping />
-      <Spacer size={"$xl"} />
-      <SectionHeader
-        title={t("home.sectionHeader.dealOfTheDay")}
-        tintColor={"darkgrey"}
-        image="dealIcon"
-        seeAllText="See All"
-        color="primary"
-        onPressSeeAll={() => {}}
-      />
-      <Spacer size={"$xl"} />
-      <ProductsHorizontalScroller />
-      <Spacer size={"$xl"} />
-      <SectionHeader
-        title={t("home.sectionHeader.categoriesYouMightLike")}
-        tintColor={"darkgrey"}
-        image="bulb"
-        color="primary"
-      />
-      <Spacer size={"$sm"} />
-      <ParagraphMD paddingHorizontal="$md">
-        {"Find the latest best deals by category"}
-      </ParagraphMD>
-      <Spacer size={"$reg"} />
-      <CategorySuggestions item={categorySuggestionsData} />
-      <Spacer size={"$xl"} />
-      <SectionHeader
-        title={t("home.sectionHeader.forYou")}
-        tintColor={"darkgrey"}
-        image="forYou"
-        seeAllText="See All"
-        color="primary"
-        onPressSeeAll={() => {}}
-      />
-      <Spacer size={"$reg"} />
-      <ProductsGridScroller />
-      <Spacer size={"$xl"} />
-      <PromoBannerCard />
-      <Spacer size={"$xl"} />
-      <SectionHeader
-        title={t("home.sectionHeader.computersAndAccesories")}
-        tintColor={"darkgrey"}
-        image="computer"
-        seeAllText="See All"
-        color="primary"
-        onPressSeeAll={() => {}}
-      />
-      <Spacer size={"$reg"} />
-      <CollectionsCardGrid />
-      <Spacer size={"$xl"} />
-      <SectionHeader
-        title={t("home.sectionHeader.brandsYouMightLike")}
-        tintColor={"darkgrey"}
-        image="emptyStar"
-        seeAllText="See All"
-        color="primary"
-        onPressSeeAll={() => {}}
-      />
-      <Spacer size={"$md"} />
-      <BrandsCollections />
-      <Spacer size={"$xl"} />
-      <SectionHeader
-        title={t("home.sectionHeader.flashSale")}
-        tintColor={"darkgrey"}
-        image="flash"
-        seeAllText="See All"
-        color="primary"
-        onPressSeeAll={() => {}}
-      />
-      <Spacer size={"$reg"} />
-      <SalesHorizontalScroller />
-      <Spacer size={"$xl"} />
-      <Spacer size={BOTTOM_INSET * 2} />
-    </ScrollView>
+
+      <YStack backgroundColor={"$background"} flex={1}>
+        <FlatList
+          data={sections}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={<Spacer size={"$xl"} />}
+          ListFooterComponent={<Spacer size={BOTTOM_INSET * 2} />}
+        />
+      </YStack>
+
+      <BottomSheetModalWithView ref={bottomSheetRef}>
+        <AddressBottomSheetContent bottomSheetRef={bottomSheetRef} />
+      </BottomSheetModalWithView>
+    </>
   );
 };
 

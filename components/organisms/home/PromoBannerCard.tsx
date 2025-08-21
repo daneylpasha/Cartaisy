@@ -16,10 +16,9 @@ export const PromoBannerCard = () => {
         borderBottomLeftRadius={"$2xl"}
         justifyContent="space-between"
         backgroundColor={"$white"}
-        height={172}
       >
         {/* Left Section */}
-        <YStack padding={"$md"} width={215}>
+        <YStack padding={"$md"} width={"60%"}>
           <TextMDBold color="$darkgrey">
             {t("home.promoBannerCard.title")}
           </TextMDBold>
@@ -33,7 +32,7 @@ export const PromoBannerCard = () => {
           <Spacer size="$reg" />
 
           <PrimaryButton
-            width={150}
+            width={"80%"}
             label={t("home.promoBannerCard.buttonText")}
             paddingVertical="xs"
             icon={

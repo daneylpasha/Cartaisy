@@ -61,7 +61,7 @@ const WellcomeScreen = () => {
         </YStack>
         <Spacer size={"$xl"} />
         <LabelMD color={"$primary"} textAlign="center">
-          {t("common.companyName")}
+          {t("common.companyName").toUpperCase()}
         </LabelMD>
         <Spacer size={"$md-lg"} />
         <HeadingSMBold textAlign="center">{t("welcome.title")}</HeadingSMBold>

@@ -11,6 +11,7 @@ import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import { t } from "@/translations";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Alert } from "react-native";
@@ -49,6 +50,7 @@ const PhoneNumber = () => {
   const onSubmit = (data: PhoneNumberForm) => {
     const fullPhoneNumber = `+${selectedCountry.callingCode[0]}${data.phone}`;
     Alert.alert("Submitted!", `Phone: ${fullPhoneNumber}`);
+    router.push("/(auth)/login");
   };
 
   const onSelectCountry = (country: Country) => {
@@ -77,16 +79,14 @@ const PhoneNumber = () => {
           <Controller
             control={control}
             name="phone"
-            rules={
-              {
-                // required: "Phone number is required",
-                // minLength: {
-                //   value: 10,
-                //   message: "Phone number too short",
-                // },
-                // validate: validatePhoneNumber,
-              }
-            }
+            rules={{
+              required: "Phone number is required",
+              minLength: {
+                value: 10,
+                message: "Phone number too short",
+              },
+              // validate: validatePhoneNumber,
+            }}
             render={({ field: { onChange, value }, fieldState }) => (
               <XStack alignItems="center">
                 <OpTouch onPress={() => setShowCountryPicker(true)}>
@@ -97,7 +97,7 @@ const PhoneNumber = () => {
                     borderRightColor="$lightgrey"
                     paddingHorizontal={"$reg"}
                     backgroundColor="$background"
-                    height={55}
+                    paddingVertical={"$reg"}
                   >
                     <CountryPicker
                       countryCode={selectedCountry.cca2 as CountryCode}
@@ -121,28 +121,34 @@ const PhoneNumber = () => {
                     />
                   </XStack>
                 </OpTouch>
-                <YStack>
-                  <XStack alignItems="center" paddingHorizontal={"$reg"}>
-                    <TextMDSemiBold color="$secondary">
-                      +{selectedCountry.callingCode[0]}
-                    </TextMDSemiBold>
-                    <FormInput
-                      width={200}
-                      borderWidth={0}
-                      paddingHorizontal={0}
-                      value={value}
-                      onChangeText={onChange}
-                      placeholder={t("profile.phoneNumber.placeholder")}
-                    />
-                    <OpTouch onPress={() => setShowCountryPicker(true)}>
-                      <AppImage name="arrowDown" width={14} height={8} />
-                    </OpTouch>
-                  </XStack>
-                </YStack>
+                <XStack alignItems="center" paddingHorizontal={"$reg"}>
+                  <TextMDSemiBold color="$secondary">
+                    +{selectedCountry.callingCode[0]}
+                  </TextMDSemiBold>
+                  <FormInput
+                    width={"70%"}
+                    borderWidth={0}
+                    paddingHorizontal={0}
+                    value={value}
+                    keyboardType="numeric"
+                    onChangeText={(text) => {
+                      // Only allow numbers
+                      const numericText = text.replace(/[^0-9]/g, "");
+                      onChange(numericText);
+                    }}
+                    placeholder={t("profile.phoneNumber.placeholder")}
+                  />
+                  <OpTouch onPress={() => setShowCountryPicker(true)}>
+                    <AppImage name="arrowDown" width={14} height={8} />
+                  </OpTouch>
+                </XStack>
               </XStack>
             )}
           />
         </YStack>
+        {errors.phone && (
+          <TextSMRegular color="$error">{errors.phone.message}</TextSMRegular>
+        )}
 
         <Spacer size={"$lg"} />
         <YStack alignItems="center" justifyContent="center">

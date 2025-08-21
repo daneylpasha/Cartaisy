@@ -12,9 +12,15 @@ interface FormInputProps {
   secureTextEntry?: boolean;
   icon?: React.ReactNode;
   width?: number | string;
+  textAlignVertical?: "auto" | "top" | "bottom" | "center";
+  multiline?: boolean;
   error?: string;
   borderWidth?: number;
   paddingHorizontal?: number;
+  keyboardType?: "default" | "numeric" | "email-address" | "phone-pad";
+  numberOfLines?: number;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 export const FormInput = ({
@@ -23,22 +29,37 @@ export const FormInput = ({
   placeholder,
   secureTextEntry = false,
   paddingHorizontal,
+  numberOfLines,
+  multiline = false,
   icon,
   width = "100%",
   error,
   borderWidth = 1,
+  keyboardType = "default",
+  onFocus,
+  onBlur,
 }: FormInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const isPassword = secureTextEntry;
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    onFocus?.();
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    onBlur?.();
+  };
 
   return (
     <YStack width={width} gap="$md">
       <XStack
         borderWidth={borderWidth}
         borderColor={error ? "red" : "$border"}
-        borderRadius="$full"
-        padding={"$reg"}
+        borderRadius={"$full"}
+        padding={"$sm-reg"}
         paddingHorizontal={paddingHorizontal}
         alignItems="center"
         backgroundColor="$white"
@@ -50,11 +71,15 @@ export const FormInput = ({
             borderWidth={0}
             onChangeText={onChangeText}
             style={Styles.input}
+            multiline={multiline}
+            height={"$lg"}
             backgroundColor="$white"
             placeholder={placeholder}
+            keyboardType={keyboardType}
+            numberOfLines={numberOfLines}
             placeholderTextColor="$secondary"
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             secureTextEntry={isPassword && !showPassword}
             selectionColor={colors.black}
           />
@@ -117,6 +142,5 @@ const Styles = StyleSheet.create({
     fontWeight: "400",
     color: "black",
     padding: 0,
-    height: 22,
   },
 });

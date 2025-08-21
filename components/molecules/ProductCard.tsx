@@ -5,8 +5,9 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
 import { BlurView } from "expo-blur";
+import { router } from "expo-router";
 import { StyleSheet } from "react-native";
-import { XStack, YStack } from "tamagui";
+import { getTokenValue, XStack, YStack } from "tamagui";
 import {
   TextMDBold,
   TextMDSemiBold,
@@ -50,12 +51,16 @@ type Product = {
 
 type ProductCardProps = {
   product: Product;
+  isFavorite?: boolean;
+  showFavoriteIcon?: boolean;
   context: "grid" | "in-line";
   showProgressBar?: boolean;
 };
 
 export const ProductCard = ({
   product,
+  isFavorite = false,
+  showFavoriteIcon = false,
   context,
   showProgressBar = false,
 }: ProductCardProps) => {
@@ -63,7 +68,11 @@ export const ProductCard = ({
   const cardWidth = context === "grid" ? GRID_CARD_WIDTH : INLINE_CARD_WIDTH;
 
   return (
-    <OpTouch onPress={product.onPress || (() => console.log("pressed"))}>
+    <OpTouch
+      onPress={
+        product.onPress || (() => router.push(`/products/${product.id}`))
+      }
+    >
       <YStack width={cardWidth}>
         <YStack
           borderRadius={tokens.space.md}
@@ -101,17 +110,26 @@ export const ProductCard = ({
           )}
 
           {/* Wishlist */}
-          {!product.wishlist && (
-            <BlurView style={styles.blurView} intensity={16} tint="dark">
-              <OpTouch onPress={product.onToggleWishlist}>
-                <AppImage
-                  name="heart"
-                  tintColor="$black"
-                  width={21}
-                  height={18}
-                />
-              </OpTouch>
-            </BlurView>
+          {showFavoriteIcon && (
+            <OpTouch onPress={product.onToggleWishlist}>
+              <BlurView style={styles.blurView} intensity={16} tint="dark">
+                {isFavorite ? (
+                  <AppImage
+                    name="wishlistIcon"
+                    tintColor={getTokenValue("$error")}
+                    width={21}
+                    height={18}
+                  />
+                ) : (
+                  <AppImage
+                    name="heart"
+                    tintColor={getTokenValue("$white")}
+                    width={21}
+                    height={18}
+                  />
+                )}
+              </BlurView>
+            </OpTouch>
           )}
         </YStack>
 

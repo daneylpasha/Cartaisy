@@ -4,9 +4,17 @@ import React, { useState } from "react";
 
 interface SearchBarProps {
   onSearch?: (query: string) => void;
+  width?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
-export const SearchBar = ({ onSearch }: SearchBarProps) => {
+export const SearchBar = ({
+  onSearch,
+  width,
+  onFocus,
+  onBlur,
+}: SearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (text: string) => {
@@ -16,9 +24,12 @@ export const SearchBar = ({ onSearch }: SearchBarProps) => {
 
   return (
     <SearchInput
+      width={width}
       value={searchQuery}
       onChangeText={handleSearch}
       placeholder={`Search ${t("common.companyName")}`}
+      onFocus={onFocus}
+      onBlur={onBlur}
     />
   );
 };

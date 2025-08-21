@@ -3,6 +3,7 @@ import React from "react";
 import { ActivityIndicator, DimensionValue } from "react-native";
 import { OpTouch, OpTouchProps } from "../../atoms/OpTouch";
 import { TextMDSemiBold } from "../../atoms/texts";
+import { XStack } from "tamagui";
 
 type ColorToken = keyof typeof tokens.color;
 type ColorTokenWithPrefix = ColorToken | `$${ColorToken}`;
@@ -14,6 +15,8 @@ type SecondaryButtonProps = Omit<OpTouchProps, "onPress" | "borderColor"> & {
   width?: DimensionValue;
   borderColor?: ColorTokenWithPrefix;
   color?: ColorTokenWithPrefix;
+  icon?: React.ReactNode;
+  iconPosition?: "left" | "right";
 };
 
 export const SecondaryButton = ({
@@ -23,6 +26,8 @@ export const SecondaryButton = ({
   width = "100%",
   borderColor = "$primary",
   color = "$primary",
+  icon,
+  iconPosition = "right",
   ...containerStyle
 }: SecondaryButtonProps) => {
   const getTokenValue = (token: ColorTokenWithPrefix | undefined) => {
@@ -48,9 +53,17 @@ export const SecondaryButton = ({
       }}
       {...containerStyle}
     >
-      <TextMDSemiBold color={color}>
-        {isLoading ? <ActivityIndicator size={"small"} color={color} /> : label}
-      </TextMDSemiBold>
+      <XStack alignItems="center" justifyContent="center" gap="$sm-reg">
+        {iconPosition === "left" && icon}
+        <TextMDSemiBold color={color}>
+          {isLoading ? (
+            <ActivityIndicator size={"small"} color={color} />
+          ) : (
+            label
+          )}
+        </TextMDSemiBold>
+        {iconPosition === "right" && icon}
+      </XStack>
     </OpTouch>
   );
 };

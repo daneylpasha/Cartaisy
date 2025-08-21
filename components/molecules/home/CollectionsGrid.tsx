@@ -39,8 +39,8 @@ export const CollectionsGrid = ({ item }: CollectionsGridProps) => {
             borderRadius={"$full"}
             alignItems="center"
             justifyContent="center"
-            width={48}
-            height={48}
+            width={"$3xl"}
+            height={"$3xl"}
             shadowColor="$black"
             shadowOffset={{ width: 0, height: 2 }}
             shadowOpacity={0.1}

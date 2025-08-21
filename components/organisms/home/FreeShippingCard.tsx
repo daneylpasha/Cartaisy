@@ -13,12 +13,12 @@ export const FreeShipping = () => {
       <XStack
         padding="$reg"
         backgroundColor={"$white"}
-        borderRadius={16}
+        borderRadius={"$2xl"}
         justifyContent="center"
       >
         <AppImage name="truck" width={37} height={26} />
         <Spacer size={"$md"} />
-        <YStack width={263}>
+        <YStack width={"80%"}>
           <TextMDBold color="$darkgrey">
             {t("home.freeShippingCard.title")}
           </TextMDBold>

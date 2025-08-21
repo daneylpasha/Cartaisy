@@ -18,6 +18,7 @@ export const tokens = {
     darkgrey: "#1F2937",
     shadow: "#1C1917",
     yellow: "#F59E0B",
+    green: "#10B981",
   },
 
   space: {

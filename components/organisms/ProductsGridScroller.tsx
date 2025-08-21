@@ -107,7 +107,14 @@ const ProductsGridScroller = () => {
       columnWrapperStyle={{
         columnGap: columnGap,
       }}
-      renderItem={({ item }) => <ProductCard product={item} context="grid" />}
+      renderItem={({ item }) => (
+        <ProductCard
+          product={item}
+          context="grid"
+          showFavoriteIcon={true}
+          isFavorite={true}
+        />
+      )}
     />
   );
 };
