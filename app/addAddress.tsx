@@ -13,6 +13,8 @@ import { TextMDSemiBold } from "@/components/atoms/texts/TextMDSemiBold";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { fonts } from "@/tamagui/fonts";
 
+import { SHADOW_STYLES } from "@/constants/styles";
+import { t } from "@/translations";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ScrollView, StyleSheet, TextInput } from "react-native";
@@ -22,7 +24,6 @@ import CountryPicker, {
 } from "react-native-country-picker-modal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
-import { SHADOW_STYLES } from "@/constants/styles";
 const AddAddress = () => {
   const form = useForm();
   const [showCountryPicker, setShowCountryPicker] = useState(false);
@@ -49,21 +50,15 @@ const AddAddress = () => {
       paddingBottom={bottomSafeAreaInset}
       flex={1}
     >
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        // contentContainerStyle={{ paddingBottom: bottomSafeAreaInset }}
-        //   contentContainerStyle={{ flexGrow: 1 }}
-      >
+      <ScrollView showsVerticalScrollIndicator={false}>
         <YStack padding={"$md"}>
-          <HeadingSMBold>{"Add a new address"}</HeadingSMBold>
+          <HeadingSMBold>{t("addAddress.title")}</HeadingSMBold>
           <Spacer size={"$sm"} />
-          <ParagraphMD>
-            {"Please fill in the following details to continue"}
-          </ParagraphMD>
+          <ParagraphMD>{t("addAddress.subtitle")}</ParagraphMD>
         </YStack>
         <Spacer size={"$lg"} />
         <YStack paddingHorizontal={"$md"}>
-          <TextSMSemiBold>{"Address Name"}</TextSMSemiBold>
+          <TextSMSemiBold>{t("addAddress.fieldfirst")}</TextSMSemiBold>
           <Spacer size={"$sm"} />
           <Controller
             name="addressName"
@@ -101,7 +96,7 @@ const AddAddress = () => {
             )}
           />
           <Spacer size={"$reg"} />
-          <TextSMSemiBold>{"Country"}</TextSMSemiBold>
+          <TextSMSemiBold>{t("addAddress.fieldsecond")}</TextSMSemiBold>
           <Spacer size={"$sm"} />
           <OpTouch onPress={() => setShowCountryPicker(true)}>
             <XStack
@@ -147,7 +142,7 @@ const AddAddress = () => {
             </XStack>
           </OpTouch>
           <Spacer size={"$reg"} />
-          <TextSMSemiBold>{"Street Address"}</TextSMSemiBold>
+          <TextSMSemiBold>{t("addAddress.fieldthird")}</TextSMSemiBold>
           <Spacer size={"$sm"} />
           <Controller
             name="streetAddress"
@@ -187,7 +182,7 @@ const AddAddress = () => {
             )}
           />
           <Spacer size={"$reg"} />
-          <TextSMSemiBold>{"Apartment/Suite"}</TextSMSemiBold>
+          <TextSMSemiBold>{t("addAddress.fieldfourth")}</TextSMSemiBold>
           <Spacer size={"$sm"} />
           <Controller
             name="apartmentSuite"
@@ -229,7 +224,7 @@ const AddAddress = () => {
           <Spacer size={"$reg"} />
           <XStack width={"100%"}>
             <YStack flex={1}>
-              <TextSMSemiBold>{"State / Province"}</TextSMSemiBold>
+              <TextSMSemiBold>{t("addAddress.fieldfifth")}</TextSMSemiBold>
               <Spacer size={"$sm"} />
               <Controller
                 name="stateProvince"
@@ -259,7 +254,7 @@ const AddAddress = () => {
             </YStack>
             <Spacer size={"$sm"} />
             <YStack flex={1}>
-              <TextSMSemiBold>{"Postcode"}</TextSMSemiBold>
+              <TextSMSemiBold>{t("addAddress.fieldsix")}</TextSMSemiBold>
               <Spacer size={"$sm"} />
               <Controller
                 name="postCode"
@@ -289,7 +284,7 @@ const AddAddress = () => {
             </YStack>
           </XStack>
           <Spacer size={"$reg"} />
-          <TextSMSemiBold>{"Delivery Instructions (Optional)"}</TextSMSemiBold>
+          <TextSMSemiBold>{t("addAddress.fieldseven")}</TextSMSemiBold>
           <Spacer size={"$sm"} />
           <YStack
             style={{

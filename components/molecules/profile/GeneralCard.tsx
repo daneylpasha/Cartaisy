@@ -22,6 +22,7 @@ export const GeneralCard = ({
   subtitle,
   onPress,
 }: GeneralCardProps) => {
+  console.log(onPress, "Hello");
   return (
     <OpTouch onPress={onPress}>
       <XStack

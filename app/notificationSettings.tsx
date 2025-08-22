@@ -9,6 +9,7 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { ToggleSwitch } from "@/components/molecules/ToggleSwitch";
 import { tokens } from "@/tamagui/token";
+import { t } from "@/translations";
 import { useState } from "react";
 import { SectionList } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -176,11 +177,10 @@ const NotificationSettings = () => {
         }}
         ListHeaderComponent={() => (
           <YStack marginBottom="$lg">
-            <HeadingSMBold>Notification Settings</HeadingSMBold>
+            <HeadingSMBold>{t("notificationSettings.title")}</HeadingSMBold>
             <Spacer size="$sm" />
             <ParagraphMD color={"$secondary"}>
-              Users with notifications enabled are 2x more likely to stick to
-              their budgets.
+              {t("notificationSettings.subtitle")}
             </ParagraphMD>
           </YStack>
         )}

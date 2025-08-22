@@ -166,7 +166,10 @@ const ProfileScreen = () => {
       content: (
         <>
           <Spacer size="$lg" />
-          <SectionHeader title="Danger Zone" showImage={false} />
+          <XStack paddingRight={"$md"} justifyContent="space-between">
+            <SectionHeader title="Danger Zone" showImage={false} />
+            <AppImage name="danger" size={19} />
+          </XStack>
           <Spacer size="$reg" />
           <DangerZoneListItem />
           <Spacer size="$xl" />

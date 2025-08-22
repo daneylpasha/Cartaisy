@@ -3,6 +3,7 @@ import {
   ParagraphMD,
   TextMDBold,
   TextSMMedium,
+  TextSMRegular,
   TextSMSemiBold,
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
@@ -471,7 +472,16 @@ const PersonalInfo = () => {
             padding="$reg"
           >
             <XStack>
-              <YStack paddingTop={"$xs"}>
+              <YStack
+                marginTop={-2}
+                justifyContent="center"
+                alignItems="center"
+                borderRadius={"$full"}
+                // paddingTop={"$xs"}
+                width={40}
+                height={40}
+                backgroundColor={"$background"}
+              >
                 <AppImage
                   name="locationIconUnfilled"
                   width={14}
@@ -488,15 +498,19 @@ const PersonalInfo = () => {
             </XStack>
           </YStack>
           <Spacer size={"$lg"} />
+          <YStack justifyContent="center" alignItems="center">
+            <AppImage name="unLock" width={15} height={16} />
+            <Spacer size={"$reg"} />
+            <TextSMRegular textAlign="center" color={"$secondary"}>
+              {
+                "Your profile information is safe with us and we don’t share data to anyone."
+              }
+            </TextSMRegular>
+          </YStack>
+          <Spacer size={"$lg"} />
         </YStack>
       </ScrollView>
-      <YStack
-        // position="absolute"
-        // bottom={20}
-        // left={0}
-        // right={0}
-        paddingHorizontal={"$md"}
-      >
+      <YStack paddingHorizontal={"$md"}>
         <PrimaryButton
           label="Save Changes"
           onPress={() => {}}

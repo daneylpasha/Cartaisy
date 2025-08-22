@@ -16,10 +16,10 @@ import React from "react";
 import { FlatList, ListRenderItem } from "react-native";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
-const categories = tArray("welcome.categories");
+const ListsItems = tArray("welcome.Lists");
 
 const WellcomeScreen = () => {
-  const renderCategory: ListRenderItem<string> = ({ item }) => (
+  const renderLists: ListRenderItem<string> = ({ item }) => (
     <XStack alignItems="center">
       <YStack
         alignItems="center"
@@ -73,8 +73,8 @@ const WellcomeScreen = () => {
       <Spacer size={"$2xl"} />
       <YStack paddingHorizontal={"$lg"}>
         <FlatList
-          data={categories}
-          renderItem={renderCategory}
+          data={ListsItems}
+          renderItem={renderLists}
           keyExtractor={(item) => item}
           showsHorizontalScrollIndicator={false}
           scrollEnabled={false}

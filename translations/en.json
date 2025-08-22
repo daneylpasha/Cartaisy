@@ -20,7 +20,7 @@
     "subtitle": "Smart shopping is the future of shopping. Save more money with cartaisy!",
     "signUp": "Sign Up",
     "alreadyHaveAccount": "I already have an account",
-    "categories": [
+    "Lists": [
       "AI Shopping Assistant",
       "Personalized E-Commerce",
       "Open Your Own Store",
@@ -175,5 +175,42 @@
   "wishlist": {
     "title": "You don’t have any wishlist yet.",
     "subtitle": "Let’s add a new one by browsing our products."
+  },
+  "addAddress": {
+    "title": "Add a new address",
+    "subtitle": "Please fill in the following details to continue",
+    "fieldfirst": "Address Name",
+    "fieldsecond": "Country",
+    "fieldthird": "Street Address",
+    "fieldfourth": "Apartment / Suite",
+    "fieldfifth": "State / Province",
+    "fieldsix": "Postcode",
+    "fieldseven": "Delivery Instructions (Optional)"
+  },
+  "securitySettings": {
+    "title": "Security Settings",
+    "subtitle": "Your financial privacy matters. Control and own your own data from here."
+  },
+  "notificationSettings": {
+    "title": "Notification Settings",
+    "subtitle": "Users with notifications enabled are 2x more likely to stick to their budgets."
+  },
+  "paymentMethod": {
+    "title": "Payment Methods",
+    "subtitle": "Here you can change payment methods",
+    "cardtitle": "Card & Debit Cards",
+    "btn": "Add new Credit/Debit Card"
+  },
+  "newpassword": {
+    "title": "Change Passowrd",
+    "subtitle": "Enter your new password",
+    "btn": "Change Password",
+    "Lists": [
+      "Must be a minimum of 8 characters",
+      "One uppercase and lowercase letter",
+      "One number",
+      "Must contain special character",
+      "Must not be common"
+    ]
   }
 }

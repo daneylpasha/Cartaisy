@@ -126,6 +126,9 @@ const Icons = {
   scanner: require("./images/scanner.png"),
   key: require("./images/key.png"),
   shieldFrame: require("./images/shield-frame.png"),
+  lockUnfilled: require("./images/lockunfilled.png"),
+  unLock: require("./images/unlock.png"),
+  danger: require("./images/danger.png"),
 };
 
 export default Icons;

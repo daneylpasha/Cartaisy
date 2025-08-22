@@ -6,8 +6,8 @@ import { YStack } from "tamagui";
 const Splash = () => {
   useEffect(() => {
     setTimeout(() => {
-      // router.push("/onboardingSlides");
-      router.replace("/(tabs)");
+      router.push("/onboardingSlides");
+      // router.replace("/(tabs)");
     }, 3000);
   }, []);
 

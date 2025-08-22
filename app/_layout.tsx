@@ -64,6 +64,10 @@ export default function RootLayout() {
                 name="changePassword"
                 options={HEADER_CONFIGS.changePassword}
               />
+              <Stack.Screen
+                name="newPassword"
+                options={HEADER_CONFIGS.newPassword}
+              />
               <Stack.Screen name="search" />
               <Stack.Screen
                 name="_modal"

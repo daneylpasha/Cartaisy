@@ -9,6 +9,7 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { ToggleSwitch } from "@/components/molecules/ToggleSwitch";
 import { tokens } from "@/tamagui/token";
+import { t } from "@/translations";
 import { useState } from "react";
 import { SectionList } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,14 +47,6 @@ const SecuritySettings = () => {
       title: "",
       data: [
         {
-          id: "autolockScreen",
-          title: "Autolock Screen",
-          description: "Automatically lock screen after inactivity",
-          icon: "mobileIcon",
-          iconColor: tokens.color.primary,
-          enabled: securityStates.autolockScreen,
-        },
-        {
           id: "rememberLoginEmail",
           title: "Remember Login Email",
           icon: "passwordChange",
@@ -66,22 +59,6 @@ const SecuritySettings = () => {
           icon: "scanner",
           iconColor: tokens.color.primary,
           enabled: securityStates.useFaceID,
-        },
-        {
-          id: "twoFactorAuth",
-          title: "Two Factor Authentication",
-          description: "Shake your phone to randomize your account balances.",
-          icon: "key",
-          iconColor: tokens.color.primary,
-          enabled: securityStates.twoFactorAuth,
-        },
-        {
-          id: "otherSecuritySettings",
-          title: "Other Security Settings",
-          description: "Shake your phone to randomize your account balances.",
-          icon: "warningIcon",
-          iconColor: tokens.color.primary,
-          enabled: securityStates.otherSecuritySettings,
         },
       ],
     },
@@ -149,11 +126,10 @@ const SecuritySettings = () => {
         }}
         ListHeaderComponent={() => (
           <YStack marginBottom="$lg">
-            <HeadingSMBold>Security Settings</HeadingSMBold>
+            <HeadingSMBold>{t("securitySettings.title")}</HeadingSMBold>
             <Spacer size="$sm" />
             <ParagraphMD color={"$secondary"}>
-              Your financial privacy matters. Control and own your own data from
-              here.
+              {t("securitySettings.subtitle")}
             </ParagraphMD>
           </YStack>
         )}

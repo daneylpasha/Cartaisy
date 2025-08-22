@@ -23,20 +23,6 @@ export const SecurityListItem = () => {
       route: "changePassword",
       onPress: () => {},
     },
-    {
-      id: 3,
-      image: "passcode" as keyof typeof Icons,
-      title: "Change Passcode",
-      route: "changePasscode",
-      onPress: () => {},
-    },
-    {
-      id: 4,
-      image: "lockIcon" as keyof typeof Icons,
-      title: "Change Pin",
-
-      onPress: () => {},
-    },
   ];
   return (
     <YStack paddingHorizontal="$md">

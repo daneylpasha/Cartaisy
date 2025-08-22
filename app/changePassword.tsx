@@ -1,25 +1,46 @@
-import { HeadingSMBold, ParagraphLG } from "@/components/atoms";
+import { HeadingSMBold, ParagraphLG, TextSMMedium } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import { t } from "@/translations";
-import React from "react";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+
 import { Controller, useForm } from "react-hook-form";
-import { YStack } from "tamagui";
+import { getTokenValue, XStack, YStack } from "tamagui";
 type ChPasswordForm = {
   password: string;
 };
 const ChangePassword = () => {
+  const [errorBanner, setErrorBanner] = useState<string | null>(null);
+
   const form = useForm<ChPasswordForm>({
     defaultValues: {
       password: "",
     },
   });
 
+  const pwd = form.watch("password");
+
+  useEffect(() => {
+    if (errorBanner && pwd === "1234567") {
+      setErrorBanner(null);
+    }
+  }, [pwd, errorBanner]);
+
+  const onSubmit = async (data: ChPasswordForm) => {
+    if (data.password === "1234567") {
+      setErrorBanner(null);
+      router.push("/newPassword");
+    } else {
+      setErrorBanner("ERROR: Password do not match!");
+      setTimeout(() => setErrorBanner(null), 2500);
+    }
+  };
+
   return (
     <YStack
-      //   justifyContent="center"
       alignItems="center"
       flex={1}
       backgroundColor={"$background"}
@@ -48,19 +69,54 @@ const ChangePassword = () => {
           <FormInput
             value={field.value}
             onChangeText={field.onChange}
-            placeholder={t("auth.login.passwordPlaceholder")}
-            icon={<AppImage name="lockIcon" size={16} />}
+            placeholder={"••••••••••••"}
+            icon={
+              <AppImage
+                name="lockUnfilled"
+                tintColor={getTokenValue("$icon")}
+                size={16}
+              />
+            }
             secureTextEntry
             error={fieldState.error?.message}
           />
         )}
       />
-      <Spacer size={"$xl"} />
+      <Spacer size={"$md"} />
+      {errorBanner && (
+        <YStack
+          alignItems="center"
+          width={"100%"}
+          gap="$xs"
+          borderWidth={1}
+          borderColor="red"
+          padding="$sm"
+          borderRadius="$2xl"
+          backgroundColor="#FFF1F2"
+        >
+          <XStack alignItems="center" justifyContent="center">
+            <AppImage
+              name="warningIcon"
+              size={14}
+              tintColor={getTokenValue("$error")}
+            />
+            <Spacer size={"$sm"} />
+            <TextSMMedium textAlign="center">{errorBanner}</TextSMMedium>
+          </XStack>
+        </YStack>
+      )}
+      <Spacer size={"$md"} />
       <PrimaryButton
-        isLoading={false}
         label="Change password"
-        iconPosition="right"
-        icon="lock"
+        onPress={form.handleSubmit(onSubmit)}
+        icon={
+          <AppImage
+            name="lockIcon"
+            tintColor={getTokenValue("$white")}
+            size={15}
+          />
+        }
+        isLoading={false}
       />
     </YStack>
   );

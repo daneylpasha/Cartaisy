@@ -32,7 +32,7 @@ type IconName = keyof typeof Icons;
 type Product = {
   id: string;
   price: number;
-  image: IconName[]; // ALWAYS array
+  image: IconName[];
   title: string;
   currentPrice: number;
   originalPrice: number;
@@ -45,7 +45,6 @@ type Product = {
   discountBadge: boolean;
 };
 
-// Mock cart items - replace with your actual cart state
 const mockCartItems = [
   {
     id: "1",
@@ -95,7 +94,6 @@ const mockCartItems = [
     inStockCount: 3,
     quantity: 1,
   },
-  // Add more items as needed
 ];
 
 const products: Product[] = [

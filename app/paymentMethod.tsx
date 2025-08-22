@@ -5,7 +5,6 @@ import {
   TextLGBold,
   TextMDBold,
   TextSMMedium,
-  TextSMRegular,
   TextSMSemiBold,
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
@@ -13,6 +12,7 @@ import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { SecondaryButton } from "@/components/molecules/buttons/SecondaryButton";
+import { t } from "@/translations";
 
 import { ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -42,23 +42,23 @@ const PaymentMethod = () => {
   return (
     <YStack
       backgroundColor="$background"
-      paddingBottom={bottomSafeAreaInset}
+      // paddingBottom={bottomSafeAreaInset}
       flex={1}
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack>
           {/* Header */}
           <YStack padding={"$md"}>
-            <HeadingSMBold>Payment Methods</HeadingSMBold>
+            <HeadingSMBold>{t("paymentMethod.title")}</HeadingSMBold>
             <Spacer size="$reg" />
             <ParagraphMD color="$secondary">
-              Here you can change payment methods
+              {t("paymentMethod.subtitle")}
             </ParagraphMD>
           </YStack>
 
           <Spacer size="$xl" />
           <YStack paddingHorizontal={"$md"}>
-            <TextMDBold>Card & Debit Cards</TextMDBold>
+            <TextMDBold>{t("paymentMethod.cardtitle")}</TextMDBold>
             <Spacer size="$reg" />
 
             <YStack>
@@ -102,7 +102,7 @@ const PaymentMethod = () => {
               <Spacer size={"$lg"} />
               {/* Add New Card Button */}
               <SecondaryButton
-                label="Add new Credit/Debit Card"
+                label={t("paymentMethod.btn")}
                 icon={<AppImage name="addIcon" width={16} height={16} />}
                 onPress={() => {}}
                 iconPosition="left"
@@ -159,6 +159,7 @@ const PaymentMethod = () => {
                 </OpTouch>
               </YStack>
             </YStack>
+            <Spacer size={"$lg"} />
           </YStack>
         </YStack>
       </ScrollView>
