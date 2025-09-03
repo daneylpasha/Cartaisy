@@ -9,6 +9,7 @@ export * from "./TextLGBold";
 export * from "./TextMDBold";
 export * from "./TextMDMedium";
 export * from "./TextMDSemiBold";
+export * from "./TextSMBold";
 export * from "./TextSMMedium";
 export * from "./TextSMRegular";
 export * from "./TextSMSemiBold";

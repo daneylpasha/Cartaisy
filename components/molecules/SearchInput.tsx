@@ -11,6 +11,7 @@ interface SearchInputProps {
   onClear?: () => void;
   onFocus?: () => void;
   onBlur?: () => void;
+  onSubmitEditing?: () => void;
 }
 
 export const SearchInput = ({
@@ -21,6 +22,7 @@ export const SearchInput = ({
   onClear,
   onFocus,
   onBlur,
+  onSubmitEditing,
 }: SearchInputProps) => {
   const searchIcon = (
     <AppImage name="searchIcon" width={20} height={20} tintColor="$secondary" />
@@ -36,6 +38,7 @@ export const SearchInput = ({
       paddingHorizontal={16}
       onFocus={onFocus}
       onBlur={onBlur}
+      onSubmitEditing={onSubmitEditing}
     />
   );
 };

@@ -13,12 +13,14 @@ type AddressCardProps = {
     shipping: string;
   };
   selectedAddress: number;
+  defaultBg?: string;
   setSelectedAddress: (id: number) => void;
 };
 
 export const AddressCard = ({
   item,
   selectedAddress,
+  defaultBg = "$background",
   setSelectedAddress,
 }: AddressCardProps) => {
   return (
@@ -33,7 +35,7 @@ export const AddressCard = ({
         borderRadius="$2xl"
         padding={"$reg"}
         backgroundColor={
-          selectedAddress === item.id ? "$primarylight" : "$background"
+          selectedAddress === item.id ? "$primarylight" : defaultBg
         }
         justifyContent="space-between"
       >
@@ -86,7 +88,7 @@ export const AddressCard = ({
             height={"$sm-reg"}
             borderRadius="$full"
             backgroundColor={
-              selectedAddress === item.id ? "$primary" : "$white"
+              selectedAddress === item.id ? "$primary" : defaultBg
             }
             position="absolute"
             justifyContent="center"

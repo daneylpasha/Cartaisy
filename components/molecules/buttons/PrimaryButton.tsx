@@ -7,18 +7,21 @@ import { TextMDSemiBold } from "../../atoms/texts";
 
 type PrimaryButtonProps = {
   onPress: () => void;
-  isLoading: boolean;
+
+  isLoading?: boolean;
   label: string;
   width?: DimensionValue;
   icon?: React.ReactNode;
   iconPosition?: "left" | "right";
   paddingVertical?: keyof typeof tokens.space;
+  background?: keyof typeof tokens.color;
 };
 
 export const PrimaryButton = ({
   onPress,
   isLoading,
   label,
+  background = "primary",
   width = "100%",
   icon,
   iconPosition = "right",
@@ -28,7 +31,7 @@ export const PrimaryButton = ({
     <OpTouch
       justifyContent="center"
       alignItems="center"
-      backgroundColor={"primary"}
+      backgroundColor={background}
       borderRadius={"full"}
       paddingVertical={paddingVertical}
       onPress={onPress}

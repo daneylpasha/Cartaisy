@@ -73,12 +73,12 @@ const Notification = () => {
         <Spacer size={"$2xl"} />
         <PrimaryButton
           label={t("common.notification")}
-          onPress={() => router.push("/fullName")}
+          onPress={() => router.push("/(tabs)")}
           icon={<AppImage name="check" size={20} />}
           isLoading={isEnabled}
         />
         <Spacer size={"$lg"} />
-        <OpTouch onPress={() => router.push("/")}>
+        <OpTouch onPress={() => router.push("/(tabs)")}>
           <TextMDSemiBold textAlign="center" color={"$primary"}>
             {t("common.nopeMaybeLater")}
           </TextMDSemiBold>

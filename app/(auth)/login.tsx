@@ -63,7 +63,8 @@ const Login = () => {
 
       // Success - navigate to main app
       console.log("Login successful:", data);
-      router.push("/(tabs)");
+      router.push("/fullName");
+      // router.push("/(tabs)");
     } catch (error) {
       Alert.alert("Error", "Login failed. Please try again.");
       console.error("Login error:", error);
@@ -71,7 +72,9 @@ const Login = () => {
       setIsLoading(false);
     }
   };
-
+  const googleLogin = async () => {
+    console.log("Google Login");
+  };
   return (
     <ScreenContainer backgroundColor={"background"}>
       <KeyboardAwareScrollView
@@ -126,6 +129,8 @@ const Login = () => {
                   placeholder={t("auth.login.emailPlaceholder")}
                   icon={<AppImage name="emailIcon" size={16} />}
                   error={fieldState.error?.message}
+                  keyboardType="email-address"
+                  onSubmitEditing={() => form.setFocus("password")}
                 />
               )}
             />
@@ -150,6 +155,7 @@ const Login = () => {
                   icon={<AppImage name="lockIcon" size={16} />}
                   secureTextEntry
                   error={fieldState.error?.message}
+                  onSubmitEditing={form.handleSubmit(onSubmit)}
                 />
               )}
             />
@@ -162,24 +168,24 @@ const Login = () => {
               <YStack
                 alignItems="center"
                 justifyContent="center"
-                width={20}
-                height={20}
+                width={16}
+                height={16}
                 borderRadius={"$full"}
                 backgroundColor={getTokenValue("$primary")}
               >
                 <AppImage
                   tintColor={getTokenValue("$white")}
                   name={"check"}
-                  width={12}
-                  height={12}
+                  width={8}
+                  height={8}
                 />
               </YStack>
             ) : (
               <YStack
                 alignItems="center"
                 justifyContent="center"
-                width={getTokenValue("$md-lg")}
-                height={getTokenValue("$md-lg")}
+                width={getTokenValue("$md")}
+                height={getTokenValue("$md")}
                 borderRadius={"$full"}
                 borderWidth={1}
               />
@@ -234,7 +240,7 @@ const Login = () => {
             paddingHorizontal={"md"}
             paddingVertical={"reg"}
             disabled={isLoading}
-            onPress={form.handleSubmit(onSubmit)}
+            onPress={googleLogin}
           >
             <XStack alignItems="center">
               <AppImage name="googleIcon" size={23.5} />

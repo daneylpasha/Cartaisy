@@ -37,7 +37,7 @@ const HomeScreen = () => {
   const collectionData = [
     {
       id: 1,
-      name: "Beauty & Fasion",
+      name: "Beauty & Fashion",
       image: "collectionBeauty",
     },
     {
@@ -57,7 +57,7 @@ const HomeScreen = () => {
     },
     {
       id: 5,
-      name: "Accesories",
+      name: "Accessories",
       image: "collectionAccesories",
     },
     {
@@ -124,14 +124,15 @@ const HomeScreen = () => {
 
   // Define sections for FlatList
   const sections = [
+      {
+      id: "featuredPromotions",
+      content: <FeaturedPromotionsCarousel item={featuredPromotionsData} />,
+    },
     {
       id: "collections",
       content: <CollectionsGrid item={collectionData} />,
     },
-    {
-      id: "featuredPromotions",
-      content: <FeaturedPromotionsCarousel item={featuredPromotionsData} />,
-    },
+  
     {
       id: "freeShipping",
       content: <FreeShipping />,
@@ -144,7 +145,7 @@ const HomeScreen = () => {
             title={t("home.sectionHeader.dealOfTheDay")}
             tintColor={"darkgrey"}
             image="dealIcon"
-            seeAllText="See All"
+            seeAllText="View All"
             color="primary"
             onPressSeeAll={() => {}}
           />
@@ -182,7 +183,7 @@ const HomeScreen = () => {
             title={t("home.sectionHeader.forYou")}
             tintColor={"darkgrey"}
             image="forYou"
-            seeAllText="See All"
+            seeAllText="View All"
             color="primary"
             onPressSeeAll={() => {}}
           />
@@ -205,7 +206,7 @@ const HomeScreen = () => {
             title={t("home.sectionHeader.computersAndAccesories")}
             tintColor={"darkgrey"}
             image="computer"
-            seeAllText="See All"
+            seeAllText="View All"
             color="primary"
             onPressSeeAll={() => {}}
           />
@@ -224,7 +225,7 @@ const HomeScreen = () => {
             title={t("home.sectionHeader.brandsYouMightLike")}
             tintColor={"darkgrey"}
             image="emptyStar"
-            seeAllText="See All"
+            seeAllText="View All"
             color="primary"
             onPressSeeAll={() => {}}
           />
@@ -241,7 +242,7 @@ const HomeScreen = () => {
             title={t("home.sectionHeader.flashSale")}
             tintColor={"darkgrey"}
             image="flash"
-            seeAllText="See All"
+            seeAllText="View All"
             color="primary"
             onPressSeeAll={() => {}}
           />
@@ -282,7 +283,7 @@ const HomeScreen = () => {
           </YStack>
 
           <YStack position="absolute" right={0}>
-            <OpTouch>
+            <OpTouch onPress={() => router.push("/cart")}>
               <AppImage name="cartIcon" size={24} />
               <TextXSRegular
                 position="absolute"
@@ -308,8 +309,8 @@ const HomeScreen = () => {
           <XStack
             backgroundColor="$white"
             borderRadius="$full"
-            paddingHorizontal="$md"
-            height={50}
+            // paddingHorizontal="$md"
+            // height={50}
             padding={"$sm-reg"}
             // paddingVertical={"$reg"}
             alignItems="center"
@@ -357,13 +358,13 @@ const HomeScreen = () => {
         </OpTouch>
       </YStack>
 
-      <YStack backgroundColor={"$background"} flex={1}>
+      <YStack backgroundColor={"$background"}  flex={1}>
         <FlatList
           data={sections}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          ListHeaderComponent={<Spacer size={"$xl"} />}
+          // ListHeaderComponent={<Spacer size={"$xl"} />}
           ListFooterComponent={<Spacer size={BOTTOM_INSET * 2} />}
         />
       </YStack>

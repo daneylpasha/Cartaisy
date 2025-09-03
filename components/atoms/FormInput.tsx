@@ -21,6 +21,7 @@ interface FormInputProps {
   numberOfLines?: number;
   onFocus?: () => void;
   onBlur?: () => void;
+  onSubmitEditing?: () => void;
 }
 
 export const FormInput = ({
@@ -38,6 +39,7 @@ export const FormInput = ({
   keyboardType = "default",
   onFocus,
   onBlur,
+  onSubmitEditing,
 }: FormInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -80,6 +82,8 @@ export const FormInput = ({
             placeholderTextColor="$secondary"
             onFocus={handleFocus}
             onBlur={handleBlur}
+            onSubmitEditing={onSubmitEditing}
+            returnKeyType="done"
             secureTextEntry={isPassword && !showPassword}
             selectionColor={colors.black}
           />

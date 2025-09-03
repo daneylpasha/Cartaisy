@@ -13,8 +13,8 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
-import ProductCarousel from "@/components/molecules/pdp/ProductCarousel";
-import ProductSpec from "@/components/molecules/pdp/ProductSpec";
+import ProductCarousel from "@/components/molecules/product/pdp/ProductCarousel";
+import ProductSpec from "@/components/molecules/product/pdp/ProductSpec";
 import {
   GRID_COLUMN_GAP,
   GRID_SIDE_PADDING,
@@ -323,7 +323,7 @@ const ProductDetailsScreen = () => {
             title={t("home.sectionHeader.youMightAlsoLike")}
             image={"bulb"}
             tintColor={"darkgrey"}
-            seeAllText="See All"
+            seeAllText="View All"
             color="primary"
             onPressSeeAll={() => {}}
           />

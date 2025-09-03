@@ -1,12 +1,12 @@
-import type {BaseBottomSheetScrollViewProps} from '../types';
+import type { BaseBottomSheetScrollViewProps } from "../types";
 
-import {useMemo} from 'react';
+import { useMemo } from "react";
 
-import {StyleSheet, useWindowDimensions} from 'react-native';
+import { StyleSheet, useWindowDimensions } from "react-native";
 
-import {BottomSheetScrollView} from '@gorhom/bottom-sheet';
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 
-import {useBottomSheetSafeAreaStyle} from '../hooks';
+import { useBottomSheetSafeAreaStyle } from "../hooks";
 
 const BaseBottomSheetScrollView = ({
   style: styleProp,
@@ -16,21 +16,21 @@ const BaseBottomSheetScrollView = ({
   children,
   ...scrollViewProps
 }: BaseBottomSheetScrollViewProps) => {
-  const {height: windowHeight} = useWindowDimensions();
+  const { height: windowHeight } = useWindowDimensions();
 
   const scrollViewStyle = useMemo(
     () =>
       StyleSheet.flatten([
         styleProp,
-        {maxHeight: windowHeight * maxProportionOfWindowHeight},
+        { maxHeight: windowHeight * maxProportionOfWindowHeight },
       ]),
-    [styleProp, windowHeight, maxProportionOfWindowHeight],
+    [styleProp, windowHeight, maxProportionOfWindowHeight]
   );
 
   const contentContainerStyle = useBottomSheetSafeAreaStyle(
     // @ts-expect-error - `contentContainerStyleProp` is not a `ViewStyle`
     contentContainerStyleProp,
-    ignoreSafeArea,
+    ignoreSafeArea
   );
 
   return (
@@ -38,10 +38,11 @@ const BaseBottomSheetScrollView = ({
       {...scrollViewProps}
       // @ts-expect-error - `scrollViewStyle` is not a `ViewStyle`
       style={scrollViewStyle}
-      contentContainerStyle={contentContainerStyle}>
+      contentContainerStyle={contentContainerStyle}
+    >
       {children}
     </BottomSheetScrollView>
   );
 };
 
-export {BaseBottomSheetScrollView};
+export { BaseBottomSheetScrollView };

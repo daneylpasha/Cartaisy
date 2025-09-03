@@ -3,12 +3,13 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { t } from "@/translations";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Modal, Platform, Pressable } from "react-native";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
-import { HeadingXSBold, ParagraphMD, TextMDSemiBold } from "../atoms";
-import { FormInput } from "../atoms/FormInput";
-import { Spacer } from "../atoms/Spacer";
+import { HeadingXSBold, ParagraphMD, TextMDSemiBold } from "../../atoms";
+import { FormInput } from "../../atoms/FormInput";
+import { Spacer } from "../../atoms/Spacer";
+import AlertModal from "../AlertModal";
+import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
 type Props = {
   visible: boolean;
   expectedName: string; // user ka full name, e.g. "John Doe"
@@ -35,19 +36,7 @@ export default function CloseAccountModal({
     },
   });
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType={Platform.OS === "ios" ? "slide" : "fade"}
-      onRequestClose={onCancel}
-    >
-      {/* Backdrop */}
-      <Pressable
-        onPress={onCancel}
-        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.9)" }}
-      />
-
-      {/* Card */}
+    <AlertModal visible={visible} onCancel={onCancel}>
       <YStack
         position="absolute"
         left={16}
@@ -100,40 +89,28 @@ export default function CloseAccountModal({
           )}
         />
         <Spacer size={"$lg"} />
-        <OpTouch onPress={onConfirm}>
-          <XStack
-            height={52}
-            borderRadius={26}
-            alignItems="center"
-            justifyContent="center"
-            backgroundColor={"red"}
-            borderWidth={2}
-            borderColor={"#EF4444"}
-          >
+        <PrimaryButton
+          label="Close Account"
+          isLoading={false}
+          background={"red"}
+          onPress={onConfirm}
+          icon={
             <AppImage
               name="closeIcon"
               tintColor={getTokenValue("$white")}
               size={13}
             />
-            <Spacer size={"$reg"} />
-            <TextMDSemiBold color={"$white"}>Close Account</TextMDSemiBold>
-          </XStack>
-        </OpTouch>
+          }
+          iconPosition="left"
+        />
         <Spacer size={"$reg"} />
-        <OpTouch onPress={onCancel}>
-          <XStack
-            height={52}
-            borderRadius={26}
-            alignItems="center"
-            justifyContent="center"
-            backgroundColor={"transparent"}
-            borderWidth={0.7}
-            borderColor={"$error"}
-          >
-            <TextMDSemiBold color={"$error"}>No, Nevermind</TextMDSemiBold>
-          </XStack>
-        </OpTouch>
+        <SecondaryButton
+          color="red"
+          borderColor="red"
+          onPress={onCancel}
+          label="No, Nevermind"
+        />
       </YStack>
-    </Modal>
+    </AlertModal>
   );
 }

@@ -4,10 +4,14 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import React from "react";
 import { XStack } from "tamagui";
-export const PlpOptions = () => {
+
+type PlpOptions = {
+  onPress?: () => void;
+};
+export const PlpOptions = ({ onPress }: PlpOptions) => {
   return (
     <XStack paddingHorizontal={"$md"}>
-      <OpTouch>
+      {/* <OpTouch>
         <XStack
           justifyContent="space-between"
           borderWidth={1}
@@ -26,8 +30,8 @@ export const PlpOptions = () => {
           <AppImage name={"arrowDown"} width={11} height={6} />
         </XStack>
       </OpTouch>
-      <Spacer size={"$md"} />
-      <OpTouch>
+      <Spacer size={"$md"} /> */}
+      <OpTouch onPress={onPress}>
         <XStack
           justifyContent="space-between"
           borderWidth={1}

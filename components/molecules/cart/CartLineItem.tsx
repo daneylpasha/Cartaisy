@@ -117,7 +117,7 @@ export default function CartLineItem(props: CartLineItemProps) {
                 <XStack alignItems="center">
                   <AppImage name={"trash"} width={14} height={15} />
                   <Spacer size={"$xs"} />
-                  <TextSMMedium color="$secondary">Remove</TextSMMedium>
+                  <TextSMMedium color="$secondary">{"Remove"}</TextSMMedium>
                 </XStack>
               </OpTouch>
             </XStack>

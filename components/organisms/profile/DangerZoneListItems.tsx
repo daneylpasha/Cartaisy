@@ -6,10 +6,12 @@ import React, { useState } from "react";
 import { FlatList } from "react-native";
 
 import { YStack } from "tamagui";
-import CloseAccountModal from "../CloseAccountModal";
+import CloseAccountModal from "./CloseAccountModal";
+import SignoutAccountModal from "./SignoutAccountModal";
 
 export const DangerZoneListItem = () => {
   const [show, setShow] = useState(false);
+  const [signout, setSignout] = useState(false);
   const DATA = [
     {
       id: 1,
@@ -25,7 +27,7 @@ export const DangerZoneListItem = () => {
       image: "signout" as keyof typeof Icons,
       title: "Sign Out",
       onPress: () => {
-        router.push("/(auth)/login");
+        setSignout(true);
       },
     },
   ];
@@ -48,6 +50,15 @@ export const DangerZoneListItem = () => {
           setShow(false);
         }}
         onCancel={() => setShow(false)}
+      />
+      <SignoutAccountModal
+        visible={signout}
+        expectedName="John Doe"
+        onConfirm={() => {
+          router.push("/login");
+          setSignout(false);
+        }}
+        onCancel={() => setSignout(false)}
       />
     </YStack>
   );

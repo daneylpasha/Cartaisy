@@ -4,6 +4,7 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
+import { tokens } from "@/tamagui/token";
 import React from "react";
 import { XStack, YStack } from "tamagui";
 
@@ -16,14 +17,14 @@ type ActiveCardProps = {
     shipping: string;
     total: number;
   };
+  background?: keyof typeof tokens.color;
 };
-export const ActiveCard = ({ item }: ActiveCardProps) => {
+export const ActiveCard = ({
+  item,
+  background = "$background" as any,
+}: ActiveCardProps) => {
   return (
-    <YStack
-      padding={"$reg"}
-      backgroundColor="$background"
-      borderRadius={"$2xl"}
-    >
+    <YStack padding={"$reg"} backgroundColor={background} borderRadius={"$2xl"}>
       <XStack>
         <YStack
           width={48}

@@ -60,7 +60,7 @@
       "supportEmail": "help@cartaisy.com"
     },
     "passwordResetSent": {
-      "title": "Password Reset Sent.",
+      "title": "Reset Link Sent",
       "subtitle": "Please check your email in a few minutes - we've sent you an email containing password recovery link.",
       "openEmailApp": "Open Email App",
       "dontRememberEmail": "Don't remember your email?",
@@ -201,6 +201,33 @@
     "cardtitle": "Card & Debit Cards",
     "btn": "Add new Credit/Debit Card"
   },
+  "checkout": {
+    "sectionHeader": {
+      "shippingaddress": "Shipping Address",
+      "deliveryinstructions": "Delivery Instructions",
+      "mobilecontact": "Mobile Contact",
+      "shippingoptions": "Shipping Options",
+      "paymentMethod": "Payment Method",
+      "yourorders": "Your Orders",
+      "deliveryaddress": "Delivery Address",
+      "promocode": "Promo Code"
+    }
+  },
+  "addnewcarddetails": {
+    "title": "Add New Card Details",
+    "subtitle": "We accept all types of debit card",
+    "cardinfo": "Card Information",
+    "bilingaddress": "Biling Address",
+    "btn": "Link card",
+    "fieldfirst": "Card Holder Name",
+    "fieldsecond": "Card Number",
+    "fieldthird": "Expiry Date",
+    "fieldfourth": "Cvv",
+    "fieldfifth": "Street Address",
+    "fieldsix": "Apartment Number",
+    "fieldseven": "Province",
+    "fieldeight": "Postal Code"
+  },
   "newpassword": {
     "title": "Change Passowrd",
     "subtitle": "Enter your new password",
@@ -212,5 +239,13 @@
       "Must contain special character",
       "Must not be common"
     ]
+  },
+  "sortfilter": {
+    "title": "Filter",
+    "headOne": "Sort",
+    "headtwo": "Category",
+    "headtthree": "Price",
+    "headfouth": "Colours",
+    "btn": "View All Results"
   }
 }

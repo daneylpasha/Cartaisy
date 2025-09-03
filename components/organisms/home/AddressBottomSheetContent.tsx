@@ -62,6 +62,13 @@ export const AddressBottomSheetContent = ({
   bottomSheetRef: React.RefObject<BaseBottomSheetRef | null>;
 }) => {
   const [selectedAddress, setSelectedAddress] = useState<number>(0);
+
+  const handleAddNewAddress = () => {
+    bottomSheetRef.current?.handleClosePress();
+    setTimeout(() => {
+      router.push("/addAddress");
+    }, 300); // Bottom sheet close animation ke baad navigate
+  };
   return (
     <YStack
       backgroundColor="$white"
@@ -93,7 +100,7 @@ export const AddressBottomSheetContent = ({
           }
           contentContainerStyle={{
             gap: getTokenValue("$reg"),
-            paddingBottom: getTokenValue("$2xl"),
+            paddingBottom: getTokenValue("$reg"),
           }}
           showsVerticalScrollIndicator={false}
           style={{ flex: 1 }}
@@ -134,9 +141,7 @@ export const AddressBottomSheetContent = ({
         paddingHorizontal="$md"
       >
         <SecondaryButton
-          onPress={() => {
-            router.push("/addAddress");
-          }}
+          onPress={handleAddNewAddress}
           label="Add New Address"
           // borderColor="$primary"
           iconPosition="left"
@@ -144,7 +149,7 @@ export const AddressBottomSheetContent = ({
         />
         <Spacer size={"$reg"} />
         <PrimaryButton
-          onPress={() => {}}
+          onPress={() => bottomSheetRef.current?.handleClosePress()}
           icon={<AppImage name="check" width={15} height={15} />}
           label="Apply"
           isLoading={false}

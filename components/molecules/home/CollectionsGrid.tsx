@@ -25,11 +25,13 @@ export const CollectionsGrid = ({ item }: CollectionsGridProps) => {
         marginBottom: tokens.space.reg,
         gap: tokens.space.reg,
         paddingHorizontal: tokens.space.md,
+       
       }}
       renderItem={({ item }) => (
         <OpTouch
           width={ITEM_WIDTH}
           alignItems="center"
+         
           onPress={() => {
             console.log("pressed");
           }}

@@ -15,13 +15,14 @@ import {
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
-import { FlatList } from "react-native";
+import { FlatList, PanResponder } from "react-native";
 
 import Icons from "@/assets/Icons";
 import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import CartLineItem from "@/components/molecules/cart/CartLineItem";
+import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -234,7 +235,27 @@ const CartScreen = () => {
       setOpen(true);
     }
   };
-
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to vertical swipes
+        return (
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx) &&
+          Math.abs(gestureState.dy) > 10
+        );
+      },
+      onPanResponderMove: () => {},
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 30) {
+          // Swipe down - close
+          setOpen(false);
+        } else if (gestureState.dy < -30) {
+          // Swipe up - open
+          setOpen(true);
+        }
+      },
+    })
+  ).current;
   // Function to add item to cart
   const addToCart = (product: Product) => {
     const existingItem = cartItems.find((item) => item.id === product.id);
@@ -359,7 +380,7 @@ const CartScreen = () => {
         title={t("home.sectionHeader.youMightAlsoLike")}
         image={"bulb"}
         tintColor={"darkgrey"}
-        seeAllText="See All"
+        seeAllText="View All"
         color="primary"
         onPressSeeAll={() => {}}
       />
@@ -418,6 +439,25 @@ const CartScreen = () => {
                 overflow: "hidden",
               }}
             >
+              <Spacer size={"$sm"} />
+              <Animated.View {...panResponder.panHandlers}>
+                <YStack
+                  justifyContent="center"
+                  alignItems="center"
+                  width={40}
+                  height={20}
+                  alignSelf="center"
+                  paddingVertical={8}
+                >
+                  <YStack
+                    width={40}
+                    height={4}
+                    backgroundColor={"$icon"}
+                    borderRadius={"$2xl"}
+                  />
+                </YStack>
+              </Animated.View>
+              <Spacer size={"$sm"} />
               <XStack paddingVertical={"$sm"} justifyContent="space-between">
                 <TextSMSemiBold>
                   Subtotal({cartItems.length} Items)
@@ -434,7 +474,7 @@ const CartScreen = () => {
                 <TextSMRegular color="$secondary">Taxes</TextSMRegular>
                 <TextSMSemiBold>Calculated at checkout</TextSMSemiBold>
               </XStack>
-              <Spacer size={"$sm"} />
+              {/* <Spacer size={"$sm"} /> */}
             </Animated.View>
             <Divider />
             <Spacer size={"$sm"} />
@@ -461,7 +501,9 @@ const CartScreen = () => {
             </OpTouch>
             <Spacer size={"$md"} />
             <PrimaryButton
-              onPress={() => {}}
+              onPress={() => {
+                router.push("/checkout");
+              }}
               isLoading={false}
               label={`Proceed to Checkout (${cartItems.length})`}
             />

@@ -8,6 +8,7 @@ import { ActiveOrders } from "@/components/molecules/profile/ActiveOrders";
 import { ActiveListItem } from "@/components/organisms/profile/ActiveListItems";
 import { DangerZoneListItem } from "@/components/organisms/profile/DangerZoneListItems";
 import { GeneralListItems } from "@/components/organisms/profile/GeneralListItems";
+
 import { PaymentListItem } from "@/components/organisms/profile/PaymentListItems";
 import { SecurityListItem } from "@/components/organisms/profile/SecurityListItems";
 import { WishlistCarousel } from "@/components/organisms/profile/WishListCarousel";
@@ -74,11 +75,13 @@ const ProfileScreen = () => {
         <>
           <Spacer size="$lg" />
           <SectionHeader
-            title="My Purchases"
+            title="My Orders"
             showImage={false}
             color="primary"
-            seeAllText="See All"
-            onPressSeeAll={() => {}}
+            seeAllText="View All"
+            onPressSeeAll={() => {
+              router.push("/orders");
+            }}
           />
           <YStack paddingHorizontal="$md">
             <Spacer size="$reg" />
@@ -110,7 +113,7 @@ const ProfileScreen = () => {
             tintColor="darkgrey"
             showImage={false}
             color="primary"
-            seeAllText="See All"
+            seeAllText="View All"
             onPressSeeAll={() => {
               router.push("/wishlist");
             }}
@@ -148,6 +151,7 @@ const ProfileScreen = () => {
         </>
       ),
     },
+
     {
       id: "security",
       type: "security",
@@ -168,7 +172,9 @@ const ProfileScreen = () => {
           <Spacer size="$lg" />
           <XStack paddingRight={"$md"} justifyContent="space-between">
             <SectionHeader title="Danger Zone" showImage={false} />
-            <AppImage name="danger" size={19} />
+            <YStack paddingRight={"$reg"}>
+              <AppImage name="danger" size={19} />
+            </YStack>
           </XStack>
           <Spacer size="$reg" />
           <DangerZoneListItem />

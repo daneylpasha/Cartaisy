@@ -59,23 +59,45 @@ export function WishlistCarousel({ horizontalPadding = 16 }: Props) {
 
   return (
     <YStack>
-      <FlatList
-        data={data}
-        keyExtractor={(_, idx) => `page-${idx}`}
-        horizontal
-        pagingEnabled
-        bounces={false}
-        showsHorizontalScrollIndicator={false}
-        renderItem={({ item: page }) => (
-          <XStack justifyContent="center" padding={"$reg"} width={pageWidth}>
-            <YStack width={cardWidthOne}>
-              <WishlistCard item={page} activePage={activePage} />
-            </YStack>
-          </XStack>
-        )}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-      />
+      <YStack position="relative">
+        <FlatList
+          data={data}
+          keyExtractor={(_, idx) => `page-${idx}`}
+          horizontal
+          pagingEnabled
+          bounces={false}
+          showsHorizontalScrollIndicator={false}
+          renderItem={({ item: page }) => (
+            <XStack justifyContent="center" padding={"$reg"} width={pageWidth}>
+              <YStack width={cardWidthOne}>
+                <WishlistCard item={page} />
+              </YStack>
+            </XStack>
+          )}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+        />
+        
+        {/* Absolutely positioned sticky dots */}
+        <XStack 
+          position="absolute" 
+          bottom={30} 
+          alignSelf="center" 
+          gap={8}
+          zIndex={10}
+
+        >
+          {data.map((_, i) => (
+            <YStack
+              key={i}
+              width={8}
+              height={8}
+              borderRadius={4}
+              backgroundColor={i === activePage ? "#6D4AFF" : "#D9D9E0"}
+            />
+          ))}
+        </XStack>
+      </YStack>
     </YStack>
   );
 }

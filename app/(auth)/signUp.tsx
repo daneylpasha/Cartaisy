@@ -129,6 +129,8 @@ const SignUp = () => {
                   placeholder={t("auth.signup.emailPlaceholder")}
                   icon={<AppImage name="emailIcon" size={16} />}
                   error={fieldState.error?.message}
+                  keyboardType="email-address"
+                  onSubmitEditing={() => form.setFocus("password")}
                 />
               )}
             />
@@ -153,6 +155,7 @@ const SignUp = () => {
                   icon={<AppImage name="lockIcon" size={16} />}
                   secureTextEntry
                   error={fieldState.error?.message}
+                  onSubmitEditing={() => form.setFocus("confirmPassword")}
                 />
               )}
             />
@@ -179,6 +182,7 @@ const SignUp = () => {
                   icon={<AppImage name="lockIcon" size={16} />}
                   secureTextEntry
                   error={fieldState.error?.message}
+                  onSubmitEditing={form.handleSubmit(onSubmit)}
                 />
               )}
             />

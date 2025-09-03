@@ -21,9 +21,18 @@ export const GeneralListItems = () => {
       title: "Address",
       route: "/addAddress",
     },
-
     {
       id: 3,
+      image: "truck" as keyof typeof Icons,
+      title: "Orders",
+      //   subtitle: "Contact information and payment methods",
+      route: "/orders",
+
+      onPress: () => {},
+    },
+
+    {
+      id: 4,
       image: "notification" as keyof typeof Icons,
       title: "Notifications",
       route: "/notificationSettings",

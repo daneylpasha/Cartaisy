@@ -129,6 +129,20 @@ const Icons = {
   lockUnfilled: require("./images/lockunfilled.png"),
   unLock: require("./images/unlock.png"),
   danger: require("./images/danger.png"),
+  compassIcon: require("./images/compass.png"),
+  mapPinIcon: require("./images/map-pin-simple.png"),
+  paymentcard: require("./images/payment-card-icon.png"),
+  upsIcon: require("./images/ups.png"),
+  package: require("./images/package.png"),
+  list: require("./images/list.png"),
+  visa: require("./images/visa.png"),
+  debitCardFrame: require("./images/debit-card-frame.png"),
+  hourGlass: require("./images/hoursglass.png"),
+  dotsThree: require("./images/dots-three-outline.png"),
+  warningAlert: require("./images/warning-alert.png"),
+  trendingIconDown: require("./images/trending-icon-down.png"),
+  moneyIcon: require("./images/money.png"),
+  cancelOrderFrame: require("./images/order-cancel-frame.png"),
 };
 
 export default Icons;

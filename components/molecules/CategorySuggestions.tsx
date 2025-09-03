@@ -1,6 +1,7 @@
 import Icons from "@/assets/Icons";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
+import { BlurView } from "expo-blur";
 import React from "react";
 import { FlatList, ImageBackground, StyleSheet } from "react-native";
 import { Spacer, XStack } from "tamagui";
@@ -54,9 +55,12 @@ export const CategorySuggestions = () => {
         <OpTouch>
           <ImageBackground
             source={item.image}
-            resizeMode="contain"
+            resizeMode="cover"
             style={[styles.image, { marginBottom: tokens.space.sm }]}
           >
+            {/* <BlurView style={styles.blurview} intensity={14} tint="dark">
+              
+            </BlurView> */}
             <XStack
               justifyContent="center"
               alignItems="center"
@@ -64,7 +68,7 @@ export const CategorySuggestions = () => {
               height="100%"
               backgroundColor="rgba(0, 0, 0, 0.4)"
             >
-              <TextMDMedium color="$white" fontSize={14} textAlign="center">
+            <TextMDMedium color="$white" fontSize={14} fontWeight={600} textAlign="center">
                 {item.title}
               </TextMDMedium>
             </XStack>
@@ -81,5 +85,12 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 12,
     overflow: "hidden",
+  },
+  blurview: {
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    height: "100%",
   },
 });

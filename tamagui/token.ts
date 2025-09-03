@@ -10,6 +10,7 @@ export const tokens = {
     background: "#F8FAFC",
     grey: "#E2E8F0",
     error: "rgba(239, 68, 68, 1)",
+    red: "#F43F5E",
     errorbg: "#FFF1F2",
     lightgrey: "#CBD5E1",
     textgrey: "#4B5563",

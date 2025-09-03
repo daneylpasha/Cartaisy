@@ -79,6 +79,7 @@ const ChangePassword = () => {
             }
             secureTextEntry
             error={fieldState.error?.message}
+            onSubmitEditing={form.handleSubmit(onSubmit)}
           />
         )}
       />

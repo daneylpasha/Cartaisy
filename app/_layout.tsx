@@ -40,6 +40,8 @@ export default function RootLayout() {
               <Stack.Screen name="notification" />
               <Stack.Screen name="fullName" />
               <Stack.Screen name="phoneNumber" />
+              <Stack.Screen name="search" />
+              <Stack.Screen name="cancelOrder" />
               <Stack.Screen
                 name="addAddress"
                 options={HEADER_CONFIGS.addAddress}
@@ -68,7 +70,17 @@ export default function RootLayout() {
                 name="newPassword"
                 options={HEADER_CONFIGS.newPassword}
               />
-              <Stack.Screen name="search" />
+              <Stack.Screen
+                name="addNewCardDetails"
+                options={HEADER_CONFIGS.addNewCardDetails}
+              />
+              <Stack.Screen name="checkout" options={HEADER_CONFIGS.checkout} />
+              <Stack.Screen name="orders" options={HEADER_CONFIGS.orders} />
+              <Stack.Screen
+                name="ordersDetails"
+                options={HEADER_CONFIGS.ordersDetails}
+              />
+
               <Stack.Screen
                 name="_modal"
                 options={{ presentation: "modal", headerShown: false }}

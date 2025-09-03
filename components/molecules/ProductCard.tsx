@@ -11,6 +11,7 @@ import { getTokenValue, XStack, YStack } from "tamagui";
 import {
   TextMDBold,
   TextMDSemiBold,
+  TextSMBold,
   TextSMMedium,
   TextSMRegular,
   TextXLBold,
@@ -155,7 +156,7 @@ export const ProductCard = ({
 
           {product.currentPrice !== undefined && (
             <XStack alignItems="center">
-              <TextXLBold>${product.currentPrice.toFixed(2)}</TextXLBold>
+              <TextMDBold>${product.currentPrice.toFixed(2)}</TextMDBold>
               <Spacer size="$xs" />
               {product.originalPrice && (
                 <TextSMRegular color="$icon" textDecorationLine="line-through">

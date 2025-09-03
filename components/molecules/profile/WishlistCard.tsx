@@ -29,9 +29,9 @@ export const SHADOW_STYLES: ViewStyle =
     default: {},
   }) || {};
 
-type Props = { item: WishlistItem; onPress?: () => void; activePage: number };
+type Props = { item: WishlistItem; onPress?: () => void };
 
-export function WishlistCard({ item, onPress, activePage }: Props) {
+export function WishlistCard({ item, onPress }: Props) {
   return (
     <OpTouch
       onPress={() =>
@@ -47,6 +47,7 @@ export function WishlistCard({ item, onPress, activePage }: Props) {
         backgroundColor={"$white"}
         borderRadius={"$2xl"}
         padding={"$reg"}
+        position="relative"
         style={{ ...SHADOW_STYLES }} // ✅ shadow only here
       >
         {/* Top Row */}
@@ -102,18 +103,7 @@ export function WishlistCard({ item, onPress, activePage }: Props) {
             />
           </YStack>
         </XStack>
-        <Spacer size={"$md"} />
-        <XStack alignSelf="center" gap={8}>
-          {Array.from({ length: 4 }).map((_, i) => (
-            <YStack
-              key={i}
-              width={8}
-              height={8}
-              borderRadius={4}
-              backgroundColor={i === activePage ? "#6D4AFF" : "#D9D9E0"}
-            />
-          ))}
-        </XStack>
+        
       </YStack>
     </OpTouch>
   );

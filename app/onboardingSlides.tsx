@@ -4,6 +4,7 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphMD } from "@/components/atoms/texts/ParagraphMD";
+import { SecondaryButton } from "@/components/molecules/buttons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { FlatList, ListRenderItem, StyleSheet } from "react-native";
@@ -49,7 +50,7 @@ export const slidesData: Slide[] = [
     id: 5,
     title: " Open Your Own Store Or Explore Millions",
     description:
-      " Start selling in minutes or browse endless unique products from top sellers.",
+      "Start selling in minutes or browse endless unique products from top sellers.",
     image: "onboardingFrame5",
   },
   {
@@ -156,6 +157,11 @@ const onboardingSlides: React.FC = () => {
           <AppImage name="rightSlide" width={13.1} height={23.1} />
         </OpTouch>
       </XStack>
+         <Spacer size={"$md"} />
+      <YStack paddingHorizontal={"$md"} alignItems="flex-end">
+
+      <SecondaryButton label="Skip" onPress={()=>{ router.push('/wellcome')}} width={"30%"} />
+      </YStack>
     </ScreenContainer>
   );
 };

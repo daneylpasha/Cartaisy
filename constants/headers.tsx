@@ -88,6 +88,20 @@ export const HEADER_CONFIGS = {
       backgroundColor: tokens.color.background,
     },
   },
+   forgotPassword: {
+    headerBackVisible: false,
+    headerTitle: "",
+    headerShown: true,
+    headerLeft: () => (
+      <OpTouch onPress={() => router.back()}>
+        <AppImage name={"arrowBack"} size={16} />
+      </OpTouch>
+    ),
+    headerShadowVisible: false,
+    headerStyle: {
+      backgroundColor: tokens.color.background,
+    },
+  },
   newPassword: {
     headerBackVisible: false,
     headerTitle: "",
@@ -97,6 +111,65 @@ export const HEADER_CONFIGS = {
         <AppImage name={"arrowBack"} size={16} />
       </OpTouch>
     ),
+    headerShadowVisible: false,
+    headerStyle: {
+      backgroundColor: tokens.color.background,
+    },
+  },
+  addNewCardDetails: {
+    headerBackVisible: false,
+    headerTitle: "",
+    headerShown: true,
+    headerLeft: () => (
+      <OpTouch onPress={() => router.back()}>
+        <AppImage name={"arrowBack"} size={16} />
+      </OpTouch>
+    ),
+    headerShadowVisible: false,
+    headerStyle: {
+      backgroundColor: tokens.color.background,
+    },
+  },
+  checkout: {
+    headerBackVisible: false,
+    headerTitle: "Checkout",
+    headerShown: true,
+    headerLeft: () => (
+      <OpTouch onPress={() => router.back()}>
+        <AppImage name={"arrowBack"} size={16} />
+      </OpTouch>
+    ),
+
+    headerShadowVisible: false,
+    headerStyle: {
+      backgroundColor: tokens.color.background,
+    },
+  },
+  orders: {
+    headerBackVisible: false,
+    headerTitle: "Orders",
+    headerShown: true,
+    headerLeft: () => (
+      <OpTouch onPress={() => router.back()}>
+        <AppImage name={"arrowBack"} size={16} />
+      </OpTouch>
+    ),
+
+    headerShadowVisible: false,
+    headerStyle: {
+      backgroundColor: tokens.color.background,
+    },
+  },
+  ordersDetails: {
+    headerBackVisible: false,
+    headerTitle: "Orders Details",
+    headerShown: true,
+    headerLeft: () => (
+      <OpTouch onPress={() => router.back()}>
+        <AppImage name={"arrowBack"} size={16} />
+      </OpTouch>
+    ),
+
     headerShadowVisible: false,
     headerStyle: {
       backgroundColor: tokens.color.background,

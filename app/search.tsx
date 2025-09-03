@@ -174,7 +174,7 @@ const Search = () => {
               title={"All deals"}
               tintColor={"darkgrey"}
               image="dealIcon"
-              seeAllText="See All"
+              seeAllText="View All"
               color="primary"
               onPressSeeAll={() => {}}
             />
@@ -186,7 +186,7 @@ const Search = () => {
               title={"All deals"}
               tintColor={"darkgrey"}
               image="dealIcon"
-              seeAllText="See All"
+              seeAllText="View All"
               color="primary"
               onPressSeeAll={() => {}}
             />
@@ -199,7 +199,7 @@ const Search = () => {
               title={"All deals"}
               tintColor={"darkgrey"}
               image="dealIcon"
-              seeAllText="See All"
+              seeAllText="View All"
               color="primary"
               onPressSeeAll={() => {}}
             />
@@ -240,7 +240,7 @@ const Search = () => {
             width={"80%"}
           />
 
-          <OpTouch>
+          <OpTouch onPress={() => router.push("/cart")}>
             <AppImage
               name="cartIcon"
               size={24}

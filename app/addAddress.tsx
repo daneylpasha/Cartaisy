@@ -1,5 +1,6 @@
 import {
   HeadingSMBold,
+  HeadingXSRegular,
   ParagraphMD,
   TextSMSemiBold,
   TextXSRegular,
@@ -13,20 +14,33 @@ import { TextMDSemiBold } from "@/components/atoms/texts/TextMDSemiBold";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { fonts } from "@/tamagui/fonts";
 
+import {
+  BaseBottomSheetRef,
+  BottomSheetModalWithView,
+} from "@/components/molecules/bottom-sheets";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
-import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { router } from "expo-router";
+import { useRef, useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { ScrollView, StyleSheet, TextInput } from "react-native";
 import CountryPicker, {
   Country,
   CountryCode,
 } from "react-native-country-picker-modal";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 const AddAddress = () => {
   const form = useForm();
   const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const desc = useWatch({ control: form.control, name: "description" });
+  const descLen = (desc ?? "").length;
+  const onSubmit = (data: any) => {
+    router.back();
+    console.log("Form submitted:", data);
+    // Handle form submission
+  };
   const [selectedCountry, setSelectedCountry] = useState<Country>({
     callingCode: ["44"],
     cca2: "GB",
@@ -36,7 +50,7 @@ const AddAddress = () => {
     region: "Europe",
     subregion: "Northern Europe",
   });
-
+  const helpBottomSheetRef = useRef<BaseBottomSheetRef>(null);
   const { bottom: bottomSafeAreaInset } = useSafeAreaInsets();
 
   const onSelectCountry = (country: Country) => {
@@ -45,12 +59,18 @@ const AddAddress = () => {
   };
 
   return (
-    <YStack
-      backgroundColor="$background"
-      paddingBottom={bottomSafeAreaInset}
-      flex={1}
-    >
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <YStack backgroundColor="$background" flex={1}>
+      <KeyboardAwareScrollView
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
+        extraScrollHeight={20}
+        keyboardOpeningTime={0}
+        keyboardDismissMode="interactive"
+      >
         <YStack padding={"$md"}>
           <HeadingSMBold>{t("addAddress.title")}</HeadingSMBold>
           <Spacer size={"$sm"} />
@@ -89,9 +109,15 @@ const AddAddress = () => {
                       height={18}
                     />
                   }
-                  error={fieldState.error?.message}
+                  // error={fieldState.error?.message}
+                  onSubmitEditing={() => form.setFocus("streetAddress")}
                 />
-                <AppImage name="warningIcon" width={16} height={16} />
+                <OpTouch
+                  hitSlop={{ bottom: 10, top: 10, left: 10, right: 10 }}
+                  onPress={() => helpBottomSheetRef.current?.handleOpenPress()}
+                >
+                  <AppImage name="warningIcon" width={16} height={16} />
+                </OpTouch>
               </XStack>
             )}
           />
@@ -173,11 +199,12 @@ const AddAddress = () => {
                       height={18}
                     />
                   }
-                  error={fieldState.error?.message}
+                  // error={fieldState.error?.message}
+                  onSubmitEditing={() => form.setFocus("apartmentSuite")}
                 />
-                <OpTouch>
+                {/* <OpTouch>
                   <AppImage name="editIcon" width={16} height={16} />
-                </OpTouch>
+                </OpTouch> */}
               </XStack>
             )}
           />
@@ -213,14 +240,13 @@ const AddAddress = () => {
                       height={16}
                     />
                   }
-                  error={fieldState.error?.message}
+                  // error={fieldState.error?.message}
+                  onSubmitEditing={() => form.setFocus("stateProvince")}
                 />
-                <OpTouch>
-                  <AppImage name="editIcon" width={16} height={16} />
-                </OpTouch>
               </XStack>
             )}
           />
+          {}
           <Spacer size={"$reg"} />
           <XStack width={"100%"}>
             <YStack flex={1}>
@@ -247,7 +273,8 @@ const AddAddress = () => {
                         height={16}
                       />
                     }
-                    error={fieldState.error?.message}
+                    // error={fieldState.error?.message}
+                    onSubmitEditing={() => form.setFocus("postCode")}
                   />
                 )}
               />
@@ -277,7 +304,8 @@ const AddAddress = () => {
                         height={16}
                       />
                     }
-                    error={fieldState.error?.message}
+                    // error={fieldState.error?.message}
+                    onSubmitEditing={() => form.setFocus("description")}
                   />
                 )}
               />
@@ -295,19 +323,21 @@ const AddAddress = () => {
             padding="$reg"
           >
             <Controller
-              name="apartmentSuite"
+              name="description"
               control={form.control}
               rules={{
-                required: "Apartment Suite is required",
+                required: "Description is required",
               }}
               render={({ field, fieldState }) => (
                 <>
                   <TextInput
+                    selectionColor={"black"}
                     value={field.value}
                     onChangeText={field.onChange}
                     placeholder={
                       "Please just put the package on the front door. Thanks a lot! 😊"
                     }
+                    maxLength={300}
                     multiline={true}
                     numberOfLines={8}
                     textAlignVertical="top"
@@ -315,40 +345,78 @@ const AddAddress = () => {
                     style={Styles.input}
                     //   error={fieldState.error?.message}
                   />
-                  {fieldState.error?.message && (
-                    <TextSMSemiBold color="$error">
-                      {fieldState.error?.message}
-                    </TextSMSemiBold>
-                  )}
                 </>
               )}
             />
             <Spacer size={"$sm"} />
             <XStack alignItems="center" justifyContent="space-between">
-              <TextXSRegular color="$secondary">{"300/200"}</TextXSRegular>
+              <TextXSRegular color="$secondary">{`${descLen}/300`}</TextXSRegular>
               <AppImage name="noteIcon" width={12} height={12} />
             </XStack>
           </YStack>
           <Spacer size={"$lg"} />
         </YStack>
-      </ScrollView>
+      </KeyboardAwareScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}></ScrollView>
       <YStack paddingHorizontal={"$md"}>
         <PrimaryButton
-          label="Add Address"
-          onPress={() => {}}
+          label="Save Address"
+          onPress={form.handleSubmit(onSubmit)}
           width={"100%"}
           iconPosition="left"
-          icon={
-            <AppImage
-              tintColor={getTokenValue("$white")}
-              name="addIcon"
-              width={16}
-              height={16}
-            />
-          }
           isLoading={false}
         />
       </YStack>
+      {/* paddingBottom={} */}
+      <Spacer size={bottomSafeAreaInset} />
+      <BottomSheetModalWithView snapPoints={["40%"]} ref={helpBottomSheetRef}>
+        <YStack
+          backgroundColor="$white"
+          borderTopLeftRadius="$xl"
+          borderTopRightRadius="$xl"
+          paddingHorizontal="$md"
+          // paddingVertical="$lg"
+        >
+          {/* Header */}
+          <XStack
+            alignItems="center"
+            justifyContent="space-between"
+            marginBottom="$md"
+          >
+            <HeadingXSRegular>Address Name Help</HeadingXSRegular>
+            <OpTouch
+              onPress={() => helpBottomSheetRef.current?.handleClosePress()}
+            >
+              <AppImage name="closeIcon" width={15} height={15} />
+            </OpTouch>
+          </XStack>
+
+          {/* Content */}
+          <YStack gap="$md">
+            <ParagraphMD>
+              Give your address a memorable name to easily identify it later.
+            </ParagraphMD>
+
+            <YStack gap="$sm">
+              <TextSMSemiBold>Examples:</TextSMSemiBold>
+              <YStack gap="$xs" paddingLeft="$md">
+                <TextMDRegular color="$secondary">• Home</TextMDRegular>
+                <TextMDRegular color="$secondary">• Office</TextMDRegular>
+                <TextMDRegular color="$secondary">• Mom's House</TextMDRegular>
+                <TextMDRegular color="$secondary">
+                  • Downtown Apartment
+                </TextMDRegular>
+                <TextMDRegular color="$secondary">• Summer House</TextMDRegular>
+              </YStack>
+            </YStack>
+
+            <ParagraphMD color="$textgrey">
+              This name will help you quickly select the right address during
+              checkout.
+            </ParagraphMD>
+          </YStack>
+        </YStack>
+      </BottomSheetModalWithView>
     </YStack>
   );
 };
@@ -360,7 +428,6 @@ const Styles = StyleSheet.create({
     fontSize: fonts.figtree.size[5],
     lineHeight: fonts.figtree.lineHeight[2],
     fontFamily: "Figtree-Regular",
-
     height: 172,
     width: "100%",
   },
