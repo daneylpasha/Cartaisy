@@ -15,7 +15,7 @@ import {
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
-import { FlatList, PanResponder } from "react-native";
+import { FlatList, PanResponder, Platform } from "react-native";
 
 import Icons from "@/assets/Icons";
 import { Divider } from "@/components/atoms/Divider";
@@ -367,7 +367,7 @@ const CartScreen = () => {
           addToCart(products[Math.floor(Math.random() * products.length)]);
         }}
       >
-        <Text color="$secondary">Add Product</Text>
+        <Text color="$secondary">{"Add Product"}</Text>
       </OpTouch>
     </YStack>
   );
@@ -507,13 +507,12 @@ const CartScreen = () => {
               isLoading={false}
               label={`Proceed to Checkout (${cartItems.length})`}
             />
-            <Spacer size={"$md"} />
+            <Spacer size={Platform.OS === "ios" ? "$md" : "$xs"} />
           </YStack>
         </>
       )}
 
-      <Spacer size={"$xs"} />
-      <Spacer size={BOTTOM_INSET + 48} />
+      <Spacer size={Platform.OS === "ios" ? BOTTOM_INSET + 48 : 10} />
     </YStack>
   );
 };

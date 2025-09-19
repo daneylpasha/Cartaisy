@@ -1,4 +1,5 @@
 import {
+  TextLGBold,
   TextMDBold,
   TextMDSemiBold,
   TextSMRegular,
@@ -23,19 +24,57 @@ import CountryPicker, {
   CountryCode,
 } from "react-native-country-picker-modal";
 
-import { DeliveryBottomSheetContent } from "@/components/organisms/checkout/DeliveryBottomSheet";
+import { BottomSheetModalWithFlatList } from "@/components/organisms/bottomSheet";
 import { fonts } from "@/tamagui/fonts";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 import { AddressCard } from "../AddressCard";
-import { BaseBottomSheetRef, BottomSheetModalWithView } from "../bottom-sheets";
+import DeliveryOptionCard from "../DeliveryOptionCard";
 
 type PhoneNumberForm = {
   phone: string;
 };
 const Shipping = () => {
   const [selectedAddress, setSelectedAddress] = useState<number>(0);
+  const { top: TOP_INSET, bottom: BOTTOM_INSET } = useSafeAreaInsets();
   const form = useForm();
-  const bottomSheetRef = useRef<BaseBottomSheetRef>(null);
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const deliveryData = [
+    {
+      id: 1,
+      title: "Standard Shipping",
+      estimateddays: "Estimated Delivery: 5-7 days",
+      image: "upsIcon",
+      cost: "Cost: $5 or free for orders over $50",
+    },
+    {
+      id: 2,
+      title: "Standard Shipping",
+      estimateddays: "Estimated Delivery: 5-7 days",
+      image: "upsIcon",
+      cost: "Cost: $5 or free for orders over $50",
+    },
+    {
+      id: 3,
+      title: "Standard Shipping",
+      estimateddays: "Estimated Delivery: 5-7 days",
+      image: "upsIcon",
+      cost: "Cost: $5 or free for orders over $50",
+    },
+    {
+      id: 4,
+      title: "Standard Shipping",
+      estimateddays: "Estimated Delivery: 5-7 days",
+      image: "upsIcon",
+      cost: "Cost: $5 or free for orders over $50",
+    },
+  ];
+ 
+  const handleApply = () => {
+    bottomSheetRef.current?.close();
+  };
+  const [selectedDelivery, setSelectedDelivery] = useState<number>(0);
   const [selectedCountry, setSelectedCountry] = useState<Country>({
     callingCode: ["44"],
     cca2: "GB",
@@ -264,7 +303,7 @@ const Shipping = () => {
                     +{selectedCountry.callingCode[0]}
                   </TextMDSemiBold>
                   <FormInput
-                    width={"70%"}
+                    width={"68%"}
                     borderWidth={0}
                     paddingHorizontal={0}
                     value={value}
@@ -295,7 +334,7 @@ const Shipping = () => {
         image="package"
         seeAllText="View All"
         color="primary"
-        onPressSeeAll={() => bottomSheetRef.current?.handleOpenPress()}
+        onPressSeeAll={() => bottomSheetRef.current?.present()}
       />
       <Spacer size={"$reg"} />
       <YStack paddingHorizontal={"$md"}>
@@ -334,9 +373,46 @@ const Shipping = () => {
           </XStack>
         </YStack>
       </YStack>
-      <BottomSheetModalWithView ref={bottomSheetRef}>
-        <DeliveryBottomSheetContent bottomSheetRef={bottomSheetRef} />
-      </BottomSheetModalWithView>
+      <BottomSheetModalWithFlatList
+        ref={bottomSheetRef}
+        data={deliveryData}
+        renderItem={({ item }) => (
+          <DeliveryOptionCard
+            selectedDelivery={selectedDelivery}
+            setSelectedDelivery={setSelectedDelivery}
+            item={item as any}
+          />
+        )}
+        // keyExtractor={(item) => item.id.toString()}
+        ListHeaderComponent={
+          <YStack paddingHorizontal={"$md"}>
+            <XStack alignItems="center" justifyContent="space-between">
+              <TextLGBold>{"Choose delivery options"}</TextLGBold>
+              <OpTouch onPress={() => bottomSheetRef.current?.close()}>
+                <AppImage name="closeIcon" width={15} height={15} />
+              </OpTouch>
+            </XStack>
+            <Spacer size={"$2xl"} />
+          </YStack>
+        }
+        snapPoints={["60%"]}
+        enableDynamicSizing={false}
+        showFooter={true}
+        showBackdrop={true}
+        onPrimaryPress={handleApply}
+        // onSecondaryPress={handleAddNewAddress}
+        primaryButtonLabel="Apply"
+        iconPosition="right"
+        icon={"check"}
+        //
+        secondaryButtonLabel="Add New Address"
+        contentContainerStyle={{
+          gap: getTokenValue("$reg"),
+          paddingBottom: getTokenValue("$reg"),
+        }}
+        style={{ flex: 1 }}
+        ListFooterComponent={<Spacer size={48 + BOTTOM_INSET} />}
+      />
     </YStack>
   );
 };

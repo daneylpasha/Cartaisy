@@ -30,6 +30,7 @@ export const AddressCard = ({
       }}
     >
       <XStack
+      
         borderWidth={"$xxxs"}
         borderColor={selectedAddress === item.id ? "$primary" : "$white"}
         borderRadius="$2xl"

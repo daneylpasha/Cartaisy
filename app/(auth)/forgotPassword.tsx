@@ -1,7 +1,6 @@
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { OpTouch } from "@/components/atoms/OpTouch";
-import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { HeadingXSBold } from "@/components/atoms/texts/HeadingXSBold";
 import { ParagraphMD } from "@/components/atoms/texts/ParagraphMD";
@@ -26,11 +25,10 @@ const ForgotPassword = () => {
     },
   });
 
- const openSupportEmail = async () => {
+  const openSupportEmail = async () => {
     const to = "help@cartaisy.com";
     const subject = "Cartaisy Support";
-    const body =
-      "Assalam-o-Alaikum,\n\nMujhe madad chahiye regarding ...";
+    const body = "Assalam-o-Alaikum,\n\nMujhe madad chahiye regarding ...";
 
     const s = encodeURIComponent(subject);
     const b = encodeURIComponent(body);
@@ -57,10 +55,10 @@ const ForgotPassword = () => {
   };
   const onSubmit = (data: ForgotPasswordForm) => {
     console.log(data);
-  router.push({
-    pathname: "/(auth)/passwordResetSent",
-    params: { email: data.email, from: "forgot" },
-  });
+    router.push({
+      pathname: "/(auth)/passwordResetSent",
+      params: { email: data.email, from: "forgot" },
+    });
   };
 
   return (
@@ -76,7 +74,7 @@ const ForgotPassword = () => {
         keyboardOpeningTime={0}
         keyboardDismissMode="interactive"
       >
-        <Spacer size={"$4xl"}/>
+        <Spacer size={"$4xl"} />
         <YStack paddingHorizontal={"$md"} alignItems="center">
           <YStack
             backgroundColor="$primarylight"

@@ -12,7 +12,7 @@ import { t } from "@/translations";
 import { router } from "expo-router";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { XStack, YStack } from "tamagui";
+import { getTokenValue, XStack, YStack } from "tamagui";
 
 const PaymentMethod = () => {
   const { bottom: bottomSafeAreaInset } = useSafeAreaInsets();
@@ -80,7 +80,14 @@ const PaymentMethod = () => {
             {/* Add New Card Button */}
             <SecondaryButton
               label={t("paymentMethod.btn")}
-              icon={<AppImage name="addIcon" width={16} height={16} />}
+              icon={
+                <AppImage
+                  tintColor={getTokenValue("$primary")}
+                  name="addIcon"
+                  width={16}
+                  height={16}
+                />
+              }
               onPress={() => {
                 router.push("/addNewCardDetails");
               }}

@@ -22,6 +22,7 @@ interface FormInputProps {
   onFocus?: () => void;
   onBlur?: () => void;
   onSubmitEditing?: () => void;
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
 }
 
 export const FormInput = ({
@@ -40,6 +41,7 @@ export const FormInput = ({
   onFocus,
   onBlur,
   onSubmitEditing,
+  autoCapitalize = "none",
 }: FormInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -64,18 +66,19 @@ export const FormInput = ({
         padding={"$sm-reg"}
         paddingHorizontal={paddingHorizontal}
         alignItems="center"
-        backgroundColor="$white"
+        backgroundColor="white"
+        style={{ backgroundColor: "white", overflow: "hidden" }}
       >
         {icon && <XStack marginRight="$2">{icon}</XStack>}
-        <YStack flex={1} position="relative">
+        <YStack flex={1} position="relative" style={Styles.inputContainer}>
           <Input
             value={value}
             borderWidth={0}
             onChangeText={onChangeText}
-            style={Styles.input}
+            style={[Styles.input, { backgroundColor: "white" }]}
             multiline={multiline}
             height={"$lg"}
-            backgroundColor="$white"
+            backgroundColor="white"
             placeholder={placeholder}
             keyboardType={keyboardType}
             numberOfLines={numberOfLines}
@@ -86,6 +89,16 @@ export const FormInput = ({
             returnKeyType="done"
             secureTextEntry={isPassword && !showPassword}
             selectionColor={colors.black}
+            autoComplete="off"
+            textContentType="none"
+            autoCapitalize={autoCapitalize}
+            autoCorrect={false}
+            importantForAutofill="no"
+            passwordRules={isPassword ? "" : undefined}
+            spellCheck={false}
+            keyboardAppearance="default"
+            clearButtonMode="never"
+            enablesReturnKeyAutomatically={false}
           />
           {!value && !isFocused && (
             <YStack
@@ -146,5 +159,10 @@ const Styles = StyleSheet.create({
     fontWeight: "400",
     color: "black",
     padding: 0,
+    backgroundColor: "transparent",
+  },
+  inputContainer: {
+    backgroundColor: "white",
+    overflow: "hidden",
   },
 });

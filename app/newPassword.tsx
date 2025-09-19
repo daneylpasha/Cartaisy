@@ -8,7 +8,7 @@ import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 
 import { Controller, useForm } from "react-hook-form";
-import { Alert, FlatList, ListRenderItem } from "react-native";
+import { FlatList, ListRenderItem } from "react-native";
 import { getTokenValue, XStack, YStack } from "tamagui";
 type newPasswordForm = {
   password: string;
@@ -33,8 +33,17 @@ const NewPassword = () => {
 
   const onSubmit = async (data: newPasswordForm) => {
     router.push("/(auth)/login");
-    Alert.alert("Password Changed Sucessfully");
+    // Alert.alert("Password Changed Sucessfully");
+
+    const { password } = data;
+    if (password === "1234567") {
+      setErrorBanner(text);
+    } else {
+      setErrorBanner("Enter your password");
+    }
   };
+
+  const text = errorBanner ? errorBanner : t("newpassword.description");
 
   const renderLists: ListRenderItem<string> = ({ item }) => (
     <XStack alignItems="center">

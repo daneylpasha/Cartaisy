@@ -25,7 +25,7 @@ const AlertModal: React.FC<AlertModalProps> = ({
   children,
   visible,
   onCancel,
-  animationType = Platform.OS === "ios" ? "fade" : "slide",
+  animationType = Platform.OS === "ios" ? "fade" : "fade",
   backdropOpacity = 0.5,
 }) => {
   return (

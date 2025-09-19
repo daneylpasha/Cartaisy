@@ -36,7 +36,15 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-mail-composer"
+      "expo-mail-composer",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#ffffff",
+          "sounds": []
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

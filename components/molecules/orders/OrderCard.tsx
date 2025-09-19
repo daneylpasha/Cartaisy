@@ -8,6 +8,7 @@ import { SHADOW_STYLES } from "@/constants/styles";
 import React from "react";
 import { getTokenValue, XStack, YStack } from "tamagui";
 import { ActiveCard } from "../profile/ActiveCard";
+import { router } from "expo-router";
 
 type itemProps = {
   item: {
@@ -24,7 +25,7 @@ type itemProps = {
 };
 const OrderCard = ({ item }: itemProps) => {
   return (
-    <OpTouch>
+    <OpTouch onPress={()=> router.push(`/ordersDetails`)} >
       <YStack
         style={{ ...SHADOW_STYLES }}
         backgroundColor={"$white"}

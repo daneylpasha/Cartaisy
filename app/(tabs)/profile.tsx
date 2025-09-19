@@ -16,7 +16,7 @@ import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
 import { router } from "expo-router";
 import React from "react";
-import { FlatList } from "react-native";
+import { FlatList, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { XStack, YStack } from "tamagui";
 
@@ -209,11 +209,11 @@ const ProfileScreen = () => {
             )} v3.1.8 bugfix9`}</TextSMSemiBold>
             <Spacer size={"$sm"} />
             <TextSMRegular color="$secondary">{`All rights reserved, 2028©`}</TextSMRegular>
-            <Spacer size={"$md"} />
+            {/* <Spacer size={"$md"} /> */}
           </YStack>
         )}
       />
-      <Spacer size={BOTTOM_INSET + 20} />
+      <Spacer size={Platform.OS === 'ios' ? BOTTOM_INSET + 20 : 0} />
     </ScreenContainer>
   );
 };

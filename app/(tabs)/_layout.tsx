@@ -19,6 +19,10 @@ export default function TabLayout() {
             ios: {
               // Use a transparent background on iOS to show the blur effect
               position: "absolute",
+              backgroundColor: getTokenValue("$background"),
+            },
+            android:{
+              backgroundColor: getTokenValue("$background"),
             },
             default: {},
           }),
@@ -51,7 +55,7 @@ export default function TabLayout() {
             headerShown: true,
             headerTitle: () => <TextMDSemiBold>{"Cart"}</TextMDSemiBold>,
             headerShadowVisible: false,
-
+            headerTitleAlign: "center",
             headerStyle: {
               backgroundColor: getTokenValue("$background"),
             },

@@ -61,6 +61,7 @@ export const CheckoutStepper = ({
           borderWidth={6}
           borderColor={"$primarylight"}
           borderRadius={"$full"}
+          
         >
           <YStack
             width={24}

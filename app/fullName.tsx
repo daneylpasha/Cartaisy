@@ -1,3 +1,4 @@
+import authApi from "@/api/endpoints/auth";
 import {
   HeadingXSRegular,
   TextSMRegular,
@@ -8,9 +9,10 @@ import { FormInput } from "@/components/atoms/FormInput";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
+import useAuthStore from "@/store/useAuthStore";
 import { t } from "@/translations";
 import { router } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { YStack } from "tamagui";
@@ -19,15 +21,62 @@ type FullnameForm = {
 };
 
 const Fullname = () => {
+  const { token, updateProfileData, updateUser, profileData } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<FullnameForm>({
     defaultValues: {
-      fullname: "",
+      fullname: profileData.fullName || "",
     },
   });
 
-  const onSubmit = (data: FullnameForm) => {
-    router.push("/phoneNumber");
-    console.log(data);
+  const onSubmit = async (data: FullnameForm) => {
+    // Store fullName in Zustand store first
+    updateProfileData("fullName", data.fullname.trim());
+
+    // If user has token, call API directly, otherwise just go to next screen
+    if (token) {
+      setIsLoading(true);
+      try {
+        // API expects field and value structure
+        const completeProfileData = {
+          fullName: data.fullname.trim(),
+        };
+
+        const response = await authApi.completeProfile(
+          completeProfileData,
+          token
+        );
+
+        console.log("Complete Profile Response:", response);
+        if (
+          response.success ||
+          response.status === "success" ||
+          response.message?.includes("successfully")
+        ) {
+          // Update user data in store
+          if (response.data?.user) {
+            updateUser(response.data.user);
+          }
+
+          console.log(
+            "Profile updated successfully with fullName - Navigating to phoneNumber"
+          );
+          router.push("/phoneNumber");
+        } else {
+          console.error("Failed to update profile:", response.message);
+        }
+      } catch (error: any) {
+        console.error("Error updating profile:", error);
+        console.error("Error details:", error.response?.data || error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      console.log("❌ No token found! Cannot call API. Please login again.");
+      // Don't navigate without token - user needs to complete registration properly
+      alert("Session expired. Please login again.");
+    }
   };
 
   return (
@@ -51,7 +100,7 @@ const Fullname = () => {
           <Spacer size={"$7xl"} />
           <Spacer size={"$8xl"} />
           <TextSMSemiBold>{t("profile.fullName.label")}</TextSMSemiBold>
-                 <Spacer size={"$sm"} />
+          <Spacer size={"$sm"} />
           <Controller
             name="fullname"
             control={form.control}
@@ -82,7 +131,7 @@ const Fullname = () => {
             <PrimaryButton
               label={t("common.continue")}
               onPress={form.handleSubmit(onSubmit)}
-              isLoading={false}
+              isLoading={isLoading}
               icon={<AppImage name="arrowRight" size={16} />}
             />
           </YStack>

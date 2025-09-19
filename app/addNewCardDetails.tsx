@@ -46,9 +46,9 @@ const formatDMY = (d: Date) => {
 const AddNewCardDetails = () => {
   const form = useForm();
   const calendarBottomSheetRef = useRef<BaseBottomSheetRef>(null);
-  
+
   const onSubmit = (data: any) => {
-    console.log('Form submitted:', data);
+    console.log("Form submitted:", data);
     handleLinkCard();
   };
   const [tempDateSelection, setTempDateSelection] = useState<string | null>(
@@ -84,17 +84,16 @@ const AddNewCardDetails = () => {
       flex={1}
     >
       <KeyboardAwareScrollView
-              bounces={false}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ flexGrow: 1 }}
-              keyboardShouldPersistTaps="handled"
-              enableOnAndroid={true}
-              enableAutomaticScroll={true}
-              extraScrollHeight={20}
-              keyboardOpeningTime={0}
-              keyboardDismissMode="interactive"
-            >
-
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
+        extraScrollHeight={20}
+        keyboardOpeningTime={0}
+        keyboardDismissMode="interactive"
+      >
         <YStack>
           {/* Header */}
           <YStack padding={"$md"}>
@@ -197,7 +196,7 @@ const AddNewCardDetails = () => {
                       // error={fieldState.error?.message}
                       onSubmitEditing={() => form.setFocus("cardnumber")}
                     />
-                    <AppImage name="warningIcon" width={16} height={16} />
+                    {/* <AppImage name="warningIcon" width={16} height={16} /> */}
                   </XStack>
                 )}
               />
@@ -239,7 +238,6 @@ const AddNewCardDetails = () => {
                       // error={fieldState.error?.message}
                       onSubmitEditing={() => form.setFocus("dob")}
                     />
-                    <AppImage name="warningIcon" width={16} height={16} />
                   </XStack>
                 )}
               />
@@ -378,9 +376,6 @@ const AddNewCardDetails = () => {
                       // error={fieldState.error?.message}
                       onSubmitEditing={() => form.setFocus("apartmentnumber")}
                     />
-                    <OpTouch>
-                      <AppImage name="editIcon" width={16} height={16} />
-                    </OpTouch>
                   </XStack>
                 )}
               />
@@ -419,9 +414,6 @@ const AddNewCardDetails = () => {
                       // error={fieldState.error?.message}
                       onSubmitEditing={() => form.setFocus("province")}
                     />
-                    <OpTouch>
-                      <AppImage name="editIcon" width={16} height={16} />
-                    </OpTouch>
                   </XStack>
                 )}
               />
@@ -462,9 +454,6 @@ const AddNewCardDetails = () => {
                       // error={fieldState.error?.message}
                       onSubmitEditing={() => form.setFocus("postalcode")}
                     />
-                    <OpTouch>
-                      <AppImage name="editIcon" width={16} height={16} />
-                    </OpTouch>
                   </XStack>
                 )}
               />
@@ -506,9 +495,6 @@ const AddNewCardDetails = () => {
                       // error={fieldState.error?.message}
                       onSubmitEditing={form.handleSubmit(onSubmit)}
                     />
-                    <OpTouch>
-                      <AppImage name="editIcon" width={16} height={16} />
-                    </OpTouch>
                   </XStack>
                 )}
               />
@@ -516,7 +502,7 @@ const AddNewCardDetails = () => {
           </YStack>
         </YStack>
         <Spacer size={"$lg"} />
-            </KeyboardAwareScrollView>
+      </KeyboardAwareScrollView>
       {/* <ScrollView showsVerticalScrollIndicator={false}>
       </ScrollView> */}
       <YStack paddingHorizontal={"$md"}>
@@ -924,7 +910,6 @@ const AddNewCardDetails = () => {
         <LoaderScreen onComplete={handleLoaderComplete} duration={3000} />
       </Modal>
 
-     
       <CardLinkModal
         visible={showCardLinkModal}
         expectedName="John Doe"

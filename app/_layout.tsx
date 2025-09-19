@@ -8,9 +8,38 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { TamaguiProvider } from "tamagui";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/api/config/queryClient";
+import * as Notifications from 'expo-notifications';
+import { useEffect } from 'react';
+
+// Configure notification handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    // Register for push notifications
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notification received:', notification);
+    });
+
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Notification response:', response);
+    });
+
+    return () => {
+      subscription.remove();
+      responseSubscription.remove();
+    };
+  }, []);
 
   const [loaded] = useFonts({
     "Figtree-Regular": require("../assets/fonts/Figtree-Regular.ttf"),
@@ -26,12 +55,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <TamaguiProvider config={config} defaultTheme={colorScheme ?? "light"}>
-          <BottomSheetModalProvider>
-            <Stack
-              screenOptions={{ headerShown: false }}
-              initialRouteName="splash"
-            >
+        <QueryClientProvider client={queryClient}>
+          <TamaguiProvider config={config} defaultTheme={colorScheme ?? "light"}>
+            <BottomSheetModalProvider>
+              <Stack
+                screenOptions={{ headerShown: false }}
+                initialRouteName="splash"
+              >
               <Stack.Screen name="splash" />
               <Stack.Screen name="wellcome" />
               <Stack.Screen name="onboardingSlides" />
@@ -91,6 +121,7 @@ export default function RootLayout() {
             </Stack>
           </BottomSheetModalProvider>
         </TamaguiProvider>
+      </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

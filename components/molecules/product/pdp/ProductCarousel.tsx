@@ -3,6 +3,7 @@ import { TextSMMedium } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
+import { tokens } from "@/tamagui/token";
 import { BlurView } from "expo-blur";
 import React, { useRef, useState } from "react";
 import { FlatList, StyleSheet, useWindowDimensions } from "react-native";
@@ -26,7 +27,7 @@ export default function ProductCarousel({
   showCounter = true,
   dotSize = 8,
   dotColor = "#D1D5DB",
-  activeDotColor = "#7C3AED",
+  activeDotColor = tokens.color.primary,
   onImagePress,
 }: Props) {
   const { width } = useWindowDimensions();

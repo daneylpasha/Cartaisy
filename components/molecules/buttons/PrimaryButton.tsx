@@ -39,15 +39,15 @@ export const PrimaryButton = ({
       width={width}
     >
       <XStack alignItems="center" justifyContent="center" gap="$sm-reg">
-        {iconPosition === "left" && icon}
-        <TextMDSemiBold color={"$white"}>
-          {isLoading ? (
-            <ActivityIndicator size={"small"} color={"white"} />
-          ) : (
-            label
-          )}
-        </TextMDSemiBold>
-        {iconPosition === "right" && icon}
+        {isLoading ? (
+          <ActivityIndicator size={"small"} color={"white"} />
+        ) : (
+          <>
+            {iconPosition === "left" && icon}
+            <TextMDSemiBold color={"$white"}>{label}</TextMDSemiBold>
+            {iconPosition === "right" && icon}
+          </>
+        )}
       </XStack>
     </OpTouch>
   );

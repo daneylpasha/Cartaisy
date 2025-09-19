@@ -13,7 +13,7 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { tokens } from "@/tamagui/token";
 import React from "react";
-import { XStack, YStack } from "tamagui";
+import { getTokenValue, XStack, YStack } from "tamagui";
 
 type IconName = keyof typeof Icons;
 
@@ -101,13 +101,23 @@ export default function CartLineItem(props: CartLineItemProps) {
               paddingVertical={"$xs"}
             >
               <OpTouch onPress={onDecrease}>
-                <AppImage name={"minus"} width={10} height={10} />
+                <AppImage
+                  tintColor={getTokenValue("$primary")}
+                  name={"minus"}
+                  width={10}
+                  height={10}
+                />
               </OpTouch>
               <Spacer size={"$reg"} />
               <TextMDBold color="$secondary">{quantity}</TextMDBold>
               <Spacer size={"$reg"} />
               <OpTouch onPress={onIncrease}>
-                <AppImage name={"addIcon"} width={10} height={10} />
+                <AppImage
+                  tintColor={getTokenValue("$primary")}
+                  name={"addIcon"}
+                  width={10}
+                  height={10}
+                />
               </OpTouch>
             </XStack>
             <Spacer size={"$md"} />

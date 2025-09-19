@@ -25,7 +25,13 @@ export const SHADOW_STYLES: ViewStyle =
       shadowRadius: 3,
       shadowOffset: { width: 0, height: 2 },
     },
-    android: { elevation: 3 },
+    android: {
+      shadowColor: "#000",
+      shadowOpacity: 0.08,
+      shadowRadius: 3,
+      shadowOffset: { width: 2, height: 2 },
+      elevation: 1,
+    },
     default: {},
   }) || {};
 
@@ -103,7 +109,6 @@ export function WishlistCard({ item, onPress }: Props) {
             />
           </YStack>
         </XStack>
-        
       </YStack>
     </OpTouch>
   );

@@ -88,7 +88,7 @@ export const HEADER_CONFIGS = {
       backgroundColor: tokens.color.background,
     },
   },
-   forgotPassword: {
+  forgotPassword: {
     headerBackVisible: false,
     headerTitle: "",
     headerShown: true,
@@ -134,6 +134,7 @@ export const HEADER_CONFIGS = {
     headerBackVisible: false,
     headerTitle: "Checkout",
     headerShown: true,
+    headerTitleAlign: "center",
     headerLeft: () => (
       <OpTouch onPress={() => router.back()}>
         <AppImage name={"arrowBack"} size={16} />
@@ -149,6 +150,8 @@ export const HEADER_CONFIGS = {
     headerBackVisible: false,
     headerTitle: "Orders",
     headerShown: true,
+
+    headerTitleAlign: "center",
     headerLeft: () => (
       <OpTouch onPress={() => router.back()}>
         <AppImage name={"arrowBack"} size={16} />
@@ -163,6 +166,7 @@ export const HEADER_CONFIGS = {
   ordersDetails: {
     headerBackVisible: false,
     headerTitle: "Orders Details",
+    headerTitleAlign: "center",
     headerShown: true,
     headerLeft: () => (
       <OpTouch onPress={() => router.back()}>

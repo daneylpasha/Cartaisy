@@ -1,3 +1,4 @@
+import { useLogin } from "@/api/hooks/useAuth";
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { OpTouch } from "@/components/atoms/OpTouch";
@@ -12,6 +13,7 @@ import {
 } from "@/components/atoms/texts";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { SecondaryButton } from "@/components/molecules/buttons/SecondaryButton";
+import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -19,14 +21,36 @@ import { Controller, useForm } from "react-hook-form";
 import { Alert } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { getTokenValue, XStack, YStack } from "tamagui";
+import useAuthStore from "@/store/useAuthStore";
 type LoginForm = {
   email: string;
   password: string;
 };
 
 const Login = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const { setToken, setUser } = useAuthStore();
+
+  const {
+    mutateAsync: loginUser,
+    isPending: isLoggingIn,
+  } = useLogin({
+    onSuccess: (data) => {
+      console.log("✅ Login Success! Full Response:", data);
+      if (data?.data?.accessToken) {
+        setToken(data.data.accessToken, data.data.refreshToken);
+      }
+
+      if (data?.data?.user) {
+        setUser(data.data.user);
+      }
+
+      router.replace("/(tabs)");
+    },
+    onError: (error) => {
+      console.log("❌ Login Failed! Full Error:", error);
+    },
+  });
 
   const form = useForm<LoginForm>({
     defaultValues: {
@@ -36,40 +60,17 @@ const Login = () => {
   });
 
   const onSubmit = async (data: LoginForm) => {
-    setIsLoading(true);
-
+    console.log("🔵 Login Form Submitted with data:", data);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await loginUser(data);
+    } catch (error: any) {
+      console.log("📊 Error Status:", error?.response?.status);
+      console.log("💬 Error Message:", error?.response?.data?.message);
 
-      // Basic validation
-      if (data.email === "" || data.password === "") {
-        Alert.alert("Error", "Please fill in all fields");
-        return;
-      }
-
-      // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(data.email)) {
-        Alert.alert("Error", "Please enter a valid email address");
-        return;
-      }
-
-      // Password validation
-      if (data.password.length < 6) {
-        Alert.alert("Error", "Password must be at least 6 characters long");
-        return;
-      }
-
-      // Success - navigate to main app
-      console.log("Login successful:", data);
-      router.push("/fullName");
-      // router.push("/(tabs)");
-    } catch (error) {
-      Alert.alert("Error", "Login failed. Please try again.");
-      console.error("Login error:", error);
-    } finally {
-      setIsLoading(false);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || "Login failed. Please try again."
+      );
     }
   };
   const googleLogin = async () => {
@@ -196,7 +197,7 @@ const Login = () => {
           <Spacer size={"$lg"} />
           <PrimaryButton
             onPress={form.handleSubmit(onSubmit)}
-            isLoading={isLoading}
+            isLoading={isLoggingIn}
             label={t("common.login")}
           />
           <Spacer size={"$reg"} />
@@ -235,11 +236,12 @@ const Login = () => {
             shadowColor={"black"}
             shadowOffset={{ width: 0, height: 8 }}
             shadowOpacity={0.05}
+            style={{ elevation: 1, ...SHADOW_STYLES }}
             shadowRadius={16}
             borderRadius={"full"}
             paddingHorizontal={"md"}
             paddingVertical={"reg"}
-            disabled={isLoading}
+            disabled={isLoggingIn}
             onPress={googleLogin}
           >
             <XStack alignItems="center">
@@ -254,7 +256,7 @@ const Login = () => {
           <OpTouch
             justifyContent="center"
             alignItems="center"
-            disabled={isLoading}
+            disabled={isLoggingIn}
             onPress={() => router.push("/(auth)/forgotPassword")}
           >
             <TextMDSemiBold

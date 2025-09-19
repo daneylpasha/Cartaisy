@@ -1,3 +1,4 @@
+import authApi from "@/api/endpoints/auth";
 import {
   HeadingXSRegular,
   TextMDSemiBold,
@@ -10,6 +11,7 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
+import useAuthStore from "@/store/useAuthStore";
 import { t } from "@/translations";
 import { router } from "expo-router";
 import { isValidPhoneNumber } from "libphonenumber-js";
@@ -27,6 +29,8 @@ type PhoneNumberForm = {
 };
 
 const PhoneNumber = () => {
+  const { token, updateUser, setProfileData, updateProfileData } =
+    useAuthStore();
   const [selectedCountry, setSelectedCountry] = useState<Country>({
     callingCode: ["44"],
     cca2: "GB",
@@ -37,6 +41,7 @@ const PhoneNumber = () => {
     subregion: "Northern Europe",
   });
   const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     control,
@@ -48,10 +53,59 @@ const PhoneNumber = () => {
     },
   });
 
-  const onSubmit = (data: PhoneNumberForm) => {
-    const fullPhoneNumber = `+${selectedCountry.callingCode[0]}${data.phone}`;
-    // Alert.alert("Submitted!", `Phone: ${fullPhoneNumber}`);
-    router.push("/notification");
+  const onSubmit = async (data: PhoneNumberForm) => {
+    // Prepare phone data
+    const phoneData = {
+      phoneNumber: data.phone.trim(),
+      countryCode: selectedCountry.callingCode[0],
+      countryName: selectedCountry.name,
+      countryISO: selectedCountry.cca2,
+      fullPhoneNumber: `+${selectedCountry.callingCode[0]}${data.phone.trim()}`,
+    };
+
+    // Store phone data in Zustand
+    Object.keys(phoneData).forEach((key) => {
+      updateProfileData(key, phoneData[key as keyof typeof phoneData]);
+    });
+
+    if (token) {
+      setIsLoading(true);
+
+      try {
+        const completeProfileData = {
+          phoneNumber: phoneData.fullPhoneNumber,
+        };
+        const response = await authApi.completeProfile(
+          completeProfileData,
+          token
+        );
+        console.log("Complete Profile Response:", response);
+        if (
+          response.success ||
+          response.status === "success" ||
+          response.message?.includes("successfully")
+        ) {
+          if (response.data?.user) {
+            updateUser(response.data.user);
+          }
+          setProfileData({});
+          console.log("Profile completed successfully ");
+          router.push("/notification");
+        } else {
+          console.error("Failed to complete profile:", response.message);
+          console.error("API returned success = false, not navigating");
+        }
+      } catch (error: any) {
+        console.error("Error completing profile:", error);
+        console.error("Error details:", error.response?.data || error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      console.log("❌ No token found! Cannot call API. Please login again.");
+      // Don't navigate without token
+      alert("Session expired. Please login again.");
+    }
   };
 
   const onSelectCountry = (country: Country) => {
@@ -111,7 +165,7 @@ const PhoneNumber = () => {
                   }
                 },
               }}
-              render={({ field: { onChange, value }, fieldState }) => (
+              render={({ field: { onChange, value } }) => (
                 <XStack alignItems="center">
                   <OpTouch onPress={() => setShowCountryPicker(true)}>
                     <XStack
@@ -187,7 +241,7 @@ const PhoneNumber = () => {
             <PrimaryButton
               label={t("common.continue")}
               onPress={handleSubmit(onSubmit)}
-              isLoading={false}
+              isLoading={isLoading}
               icon={<AppImage name="arrowRight" size={16} />}
             />
           </YStack>

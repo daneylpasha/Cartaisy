@@ -1,3 +1,4 @@
+import { useSignUp } from "@/api/hooks/useAuth";
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { OpTouch } from "@/components/atoms/OpTouch";
@@ -6,10 +7,11 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { HeadingSMBold } from "@/components/atoms/texts/HeadingSMBold";
 import { TextMDSemiBold } from "@/components/atoms/texts/TextMDSemiBold";
 import { TextSMSemiBold } from "@/components/atoms/texts/TextSMSemiBold";
-import { t } from "@/translations";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
+import useAuthStore from "@/store/useAuthStore";
+import { t } from "@/translations";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Alert } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -23,56 +25,58 @@ type SignUpForm = {
 };
 
 const SignUp = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const { setToken, setUser } = useAuthStore();
+
+  const { mutateAsync: signUpUser, isPending: isSigningUp } = useSignUp({
+    onSuccess: (data) => {
+      console.log(" Sign Up Success! Full Response", data);
+
+      // Now properly extract token - might be in data.token
+      const token = data?.data?.token;
+
+      const refreshToken = data?.data?.refreshToken;
+
+      if (token) {
+        setToken(token, refreshToken || undefined);
+      } else {
+        console.log("❌ No token found in registration response");
+      }
+
+      if (data?.data?.user) {
+        setUser(data.data.user);
+      }
+
+      router.push("/fullName");
+    },
+    onError: (error) => {
+      console.log("❌ Sign Up Failed! Full Error:", error);
+    },
+  });
 
   const form = useForm<SignUpForm>({
     defaultValues: {
       email: "",
       password: "",
-      confirmPassword: "",
     },
   });
 
   const onSubmit = async (data: SignUpForm) => {
-    setIsLoading(true);
+    if (data.password !== data.confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
 
     try {
-      // Simulate API call
-      // await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Basic validation
-      if (data.email === "" || data.password === "") {
-        Alert.alert("Error", "Please fill in all fields");
-        return;
-      }
-
-      // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(data.email)) {
-        Alert.alert("Error", "Please enter a valid email address");
-        return;
-      }
-
-      // Password validation
-      if (data.password.length < 6) {
-        Alert.alert("Error", "Password must be at least 6 characters long");
-        return;
-      }
-
-      // Confirm password validation
-      if (data.password !== data.confirmPassword) {
-        Alert.alert("Error", "Passwords do not match");
-        return;
-      }
-
-      // Success - navigate to main app
-      console.log("Sign Up successful:", data);
-      router.push("/(auth)/login");
-    } catch (error) {
-      Alert.alert("Error", "Sign Up failed. Please try again.");
-      console.error("Sign Up error:", error);
-    } finally {
-      setIsLoading(false);
+      await signUpUser({
+        email: data.email,
+        password: data.password,
+      });
+      // Success is handled in the custom onSuccess handler
+    } catch (error: any) {
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || "Sign Up failed. Please try again."
+      );
     }
   };
 
@@ -131,6 +135,7 @@ const SignUp = () => {
                   error={fieldState.error?.message}
                   keyboardType="email-address"
                   onSubmitEditing={() => form.setFocus("password")}
+                  autoCapitalize="none"
                 />
               )}
             />
@@ -155,7 +160,8 @@ const SignUp = () => {
                   icon={<AppImage name="lockIcon" size={16} />}
                   secureTextEntry
                   error={fieldState.error?.message}
-                  onSubmitEditing={() => form.setFocus("confirmPassword")}
+                  onSubmitEditing={form.handleSubmit(onSubmit)}
+                  autoCapitalize="none"
                 />
               )}
             />
@@ -167,13 +173,6 @@ const SignUp = () => {
             <Controller
               name="confirmPassword"
               control={form.control}
-              rules={{
-                required: t("validation.confirmPasswordRequired"),
-                minLength: {
-                  value: 6,
-                  message: t("validation.confirmPasswordMinLength"),
-                },
-              }}
               render={({ field, fieldState }) => (
                 <FormInput
                   value={field.value}
@@ -182,7 +181,8 @@ const SignUp = () => {
                   icon={<AppImage name="lockIcon" size={16} />}
                   secureTextEntry
                   error={fieldState.error?.message}
-                  onSubmitEditing={form.handleSubmit(onSubmit)}
+                  // onSubmitEditing={form.handleSubmit(onSubmit)}
+                  autoCapitalize="none"
                 />
               )}
             />
@@ -192,7 +192,7 @@ const SignUp = () => {
         <YStack paddingHorizontal={"$md"}>
           <PrimaryButton
             onPress={form.handleSubmit(onSubmit)}
-            isLoading={isLoading}
+            isLoading={isSigningUp}
             label={t("common.createAccount")}
           />
         </YStack>
@@ -200,7 +200,7 @@ const SignUp = () => {
         <OpTouch
           justifyContent="center"
           alignItems="center"
-          disabled={isLoading}
+          disabled={isSigningUp}
           onPress={() => router.push("/(auth)/login")}
         >
           <TextMDSemiBold

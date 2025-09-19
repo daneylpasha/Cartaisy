@@ -95,7 +95,7 @@ const WellcomeScreen = () => {
       <XStack justifyContent="center" alignItems="center">
         <OpTouch onPress={() => router.push("/(auth)/login")}>
           <XStack alignItems="center">
-            <AppImage tintColor={"$primary"} name={"loginIcon"} size={20} />
+            <AppImage  tintColor={getTokenValue("$primary")} name={"loginIcon"} size={20} />
             <Spacer size={"$sm-reg"} />
             <TextMDSemiBold color={"$primary"}>
               {t("welcome.alreadyHaveAccount")}

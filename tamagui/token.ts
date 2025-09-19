@@ -5,7 +5,7 @@ export const tokens = {
     white: "#FFFFFF",
     black: "#000000",
     primary: "rgba(124, 58, 237, 1)",
-    primarylight: "#EDE9FE",
+    primarylight: "#ede9feff",
     secondary: "rgba(75, 85, 99, 1)",
     background: "#F8FAFC",
     grey: "#E2E8F0",

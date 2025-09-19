@@ -1,0 +1,96 @@
+import { BottomSheetFlatList, BottomSheetModal } from "@gorhom/bottom-sheet";
+import React, { forwardRef } from "react";
+import { ListRenderItem, ViewStyle } from "react-native";
+import { BaseBottomSheetModal } from "./BottomSheetModal";
+import Icons from "@/assets/Icons";
+
+interface BottomSheetModalWithFlatListProps<T = any> {
+  // Required props
+  data: T[];
+  renderItem: ListRenderItem<T>;
+  
+  // FlatList props - pass through as needed
+  ListFooterComponent?: React.ReactElement | React.ComponentType<any>;
+  ListHeaderComponent?: React.ReactElement | React.ComponentType<any>;
+  keyExtractor?: (item: T, index: number) => string;
+  contentContainerStyle?: ViewStyle;
+  showsVerticalScrollIndicator?: boolean;
+  style?: ViewStyle;
+  icon?:keyof typeof Icons;
+  iconPosition?: "left" | "right";
+  // BottomSheet props
+  snapPoints?: (string | number)[];
+  enableDynamicSizing?: boolean;
+  showBackdrop?: boolean;
+  
+  // Footer button props - optional
+  onPrimaryPress?: () => void;
+  onSecondaryPress?: () => void;
+  primaryButtonLabel?: string;
+  secondaryButtonLabel?: string;
+  showFooter?: boolean;
+}
+
+export const BottomSheetModalWithFlatList = forwardRef<
+  BottomSheetModal,
+  BottomSheetModalWithFlatListProps
+>(
+  (
+    {
+      // Required
+      data,
+      renderItem,
+      icon,
+      iconPosition,
+      // FlatList props
+      ListFooterComponent,
+      ListHeaderComponent,
+      keyExtractor,
+      contentContainerStyle,
+      showsVerticalScrollIndicator = false,
+      style,
+      
+      // BottomSheet props
+      snapPoints = ["60%"],
+      enableDynamicSizing = false,
+      showBackdrop = true,
+      
+      // Footer button props
+      onPrimaryPress,
+      onSecondaryPress,
+      primaryButtonLabel,
+      secondaryButtonLabel,
+      showFooter = false,
+    },
+    ref
+  ) => {
+    return (
+      <BaseBottomSheetModal
+        ref={ref}
+        snapPoints={snapPoints}
+        onPrimaryPress={onPrimaryPress}
+        onSecondaryPress={onSecondaryPress}
+        icon={icon}
+        iconPosition={iconPosition}
+        primaryButtonLabel={primaryButtonLabel}
+        secondaryButtonLabel={secondaryButtonLabel}
+        showFooter={showFooter}
+        showBackdrop={showBackdrop}
+        enableDynamicSizing={enableDynamicSizing}
+      >
+        <BottomSheetFlatList
+          data={data}
+          keyExtractor={keyExtractor}
+          ListHeaderComponent={ListHeaderComponent}
+          ListFooterComponent={ListFooterComponent}
+          contentContainerStyle={contentContainerStyle}
+          showsVerticalScrollIndicator={showsVerticalScrollIndicator}
+          style={style}
+          renderItem={renderItem}
+        />
+      </BaseBottomSheetModal>
+    );
+  }
+);
+
+BottomSheetModalWithFlatList.displayName = "BottomSheetModalWithFlatList";

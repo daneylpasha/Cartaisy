@@ -4,7 +4,7 @@ import { getTokenValue, XStack, YStack } from "tamagui";
 
 import Icons from "@/assets/Icons";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
-import { FlatList } from "react-native";
+import { FlatList, Platform } from "react-native";
 import { HeadingXSBold, ParagraphMD, TextMDSemiBold } from "../../atoms";
 import { Spacer } from "../../atoms/Spacer";
 import AlertModal from "../AlertModal";
@@ -116,7 +116,7 @@ export default function CancelOrderModal({
         left={16}
         right={16}
         borderRadius={"$3xl"}
-        top={"20%"}
+        top={Platform.OS === "ios" ? "20%" : "10%"}
         backgroundColor={"$white"}
         paddingHorizontal={"$md"}
         paddingVertical={"$reg"}

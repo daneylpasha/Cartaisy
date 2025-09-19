@@ -52,7 +52,7 @@ const ChangePassword = () => {
       <HeadingSMBold>{"Change Password"}</HeadingSMBold>
       <Spacer size={"$reg"} />
       <ParagraphLG color={"$secondary"}>
-        Enter your current password
+        {"Enter your current password"}
       </ParagraphLG>
       <Spacer size={"$xl"} />
       <Controller

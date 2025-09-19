@@ -87,7 +87,8 @@ export const FeaturedPromotionsCarousel = ({
               style={{
                 borderTopRightRadius: 16,
                 borderTopLeftRadius: 16,
-                ...SHADOW_STYLES,
+               
+                // elevation:1,
                 paddingVertical: 30,
               }}
             >
@@ -103,6 +104,7 @@ export const FeaturedPromotionsCarousel = ({
                 backgroundColor={"white"}
                 borderBottomRightRadius={"$md"}
                 borderBottomLeftRadius={"$md"}
+                style={SHADOW_STYLES}
               >
                 <TextXSRegular color="$icon">
                   Ends in {item.dealEnds}

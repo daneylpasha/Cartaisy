@@ -1,4 +1,5 @@
 import {
+  ParagraphMD,
   TextMDBold,
   TextMDSemiBold,
   TextSMMedium,
@@ -344,13 +345,12 @@ const ordersDetails = () => {
         />
         <Spacer size={"$reg"} />
         <SecondaryButton
-          onPress={() => {
-            setShow(true);
-          }}
+          onPress={() => setShow(true)}
           label={"Cancel Order"}
         />
         <Spacer size={bottomSafeAreaInset} />
       </YStack>
+      
       <CancelOrderModal
         visible={show}
         expectedName="John Doe"
