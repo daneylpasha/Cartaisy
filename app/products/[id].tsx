@@ -143,23 +143,52 @@ const productSpecs = [
 ];
 
 const ProductDetailsScreen = () => {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const product = products.find((p) => p.id == id);
+  const { id, productData } = useLocalSearchParams<{ id: string; productData?: string }>();
+
+  // ✅ Parse the product data from navigation params
+  const passedProduct = productData ? JSON.parse(productData as string) : null;
+
+  console.log("ID:", id);
+  console.log("Passed Product Data:", passedProduct);
+
+  // ✅ Use passed product data if available, otherwise fallback to local data
+  const product = passedProduct || products.find((p) => p.id == id);
 
   const [viewerIndex, setViewerIndex] = useState(0);
   const [viewerOpen, setViewerOpen] = useState(false);
 
-  // ✅ FIXED: Properly format images for ImageViewing
-  const imageNames = product?.image ?? [];
+  // ✅ Handle both single image and array of images from API
+  const productImages = useMemo(() => {
+    // Check if product from API has image/images
+    if (passedProduct) {
+      // If has images array
+      if (passedProduct.images && Array.isArray(passedProduct.images)) {
+        return passedProduct.images.map((img: any) =>
+          typeof img === 'string' ? img : img.src || img.url || img
+        );
+      }
+      // If has single image (not array)
+      if (passedProduct.image) {
+        // Convert single image to array
+        return [passedProduct.image];
+      }
+    }
 
-  // ✅ FIXED: Create proper image sources for ImageViewing
+    // Fallback to local product.image array
+    return product?.image ?? [];
+  }, [passedProduct, product]);
+
+  // ✅ Create proper image sources for ImageViewing
   const viewerImages = useMemo(() => {
-    const images = imageNames.map((n) => {
-      const iconSource = Icons[n];
-      return iconSource;
+    return productImages.map((img: string) => {
+      // Check if it's a URL or an icon name
+      if (img.startsWith('http') || img.startsWith('https')) {
+        return { uri: img }; // API image URL
+      }
+      // Fallback to icon if it's a local icon name
+      return Icons[img as keyof typeof Icons] || { uri: img };
     });
-    return images;
-  }, [imageNames]);
+  }, [productImages]);
 
   // Define sections for FlatList
   const sections = [
@@ -169,7 +198,7 @@ const ProductDetailsScreen = () => {
       content: (
         <ProductCarousel
           height={385}
-          images={imageNames}
+          images={productImages}
           onImagePress={(i) => {
             setViewerIndex(i);
             setViewerOpen(true);

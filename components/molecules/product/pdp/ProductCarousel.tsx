@@ -10,7 +10,7 @@ import { FlatList, StyleSheet, useWindowDimensions } from "react-native";
 import { Stack, XStack, YStack } from "tamagui";
 
 type Props = {
-  images: (keyof typeof Icons)[] | keyof typeof Icons;
+  images: (keyof typeof Icons)[] | keyof typeof Icons | string[] | string;
   height?: number;
   borderRadius?: number;
   showCounter?: boolean;
@@ -33,14 +33,14 @@ export default function ProductCarousel({
   const { width } = useWindowDimensions();
   const h = height ?? width;
 
-  // ✅ always array
-  const data: (keyof typeof Icons)[] = Array.isArray(images)
-    ? images
-    : [images];
+  // ✅ always array - handle both icon names and URLs
+  const data: string[] = Array.isArray(images)
+    ? images.map(img => String(img))
+    : [String(images)];
   const total = data.length;
 
   const [index, setIndex] = useState(0);
-  const listRef = useRef<FlatList<keyof typeof Icons>>(null);
+  const listRef = useRef<FlatList<string>>(null);
 
   const onEnd = (e: any) => {
     const i = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -99,7 +99,12 @@ export default function ProductCarousel({
               }}
             >
               <Stack pointerEvents="none" style={{ width, height: h }}>
-                <AppImage name={item} width={width} height={h} />
+                {/* Check if it's a URL or icon name */}
+                {item.startsWith('http') || item.startsWith('https') ? (
+                  <AppImage source={item} width={width} height={h} />
+                ) : (
+                  <AppImage name={item as keyof typeof Icons} width={width} height={h} />
+                )}
               </Stack>
             </OpTouch>
 

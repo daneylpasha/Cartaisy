@@ -201,7 +201,8 @@ const SignUp = () => {
           justifyContent="center"
           alignItems="center"
           disabled={isSigningUp}
-          onPress={() => router.push("/(auth)/login")}
+          // onPress={() => router.push("/(auth)/login")}
+          onPress={() => router.push("/(tabs)")}
         >
           <TextMDSemiBold
             borderBottomWidth={1}

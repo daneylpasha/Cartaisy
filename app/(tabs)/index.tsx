@@ -10,18 +10,16 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
 import { TextXSRegular } from "@/components/atoms/texts/TextXSRegular";
 import { CategorySuggestions } from "@/components/molecules/CategorySuggestions";
-import { CollectionsGrid } from "@/components/molecules/home/CollectionsGrid";
-import { SectionHeader } from "@/components/molecules/SectionHeader";
 import CollectionsCardGrid from "@/components/organisms/CollectionsCardGrid";
 import {
+  CalloutBanners,
   FeaturedPromotionsCarousel,
-  FreeShipping,
 } from "@/components/organisms/home";
 import BrandsCollections from "@/components/organisms/home/BrandsCollections";
 import { PromoBannerCard } from "@/components/organisms/home/PromoBannerCard";
-import ProductsGridScroller from "@/components/organisms/ProductsGridScroller";
-import ProductsHorizontalScroller from "@/components/organisms/ProductsHorizontalScroller";
-import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller";
+import ProductsHorizontalScroller from "@/components/organisms/productHorizontalScroller/ProductsHorizontalScroller";
+import ProductsGridScroller from "@/components/organisms/ProductsGridScroller/ProductsGridScroller";
+import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller/SalesHorizontalScroller";
 import { t } from "@/translations";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
@@ -30,13 +28,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 //
 
+import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
 import { AddressCard } from "@/components/molecules/AddressCard";
+import { CollectionsGrid } from "@/components/molecules/home/CollectionsGrid";
 import { BottomSheetModalWithFlatList } from "@/components/organisms/bottomSheet";
+import PlaceHolder from "@/components/organisms/home/Placeholder";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+
 const HomeScreen = () => {
   const { top: TOP_INSET, bottom: BOTTOM_INSET } = useSafeAreaInsets();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const [ open, setOpen ] = useState(false);
+  const [open, setOpen] = useState(false);
   const addressData = [
     {
       id: 1,
@@ -81,6 +83,10 @@ const HomeScreen = () => {
       shipping: "Shipping Available",
     },
   ];
+
+  const { data, isLoading, error } = useHomeScreenData();
+  console.log("homeData ", data);
+
   const handleAddNewAddress = () => {
     bottomSheetModalRef.current?.close();
     setOpen(false);
@@ -94,218 +100,59 @@ const HomeScreen = () => {
 
   const [selectedAddress, setSelectedAddress] = useState<number>(0);
 
-  const collectionData = [
-    {
-      id: 1,
-      name: "Beauty & Fashion",
-      image: "collectionBeauty",
-    },
-    {
-      id: 2,
-      name: "Health & Fitness",
-      image: "collectionFitness",
-    },
-    {
-      id: 3,
-      name: "Goods",
-      image: "collectionGoods",
-    },
-    {
-      id: 4,
-      name: "Electronics",
-      image: "collectionElectronics",
-    },
-    {
-      id: 5,
-      name: "Accessories",
-      image: "collectionAccesories",
-    },
-    {
-      id: 6,
-      name: "Baby Care ",
-      image: "collectionBaby",
-    },
-    {
-      id: 7,
-      name: "Books",
-      image: "collectionBooks",
-    },
-    {
-      id: 8,
-      name: "Automotive",
-      image: "collectionAutomotive",
-    },
-  ];
-  const featuredPromotionsData = [
-    {
-      id: 1,
-      image: "featuredPromotion1",
-      title: "Summer Sale",
-      description: "The deal or the year is finally here.",
-      discount: "50%",
-      dealEnds: "10:00:00",
-    },
-    {
-      id: 2,
-      image: "featuredPromotion1",
-      title: "Summer Sale",
-      description: "The deal or the year is finally here.",
-      discount: "50%",
-      dealEnds: "10:00:00",
-    },
-    {
-      id: 3,
-      image: "featuredPromotion1",
-      title: "Summer Sale",
-      description: "The deal or the year is finally here.",
-      discount: "50%",
-      dealEnds: "10:00:00",
-    },
-    {
-      id: 4,
-      image: "featuredPromotion1",
-      title: "Summer Sale",
-      description: "The deal or the year is finally here.",
-      discount: "50%",
-      dealEnds: "10:00:00",
-    },
-    {
-      id: 5,
-      image: "featuredPromotion1",
-      title: "Summer Sale",
-      description: "Get 50% off on all products",
-      discount: "50%",
-      dealEnds: "10:00:00",
-    },
-  ];
-
- 
   const sections = [
     {
-      id: "featuredPromotions",
-      content: <FeaturedPromotionsCarousel item={featuredPromotionsData} />,
+      id: "featuredPromotionsCarousel",
+      content: <FeaturedPromotionsCarousel item={data?.carousel} />,
     },
     {
       id: "collections",
-      content: <CollectionsGrid item={collectionData} />,
+      content: <CollectionsGrid itemData={data?.categoryGrid} />,
     },
 
     {
-      id: "freeShipping",
-      content: <FreeShipping />,
+      id: "calloutBanners",
+      content: <CalloutBanners calloutBanners={data?.calloutBanners} />,
     },
     {
-      id: "dealOfTheDay",
+      id: "productsHorizontalScroller",
       content: (
-        <YStack>
-          <SectionHeader
-            title={t("home.sectionHeader.dealOfTheDay")}
-            tintColor={"darkgrey"}
-            image="dealIcon"
-            seeAllText="View All"
-            color="primary"
-            onPressSeeAll={() => {}}
-          />
-          <Spacer size={"$xl"} />
-          <ProductsHorizontalScroller />
-        </YStack>
+        <ProductsHorizontalScroller collection={data?.collectionDisplays} />
       ),
     },
     {
       id: "categories",
       content: (
-        <>
-          <SectionHeader
-            title={t("home.sectionHeader.categoriesYouMightLike")}
-            tintColor={"darkgrey"}
-            image="bulb"
-            color="primary"
-          />
-          <Spacer size={"$sm"} />
-          <ParagraphMD paddingHorizontal="$md">
-            {"Find the latest best deals by category"}
-          </ParagraphMD>
-          <YStack paddingHorizontal="$md">
-            <Spacer size={"$reg"} />
-            <CategorySuggestions />
-          </YStack>
-        </>
+        <CategorySuggestions
+          categoryCollectionGrid={data?.categoryCollectionGrid}
+        />
       ),
     },
+
     {
-      id: "forYou",
-      content: (
-        <>
-          <SectionHeader
-            title={t("home.sectionHeader.forYou")}
-            tintColor={"darkgrey"}
-            image="forYou"
-            seeAllText="View All"
-            color="primary"
-            onPressSeeAll={() => {}}
-          />
-          <YStack paddingHorizontal="$md">
-            <Spacer size={"$reg"} />
-            <ProductsGridScroller />
-          </YStack>
-        </>
-      ),
+      id: "productsGridScroller",
+      content: <ProductsGridScroller collection={data?.collectionDisplays} />,
     },
     {
       id: "promoBanner",
-      content: <PromoBannerCard />,
+      content: <PromoBannerCard promoBanners={data?.promoBanners} />,
     },
     {
-      id: "computersAndAccessories",
+      id: "collectionsCardGrid",
       content: (
-        <>
-          <SectionHeader
-            title={t("home.sectionHeader.computersAndAccesories")}
-            tintColor={"darkgrey"}
-            image="computer"
-            seeAllText="View All"
-            color="primary"
-            onPressSeeAll={() => {}}
-          />
-          <YStack paddingHorizontal="$md">
-            <Spacer size={"$reg"} />
-            <CollectionsCardGrid />
-          </YStack>
-        </>
+        <CollectionsCardGrid collectionShowcases={data?.collectionShowcases} />
       ),
     },
     {
       id: "brands",
       content: (
-        <YStack>
-          <SectionHeader
-            title={t("home.sectionHeader.brandsYouMightLike")}
-            tintColor={"darkgrey"}
-            image="emptyStar"
-            seeAllText="View All"
-            color="primary"
-            onPressSeeAll={() => {}}
-          />
-          <Spacer size={"$md"} />
-          <BrandsCollections />
-        </YStack>
+        <BrandsCollections brandsCollections={data?.collectionShowcases} />
       ),
     },
     {
-      id: "flashSale",
+      id: "SalesHorizontalScroller",
       content: (
-        <YStack>
-          <SectionHeader
-            title={t("home.sectionHeader.flashSale")}
-            tintColor={"darkgrey"}
-            image="flash"
-            seeAllText="View All"
-            color="primary"
-            onPressSeeAll={() => {}}
-          />
-          <Spacer size={"$reg"} />
-          <SalesHorizontalScroller />
-        </YStack>
+        <SalesHorizontalScroller collection={data?.collectionDisplays} />
       ),
     },
   ];
@@ -315,9 +162,8 @@ const HomeScreen = () => {
   }: {
     item: { id: string; content: React.ReactNode };
   }) => {
-    // Special spacing for collections section
     const spacerSize = item.id === "featuredPromotions" ? "$xs" : "$xl";
-    
+
     return (
       <YStack>
         {item.content}
@@ -329,10 +175,8 @@ const HomeScreen = () => {
   return (
     <>
       <YStack backgroundColor={"$primary"} height={TOP_INSET} />
-      {
-        Platform.OS === "android" && <StatusBar barStyle={"light-content"}/>
-      }
-      
+      {Platform.OS === "android" && <StatusBar barStyle={"light-content"} />}
+
       <YStack paddingHorizontal="$md" height={110} backgroundColor="$primary">
         <XStack alignItems="center" paddingVertical={"$xs"} position="relative">
           <YStack position="absolute" left={0}>
@@ -373,10 +217,7 @@ const HomeScreen = () => {
           <XStack
             backgroundColor="$white"
             borderRadius="$full"
-            // paddingHorizontal="$md"
-            // height={50}
             padding={"$sm-reg"}
-            // paddingVertical={"$reg"}
             alignItems="center"
             gap={"$md"}
           >
@@ -419,13 +260,13 @@ const HomeScreen = () => {
               tintColor={getTokenValue("$white")}
               name="arrowUp"
               width={13}
-                style={{
-                      transform: [
-                        {
-                          rotate: open ? "180deg" : "0deg",
-                        },
-                      ],
-                    }}
+              style={{
+                transform: [
+                  {
+                    rotate: open ? "180deg" : "0deg",
+                  },
+                ],
+              }}
               height={7.5}
             />
           </XStack>
@@ -433,16 +274,19 @@ const HomeScreen = () => {
       </YStack>
 
       <YStack backgroundColor={"$background"} flex={1}>
-        <FlatList
-          data={sections}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          // ListHeaderComponent={<Spacer size={"$xl"} />}
-          ListFooterComponent={
-            <Spacer size={Platform.OS === "ios" ? BOTTOM_INSET * 2 : 0} />
-          }
-        />
+        {isLoading ? (
+          <PlaceHolder />
+        ) : (
+          <FlatList
+            data={sections}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            ListFooterComponent={
+              <Spacer size={Platform.OS === "ios" ? BOTTOM_INSET * 2 : 0} />
+            }
+          />
+        )}
       </YStack>
       <BottomSheetModalWithFlatList
         ref={bottomSheetModalRef}
@@ -461,10 +305,12 @@ const HomeScreen = () => {
           <YStack paddingHorizontal="$md">
             <XStack alignItems="center" justifyContent="space-between">
               <TextLGBold>{"Choose Delivery Address"}</TextLGBold>
-              <OpTouch onPress={() => {
-                bottomSheetModalRef.current?.close();
-                setOpen(false);
-              }}>
+              <OpTouch
+                onPress={() => {
+                  bottomSheetModalRef.current?.close();
+                  setOpen(false);
+                }}
+              >
                 <AppImage name="closeIcon" width={15} height={15} />
               </OpTouch>
             </XStack>

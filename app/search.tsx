@@ -1,12 +1,10 @@
+import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextXSRegular } from "@/components/atoms/texts/TextXSRegular";
-import { SectionHeader } from "@/components/molecules/SectionHeader";
-import ProductsGridScroller from "@/components/organisms/ProductsGridScroller";
-import ProductsHorizontalScroller from "@/components/organisms/ProductsHorizontalScroller";
-import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller";
 import { SearchBar } from "@/components/organisms/SearchBar";
+import ProductsHorizontalScroller from "@/components/organisms/productHorizontalScroller/ProductsHorizontalScroller";
 import { EmptySearches } from "@/components/organisms/search/EmptySearches";
 import { SearchesResults } from "@/components/organisms/search/SearchesResults";
 import { router } from "expo-router";
@@ -39,6 +37,7 @@ const Search = () => {
   const [hasSearchResults, setHasSearchResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const { data, isLoading, error } = useHomeScreenData();
 
   // Mock search function - replace this with your actual search logic
   const performSearch = (query: string) => {
@@ -169,6 +168,29 @@ const Search = () => {
       case "defaultContent":
         return (
           <YStack>
+            {/* <Spacer size={"$md"} />
+            <SectionHeader
+              title={"All deals"}
+              tintColor={"darkgrey"}
+              image="dealIcon"
+              seeAllText="View All"
+              color="primary"
+              onPressSeeAll={() => {}}
+            /> */}
+            <Spacer size={"$reg"} />
+            <ProductsHorizontalScroller collection={data?.collectionDisplays} />
+            {/* <Spacer size={"$md"} />
+            <SectionHeader
+              title={"All deals"}
+              tintColor={"darkgrey"}
+              image="dealIcon"
+              seeAllText="View All"
+              color="primary"
+              onPressSeeAll={() => {}}
+            /> */}
+            <Spacer size={"$reg"} />
+            <ProductsHorizontalScroller collection={data?.collectionDisplays} />
+            {/*
             <Spacer size={"$md"} />
             <SectionHeader
               title={"All deals"}
@@ -177,34 +199,9 @@ const Search = () => {
               seeAllText="View All"
               color="primary"
               onPressSeeAll={() => {}}
-            />
+            /> */}
             <Spacer size={"$reg"} />
-
-            <ProductsHorizontalScroller />
-            <Spacer size={"$md"} />
-            <SectionHeader
-              title={"All deals"}
-              tintColor={"darkgrey"}
-              image="dealIcon"
-              seeAllText="View All"
-              color="primary"
-              onPressSeeAll={() => {}}
-            />
-            <Spacer size={"$reg"} />
-            <YStack paddingHorizontal={"$md"}>
-              <ProductsGridScroller />
-            </YStack>
-            <Spacer size={"$md"} />
-            <SectionHeader
-              title={"All deals"}
-              tintColor={"darkgrey"}
-              image="dealIcon"
-              seeAllText="View All"
-              color="primary"
-              onPressSeeAll={() => {}}
-            />
-            <Spacer size={"$reg"} />
-            <SalesHorizontalScroller />
+            <ProductsHorizontalScroller collection={data?.collectionDisplays} />
             <Spacer size={bottomInset} />
           </YStack>
         );

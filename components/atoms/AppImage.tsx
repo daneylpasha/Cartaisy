@@ -10,6 +10,7 @@ type AppImageProps = {
   source?: string;
   size?: number;
   width?: number | string;
+  radius?: keyof AppConfig["tokens"]["space"] | number;
   height?: number;
   style?: any;
   tintColor?: keyof AppConfig["tokens"]["color"] | string;
@@ -26,6 +27,7 @@ export const AppImage: React.FC<AppImageProps> = ({
   source,
   size,
   width,
+  radius,
   height,
   style,
   tintColor,
@@ -48,6 +50,7 @@ export const AppImage: React.FC<AppImageProps> = ({
         {
           width: finalWidth,
           height: finalHeight,
+          borderRadius: radius,
         },
         style,
       ]}

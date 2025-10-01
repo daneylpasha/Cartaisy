@@ -1,81 +1,105 @@
-import Icons from "@/assets/Icons";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
-import { BlurView } from "expo-blur";
 import React from "react";
 import { FlatList, ImageBackground, StyleSheet } from "react-native";
-import { Spacer, XStack } from "tamagui";
-import { TextMDMedium } from "../atoms";
+import { Spacer, XStack, YStack } from "tamagui";
+import { ParagraphMD, TextMDMedium } from "../atoms";
 import { OpTouch } from "../atoms/OpTouch";
+import { SectionHeader } from "./SectionHeader";
+
+type CategoryCollection = {
+  id: string;
+  image: string;
+  title: string;
+};
+
+type CategoryCollectionGridItem = {
+  title: string;
+  subtitle: string;
+  collections: CategoryCollection[];
+};
+
+type CategorySuggestionsProps = {
+  categoryCollectionGrid?: CategoryCollectionGridItem[];
+};
 
 const itemWidth = (SCREEN_WIDTH - 56) / 3;
-const categorySuggestionsData = [
-  {
-    id: 1,
-    image: Icons.category1,
-    title: "Personal Care",
-  },
-  {
-    id: 2,
-    image: Icons.category2,
-    title: "Automotive",
-  },
-  {
-    id: 3,
-    image: Icons.category3,
-    title: "Electronics",
-  },
-  {
-    id: 4,
-    image: Icons.category4,
-    title: "Health & Fitness",
-  },
-  {
-    id: 5,
-    image: Icons.category2,
-    title: "Health & Fitness",
-  },
-];
-export const CategorySuggestions = () => {
+
+export const CategorySuggestions = ({
+  categoryCollectionGrid: gridItems,
+}: CategorySuggestionsProps) => {
+  if (!gridItems || gridItems.length === 0) {
+    return null;
+  }
+
+  const primaryGridItem = gridItems[0];
+  const sectionTitle = primaryGridItem?.title || "";
+  const sectionSubtitle = primaryGridItem?.subtitle || "";
+  const allCategoryCollections = gridItems.flatMap(
+    (gridItem) => gridItem.collections
+  );
+
+  if (allCategoryCollections.length === 0) {
+    return null;
+  }
+
   return (
-    <FlatList
-      data={categorySuggestionsData}
-      numColumns={3}
-      showsVerticalScrollIndicator={false}
-      scrollEnabled={false}
-      contentContainerStyle={{
-        paddingHorizontal: tokens.space.md,
-        paddingVertical: tokens.space.sm,
-      }}
-      ItemSeparatorComponent={() => <Spacer size={"$reg"} />}
-      columnWrapperStyle={{
-        gap: tokens.space.reg,
-      }}
-      renderItem={({ item, index }) => (
-        <OpTouch>
-          <ImageBackground
-            source={item.image}
-            resizeMode="cover"
-            style={[styles.image, { marginBottom: tokens.space.sm }]}
-          >
-            {/* <BlurView style={styles.blurview} intensity={14} tint="dark">
-              
-            </BlurView> */}
-            <XStack
-              justifyContent="center"
-              alignItems="center"
-              width="100%"
-              height="100%"
-              backgroundColor="rgba(0, 0, 0, 0.4)"
-            >
-            <TextMDMedium color="$white" fontSize={14} fontWeight={600} textAlign="center">
-                {item.title}
-              </TextMDMedium>
-            </XStack>
-          </ImageBackground>
-        </OpTouch>
-      )}
-    />
+    <>
+      <SectionHeader
+        title={sectionTitle}
+        tintColor={"darkgrey"}
+        image="bulb"
+        color="primary"
+      />
+      <Spacer size={"$sm"} />
+      <ParagraphMD paddingHorizontal="$md">{sectionSubtitle}</ParagraphMD>
+      <Spacer size={"$reg"} />
+      <YStack paddingHorizontal="$md">
+        <FlatList
+          data={allCategoryCollections}
+          keyExtractor={(collection, collectionIndex) =>
+            `${collection.id}-${collectionIndex}`
+          }
+          numColumns={3}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={false}
+          contentContainerStyle={{
+            paddingHorizontal: tokens.space.md,
+            paddingVertical: tokens.space.sm,
+          }}
+          ItemSeparatorComponent={() => <Spacer size={"$reg"} />}
+          columnWrapperStyle={{
+            gap: tokens.space.reg,
+          }}
+          renderItem={({ item: categoryCollection }) => (
+            <OpTouch>
+              <ImageBackground
+                source={{ uri: categoryCollection.image }}
+                resizeMode="cover"
+                style={[styles.image, { marginBottom: tokens.space.sm }]}
+              >
+                <XStack
+                  justifyContent="center"
+                  alignItems="center"
+                  width="100%"
+                  height="100%"
+                  backgroundColor="rgba(0, 0, 0, 0.4)"
+                >
+                  <TextMDMedium
+                    color="$white"
+                    fontSize={14}
+                    fontWeight={600}
+                    textAlign="center"
+                  >
+                    {categoryCollection.title}
+                  </TextMDMedium>
+                </XStack>
+              </ImageBackground>
+            </OpTouch>
+          )}
+        />
+      </YStack>
+    </>
   );
 };
 

@@ -1,6 +1,3 @@
-// components/molecules/ProductCard.tsx
-
-import Icons from "@/assets/Icons";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
@@ -11,10 +8,8 @@ import { getTokenValue, XStack, YStack } from "tamagui";
 import {
   TextMDBold,
   TextMDSemiBold,
-  TextSMBold,
   TextSMMedium,
   TextSMRegular,
-  TextXLBold,
   TextXSRegular,
 } from "../atoms";
 import { AppImage } from "../atoms/AppImage";
@@ -36,7 +31,8 @@ const INLINE_CARD_WIDTH = 240;
 type Product = {
   id: string;
   title: string;
-  image: keyof typeof Icons;
+  // image: keyof typeof Icons | string; // Allow both Icons keys and URL strings
+  image: string; // Allow both Icons keys and URL strings
   currentPrice: number;
   originalPrice?: number;
   discountPercent?: number;
@@ -71,7 +67,15 @@ export const ProductCard = ({
   return (
     <OpTouch
       onPress={
-        product.onPress || (() => router.push(`/products/${product.id}`))
+        product.onPress ||
+        (() =>
+          router.push({
+            pathname: "/products/[id]",
+            params: {
+              id: product.id,
+              productData: JSON.stringify(product),
+            },
+          }))
       }
     >
       <YStack width={cardWidth}>
@@ -83,32 +87,39 @@ export const ProductCard = ({
           borderColor="$lightgrey"
           backgroundColor="$white"
         >
-          <AppImage name={product.image} width="100%" height={imageHeight} />
+          <AppImage
+            resizeMode="cover"
+            source={product.image}
+            width="100%"
+            height={imageHeight}
+          />
 
-          {!product.discountBadge && (
-            <XStack
-              position="absolute"
-              top={12}
-              left={12}
-              width={76}
-              height={26}
-              backgroundColor="$error"
-              borderRadius="$full"
-              justifyContent="center"
-              alignItems="center"
-            >
-              <AppImage
-                name="discount"
-                tintColor="$black"
-                width={14}
-                height={14}
-              />
-              <Spacer size="$xs-sm" />
-              <TextSMMedium color="$white">
-                -{product.discountPercent}%
-              </TextSMMedium>
-            </XStack>
-          )}
+          {product.discountBadge &&
+            product.discountPercent &&
+            product.discountPercent > 0 && (
+              <XStack
+                position="absolute"
+                top={12}
+                left={12}
+                width={76}
+                height={26}
+                backgroundColor="$error"
+                borderRadius="$full"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <AppImage
+                  name="discount"
+                  tintColor="$black"
+                  width={14}
+                  height={14}
+                />
+                <Spacer size="$xs-sm" />
+                <TextSMMedium color="$white">
+                  -{product.discountPercent}%
+                </TextSMMedium>
+              </XStack>
+            )}
 
           {/* Wishlist */}
           {showFavoriteIcon && (
@@ -143,12 +154,12 @@ export const ProductCard = ({
               <RatingStar rating={product.ratingValue} />
               <Spacer size="$sm-reg" />
               <TextMDBold color="$secondary">
-                {product.ratingValue.toFixed(1)}
-                <Spacer size="$xs" />
-                <TextXSRegular color="$icon">
-                  ({product.totalReviewCount?.toLocaleString()})
-                </TextXSRegular>
+                {product.ratingValue?.toFixed(1)}
               </TextMDBold>
+              <Spacer size="$xs" />
+              <TextXSRegular color="$icon">
+                ({product.totalReviewCount?.toLocaleString()})
+              </TextXSRegular>
             </XStack>
           )}
 

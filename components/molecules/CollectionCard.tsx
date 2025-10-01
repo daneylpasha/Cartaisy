@@ -1,6 +1,5 @@
 // components/molecules/CategoryCard.tsx
 
-import Icons from "@/assets/Icons";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { GRID_CARD_WIDTH } from "@/components/molecules/ProductCard";
@@ -12,8 +11,8 @@ import { Spacer } from "../atoms/Spacer";
 import { TextMDRegular } from "../atoms/texts/TextMDRegular";
 type CategoryItem = {
   id: string;
-  image: keyof typeof Icons;
-  name: string;
+  title: string;
+  image: string;
 };
 
 type CategoryCardListProps = {
@@ -28,14 +27,18 @@ export const CollectionCard = ({ item }: CategoryCardListProps) => {
       onPress={() =>
         router.push({
           pathname: "/products",
-          params: { categoryName: item.name },
+          // params: { categoryName: item.name },
         })
       }
     >
       <YStack borderRadius={"$2xl"}>
-        <AppImage style={Styles.ImageStyle} name={item.image} />
+        <AppImage
+          resizeMode="cover"
+          style={Styles.ImageStyle}
+          source={item.image}
+        />
         <Spacer size={"$sm"} />
-        <TextMDRegular textAlign="center">{item.name}</TextMDRegular>
+        <TextMDRegular textAlign="center">{item.title}</TextMDRegular>
       </YStack>
     </OpTouch>
   );
