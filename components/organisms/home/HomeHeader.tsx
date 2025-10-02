@@ -1,0 +1,133 @@
+import {
+  TextMDSemiBold,
+  TextSMSemiBold,
+  TextXSRegular,
+} from "@/components/atoms";
+import { AppImage } from "@/components/atoms/AppImage";
+import { OpTouch } from "@/components/atoms/OpTouch";
+import { Spacer } from "@/components/atoms/Spacer";
+import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
+import { t } from "@/translations";
+import { router } from "expo-router";
+import React from "react";
+import { Animated, Platform } from "react-native";
+import { getTokenValue, XStack, YStack } from "tamagui";
+
+type HomeHeaderProps = {
+  topInset: number;
+  rotateAnim: Animated.Value;
+  onAddressPress: () => void;
+};
+
+export const HomeHeader = ({
+  topInset,
+  rotateAnim,
+  onAddressPress,
+}: HomeHeaderProps) => {
+  return (
+    <YStack
+      paddingTop={Platform.OS === "android" ? topInset + 24 : 0}
+      paddingHorizontal="$md"
+      backgroundColor="$primary"
+      paddingBottom={"$md"}
+    >
+      <XStack alignItems="center" paddingVertical={"$xs"} position="relative">
+        <YStack position="absolute" left={0}>
+          <TextMDSemiBold color="$white">{"Hello, Lily!"}</TextMDSemiBold>
+        </YStack>
+        <YStack
+          position="absolute"
+          left="50%"
+          transform={[{ translateX: -25 }]}
+        >
+          <AppImage name="bagWhite" width={50} height={26} />
+        </YStack>
+
+        <YStack position="absolute" right={0}>
+          <OpTouch onPress={() => router.push("/cart")}>
+            <AppImage name="cartIcon" size={24} />
+            <TextXSRegular
+              position="absolute"
+              backgroundColor="$yellow"
+              color="$white"
+              top={-8}
+              right={-10}
+              borderRadius="$full"
+              paddingHorizontal={"$xs-sm"}
+            >
+              {"2"}
+            </TextXSRegular>
+          </OpTouch>
+        </YStack>
+      </XStack>
+      <Spacer size={"$md"} />
+
+      {/* Search Bar */}
+      <OpTouch
+        activeOpacity={0.9}
+        onPress={() => router.push("/search")}
+        hitSlop={10}
+      >
+        <XStack
+          backgroundColor="$white"
+          borderRadius="$full"
+          padding={"$sm-reg"}
+          alignItems="center"
+          gap={"$md"}
+        >
+          <AppImage
+            name="searchIcon"
+            width={20}
+            height={20}
+            tintColor="$secondary"
+          />
+
+          <TextMDRegular color="$textgrey">
+            {`Search ${t("common.companyName")}`}
+          </TextMDRegular>
+        </XStack>
+      </OpTouch>
+      <Spacer size={"$sm"} />
+
+      {/* Address Selector */}
+      <OpTouch
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        onPress={onAddressPress}
+      >
+        <XStack justifyContent="space-between" alignItems="center">
+          <XStack alignItems="center" gap={"$xs"}>
+            <AppImage
+              tintColor={getTokenValue("$primarylight")}
+              name="locationIcon"
+              width={13}
+              height={17}
+            />
+            <Spacer size={"$sm"} />
+            <TextSMSemiBold color="$white">
+              {"1752 January Avenue, NY 10013"}
+            </TextSMSemiBold>
+          </XStack>
+          <Animated.View
+            style={{
+              transform: [
+                {
+                  rotate: rotateAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ["0deg", "180deg"],
+                  }),
+                },
+              ],
+            }}
+          >
+            <AppImage
+              tintColor={getTokenValue("$white")}
+              name="arrowUp"
+              width={13}
+              height={7.5}
+            />
+          </Animated.View>
+        </XStack>
+      </OpTouch>
+    </YStack>
+  );
+};

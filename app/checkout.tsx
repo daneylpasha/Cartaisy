@@ -183,9 +183,9 @@ const CheckoutScreen = () => {
         }}
       />
       {currentStep !== "succesfull" && (
-        <YStack paddingHorizontal={"$md"}>
+        <>
           {currentStep === "confirmation" && (
-            <YStack>
+            <>
               <Animated.View
                 style={{
                   opacity: animatedOpacity,
@@ -197,94 +197,119 @@ const CheckoutScreen = () => {
                   overflow: "hidden",
                 }}
               >
-                <Spacer size={"$sm"} />
-                <Animated.View {...panResponder.panHandlers}>
-                  <YStack
-                    justifyContent="center"
-                    alignItems="center"
-                    width={40}
-                    height={20}
-                    alignSelf="center"
-                    paddingVertical={8}
-                  >
+                <Divider />
+                <YStack paddingHorizontal={"$md"}>
+                  <Spacer size={"$sm"} />
+                  <Animated.View {...panResponder.panHandlers}>
                     <YStack
+                      justifyContent="center"
+                      alignItems="center"
                       width={40}
-                      height={4}
-                      backgroundColor={"$icon"}
-                      borderRadius={"$2xl"}
-                    />
-                  </YStack>
-                </Animated.View>
-                <Spacer size={"$sm"} />
-                <XStack paddingVertical={"$sm"} justifyContent="space-between">
-                  <TextSMSemiBold>Subtotal( Items)</TextSMSemiBold>
-                  <TextSMSemiBold>${"4,211"}</TextSMSemiBold>
-                </XStack>
-                <XStack paddingVertical={"$sm"} justifyContent="space-between">
-                  <TextSMRegular color="$secondary">Discount</TextSMRegular>
-                  <TextSMSemiBold color="$green">${"2323"}</TextSMSemiBold>
-                </XStack>
-                <XStack paddingVertical={"$sm"} justifyContent="space-between">
-                  <TextSMRegular color="$secondary">
-                    Coupon Discount
-                  </TextSMRegular>
-                  <TextSMSemiBold color="$green">${"2323"}</TextSMSemiBold>
-                </XStack>
-                <XStack paddingVertical={"$sm"} justifyContent="space-between">
-                  <TextSMRegular color="$secondary">Taxes</TextSMRegular>
-                  <TextSMSemiBold color="$error">{"$23.00"}</TextSMSemiBold>
-                </XStack>
-                <XStack paddingVertical={"$sm"} justifyContent="space-between">
-                  <TextSMRegular color="$secondary">Delivery Fee</TextSMRegular>
-                  <TextSMSemiBold color="$error">{"$8.00"}</TextSMSemiBold>
-                </XStack>
-                <Spacer size={"$md"} />
-              </Animated.View>
-
-              <Divider />
-              <Spacer size={"$sm"} />
-              <OpTouch onPress={toggleOrderSummary}>
-                <XStack justifyContent="space-between">
-                  <TextSMSemiBold>{"GrandTotal"}</TextSMSemiBold>
-                  <XStack alignItems="center">
-                    <TextMDBold>{"$8413"}</TextMDBold>
-                    <Spacer size={"$xs"} />
-                    <AppImage
-                      name="caretRight"
-                      width={14}
-                      height={14}
-                      style={{
-                        transform: [
-                          {
-                            rotate: open ? "-90deg" : "90deg",
-                          },
-                        ],
-                      }}
-                    />
+                      height={20}
+                      alignSelf="center"
+                      paddingVertical={8}
+                    >
+                      <YStack
+                        width={40}
+                        height={4}
+                        backgroundColor={"$icon"}
+                        borderRadius={"$2xl"}
+                      />
+                    </YStack>
+                  </Animated.View>
+                  <Spacer size={"$sm"} />
+                  <XStack
+                    paddingVertical={"$sm"}
+                    justifyContent="space-between"
+                  >
+                    <TextSMSemiBold>Subtotal( Items)</TextSMSemiBold>
+                    <TextSMSemiBold>${"4,211"}</TextSMSemiBold>
                   </XStack>
-                </XStack>
-              </OpTouch>
-              <Spacer size={"$md"} />
+                  <XStack
+                    paddingVertical={"$sm"}
+                    justifyContent="space-between"
+                  >
+                    <TextSMRegular color="$secondary">Discount</TextSMRegular>
+                    <TextSMSemiBold color="$green">${"2323"}</TextSMSemiBold>
+                  </XStack>
+                  <XStack
+                    paddingVertical={"$sm"}
+                    justifyContent="space-between"
+                  >
+                    <TextSMRegular color="$secondary">
+                      Coupon Discount
+                    </TextSMRegular>
+                    <TextSMSemiBold color="$green">${"2323"}</TextSMSemiBold>
+                  </XStack>
+                  <XStack
+                    paddingVertical={"$sm"}
+                    justifyContent="space-between"
+                  >
+                    <TextSMRegular color="$secondary">Taxes</TextSMRegular>
+                    <TextSMSemiBold color="$error">{"$23.00"}</TextSMSemiBold>
+                  </XStack>
+                  <XStack
+                    paddingVertical={"$sm"}
+                    justifyContent="space-between"
+                  >
+                    <TextSMRegular color="$secondary">
+                      Delivery Fee
+                    </TextSMRegular>
+                    <TextSMSemiBold color="$error">{"$8.00"}</TextSMSemiBold>
+                  </XStack>
+                  <Spacer size={"$md"} />
+                </YStack>
+              </Animated.View>
+              <YStack paddingHorizontal={"$md"}>
+                <Divider />
+                <Spacer size={"$sm"} />
+                <OpTouch onPress={toggleOrderSummary}>
+                  <XStack justifyContent="space-between">
+                    <TextSMSemiBold>{"GrandTotal"}</TextSMSemiBold>
+                    <XStack alignItems="center">
+                      <TextMDBold>{"$8413"}</TextMDBold>
+                      <Spacer size={"$xs"} />
+                      <AppImage
+                        name="caretRight"
+                        width={14}
+                        height={14}
+                        style={{
+                          transform: [
+                            {
+                              rotate: open ? "-90deg" : "90deg",
+                            },
+                          ],
+                        }}
+                      />
+                    </XStack>
+                  </XStack>
+                </OpTouch>
+                <Spacer size={"$md"} />
+                <PrimaryButton
+                  label="Complete Order"
+                  onPress={handleContinue}
+                  icon={
+                    <AppImage
+                      name="shieldCheck"
+                      tintColor={getTokenValue("$white")}
+                      size={16}
+                    />
+                  }
+                  isLoading={false}
+                />
+              </YStack>
+            </>
+          )}
+          {currentStep !== "confirmation" && (
+            <YStack paddingHorizontal={"$md"}>
+              <PrimaryButton
+                label="Continue"
+                onPress={handleContinue}
+                isLoading={false}
+              />
             </YStack>
           )}
-
-          <PrimaryButton
-            label={
-              currentStep === "confirmation" ? "Complete Order" : "Continue"
-            }
-            onPress={handleContinue}
-            icon={
-              currentStep === "confirmation" ? (
-                <AppImage
-                  name="shieldCheck"
-                  tintColor={getTokenValue("$white")}
-                  size={16}
-                />
-              ) : null
-            }
-            isLoading={false}
-          />
-        </YStack>
+        </>
       )}
       <Spacer size={bottomSafeAreaInset} />
     </YStack>

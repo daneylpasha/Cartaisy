@@ -100,20 +100,21 @@ export default function ProductCarousel({
             >
               <Stack pointerEvents="none" style={{ width, height: h }}>
                 {/* Check if it's a URL or icon name */}
-                {item.startsWith("http") || item.startsWith("https") ? (
+                {item && (item.startsWith("http") || item.startsWith("https")) ? (
                   <AppImage
                     resizeMode="cover"
                     source={item}
                     width={width}
                     height={h}
                   />
-                ) : (
+                ) : item && Icons[item as keyof typeof Icons] ? (
                   <AppImage
                     name={item as keyof typeof Icons}
                     width={width}
                     height={h}
+                    resizeMode="cover"
                   />
-                )}
+                ) : null}
               </Stack>
             </OpTouch>
 

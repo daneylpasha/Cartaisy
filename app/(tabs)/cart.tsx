@@ -428,17 +428,18 @@ const CartScreen = () => {
       />
       {cartItems.length > 0 && (
         <>
-          <YStack paddingHorizontal={"$md"}>
-            <Animated.View
-              style={{
-                opacity: animatedOpacity,
-                maxHeight: animatedHeight.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, 200], // Adjust this value based on your content height
-                }),
-                overflow: "hidden",
-              }}
-            >
+          <Animated.View
+            style={{
+              opacity: animatedOpacity,
+              maxHeight: animatedHeight.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 200], // Adjust this value based on your content height
+              }),
+              overflow: "hidden",
+            }}
+          >
+            <Divider />
+            <YStack paddingHorizontal={"$md"}>
               <Spacer size={"$sm"} />
               <Animated.View {...panResponder.panHandlers}>
                 <YStack
@@ -475,7 +476,9 @@ const CartScreen = () => {
                 <TextSMSemiBold>Calculated at checkout</TextSMSemiBold>
               </XStack>
               {/* <Spacer size={"$sm"} /> */}
-            </Animated.View>
+            </YStack>
+          </Animated.View>
+          <YStack paddingHorizontal={"$md"}>
             <Divider />
             <Spacer size={"$sm"} />
             <OpTouch onPress={toggleCartSummary}>

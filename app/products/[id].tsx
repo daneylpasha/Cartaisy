@@ -1,4 +1,4 @@
-import Icons from "@/assets/Icons";
+import { useCollectionWithProducts } from "@/api/hooks/useProducts";
 import {
   HeadingXSBold,
   TextMDBold,
@@ -10,7 +10,6 @@ import {
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
-import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import ProductCarousel from "@/components/molecules/product/pdp/ProductCarousel";
@@ -22,110 +21,15 @@ import {
 } from "@/components/molecules/ProductCard";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { RatingStar } from "@/components/organisms/home";
+import { SCREEN_WIDTH } from "@/constants/styles";
 import { t } from "@/translations";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
-import { FlatList, useWindowDimensions } from "react-native";
+import { ActivityIndicator, FlatList } from "react-native";
 import ImageViewing from "react-native-image-viewing";
 import RenderHTML from "react-native-render-html";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
-
-// ===== types =====
-type IconName = keyof typeof Icons;
-
-type Product = {
-  id: string;
-  price: number;
-  image: IconName[]; // ALWAYS array
-  title: string;
-  currentPrice: number;
-  originalPrice: number;
-  discountPercent: number;
-  progressValue: number;
-  showProgressBar: boolean;
-  ratingValue: number;
-  totalReviewCount: number;
-  wishlist: boolean;
-  discountBadge: boolean;
-};
-
-const products: Product[] = [
-  {
-    id: "1",
-    price: 100,
-    image: ["product1", "product2", "product3", "product4", "product5"],
-    title: "Bose QuietComfort Bluetooth Headphones - Chilled Lilac",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "2",
-    price: 100,
-    image: ["product2"],
-    title: "Product2",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "3",
-    price: 100,
-    image: ["product3"],
-    title: "Product3",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "4",
-    price: 100,
-    image: ["product4"],
-    title: "Product4",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "5",
-    price: 100,
-    image: ["product5"],
-    title: "Product5",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 0,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-];
 
 const productSpecs = [
   { label: "Brand", value: "Bose" },
@@ -144,60 +48,55 @@ const productSpecs = [
 ];
 
 const ProductDetailsScreen = () => {
-  const { id, productData } = useLocalSearchParams<{
+  const { id, productData, collectionId } = useLocalSearchParams<{
     id: string;
     productData?: string;
+    collectionId?: string;
   }>();
-  const { width } = useWindowDimensions();
+
+  const { top: TOP_INSET } = useSafeAreaInsets();
 
   // ✅ Parse the product data from navigation params
   const passedProduct = productData ? JSON.parse(productData as string) : null;
 
+  // ✅ Fetch collection with products if collectionId is provided
+  const { data: collectionData, isLoading: isLoadingCollection } =
+    useCollectionWithProducts(collectionId);
+
   console.log("ID:", id);
   console.log("Passed Product Data:", passedProduct);
+  console.log("Collection Data:", collectionData);
 
-  // ✅ Use passed product data if available, otherwise fallback to local data
-  const product = passedProduct || products.find((p) => p.id == id);
+  // ✅ Use passed product data
+  const product = passedProduct;
 
   const [viewerIndex, setViewerIndex] = useState(0);
   const [viewerOpen, setViewerOpen] = useState(false);
 
-  // Strip HTML tags for plain text description
-  const stripHtml = (html: string) => {
-    return html?.replace(/<[^>]*>/g, "") || "";
-  };
-
-  // ✅ Handle both single image and array of images from API
+  // ✅ Handle image from API - only use source URI
   const productImages = useMemo(() => {
-    // Check if product from API has image/images
-    if (passedProduct) {
-      // If has images array
-      if (passedProduct.images && Array.isArray(passedProduct.images)) {
-        return passedProduct.images.map((img: any) =>
-          typeof img === "string" ? img : img.src || img.url || img
-        );
-      }
-      // If has single image (not array)
-      if (passedProduct.image) {
-        // Convert single image to array
-        return [passedProduct.image];
-      }
+    if (!product) return [];
+
+    // If has images array (Shopify format)
+    if (product.images && Array.isArray(product.images)) {
+      return product.images
+        .map((img: any) =>
+          typeof img === "string" ? img : img.src || img.url || ""
+        )
+        .filter(Boolean);
     }
 
-    // Fallback to local product.image array
-    return product?.image ?? [];
-  }, [passedProduct, product]);
+    // If has single image string
+    if (product.image && typeof product.image === "string") {
+      return [product.image];
+    }
 
-  // ✅ Create proper image sources for ImageViewing
+    return [];
+  }, [product]);
+
+  // ✅ Create proper image sources for ImageViewing - only URI
   const viewerImages = useMemo(() => {
-    return productImages.map((img: string) => {
-      // Check if it's a URL or an icon name
-      if (img.startsWith("http") || img.startsWith("https")) {
-        return { uri: img }; // API image URL
-      }
-      // Fallback to icon if it's a local icon name
-      return Icons[img as keyof typeof Icons] || { uri: img };
-    });
+    return productImages.map((img: string) => ({ uri: img }));
   }, [productImages]);
 
   // Define sections for FlatList
@@ -330,7 +229,7 @@ const ProductDetailsScreen = () => {
           <Spacer size={"$reg"} />
           {passedProduct?.description || product?.description ? (
             <RenderHTML
-              contentWidth={width - 32}
+              contentWidth={SCREEN_WIDTH - 32}
               source={{
                 html: passedProduct?.description || product?.description || "",
               }}
@@ -368,37 +267,40 @@ const ProductDetailsScreen = () => {
     {
       id: "relatedProducts",
       type: "relatedProducts",
-      content: (
-        <YStack>
-          <SectionHeader
-            title={t("home.sectionHeader.youMightAlsoLike")}
-            image={"bulb"}
-            tintColor={"darkgrey"}
-            seeAllText="View All"
-            color="primary"
-            onPressSeeAll={() => {}}
-          />
+      content:
+        collectionData?.products && collectionData.products.length > 0 ? (
+          <YStack>
+            <SectionHeader
+              title={t("home.sectionHeader.youMightAlsoLike")}
+              image={"bulb"}
+              tintColor={"darkgrey"}
+              seeAllText="View All"
+              color="primary"
+              onPressSeeAll={() => {}}
+            />
 
-          <Spacer size={"$reg"} />
-          <FlatList
-            data={products}
-            renderItem={({ item }) => (
-              <ProductCard
-                product={item as any}
-                context="grid"
-                showProgressBar={false}
-              />
-            )}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            horizontal
-            contentContainerStyle={{
-              paddingHorizontal: GRID_SIDE_PADDING,
-              gap: GRID_COLUMN_GAP,
-            }}
-          />
-        </YStack>
-      ),
+            <Spacer size={"$reg"} />
+            <FlatList
+              data={collectionData.products.filter(
+                (p: any) => p.id !== product?.id
+              )}
+              renderItem={({ item }) => (
+                <ProductCard
+                  product={item as any}
+                  context="grid"
+                  showProgressBar={false}
+                />
+              )}
+              keyExtractor={(item) => item.id}
+              showsHorizontalScrollIndicator={false}
+              horizontal
+              contentContainerStyle={{
+                paddingHorizontal: GRID_SIDE_PADDING,
+                gap: GRID_COLUMN_GAP,
+              }}
+            />
+          </YStack>
+        ) : null,
     },
   ];
 
@@ -411,14 +313,44 @@ const ProductDetailsScreen = () => {
     );
   };
 
-  return (
-    <ScreenContainer backgroundColor="$background">
-      <YStack paddingHorizontal="$md">
-        <OpTouch onPress={() => router.back()}>
-          <AppImage name={"arrowBack"} size={16} />
-        </OpTouch>
+  if (!product) {
+    return (
+      <YStack
+        flex={1}
+        backgroundColor="$background"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <ActivityIndicator size="large" color={getTokenValue("$primary")} />
       </YStack>
-      <Spacer size={"$md"} />
+    );
+  }
+
+  return (
+    <YStack flex={1} backgroundColor="$background">
+      <YStack backgroundColor="$primary" paddingTop={TOP_INSET - 22}>
+        <XStack
+          paddingHorizontal="$md"
+          paddingVertical={"$md"}
+          justifyContent="space-between"
+        >
+          <OpTouch onPress={() => router.back()}>
+            <AppImage
+              name={"arrowBack"}
+              size={16}
+              tintColor={getTokenValue("$white")}
+            />
+          </OpTouch>
+          <OpTouch onPress={() => router.navigate("/cart")}>
+            <AppImage
+              name={"cartIcon"}
+              size={24}
+              tintColor={getTokenValue("$white")}
+            />
+          </OpTouch>
+        </XStack>
+      </YStack>
+      {/* <Spacer size={"$md"} /> */}
       <FlatList
         data={sections}
         renderItem={renderItem}
@@ -434,7 +366,7 @@ const ProductDetailsScreen = () => {
         visible={viewerOpen}
         onRequestClose={() => setViewerOpen(false)}
       />
-    </ScreenContainer>
+    </YStack>
   );
 };
 

@@ -124,7 +124,7 @@ export const ProductCard = ({
 
           {/* Wishlist */}
           {showFavoriteIcon && (
-            <OpTouch onPress={product.onToggleWishlist}>
+            <OpTouch onPress={product.onToggleWishlist || (() => {})}>
               <BlurView style={styles.blurView} intensity={16} tint="dark">
                 {isFavorite ? (
                   <AppImage
@@ -147,7 +147,7 @@ export const ProductCard = ({
         </YStack>
 
         <YStack paddingVertical="$reg">
-          <TextMDSemiBold numberOfLines={2}>{product.title || ''}</TextMDSemiBold>
+          <TextMDSemiBold numberOfLines={2}>{String(product.title || '')}</TextMDSemiBold>
           <Spacer size="$sm-reg" />
 
           {product.ratingValue !== undefined && (

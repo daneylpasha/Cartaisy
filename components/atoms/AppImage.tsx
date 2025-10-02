@@ -7,7 +7,7 @@ import { styled } from "tamagui";
 
 type AppImageProps = {
   name?: keyof typeof Icons;
-  source?: string;
+  source?: string | { uri: string };
   size?: number;
   width?: number | string;
   radius?: keyof AppConfig["tokens"]["space"] | number;
@@ -41,7 +41,27 @@ export const AppImage: React.FC<AppImageProps> = ({
       ? tokens.color[tintColor as keyof typeof tokens.color]
       : tintColor;
 
-  const finalSource = name ? Icons[name] : source ? { uri: source } : undefined;
+  let finalSource;
+
+  if (name) {
+    const iconSource = Icons[name];
+    // Validate icon source is not null/undefined and is a valid object
+    if (iconSource && (typeof iconSource === 'number' || (typeof iconSource === 'object' && iconSource.uri))) {
+      finalSource = iconSource;
+    }
+  } else if (source) {
+    if (typeof source === 'string') {
+      // Only create URI object if string is not empty
+      finalSource = source.trim() ? { uri: source } : undefined;
+    } else {
+      // Validate source object has uri property
+      finalSource = source?.uri ? source : undefined;
+    }
+  }
+
+  if (!finalSource) {
+    return null;
+  }
 
   return (
     <StyledImage

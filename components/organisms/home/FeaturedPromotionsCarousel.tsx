@@ -25,7 +25,7 @@ type BannerItem = {
 };
 
 type FeaturedPromotionsCarouselProps = {
-  item: BannerItem[];
+  item?: BannerItem[];
 };
 
 export const FeaturedPromotionsCarousel = ({

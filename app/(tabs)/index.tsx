@@ -1,29 +1,33 @@
 import {
   ParagraphMD,
   TextLGBold,
-  TextMDSemiBold,
   TextSMSemiBold,
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
-import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
-import { TextXSRegular } from "@/components/atoms/texts/TextXSRegular";
 import { CategorySuggestions } from "@/components/molecules/CategorySuggestions";
 import CollectionsCardGrid from "@/components/organisms/CollectionsCardGrid";
 import {
   CalloutBanners,
   FeaturedPromotionsCarousel,
+  HomeHeader,
 } from "@/components/organisms/home";
 import BrandsCollections from "@/components/organisms/home/BrandsCollections";
 import { PromoBannerCard } from "@/components/organisms/home/PromoBannerCard";
+import PlaceHolder from "@/components/organisms/home/Placeholder";
 import ProductsHorizontalScroller from "@/components/organisms/productHorizontalScroller/ProductsHorizontalScroller";
 import ProductsGridScroller from "@/components/organisms/ProductsGridScroller/ProductsGridScroller";
 import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller/SalesHorizontalScroller";
-import { t } from "@/translations";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
-import { FlatList, Platform, RefreshControl, StatusBar } from "react-native";
+import {
+  Animated,
+  FlatList,
+  Platform,
+  RefreshControl,
+  StatusBar,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 //
@@ -32,13 +36,13 @@ import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
 import { AddressCard } from "@/components/molecules/AddressCard";
 import { CollectionsGrid } from "@/components/molecules/home/CollectionsGrid";
 import { BottomSheetModalWithFlatList } from "@/components/organisms/bottomSheet";
-import PlaceHolder from "@/components/organisms/home/Placeholder";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 const HomeScreen = () => {
   const { top: TOP_INSET, bottom: BOTTOM_INSET } = useSafeAreaInsets();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [open, setOpen] = useState(false);
+  const rotateAnim = useRef(new Animated.Value(0)).current;
   const addressData = [
     {
       id: 1,
@@ -95,14 +99,24 @@ const HomeScreen = () => {
   };
 
   const handleAddNewAddress = () => {
-    bottomSheetModalRef.current?.close();
     setOpen(false);
-    router.push("/addAddress");
+    Animated.timing(rotateAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+    bottomSheetModalRef.current?.close();
+    setTimeout(() => router.push("/addAddress"), 300);
   };
 
   const handleApply = () => {
-    bottomSheetModalRef.current?.close();
     setOpen(false);
+    Animated.timing(rotateAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+    bottomSheetModalRef.current?.close();
   };
 
   const [selectedAddress, setSelectedAddress] = useState<number>(0);
@@ -182,103 +196,25 @@ const HomeScreen = () => {
   return (
     <>
       <YStack backgroundColor={"$primary"} height={TOP_INSET} />
-      {Platform.OS === "android" && <StatusBar barStyle={"light-content"} />}
-
-      <YStack paddingHorizontal="$md" height={110} backgroundColor="$primary">
-        <XStack alignItems="center" paddingVertical={"$xs"} position="relative">
-          <YStack position="absolute" left={0}>
-            <TextMDSemiBold color="$white">{"Hello, Lily!"}</TextMDSemiBold>
-          </YStack>
-          <YStack
-            position="absolute"
-            left="50%"
-            transform={[{ translateX: -25 }]}
-          >
-            <AppImage name="bagWhite" width={50} height={26} />
-          </YStack>
-
-          <YStack position="absolute" right={0}>
-            <OpTouch onPress={() => router.push("/cart")}>
-              <AppImage name="cartIcon" size={24} />
-              <TextXSRegular
-                position="absolute"
-                backgroundColor="$yellow"
-                color="$white"
-                top={-8}
-                right={-10}
-                borderRadius="$full"
-                paddingHorizontal={"$xs-sm"}
-              >
-                {"2"}
-              </TextXSRegular>
-            </OpTouch>
-          </YStack>
-        </XStack>
-        <Spacer size={"$md"} />
-
-        <OpTouch
-          activeOpacity={0.9}
-          onPress={() => router.push("/search")}
-          hitSlop={10}
-        >
-          <XStack
-            backgroundColor="$white"
-            borderRadius="$full"
-            padding={"$sm-reg"}
-            alignItems="center"
-            gap={"$md"}
-          >
-            <AppImage
-              name="searchIcon"
-              width={20}
-              height={20}
-              tintColor="$secondary"
-            />
-
-            <TextMDRegular color="$textgrey">
-              {`Search ${t("common.companyName")}`}
-            </TextMDRegular>
-          </XStack>
-        </OpTouch>
-        <Spacer size={"$sm"} />
-
-        <OpTouch
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          onPress={() => {
-            bottomSheetModalRef.current?.present();
-            setOpen(true);
-          }}
-        >
-          <XStack justifyContent="space-between" alignItems="center">
-            <XStack alignItems="center" gap={"$xs"}>
-              <AppImage
-                tintColor={getTokenValue("$primarylight")}
-                name="locationIcon"
-                width={13}
-                height={17}
-              />
-              <Spacer size={"$sm"} />
-              {/* <Spacer size={"$sm"} /> */}
-              <TextSMSemiBold color="$white">
-                {"1752 January Avenue, NY 10013"}
-              </TextSMSemiBold>
-            </XStack>
-            <AppImage
-              tintColor={getTokenValue("$white")}
-              name="arrowUp"
-              width={13}
-              style={{
-                transform: [
-                  {
-                    rotate: open ? "180deg" : "0deg",
-                  },
-                ],
-              }}
-              height={7.5}
-            />
-          </XStack>
-        </OpTouch>
-      </YStack>
+      {Platform.OS === "android" && (
+        <StatusBar
+          barStyle={"light-content"}
+          backgroundColor={getTokenValue("$primary")}
+        />
+      )}
+      <HomeHeader
+        topInset={TOP_INSET}
+        rotateAnim={rotateAnim}
+        onAddressPress={() => {
+          bottomSheetModalRef.current?.present();
+          setOpen(true);
+          Animated.timing(rotateAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }).start();
+        }}
+      />
 
       <YStack backgroundColor={"$background"} flex={1}>
         {isLoading ? (
@@ -306,6 +242,14 @@ const HomeScreen = () => {
       <BottomSheetModalWithFlatList
         ref={bottomSheetModalRef}
         data={addressData}
+        onDismiss={() => {
+          setOpen(false);
+          Animated.timing(rotateAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }).start();
+        }}
         renderItem={({ item }) => (
           <YStack paddingHorizontal="$md">
             <AddressCard
@@ -322,8 +266,13 @@ const HomeScreen = () => {
               <TextLGBold>{"Choose Delivery Address"}</TextLGBold>
               <OpTouch
                 onPress={() => {
-                  bottomSheetModalRef.current?.close();
                   setOpen(false);
+                  Animated.timing(rotateAnim, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                  }).start();
+                  bottomSheetModalRef.current?.close();
                 }}
               >
                 <AppImage name="closeIcon" width={15} height={15} />

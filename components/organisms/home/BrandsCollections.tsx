@@ -25,7 +25,9 @@ type BrandsCollectionsProps = {
   brandsCollections?: BrandShowcase[];
 };
 
-const BrandsCollections = ({ brandsCollections: showcases }: BrandsCollectionsProps) => {
+const BrandsCollections = ({
+  brandsCollections: showcases,
+}: BrandsCollectionsProps) => {
   const targetShowcase = showcases?.find(
     (showcase) => showcase.type === "circular"
   );
@@ -79,7 +81,7 @@ const BrandsCollections = ({ brandsCollections: showcases }: BrandsCollectionsPr
                 source={brand.image}
                 width={50}
                 height={50}
-                resizeMode="center"
+                resizeMode="cover"
               />
             </YStack>
             <Spacer size={"$sm"} />

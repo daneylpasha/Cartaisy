@@ -8,7 +8,7 @@ interface BottomSheetModalWithFlatListProps<T = any> {
   // Required props
   data: T[];
   renderItem: ListRenderItem<T>;
-  
+
   // FlatList props - pass through as needed
   ListFooterComponent?: React.ReactElement | React.ComponentType<any>;
   ListHeaderComponent?: React.ReactElement | React.ComponentType<any>;
@@ -22,7 +22,8 @@ interface BottomSheetModalWithFlatListProps<T = any> {
   snapPoints?: (string | number)[];
   enableDynamicSizing?: boolean;
   showBackdrop?: boolean;
-  
+  onDismiss?: () => void;
+
   // Footer button props - optional
   onPrimaryPress?: () => void;
   onSecondaryPress?: () => void;
@@ -49,12 +50,13 @@ export const BottomSheetModalWithFlatList = forwardRef<
       contentContainerStyle,
       showsVerticalScrollIndicator = false,
       style,
-      
+
       // BottomSheet props
       snapPoints = ["60%"],
       enableDynamicSizing = false,
       showBackdrop = true,
-      
+      onDismiss,
+
       // Footer button props
       onPrimaryPress,
       onSecondaryPress,
@@ -77,6 +79,7 @@ export const BottomSheetModalWithFlatList = forwardRef<
         showFooter={showFooter}
         showBackdrop={showBackdrop}
         enableDynamicSizing={enableDynamicSizing}
+        onDismiss={onDismiss}
       >
         <BottomSheetFlatList
           data={data}
