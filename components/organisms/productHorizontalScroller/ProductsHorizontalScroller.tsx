@@ -28,7 +28,6 @@ const ProductsHorizontalScroller = ({
   const { data: collectionData, isLoading } = useCollectionWithProducts(
     targetCollection?.collectionId
   );
-  // console.log(collectionData, "collectionData");
 
   if (isLoading) {
     return <Placeholder />;
@@ -51,7 +50,7 @@ const ProductsHorizontalScroller = ({
       <Spacer size={"$xl"} />
       <FlatList
         data={collectionData.products}
-        keyExtractor={(product) => product.id}
+        keyExtractor={(product, index) => `product-${product.id}-${index}`}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{

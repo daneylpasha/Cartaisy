@@ -23,7 +23,7 @@ import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScrol
 import { t } from "@/translations";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
-import { FlatList, Platform, StatusBar } from "react-native";
+import { FlatList, Platform, RefreshControl, StatusBar } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 //
@@ -84,8 +84,15 @@ const HomeScreen = () => {
     },
   ];
 
-  const { data, isLoading, error } = useHomeScreenData();
+  const { data, isLoading, error, refetch } = useHomeScreenData();
+  const [refreshing, setRefreshing] = useState(false);
   console.log("homeData ", data);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
 
   const handleAddNewAddress = () => {
     bottomSheetModalRef.current?.close();
@@ -282,6 +289,14 @@ const HomeScreen = () => {
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={getTokenValue("$primary")}
+                colors={[getTokenValue("$primary")]}
+              />
+            }
             ListFooterComponent={
               <Spacer size={Platform.OS === "ios" ? BOTTOM_INSET * 2 : 0} />
             }

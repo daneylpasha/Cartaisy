@@ -139,7 +139,7 @@ export const CheckoutSuccess = () => {
       <XStack gap="$sm" alignItems="center">
         {imageData.map((item, index) => (
           <YStack
-            key={index}
+            key={`success-img-${item}-${index}`}
             borderRadius="$md"
             overflow="hidden"
             borderWidth={1}

@@ -55,7 +55,7 @@ const SalesHorizontalScroller = ({
       <Spacer size={"$reg"} />
       <FlatList
         data={collectionData.products}
-        keyExtractor={(product) => product.id.toString()}
+        keyExtractor={(product, index) => `sales-${product.id}-${index}`}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
@@ -63,7 +63,7 @@ const SalesHorizontalScroller = ({
           gap: tokens.space.md,
         }}
         renderItem={({ item: product }) => (
-          <ProductCard product={product} context="grid" />
+          <ProductCard product={product} context="grid" showProgressBar={true} />
         )}
       />
     </YStack>
@@ -71,3 +71,7 @@ const SalesHorizontalScroller = ({
 };
 
 export default SalesHorizontalScroller;
+// export const getCollectionProductsUrl = (collectionId: string) => {
+//   // Use products endpoint with collection_id filter to get full variant data including price
+//   return `${PRODUCTS_CONFIG.SHOPIFY.STORE_URL}/admin/api/${PRODUCTS_CONFIG.SHOPIFY.API_VERSION}/collections/${collectionId}/products.json?limit=250`;
+// };

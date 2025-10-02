@@ -29,8 +29,6 @@ const fetchCollectionWithProducts = async (collectionId: string) => {
 
   const collectionData = await collectionResponse.json();
   const productsData = await productsResponse.json();
-  console.log(collectionData, "collectionData");
-  console.log(productsData, "productsData");
 
   // Map products
   const mappedProducts =
@@ -40,9 +38,31 @@ const fetchCollectionWithProducts = async (collectionId: string) => {
         product.variants?.[0]?.compare_at_price || "0"
       );
 
+      // Calculate progress based on inventory
+      const inventoryQuantity = product.variants?.[0]?.inventory_quantity || 0;
+      const inventoryManagement = product.variants?.[0]?.inventory_management;
+
+      // Calculate progress based on inventory scarcity
+      // Lower stock = higher urgency/progress
+      let progressValue = 0;
+      if (inventoryManagement && inventoryQuantity >= 0) {
+        if (inventoryQuantity === 0) {
+          progressValue = 100; // Sold out
+        } else if (inventoryQuantity <= 10) {
+          progressValue = 90; // Almost sold out
+        } else if (inventoryQuantity <= 30) {
+          progressValue = 70; // Low stock
+        } else if (inventoryQuantity <= 60) {
+          progressValue = 50; // Medium stock
+        } else {
+          progressValue = 30; // High stock
+        }
+      }
+
       return {
         id: product.id.toString(),
         title: product.title,
+        description: collectionData.collection?.body_html || product.body_html || "",
         image: product.images?.[0]?.src || "",
         currentPrice: currentPrice,
         originalPrice: originalPrice || currentPrice,
@@ -54,6 +74,7 @@ const fetchCollectionWithProducts = async (collectionId: string) => {
                 100
             )
           : 0,
+        progressValue: progressValue,
         ratingValue: PRODUCTS_CONFIG.DEFAULT_VALUES.RATING,
         totalReviewCount: PRODUCTS_CONFIG.DEFAULT_VALUES.REVIEW_COUNT,
         onToggleWishlist: () => {},

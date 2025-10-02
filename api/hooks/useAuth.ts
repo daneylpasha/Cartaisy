@@ -15,21 +15,17 @@ export const useLogin = (
     {
       mutationFn: (data: LoginCredentials) => authApi.login(data),
       onMutate: async (variables) => {
-        console.log("🔄 React Query: Starting login mutation with:", variables);
         if (options?.onMutate) {
           return await options.onMutate(variables);
         }
       },
       onSuccess: (data, variables, context,onMutateResult) => {
-        console.log("✅ React Query: Login mutation successful!", data);
         options?.onSuccess?.(data, variables, context,onMutateResult);
       },
       onError: (error, variables, context,onMutateResult) => {
-        console.log("❌ React Query: Login mutation failed!", error);
         options?.onError?.(error, variables, context,onMutateResult);
       },
       onSettled: (data, error, variables, context,onMutateResult) => {
-        console.log("🎯 React Query: Login mutation completed");
         options?.onSettled?.(data, error, variables, context,onMutateResult);
       },
       ...options,
@@ -73,22 +69,17 @@ export const useSignUp = (
   const mutation = useMutation<AuthResponse, AxiosError<any>, SignUpData>({
     mutationFn: (data: SignUpData) => authApi.signUp(data),
     onMutate: async (variables) => {
-      console.log("🔄 React Query: Starting sign-up mutation with:", variables);
       if (options?.onMutate) {
         return await options.onMutate(variables);
       }
-      
     },
     onSuccess: (data, variables, context,onMutateResult) => {
-      console.log("✅ React Query: Sign-up mutation successful!", data);
       options?.onSuccess?.(data, variables, context,onMutateResult);
     },
     onError: (error, variables, context,onMutateResult) => {
-      console.log("❌ React Query: Sign-up mutation failed!", error);
       options?.onError?.(error, variables, context,onMutateResult);
     },
     onSettled: (data, variables, context,error,onMutateResult) => {
-      console.log("🎯 React Query: Sign-up mutation completed");
       options?.onSettled?.(data,  variables,context,error,onMutateResult);
     },
     ...options,

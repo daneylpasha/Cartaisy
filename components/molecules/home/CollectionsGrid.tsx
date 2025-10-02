@@ -43,7 +43,7 @@ export const CollectionsGrid = ({ itemData: categories }: CollectionsGridProps) 
           width={ITEM_WIDTH}
           alignItems="center"
           onPress={() => {
-            console.log("pressed");
+            // Handle category press
           }}
         >
           <YStack

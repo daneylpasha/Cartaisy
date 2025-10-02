@@ -2,13 +2,13 @@ const PRODUCTS_CONFIG = {
   SHOPIFY: {
     STORE_URL: "https://pwhqbm-db.myshopify.com",
     API_VERSION: "2025-07",
-    ENDPOINTS: {
-      PRODUCTS: "/admin/api/2025-07/products.json",
-      COLLECTIONS: "/admin/api/2025-07/custom_collections.json",
-      SMART_COLLECTIONS: "/admin/api/2025-07/smart_collections.json",
-      COLLECTION_PRODUCTS:
-        "/admin/api/2025-07/collections/{collection_id}/products.json",
-    },
+    // ENDPOINTS: {
+    //   PRODUCTS: "/admin/api/2025-07/products.json",
+    //   COLLECTIONS: "/admin/api/2025-07/custom_collections.json",
+    //   SMART_COLLECTIONS: "/admin/api/2025-07/smart_collections.json",
+    //   COLLECTION_PRODUCTS:
+    //     "/admin/api/2025-07/collections/{collection_id}/products.json",
+    // },
   },
   LIMITS: {
     HOME_PRODUCTS: 6,
@@ -40,8 +40,8 @@ export const getCollectionWithProductsUrl = (collectionId: string) => {
 };
 
 export const getCollectionProductsUrl = (collectionId: string) => {
-  // Use products endpoint with collection_id filter to get full variant data including price
-  return `${PRODUCTS_CONFIG.SHOPIFY.STORE_URL}/admin/api/${PRODUCTS_CONFIG.SHOPIFY.API_VERSION}/collections/${collectionId}/products.json?limit=250`;
+  // Use products endpoint with collection_id filter to get full product data
+  return `${PRODUCTS_CONFIG.SHOPIFY.STORE_URL}/admin/api/${PRODUCTS_CONFIG.SHOPIFY.API_VERSION}/products.json?collection_id=${collectionId}&limit=250`;
 };
 
 export default PRODUCTS_CONFIG;

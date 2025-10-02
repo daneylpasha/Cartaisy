@@ -55,7 +55,7 @@ const ProductsGridScroller = ({
         <Spacer size={"$reg"} />
         <FlatList
           data={collectionData.products}
-          keyExtractor={(product) => product.id.toString()}
+          keyExtractor={(product, index) => `grid-${product.id}-${index}`}
           horizontal={false}
           numColumns={numColumns}
           showsHorizontalScrollIndicator={false}

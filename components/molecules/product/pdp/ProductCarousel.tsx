@@ -35,7 +35,7 @@ export default function ProductCarousel({
 
   // ✅ always array - handle both icon names and URLs
   const data: string[] = Array.isArray(images)
-    ? images.map(img => String(img))
+    ? images.map((img) => String(img))
     : [String(images)];
   const total = data.length;
 
@@ -83,7 +83,7 @@ export default function ProductCarousel({
       <FlatList
         ref={listRef}
         data={data}
-        keyExtractor={(_, i) => String(i)}
+        keyExtractor={(item, i) => `${item}-${i}`}
         renderItem={({ item, index: i }) => (
           <YStack alignItems="center" justifyContent="center" width={width}>
             {/* Image touch area - positioned first so it gets touch events */}
@@ -100,10 +100,19 @@ export default function ProductCarousel({
             >
               <Stack pointerEvents="none" style={{ width, height: h }}>
                 {/* Check if it's a URL or icon name */}
-                {item.startsWith('http') || item.startsWith('https') ? (
-                  <AppImage source={item} width={width} height={h} />
+                {item.startsWith("http") || item.startsWith("https") ? (
+                  <AppImage
+                    resizeMode="cover"
+                    source={item}
+                    width={width}
+                    height={h}
+                  />
                 ) : (
-                  <AppImage name={item as keyof typeof Icons} width={width} height={h} />
+                  <AppImage
+                    name={item as keyof typeof Icons}
+                    width={width}
+                    height={h}
+                  />
                 )}
               </Stack>
             </OpTouch>
@@ -112,7 +121,9 @@ export default function ProductCarousel({
             <XStack style={styles.blurviewcontainer} pointerEvents="box-none">
               <OpTouch
                 style={{ zIndex: 100 }}
-                onPress={() => console.log("Share button pressed")}
+                onPress={() => {
+                  // Handle share button press
+                }}
               >
                 <BlurView intensity={45} tint="dark" style={styles.blurView}>
                   <AppImage
@@ -126,7 +137,9 @@ export default function ProductCarousel({
               <Spacer size={"$reg"} />
               <OpTouch
                 style={{ zIndex: 100 }}
-                onPress={() => console.log("Heart button pressed")}
+                onPress={() => {
+                  // Handle wishlist button press
+                }}
               >
                 <BlurView intensity={45} tint="dark" style={styles.blurView}>
                   <AppImage
@@ -151,9 +164,9 @@ export default function ProductCarousel({
       <Spacer size={"$md"} />
 
       <XStack alignItems="center" justifyContent="center">
-        {data.map((_, i) => (
+        {data.map((item, i) => (
           <OpTouch
-            key={i}
+            key={`dot-${item}-${i}`}
             onPress={() => goTo(i)}
             style={{ paddingHorizontal: 4 }}
           >

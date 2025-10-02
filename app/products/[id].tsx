@@ -25,8 +25,9 @@ import { RatingStar } from "@/components/organisms/home";
 import { t } from "@/translations";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
-import { FlatList } from "react-native";
+import { FlatList, useWindowDimensions } from "react-native";
 import ImageViewing from "react-native-image-viewing";
+import RenderHTML from "react-native-render-html";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
 // ===== types =====
@@ -143,7 +144,11 @@ const productSpecs = [
 ];
 
 const ProductDetailsScreen = () => {
-  const { id, productData } = useLocalSearchParams<{ id: string; productData?: string }>();
+  const { id, productData } = useLocalSearchParams<{
+    id: string;
+    productData?: string;
+  }>();
+  const { width } = useWindowDimensions();
 
   // ✅ Parse the product data from navigation params
   const passedProduct = productData ? JSON.parse(productData as string) : null;
@@ -157,6 +162,11 @@ const ProductDetailsScreen = () => {
   const [viewerIndex, setViewerIndex] = useState(0);
   const [viewerOpen, setViewerOpen] = useState(false);
 
+  // Strip HTML tags for plain text description
+  const stripHtml = (html: string) => {
+    return html?.replace(/<[^>]*>/g, "") || "";
+  };
+
   // ✅ Handle both single image and array of images from API
   const productImages = useMemo(() => {
     // Check if product from API has image/images
@@ -164,7 +174,7 @@ const ProductDetailsScreen = () => {
       // If has images array
       if (passedProduct.images && Array.isArray(passedProduct.images)) {
         return passedProduct.images.map((img: any) =>
-          typeof img === 'string' ? img : img.src || img.url || img
+          typeof img === "string" ? img : img.src || img.url || img
         );
       }
       // If has single image (not array)
@@ -182,7 +192,7 @@ const ProductDetailsScreen = () => {
   const viewerImages = useMemo(() => {
     return productImages.map((img: string) => {
       // Check if it's a URL or an icon name
-      if (img.startsWith('http') || img.startsWith('https')) {
+      if (img.startsWith("http") || img.startsWith("https")) {
         return { uri: img }; // API image URL
       }
       // Fallback to icon if it's a local icon name
@@ -305,11 +315,11 @@ const ProductDetailsScreen = () => {
                 <Spacer size="$sm-reg" />
                 <TextMDBold color="$secondary">
                   {product.ratingValue.toFixed(1)}
-                  <Spacer size="$xs" />
-                  <TextXSRegular color="$icon">
-                    ({product.totalReviewCount?.toLocaleString()})
-                  </TextXSRegular>
                 </TextMDBold>
+                <Spacer size="$xs" />
+                <TextXSRegular color="$icon">
+                  ({product.totalReviewCount?.toLocaleString()})
+                </TextXSRegular>
               </XStack>
               <TextSMMedium color="$primary">{"14 Questions"}</TextSMMedium>
             </XStack>
@@ -318,11 +328,23 @@ const ProductDetailsScreen = () => {
           <Spacer size={"$reg"} />
           <TextMDBold color="$text">{"Description"}</TextMDBold>
           <Spacer size={"$reg"} />
-          <ParagraphSM color="$secondary">
-            {
-              "Take charge of your music and stride along to the beat. High-fidelity audio and legendary noise cancellation work their magic by sealing you in, eliminating distractions, and letting you dive deep into your own rhythm. Toggle between Quiet and Aware Modes, or create a Custom Mode and adjust outside sound to the moment. The design is iconic and the comfort lasting, while an optional audio cable with an in-line microphone plugs you into sound as bold as you, even without a Bluetooth® connection."
-            }
-          </ParagraphSM>
+          {passedProduct?.description || product?.description ? (
+            <RenderHTML
+              contentWidth={width - 32}
+              source={{
+                html: passedProduct?.description || product?.description || "",
+              }}
+              baseStyle={{
+                color: getTokenValue("$secondary"),
+                fontSize: 14,
+                lineHeight: 20,
+              }}
+            />
+          ) : (
+            <ParagraphSM color="$secondary">
+              No description available
+            </ParagraphSM>
+          )}
         </YStack>
       ),
     },

@@ -42,6 +42,7 @@ type Product = {
   totalReviewCount?: number;
   wishlist?: boolean;
   discountBadge?: boolean;
+  description?: string;
   onToggleWishlist?: () => void;
   onPress?: () => void;
 };
@@ -94,9 +95,9 @@ export const ProductCard = ({
             height={imageHeight}
           />
 
-          {product.discountBadge &&
-            product.discountPercent &&
-            product.discountPercent > 0 && (
+          {product.discountPercent &&
+            product.discountPercent > 0 &&
+            product.currentPrice !== product.originalPrice && (
               <XStack
                 position="absolute"
                 top={12}
@@ -116,7 +117,7 @@ export const ProductCard = ({
                 />
                 <Spacer size="$xs-sm" />
                 <TextSMMedium color="$white">
-                  -{product.discountPercent}%
+                  -{product.discountPercent || 0}%
                 </TextSMMedium>
               </XStack>
             )}
@@ -146,7 +147,7 @@ export const ProductCard = ({
         </YStack>
 
         <YStack paddingVertical="$reg">
-          <TextMDSemiBold numberOfLines={2}>{product.title}</TextMDSemiBold>
+          <TextMDSemiBold numberOfLines={2}>{product.title || ''}</TextMDSemiBold>
           <Spacer size="$sm-reg" />
 
           {product.ratingValue !== undefined && (
@@ -167,18 +168,19 @@ export const ProductCard = ({
 
           {product.currentPrice !== undefined && (
             <XStack alignItems="center">
-              <TextMDBold>${product.currentPrice.toFixed(2)}</TextMDBold>
+              <TextMDBold>${(product.currentPrice || 0).toFixed(2)}</TextMDBold>
               <Spacer size="$xs" />
-              {product.originalPrice && (
-                <TextSMRegular color="$icon" textDecorationLine="line-through">
-                  ${product.originalPrice.toFixed(2)}
-                </TextSMRegular>
-              )}
+              {product.originalPrice &&
+                product.currentPrice !== product.originalPrice && (
+                  <TextSMRegular color="$icon" textDecorationLine="line-through">
+                    ${(product.originalPrice || 0).toFixed(2)}
+                  </TextSMRegular>
+                )}
             </XStack>
           )}
         </YStack>
 
-        {!showProgressBar && product.progressValue ? (
+        {showProgressBar && product.progressValue ? (
           <XStack alignItems="center" gap="$sm">
             <YStack
               borderRadius="$full"
@@ -199,11 +201,10 @@ export const ProductCard = ({
               />
             </YStack>
             <TextSMRegular color="$secondary">
-              {product.progressValue}% Claimed
+              {product.progressValue || 0}% Claimed
             </TextSMRegular>
           </XStack>
-        ) : // <Spacer size="$reg" />
-        null}
+        ) : null}
       </YStack>
     </OpTouch>
   );

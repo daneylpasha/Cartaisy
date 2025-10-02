@@ -22,9 +22,9 @@ type CollectionsCardGridProps = {
   collectionShowcases?: CollectionShowcase[];
 };
 
-const CollectionsCardGrid = ({ collectionShowcases: showcases }: CollectionsCardGridProps) => {
-  console.log("collectionShowcases", showcases);
-
+const CollectionsCardGrid = ({
+  collectionShowcases: showcases,
+}: CollectionsCardGridProps) => {
   // Filter collections by type 'grid' and get the first one
   const targetShowcase = showcases?.find(
     (showcase) => showcase.type === "grid"
@@ -49,7 +49,7 @@ const CollectionsCardGrid = ({ collectionShowcases: showcases }: CollectionsCard
         <Spacer size={"$reg"} />
         <FlatList
           data={targetShowcase.collections}
-          keyExtractor={(collection) => collection.id || collection._id}
+          keyExtractor={(collection, index) => `${collection.id}-${index}`}
           numColumns={2}
           contentContainerStyle={{
             paddingHorizontal: GRID_SIDE_PADDING,
@@ -59,7 +59,9 @@ const CollectionsCardGrid = ({ collectionShowcases: showcases }: CollectionsCard
             marginBottom: GRID_COLUMN_GAP,
           }}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item: collection }) => <CollectionCard item={collection} />}
+          renderItem={({ item: collection }) => (
+            <CollectionCard item={collection} />
+          )}
         />
       </YStack>
     </YStack>
