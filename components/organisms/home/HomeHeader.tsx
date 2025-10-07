@@ -7,6 +7,7 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
+import useCartStore from "@/store/useCartStore";
 import { t } from "@/translations";
 import { router } from "expo-router";
 import React from "react";
@@ -24,6 +25,8 @@ export const HomeHeader = ({
   rotateAnim,
   onAddressPress,
 }: HomeHeaderProps) => {
+  const { items, getTotalQuantity } = useCartStore();
+  const cartItemCount = getTotalQuantity();
   return (
     <YStack
       paddingTop={Platform.OS === "android" ? topInset + 24 : 0}
@@ -45,18 +48,27 @@ export const HomeHeader = ({
 
         <YStack position="absolute" right={0}>
           <OpTouch onPress={() => router.push("/cart")}>
-            <AppImage name="cartIcon" size={24} />
-            <TextXSRegular
-              position="absolute"
-              backgroundColor="$yellow"
-              color="$white"
-              top={-8}
-              right={-10}
-              borderRadius="$full"
-              paddingHorizontal={"$xs-sm"}
-            >
-              {"2"}
-            </TextXSRegular>
+            <YStack position="relative">
+              <AppImage name="cartIcon" size={24} />
+              {cartItemCount > 0 && (
+                <YStack
+                  position="absolute"
+                  backgroundColor="$yellow"
+                  top={-8}
+                  right={-10}
+                  borderRadius="$full"
+                  minWidth={20}
+                  height={20}
+                  justifyContent="center"
+                  alignItems="center"
+                  paddingHorizontal={"$xs"}
+                >
+                  <TextXSRegular color="$white" textAlign="center">
+                    {cartItemCount}
+                  </TextXSRegular>
+                </YStack>
+              )}
+            </YStack>
           </OpTouch>
         </YStack>
       </XStack>

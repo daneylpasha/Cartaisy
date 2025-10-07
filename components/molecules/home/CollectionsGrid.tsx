@@ -1,3 +1,4 @@
+import { CategoryGridItem } from "@/api/generated/cartaisyAPI.schemas";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { TextSMMedium } from "@/components/atoms/texts";
@@ -5,12 +6,6 @@ import { SCREEN_WIDTH, SHADOW_STYLES } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
 import { FlatList } from "react-native";
 import { Spacer, YStack } from "tamagui";
-
-type CategoryGridItem = {
-  id: string;
-  imageUrl: string;
-  title: string;
-};
 
 type CollectionsGridProps = {
   itemData?: CategoryGridItem[];
@@ -21,8 +16,9 @@ const COLUMNS = 4;
 
 const ITEM_WIDTH = (SCREEN_WIDTH - PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
 
-
-export const CollectionsGrid = ({ itemData: categories }: CollectionsGridProps) => {
+export const CollectionsGrid = ({
+  itemData: categories,
+}: CollectionsGridProps) => {
   // ✅ If no data provided, hide component completely
   if (!categories || categories.length === 0) {
     return null;
@@ -31,7 +27,9 @@ export const CollectionsGrid = ({ itemData: categories }: CollectionsGridProps) 
   return (
     <FlatList
       data={categories}
-      keyExtractor={(category, index) => category.id?.toString() || index.toString()}
+      keyExtractor={(category, index) =>
+        category.id?.toString() || `category-${index}`
+      }
       numColumns={4}
       columnWrapperStyle={{
         marginBottom: tokens.space.reg,
@@ -64,7 +62,7 @@ export const CollectionsGrid = ({ itemData: categories }: CollectionsGridProps) 
           </YStack>
           <Spacer size={"$sm"} />
           <TextSMMedium numberOfLines={2} textAlign="center" color="$secondary">
-            {category.title || ''}
+            {category.title || ""}
           </TextSMMedium>
         </OpTouch>
       )}

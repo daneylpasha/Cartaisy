@@ -1,3 +1,4 @@
+import { CategoryCollectionGridItem } from "@/api/generated/cartaisyAPI.schemas";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
 import React from "react";
@@ -6,18 +7,6 @@ import { Spacer, XStack, YStack } from "tamagui";
 import { ParagraphMD, TextMDMedium } from "../atoms";
 import { OpTouch } from "../atoms/OpTouch";
 import { SectionHeader } from "./SectionHeader";
-
-type CategoryCollection = {
-  id: string;
-  image: string;
-  title: string;
-};
-
-type CategoryCollectionGridItem = {
-  title: string;
-  subtitle: string;
-  collections: CategoryCollection[];
-};
 
 type CategorySuggestionsProps = {
   categoryCollectionGrid?: CategoryCollectionGridItem[];
@@ -58,7 +47,7 @@ export const CategorySuggestions = ({
         <FlatList
           data={allCategoryCollections}
           keyExtractor={(collection, collectionIndex) =>
-            `${collection.id}-${collectionIndex}`
+            `${collection.collectionId}-${collectionIndex}`
           }
           numColumns={3}
           showsVerticalScrollIndicator={false}

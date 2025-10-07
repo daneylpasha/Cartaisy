@@ -1,3 +1,4 @@
+import { CollectionShowcaseItem } from "@/api/generated/cartaisyAPI.schemas";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
@@ -8,21 +9,8 @@ import React from "react";
 import { FlatList } from "react-native";
 import { YStack } from "tamagui";
 
-type BrandCollection = {
-  id: string;
-  image: string;
-  name: string;
-};
-
-type BrandShowcase = {
-  _id: string;
-  type: string;
-  title: string;
-  collections: BrandCollection[];
-};
-
 type BrandsCollectionsProps = {
-  brandsCollections?: BrandShowcase[];
+  brandsCollections?: CollectionShowcaseItem[];
 };
 
 const BrandsCollections = ({
@@ -49,7 +37,7 @@ const BrandsCollections = ({
       <Spacer size={"$md"} />
       <FlatList
         data={targetShowcase.collections}
-        keyExtractor={(brand) => brand.id}
+        keyExtractor={(brand, index) => `brand-${index}`}
         horizontal
         contentContainerStyle={{
           paddingHorizontal: tokens.space.md,
@@ -86,7 +74,7 @@ const BrandsCollections = ({
             </YStack>
             <Spacer size={"$sm"} />
             <TextSMMedium textAlign="center" color="$secondary">
-              {brand.name || ""}
+              {brand.title || ""}
             </TextSMMedium>
           </OpTouch>
         )}

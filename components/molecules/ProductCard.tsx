@@ -1,3 +1,4 @@
+import { Product } from "@/api/generated/cartaisyAPI.schemas";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
@@ -28,31 +29,13 @@ const GRID_CARD_WIDTH =
 
 const INLINE_CARD_WIDTH = 240;
 
-type Product = {
-  id: string;
-  title: string;
-  // image: keyof typeof Icons | string; // Allow both Icons keys and URL strings
-  image: string; // Allow both Icons keys and URL strings
-  currentPrice: number;
-  originalPrice?: number;
-  discountPercent?: number;
-  progressValue?: number;
-  showProgressBar?: boolean;
-  ratingValue?: number;
-  totalReviewCount?: number;
-  wishlist?: boolean;
-  discountBadge?: boolean;
-  description?: string;
-  onToggleWishlist?: () => void;
-  onPress?: () => void;
-};
-
 type ProductCardProps = {
   product: Product;
   isFavorite?: boolean;
   showFavoriteIcon?: boolean;
   context: "grid" | "in-line";
   showProgressBar?: boolean;
+  onPress?: () => void;
 };
 
 export const ProductCard = ({
@@ -61,24 +44,28 @@ export const ProductCard = ({
   showFavoriteIcon = false,
   context,
   showProgressBar = false,
+  onPress,
 }: ProductCardProps) => {
   const imageHeight = context === "grid" ? 163.5 : 240;
   const cardWidth = context === "grid" ? GRID_CARD_WIDTH : INLINE_CARD_WIDTH;
+  console.log(product, "product in card");
+
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+    } else {
+      router.push({
+        pathname: "/products/[id]",
+        params: {
+          id: product.productId,
+          productData: JSON.stringify(product),
+        },
+      });
+    }
+  };
 
   return (
-    <OpTouch
-      onPress={
-        product.onPress ||
-        (() =>
-          router.push({
-            pathname: "/products/[id]",
-            params: {
-              id: product.id,
-              productData: JSON.stringify(product),
-            },
-          }))
-      }
-    >
+    <OpTouch onPress={handlePress}>
       <YStack width={cardWidth}>
         <YStack
           borderRadius={tokens.space.md}
@@ -90,41 +77,45 @@ export const ProductCard = ({
         >
           <AppImage
             resizeMode="cover"
-            source={product.image}
+            source={product?.images?.[0] || ""}
             width="100%"
             height={imageHeight}
           />
 
-          {product.discountPercent &&
-            product.discountPercent > 0 &&
-            product.currentPrice !== product.originalPrice && (
-              <XStack
-                position="absolute"
-                top={12}
-                left={12}
-                width={76}
-                height={26}
-                backgroundColor="$error"
-                borderRadius="$full"
-                justifyContent="center"
-                alignItems="center"
-              >
-                <AppImage
-                  name="discount"
-                  tintColor="$black"
-                  width={14}
-                  height={14}
-                />
-                <Spacer size="$xs-sm" />
-                <TextSMMedium color="$white">
-                  -{product.discountPercent || 0}%
-                </TextSMMedium>
-              </XStack>
-            )}
+          {product.compareAtPrice && product.price < product.compareAtPrice && (
+            <XStack
+              position="absolute"
+              top={12}
+              left={12}
+              width={76}
+              height={26}
+              backgroundColor="$error"
+              borderRadius="$full"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <AppImage
+                name="discount"
+                tintColor="$black"
+                width={14}
+                height={14}
+              />
+              <Spacer size="$xs-sm" />
+              <TextSMMedium color="$white">
+                -
+                {Math.round(
+                  ((product.compareAtPrice - product.price) /
+                    product.compareAtPrice) *
+                    100
+                )}
+                %
+              </TextSMMedium>
+            </XStack>
+          )}
 
           {/* Wishlist */}
           {showFavoriteIcon && (
-            <OpTouch onPress={product.onToggleWishlist || (() => {})}>
+            <OpTouch onPress={() => {}}>
               <BlurView style={styles.blurView} intensity={16} tint="dark">
                 {isFavorite ? (
                   <AppImage
@@ -147,40 +138,47 @@ export const ProductCard = ({
         </YStack>
 
         <YStack paddingVertical="$reg">
-          <TextMDSemiBold numberOfLines={2}>{String(product.title || '')}</TextMDSemiBold>
+          <TextMDSemiBold numberOfLines={2}>
+            {String(product.title || "")}
+          </TextMDSemiBold>
           <Spacer size="$sm-reg" />
 
-          {product.ratingValue !== undefined && (
+          {product.rating !== undefined && (
             <XStack alignItems="center">
-              <RatingStar rating={product.ratingValue} />
+              <RatingStar rating={product.rating} />
               <Spacer size="$sm-reg" />
               <TextMDBold color="$secondary">
-                {product.ratingValue?.toFixed(1)}
+                {product.rating?.toFixed(1)}
               </TextMDBold>
               <Spacer size="$xs" />
               <TextXSRegular color="$icon">
-                ({product.totalReviewCount?.toLocaleString()})
+                ({product.reviewsCount?.toLocaleString()})
               </TextXSRegular>
             </XStack>
           )}
 
           {<Spacer size="$sm-reg" />}
 
-          {product.currentPrice !== undefined && (
+          {product.price !== undefined && (
             <XStack alignItems="center">
-              <TextMDBold>${(product.currentPrice || 0).toFixed(2)}</TextMDBold>
+              <TextMDBold>${(product.price || 0).toFixed(2)}</TextMDBold>
               <Spacer size="$xs" />
-              {product.originalPrice &&
-                product.currentPrice !== product.originalPrice && (
-                  <TextSMRegular color="$icon" textDecorationLine="line-through">
-                    ${(product.originalPrice || 0).toFixed(2)}
+              {product.compareAtPrice &&
+                product.price !== product.compareAtPrice && (
+                  <TextSMRegular
+                    color="$icon"
+                    textDecorationLine="line-through"
+                  >
+                    ${(product.compareAtPrice || 0).toFixed(2)}
                   </TextSMRegular>
                 )}
             </XStack>
           )}
         </YStack>
 
-        {showProgressBar && product.progressValue ? (
+        {showProgressBar &&
+        product.availableQuantity &&
+        product.totalQuantity ? (
           <XStack alignItems="center" gap="$sm">
             <YStack
               borderRadius="$full"
@@ -196,12 +194,21 @@ export const ProductCard = ({
                 bottom={0}
                 backgroundColor="$primary"
                 height="100%"
-                width={`${product.progressValue}%`}
+                width={`${
+                  ((product.totalQuantity - product.availableQuantity) /
+                    product.totalQuantity) *
+                  100
+                }%`}
                 borderRadius="$full"
               />
             </YStack>
             <TextSMRegular color="$secondary">
-              {product.progressValue || 0}% Claimed
+              {Math.round(
+                ((product.totalQuantity - product.availableQuantity) /
+                  product.totalQuantity) *
+                  100
+              )}
+              % Claimed
             </TextSMRegular>
           </XStack>
         ) : null}

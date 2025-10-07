@@ -1,8 +1,4 @@
-import {
-  ParagraphMD,
-  TextLGBold,
-  TextSMSemiBold,
-} from "@/components/atoms";
+import { ParagraphMD, TextLGBold, TextSMSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
@@ -14,8 +10,8 @@ import {
   HomeHeader,
 } from "@/components/organisms/home";
 import BrandsCollections from "@/components/organisms/home/BrandsCollections";
-import { PromoBannerCard } from "@/components/organisms/home/PromoBannerCard";
 import PlaceHolder from "@/components/organisms/home/Placeholder";
+import { PromoBannerCard } from "@/components/organisms/home/PromoBannerCard";
 import ProductsHorizontalScroller from "@/components/organisms/productHorizontalScroller/ProductsHorizontalScroller";
 import ProductsGridScroller from "@/components/organisms/ProductsGridScroller/ProductsGridScroller";
 import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller/SalesHorizontalScroller";
@@ -88,15 +84,22 @@ const HomeScreen = () => {
     },
   ];
 
-  const { data, isLoading, error, refetch } = useHomeScreenData();
-  const [refreshing, setRefreshing] = useState(false);
-  console.log("homeData ", data);
+  const { data, isLoading, refetch, isFetching, error } = useHomeScreenData();
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+  console.log("[HomeScreen] Query State:", {
+    isLoading,
+    isFetching,
+    data,
+    hasError: !!error,
+  });
+
+  const onRefresh = () => {
+    console.log("[HomeScreen] Refetching data...");
+    refetch();
   };
+
+  const homescreenData = data?.data;
+  console.log("[HomeScreen] Data:", homescreenData);
 
   const handleAddNewAddress = () => {
     setOpen(false);
@@ -124,56 +127,70 @@ const HomeScreen = () => {
   const sections = [
     {
       id: "featuredPromotionsCarousel",
-      content: <FeaturedPromotionsCarousel item={data?.carousel} />,
+      content: (
+        <FeaturedPromotionsCarousel carousels={homescreenData?.carousel} />
+      ),
     },
     {
       id: "collections",
-      content: <CollectionsGrid itemData={data?.categoryGrid} />,
+      content: <CollectionsGrid itemData={homescreenData?.categoryGrid} />,
     },
 
     {
       id: "calloutBanners",
-      content: <CalloutBanners calloutBanners={data?.calloutBanners} />,
+      content: (
+        <CalloutBanners calloutBanners={homescreenData?.calloutBanners} />
+      ),
     },
     {
       id: "productsHorizontalScroller",
       content: (
-        <ProductsHorizontalScroller collection={data?.collectionDisplays} />
+        <ProductsHorizontalScroller
+          collections={homescreenData?.collectionDisplays}
+        />
       ),
     },
     {
       id: "categories",
       content: (
         <CategorySuggestions
-          categoryCollectionGrid={data?.categoryCollectionGrid}
+          categoryCollectionGrid={homescreenData?.categoryCollectionGrid}
         />
       ),
     },
 
     {
       id: "productsGridScroller",
-      content: <ProductsGridScroller collection={data?.collectionDisplays} />,
+      content: (
+        <ProductsGridScroller collection={homescreenData?.collectionDisplays} />
+      ),
     },
     {
       id: "promoBanner",
-      content: <PromoBannerCard promoBanners={data?.promoBanners} />,
+      content: <PromoBannerCard promoBanners={homescreenData?.promoBanners} />,
     },
     {
       id: "collectionsCardGrid",
       content: (
-        <CollectionsCardGrid collectionShowcases={data?.collectionShowcases} />
+        <CollectionsCardGrid
+          collectionShowcases={homescreenData?.collectionShowcases}
+        />
       ),
     },
     {
       id: "brands",
       content: (
-        <BrandsCollections brandsCollections={data?.collectionShowcases} />
+        <BrandsCollections
+          brandsCollections={homescreenData?.collectionShowcases}
+        />
       ),
     },
     {
       id: "SalesHorizontalScroller",
       content: (
-        <SalesHorizontalScroller collection={data?.collectionDisplays} />
+        <SalesHorizontalScroller
+          collection={homescreenData?.collectionDisplays}
+        />
       ),
     },
   ];
@@ -227,7 +244,7 @@ const HomeScreen = () => {
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
-                refreshing={refreshing}
+                refreshing={isFetching}
                 onRefresh={onRefresh}
                 tintColor={getTokenValue("$primary")}
                 colors={[getTokenValue("$primary")]}

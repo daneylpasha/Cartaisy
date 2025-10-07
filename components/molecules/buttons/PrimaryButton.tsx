@@ -9,6 +9,7 @@ type PrimaryButtonProps = {
   onPress: () => void;
 
   isLoading?: boolean;
+  disabled?: boolean;
   label: string;
   width?: DimensionValue;
   icon?: React.ReactNode;
@@ -20,6 +21,7 @@ type PrimaryButtonProps = {
 export const PrimaryButton = ({
   onPress,
   isLoading,
+  disabled = false,
   label,
   background = "primary",
   width = "100%",
@@ -35,7 +37,8 @@ export const PrimaryButton = ({
       borderRadius={"full"}
       paddingVertical={paddingVertical}
       onPress={onPress}
-      disabled={isLoading}
+      disabled={isLoading || disabled}
+      opacity={isLoading || disabled ? 0.5 : 1}
       width={width}
     >
       <XStack alignItems="center" justifyContent="center" gap="$sm-reg">

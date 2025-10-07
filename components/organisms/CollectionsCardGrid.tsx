@@ -1,3 +1,4 @@
+import { CollectionShowcaseItem } from "@/api/generated/cartaisyAPI.schemas";
 import React from "react";
 import { FlatList } from "react-native";
 import { Spacer, YStack } from "tamagui";
@@ -5,21 +6,8 @@ import { CollectionCard } from "../molecules/CollectionCard";
 import { GRID_COLUMN_GAP, GRID_SIDE_PADDING } from "../molecules/ProductCard";
 import { SectionHeader } from "../molecules/SectionHeader";
 
-type Collection = {
-  id: string;
-  image: string;
-  name: string;
-};
-
-type CollectionShowcase = {
-  _id: string;
-  type: string;
-  title: string;
-  collections: Collection[];
-};
-
 type CollectionsCardGridProps = {
-  collectionShowcases?: CollectionShowcase[];
+  collectionShowcases?: CollectionShowcaseItem[];
 };
 
 const CollectionsCardGrid = ({
@@ -29,6 +17,7 @@ const CollectionsCardGrid = ({
   const targetShowcase = showcases?.find(
     (showcase) => showcase.type === "grid"
   );
+  console.log(targetShowcase, "targetShowcase");
 
   // If no grid collection found, return null or fallback
   if (!targetShowcase) {
@@ -49,7 +38,9 @@ const CollectionsCardGrid = ({
         <Spacer size={"$reg"} />
         <FlatList
           data={targetShowcase.collections}
-          keyExtractor={(collection, index) => `${collection.id}-${index}`}
+          keyExtractor={(collection, index) =>
+            `${collection.collectionId}-${index}`
+          }
           numColumns={2}
           contentContainerStyle={{
             paddingHorizontal: GRID_SIDE_PADDING,

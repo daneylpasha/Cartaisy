@@ -36,9 +36,8 @@ const Login = () => {
     isPending: isLoggingIn,
   } = useLogin({
     onSuccess: (data) => {
-      console.log("✅ Login Success! Full Response:", data);
-      if (data?.data?.accessToken) {
-        setToken(data.data.accessToken, data.data.refreshToken);
+      if (data?.data?.token) {
+        setToken(data.data.token, data.data.refreshToken);
       }
 
       if (data?.data?.user) {
@@ -48,7 +47,7 @@ const Login = () => {
       router.replace("/(tabs)");
     },
     onError: (error) => {
-      console.log("❌ Login Failed! Full Error:", error);
+      // Error handling is done in onSubmit
     },
   });
 
@@ -60,21 +59,18 @@ const Login = () => {
   });
 
   const onSubmit = async (data: LoginForm) => {
-    console.log("🔵 Login Form Submitted with data:", data);
     try {
       await loginUser(data);
     } catch (error: any) {
-      console.log("📊 Error Status:", error?.response?.status);
-      console.log("💬 Error Message:", error?.response?.data?.message);
-
       Alert.alert(
         "Error",
         error?.response?.data?.message || "Login failed. Please try again."
       );
     }
   };
+
   const googleLogin = async () => {
-    console.log("Google Login");
+    // TODO: Implement Google Login
   };
   return (
     <ScreenContainer backgroundColor={"background"}>

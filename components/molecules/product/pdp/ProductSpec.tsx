@@ -9,6 +9,7 @@ type ProductSpecProps = {
 };
 
 const ProductSpec = ({ item, showLabel = true }: ProductSpecProps) => {
+  console.log(item, "metafields");
   return (
     <YStack paddingHorizontal={"$md"}>
       <FlatList

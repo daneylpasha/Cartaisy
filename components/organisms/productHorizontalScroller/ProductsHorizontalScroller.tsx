@@ -1,46 +1,31 @@
-import { useCollectionWithProducts } from "@/api/hooks/useProducts";
+import { CollectionDisplay } from "@/api/generated/cartaisyAPI.schemas";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { tokens } from "@/tamagui/token";
 import React from "react";
 import { FlatList } from "react-native";
 import { Spacer, YStack } from "tamagui";
 import { ProductCard } from "../../molecules/ProductCard";
-import { Placeholder } from "./Placeholder";
-
-type CollectionDisplay = {
-  _id: string;
-  type: string;
-  title: string;
-  collectionId: string;
-};
 
 type ProductsHorizontalScrollerProps = {
-  collection?: CollectionDisplay[];
+  collections?: CollectionDisplay[];
 };
 
 const ProductsHorizontalScroller = ({
-  collection: collections,
+  collections,
 }: ProductsHorizontalScrollerProps) => {
   const targetCollection = collections?.find(
     (collectionItem) => collectionItem.type === "large_row"
   );
 
-  const { data: collectionData, isLoading } = useCollectionWithProducts(
-    targetCollection?.collectionId
-  );
-
-  if (isLoading) {
-    return <Placeholder />;
-  }
-
-  if (!targetCollection || !collectionData?.products) {
+  if (!targetCollection) {
     return null;
   }
 
+  const { products, title } = targetCollection.collection;
   return (
     <YStack>
       <SectionHeader
-        title={collectionData.title || targetCollection.title}
+        title={title}
         tintColor={"darkgrey"}
         image="dealIcon"
         seeAllText="View All"
@@ -49,7 +34,7 @@ const ProductsHorizontalScroller = ({
       />
       <Spacer size={"$xl"} />
       <FlatList
-        data={collectionData.products}
+        data={products}
         keyExtractor={(product, index) => `product-${product.id}-${index}`}
         horizontal
         showsHorizontalScrollIndicator={false}

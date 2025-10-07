@@ -143,6 +143,7 @@ const Icons = {
   trendingIconDown: require("./images/trending-icon-down.png"),
   moneyIcon: require("./images/money.png"),
   cancelOrderFrame: require("./images/order-cancel-frame.png"),
+  palette: require("./images/palette.png"),
 };
 
 export default Icons;

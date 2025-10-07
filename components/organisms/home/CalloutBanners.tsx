@@ -10,22 +10,10 @@ import React, { useState } from "react";
 import { FlatList } from "react-native";
 import { XStack, YStack } from "tamagui";
 
-interface CalloutData {
-  _id: string;
-  imageUrl: string;
-  title: string;
-  subTitle: string;
-  buttonText: string;
-  action: {
-    type: string;
-    navigateTo: string;
-  };
-  position: number;
-  isActive: boolean;
-  backgroundColor: string;
-  textColor: string;
-  buttonColor: string;
-}
+import type { CalloutBannerItem } from '@/api/generated/cartaisyAPI.schemas';
+
+// Note: CalloutBannerItem still uses subTitle and buttonText (not changed in backend)
+type CalloutData = CalloutBannerItem;
 
 type CalloutBannersProps = {
   calloutBanners?: CalloutData[];
@@ -50,7 +38,7 @@ export const CalloutBanners = ({ calloutBanners: banners }: CalloutBannersProps)
     <YStack>
       <FlatList
         data={banners || []}
-        keyExtractor={(banner) => banner._id}
+        keyExtractor={(banner, index) => `callout-${banner.position ?? index}`}
         horizontal
         pagingEnabled
         bounces={false}
@@ -113,7 +101,7 @@ export const CalloutBanners = ({ calloutBanners: banners }: CalloutBannersProps)
         >
           {banners?.map((banner: CalloutData, dotIndex: number) => (
             <YStack
-              key={`${banner._id}-${dotIndex}`}
+              key={`callout-dot-${dotIndex}`}
               borderRadius="$full"
               width={8}
               height={8}

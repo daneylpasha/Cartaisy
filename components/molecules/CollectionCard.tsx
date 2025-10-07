@@ -10,7 +10,7 @@ import { YStack } from "tamagui";
 import { Spacer } from "../atoms/Spacer";
 import { TextMDRegular } from "../atoms/texts/TextMDRegular";
 type CategoryItem = {
-  id: string;
+  collectionId: string;
   title: string;
   image: string;
 };

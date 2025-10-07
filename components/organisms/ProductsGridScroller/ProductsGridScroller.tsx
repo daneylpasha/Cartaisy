@@ -1,17 +1,9 @@
-import { useCollectionWithProducts } from "@/api/hooks/useProducts";
+import { CollectionDisplay } from "@/api/generated/cartaisyAPI.schemas";
 import React from "react";
 import { FlatList } from "react-native";
 import { Spacer, YStack } from "tamagui";
 import { GRID_COLUMN_GAP, ProductCard } from "../../molecules/ProductCard";
 import { SectionHeader } from "../../molecules/SectionHeader";
-import Placeholder from "./Placeholder";
-
-type CollectionDisplay = {
-  _id: string;
-  type: string;
-  title: string;
-  collectionId: string;
-};
 
 type ProductsGridScrollerProps = {
   collection?: CollectionDisplay[];
@@ -25,26 +17,10 @@ const ProductsGridScroller = ({
     (collectionItem) => collectionItem.type === "small_grid"
   );
 
-  const { data: collectionData, isLoading } = useCollectionWithProducts(
-    targetCollection?.collectionId
-  );
-
-  if (!targetCollection) {
-    return null;
-  }
-
-  if (isLoading) {
-    return <Placeholder />;
-  }
-
-  if (!collectionData?.products) {
-    return null;
-  }
-
   return (
     <YStack>
       <SectionHeader
-        title={collectionData.title || targetCollection.title}
+        title={targetCollection?.collection.title || ""}
         tintColor={"darkgrey"}
         image="forYou"
         seeAllText="View All"
@@ -54,8 +30,10 @@ const ProductsGridScroller = ({
       <YStack paddingHorizontal="$md">
         <Spacer size={"$reg"} />
         <FlatList
-          data={collectionData.products}
-          keyExtractor={(product, index) => `grid-${product.id}-${index}`}
+          data={targetCollection?.collection.products}
+          keyExtractor={(product, index) =>
+            `grid-${product.productId}-${index}`
+          }
           horizontal={false}
           numColumns={numColumns}
           showsHorizontalScrollIndicator={false}

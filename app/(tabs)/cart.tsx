@@ -7,12 +7,6 @@ import {
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Spacer } from "@/components/atoms/Spacer";
-import {
-  GRID_COLUMN_GAP,
-  GRID_SIDE_PADDING,
-  ProductCard,
-} from "@/components/molecules/ProductCard";
-import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
 import { FlatList, PanResponder, Platform } from "react-native";
@@ -22,6 +16,9 @@ import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import CartLineItem from "@/components/molecules/cart/CartLineItem";
+import { SectionHeader } from "@/components/molecules/SectionHeader";
+import ErrorModal from "@/components/organisms/ErrorModal";
+import useCartStore from "@/store/useCartStore";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Animated } from "react-native";
@@ -30,167 +27,29 @@ import { getTokenValue, Text, XStack, YStack } from "tamagui";
 
 type IconName = keyof typeof Icons;
 
-type Product = {
-  id: string;
-  price: number;
-  image: IconName[];
-  title: string;
-  currentPrice: number;
-  originalPrice: number;
-  discountPercent: number;
-  progressValue: number;
-  showProgressBar: boolean;
-  ratingValue: number;
-  totalReviewCount: number;
-  wishlist: boolean;
-  discountBadge: boolean;
-};
-
-const mockCartItems = [
-  {
-    id: "1",
-    image: "product1" as IconName,
-    title: "Adjustable Laptop Stand with Cooling Fans",
-    currentPrice: 712.15,
-    originalPrice: 814.25,
-    couponsCount: 2,
-    freeDelivery: true,
-    options: [{ label: "Dark Blue" }, { label: "XL" }],
-    inStockCount: 3,
-    quantity: 1,
-  },
-  {
-    id: "2",
-    image: "product2" as IconName,
-    title: "Adjustable Laptop Stand with Cooling Fans",
-    currentPrice: 712.15,
-    originalPrice: 814.25,
-    couponsCount: 2,
-    freeDelivery: true,
-    options: [{ label: "Dark Blue" }, { label: "XL" }],
-    inStockCount: 3,
-    quantity: 1,
-  },
-  {
-    id: "3",
-    image: "product3" as IconName,
-    title: "Adjustable Laptop Stand with Cooling Fans",
-    currentPrice: 712.15,
-    originalPrice: 814.25,
-    couponsCount: 2,
-    freeDelivery: true,
-    options: [{ label: "Dark Blue" }, { label: "XL" }],
-    inStockCount: 3,
-    quantity: 1,
-  },
-  {
-    id: "4",
-    image: "product4" as IconName,
-    title: "Adjustable Laptop Stand with Cooling Fans",
-    currentPrice: 712.15,
-    originalPrice: 814.25,
-    couponsCount: 2,
-    freeDelivery: true,
-    options: [{ label: "Dark Blue" }, { label: "XL" }],
-    inStockCount: 3,
-    quantity: 1,
-  },
-];
-
-const products: Product[] = [
-  {
-    id: "1",
-    price: 100,
-    image: ["product1", "product2", "product3", "product4", "product5"],
-    title: "Bose QuietComfort Bluetooth Headphones - Chilled Lilac",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "2",
-    price: 100,
-    image: ["product2"],
-    title: "Product2",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "3",
-    price: 100,
-    image: ["product3"],
-    title: "Product3",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "4",
-    price: 100,
-    image: ["product4"],
-    title: "Product4",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "5",
-    price: 100,
-    image: ["product5"],
-    title: "Product5",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 0,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-];
-
 const CartScreen = () => {
-  // State for cart items - replace with your actual cart state management
-  const [cartItems, setCartItems] = useState(mockCartItems);
   const { bottom: BOTTOM_INSET, top: TOP_INSET } = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
+  const [errorModal, setErrorModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+  }>({ visible: false, title: "", message: "" });
 
+  const { items, removeItem, updateQuantity, getTotalPrice, getTotalQuantity } =
+    useCartStore();
+  const totalQuantity = getTotalQuantity();
+  console.log(items, "items from store");
   // Animation refs
   const animatedHeight = useRef(new Animated.Value(0)).current;
   const animatedOpacity = useRef(new Animated.Value(0)).current;
 
   // Auto-open cart summary when items are added
   useEffect(() => {
-    if (cartItems.length > 0) {
+    if (items.length > 0) {
       setOpen(false);
     }
-  }, [cartItems.length]);
+  }, [items.length]);
 
   // Animate cart summary when open state changes
   useEffect(() => {
@@ -256,84 +115,62 @@ const CartScreen = () => {
       },
     })
   ).current;
-  // Function to add item to cart
-  const addToCart = (product: Product) => {
-    const existingItem = cartItems.find((item) => item.id === product.id);
-
-    if (existingItem) {
-      // If item already exists, increase quantity
-      setCartItems((prev) =>
-        prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      );
-    } else {
-      // If item doesn't exist, add new item
-      const newCartItem = {
-        id: product.id,
-        image: product.image[0] as IconName, // Take first image
-        title: product.title,
-        currentPrice: product.currentPrice,
-        originalPrice: product.originalPrice,
-        couponsCount: 0,
-        freeDelivery: true,
-        options: [],
-        inStockCount: 10,
-        quantity: 1,
-      };
-
-      setCartItems((prev) => [...prev, newCartItem]);
-    }
-  };
 
   // Render cart item
-  const renderCartItem = ({ item }: { item: any }) => (
-    <YStack>
-      <CartLineItem
-        key={item.id}
-        image={item.image}
-        title={item.title}
-        currentPrice={item.currentPrice * item.quantity}
-        originalPrice={item.originalPrice}
-        couponsCount={item.couponsCount}
-        freeDelivery={item.freeDelivery}
-        options={item.options}
-        inStockCount={item.inStockCount}
-        quantity={item.quantity}
-        onIncrease={() => {
-          // Handle increase quantity
-          setCartItems((prev) =>
-            prev.map((cartItem) =>
-              cartItem.id === item.id
-                ? { ...cartItem, quantity: cartItem.quantity + 1 }
-                : cartItem
-            )
-          );
-        }}
-        onDecrease={() => {
-          // Handle decrease quantity
-          setCartItems((prev) =>
-            prev.map((cartItem) =>
-              cartItem.id === item.id && cartItem.quantity > 1
-                ? { ...cartItem, quantity: cartItem.quantity - 1 }
-                : cartItem
-            )
-          );
-        }}
-        onSaveForLater={() => {
-          // Handle save for later
-        }}
-        onRemove={() => {
-          // Handle remove item
-          setCartItems((prev) =>
-            prev.filter((cartItem) => cartItem.id !== item.id)
-          );
-        }}
-      />
-    </YStack>
-  );
+  const renderCartItem = ({ item }: { item: any }) => {
+    // Parse variant options for display
+    const options =
+      item.selectedOptions?.map((opt: any) => ({
+        label: opt.value,
+      })) || [];
+
+    return (
+      <YStack>
+        <CartLineItem
+          key={item.variantId}
+          image={item.image || ""}
+          title={`${item.title}${
+            item.variantTitle ? ` - ${item.variantTitle}` : ""
+          }`}
+          currentPrice={item.price * item.quantity}
+          originalPrice={item.compareAtPrice}
+          options={options}
+          inStockCount={item.quantityAvailable}
+          quantity={item.quantity}
+          maxQuantity={item.quantityAvailable}
+          onIncrease={() => {
+            // Check if can increase
+            if (item.quantity < item.quantityAvailable) {
+              updateQuantity(item.variantId, item.quantity + 1);
+            } else {
+              setErrorModal({
+                visible: true,
+                title: "Maximum Stock Reached",
+                message: `Only ${item.quantityAvailable} items available in stock.`,
+              });
+            }
+          }}
+          onDecrease={() => {
+            // Decrease or remove if quantity is 1
+            if (item.quantity > 1) {
+              updateQuantity(item.variantId, item.quantity - 1);
+            } else {
+              removeItem(item.variantId);
+            }
+          }}
+          onSaveForLater={() => {
+            // Handle save for later (future feature)
+          }}
+          onRemove={() => {
+            removeItem(item.variantId);
+          }}
+          onPressItem={() => {
+            router.push(`/products/${item.productId}`);
+          }}
+        />
+      </YStack>
+    );
+  };
 
   // Render empty cart state
   const renderEmptyCart = () => (
@@ -364,10 +201,10 @@ const CartScreen = () => {
       <Spacer size={"$reg"} />
       <OpTouch
         onPress={() => {
-          addToCart(products[Math.floor(Math.random() * products.length)]);
+          router.push("/");
         }}
       >
-        <Text color="$secondary">{"Add Product"}</Text>
+        <Text color="$primary">{"Start Shopping"}</Text>
       </OpTouch>
     </YStack>
   );
@@ -386,14 +223,17 @@ const CartScreen = () => {
       />
 
       <Spacer size={"$reg"} />
-      <FlatList
+      {/* <FlatList
         data={products}
         renderItem={({ item }) => (
-          <ProductCard
-            product={item as any}
-            context="grid"
-            showProgressBar={false}
-          />
+          console.log(item, "item in rec"),
+          (
+            <ProductCard
+              product={item as any}
+              context="grid"
+              showProgressBar={false}
+            />
+          )
         )}
         keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
@@ -402,31 +242,38 @@ const CartScreen = () => {
           paddingHorizontal: GRID_SIDE_PADDING,
           gap: GRID_COLUMN_GAP,
         }}
-      />
+      /> */}
     </YStack>
   );
 
-  const totalAmount = cartItems.reduce(
-    (acc, item) => acc + item.currentPrice * item.quantity,
-    0
-  );
+  // Calculate cart totals
+  const subtotal = getTotalPrice(); // Current discounted prices
+  const savings = items.reduce((acc, item) => {
+    if (item.compareAtPrice) {
+      return acc + (item.compareAtPrice - item.price) * item.quantity;
+    }
+    return acc;
+  }, 0);
+  const originalTotal = subtotal + savings; // Original total before discount
+  const grandTotal = subtotal; // Final amount to pay (after discount)
 
   return (
     <YStack flex={1} backgroundColor="$background">
       <FlatList
-        data={cartItems.length === 0 ? [] : cartItems}
+        data={items}
         renderItem={renderCartItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.variantId}
         ListEmptyComponent={renderEmptyCart}
         ListFooterComponent={() => (
           <YStack>
-            {renderRecommendations()}
+            {items.length > 0 && renderRecommendations()}
             <Spacer size={"$3xl"} />
           </YStack>
         )}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
       />
-      {cartItems.length > 0 && (
+      {items.length > 0 && (
         <>
           <Animated.View
             style={{
@@ -459,21 +306,38 @@ const CartScreen = () => {
                 </YStack>
               </Animated.View>
               <Spacer size={"$sm"} />
+              {savings > 0 && (
+                <XStack paddingVertical={"$sm"} justifyContent="space-between">
+                  <TextSMRegular color="$secondary">
+                    Original Total
+                  </TextSMRegular>
+                  <TextSMRegular
+                    color="$secondary"
+                    textDecorationLine="line-through"
+                  >
+                    {`$${originalTotal.toFixed(2)}`}
+                  </TextSMRegular>
+                </XStack>
+              )}
+              {savings > 0 && (
+                <XStack paddingVertical={"$sm"} justifyContent="space-between">
+                  <TextSMRegular color="$secondary">You save</TextSMRegular>
+                  <TextSMSemiBold color="$green">
+                    {`- $${savings.toFixed(2)}`}
+                  </TextSMSemiBold>
+                </XStack>
+              )}
               <XStack paddingVertical={"$sm"} justifyContent="space-between">
                 <TextSMSemiBold>
-                  Subtotal({cartItems.length} Items)
+                  {`Subtotal (${items.length} ${
+                    items.length === 1 ? "Item" : "Items"
+                  })`}
                 </TextSMSemiBold>
-                <TextSMSemiBold>${totalAmount}</TextSMSemiBold>
-              </XStack>
-              <XStack paddingVertical={"$sm"} justifyContent="space-between">
-                <TextSMRegular color="$secondary">You save</TextSMRegular>
-                <TextSMSemiBold color="$green">
-                  - ${totalAmount * 0.1}
-                </TextSMSemiBold>
+                <TextSMSemiBold>{`$${subtotal.toFixed(2)}`}</TextSMSemiBold>
               </XStack>
               <XStack paddingVertical={"$sm"} justifyContent="space-between">
                 <TextSMRegular color="$secondary">Taxes</TextSMRegular>
-                <TextSMSemiBold>Calculated at checkout</TextSMSemiBold>
+                <TextSMSemiBold>{"Calculated at checkout"}</TextSMSemiBold>
               </XStack>
               {/* <Spacer size={"$sm"} /> */}
             </YStack>
@@ -483,9 +347,9 @@ const CartScreen = () => {
             <Spacer size={"$sm"} />
             <OpTouch onPress={toggleCartSummary}>
               <XStack justifyContent="space-between">
-                <TextSMSemiBold>GrandTotal</TextSMSemiBold>
+                <TextSMSemiBold>Grand Total</TextSMSemiBold>
                 <XStack alignItems="center">
-                  <TextMDBold>${totalAmount + totalAmount * 0.1}</TextMDBold>
+                  <TextMDBold>{`$${grandTotal.toFixed(2)}`}</TextMDBold>
                   <Spacer size={"$xs"} />
                   <AppImage
                     name="caretRight"
@@ -508,7 +372,7 @@ const CartScreen = () => {
                 router.push("/checkout");
               }}
               isLoading={false}
-              label={`Proceed to Checkout (${cartItems.length})`}
+              label={`Proceed to Checkout (${totalQuantity})`}
             />
             <Spacer size={Platform.OS === "ios" ? "$md" : "$xs"} />
           </YStack>
@@ -516,6 +380,14 @@ const CartScreen = () => {
       )}
 
       <Spacer size={Platform.OS === "ios" ? BOTTOM_INSET + 48 : 10} />
+      <ErrorModal
+        visible={errorModal.visible}
+        title={errorModal.title}
+        message={errorModal.message}
+        onClose={() =>
+          setErrorModal({ visible: false, title: "", message: "" })
+        }
+      />
     </YStack>
   );
 };

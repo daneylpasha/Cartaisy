@@ -9,17 +9,10 @@ import { useState } from "react";
 import { FlatList, StyleSheet } from "react-native";
 import { getTokenValue, Spacer, XStack, YStack } from "tamagui";
 
-type PromoBannerItem = {
-  _id: string;
-  image: string;
-  title: string;
-  subtitle: string;
-  buttonText: string;
-  action?: {
-    type: string;
-    navigateTo: string;
-  };
-};
+import type { PromoBannerItem as ApiPromoBannerItem } from '@/api/generated/cartaisyAPI.schemas';
+
+// Note: API uses ctaText instead of buttonText
+type PromoBannerItem = ApiPromoBannerItem;
 
 type PromoBannerCardProps = {
   promoBanners?: PromoBannerItem[];
@@ -58,7 +51,7 @@ export const PromoBannerCard = ({ promoBanners: banners }: PromoBannerCardProps)
 
         <PrimaryButton
           width={"80%"}
-          label={banner.buttonText || t("home.promoBannerCard.buttonText")}
+          label={banner.ctaText || t("home.promoBannerCard.buttonText")}
           paddingVertical="xs"
           icon={
             <AppImage
@@ -98,7 +91,7 @@ export const PromoBannerCard = ({ promoBanners: banners }: PromoBannerCardProps)
     <YStack>
       <FlatList
         data={banners}
-        keyExtractor={(banner) => banner._id}
+        keyExtractor={(banner, index) => `promo-${banner.collectionId}-${index}`}
         horizontal
         pagingEnabled
         bounces={false}
@@ -122,7 +115,7 @@ export const PromoBannerCard = ({ promoBanners: banners }: PromoBannerCardProps)
         >
           {banners?.map((banner, dotIndex) => (
             <YStack
-              key={banner._id}
+              key={`promo-dot-${dotIndex}`}
               borderRadius="$full"
               width={8}
               height={8}

@@ -18,20 +18,21 @@ import { getTokenValue, XStack, YStack } from "tamagui";
 type IconName = keyof typeof Icons;
 
 export type CartLineItemProps = {
-  image: IconName;
+  image: IconName | string; // Support both icon names and URLs
   title: string;
   currentPrice: number;
   originalPrice?: number;
   couponsCount?: number;
   freeDelivery?: boolean;
-  options?: { label: string }[]; // e.g. [{label:'Dark Blue'}, {label:'XL'}]
-  inStockCount?: number; // e.g. 3 -> "In Stock (3)"
+  options?: { label: string }[];
+  inStockCount?: number;
   quantity: number;
   onIncrease: () => void;
   onDecrease: () => void;
   onSaveForLater: () => void;
   onRemove: () => void;
   onPressItem?: () => void;
+  maxQuantity?: number;
 };
 
 export default function CartLineItem(props: CartLineItemProps) {
@@ -50,45 +51,80 @@ export default function CartLineItem(props: CartLineItemProps) {
     onSaveForLater,
     onRemove,
     onPressItem,
+    maxQuantity,
   } = props;
+
+  // Check if image is URL or icon name
+  const isImageUrl =
+    typeof image === "string" &&
+    (image.startsWith("http://") || image.startsWith("https://"));
+
+  // Check if at max quantity
+  const isAtMaxQuantity = maxQuantity !== undefined && quantity >= maxQuantity;
 
   return (
     <YStack>
       <XStack paddingHorizontal={"$md"} paddingTop={"$lg"}>
-        <YStack
-          overflow="hidden"
-          borderWidth={1}
-          borderColor="$lightgrey"
-          backgroundColor="$white"
-          borderRadius={tokens.space.md}
-          width={80}
-          height={80}
-        >
-          <AppImage resizeMode="contain" name={image} width={80} height={80} />
-        </YStack>
+        <OpTouch onPress={onPressItem} disabled={!onPressItem}>
+          <YStack
+            overflow="hidden"
+            borderWidth={1}
+            borderColor="$lightgrey"
+            backgroundColor="$white"
+            borderRadius={tokens.space.md}
+            width={80}
+            height={80}
+          >
+            {isImageUrl && (
+              <AppImage
+                resizeMode="cover"
+                source={{ uri: image }}
+                width={80}
+                height={80}
+              />
+            )}
+          </YStack>
+        </OpTouch>
         <Spacer size={"$md"} />
         <YStack flexShrink={1}>
-          <TextSMMedium>{title}</TextSMMedium>
+          <OpTouch onPress={onPressItem} disabled={!onPressItem}>
+            <TextSMMedium numberOfLines={2}>{title}</TextSMMedium>
+          </OpTouch>
           <Spacer size={"$sm"} />
           {/* Price Row */}
           <XStack alignItems="center">
             <TextLGBold>${currentPrice.toFixed(2)}</TextLGBold>
-            <Spacer size={"$sm"} />
-            <TextXSRegular textDecorationLine="line-through" color="$secondary">
-              ${originalPrice?.toFixed(2)}
-            </TextXSRegular>
+            {originalPrice && originalPrice > currentPrice && (
+              <>
+                <Spacer size={"$sm"} />
+                <TextXSRegular
+                  textDecorationLine="line-through"
+                  color="$secondary"
+                >
+                  ${originalPrice.toFixed(2)}
+                </TextXSRegular>
+              </>
+            )}
           </XStack>
 
-          <XStack alignItems="center">
-            <TextSMRegular color="$secondary">
-              {couponsCount} Coupons
-            </TextSMRegular>
+          {options && options.length > 0 && (
+            <XStack alignItems="center" flexWrap="wrap" gap="$xs">
+              {options.map((opt, idx) => (
+                <React.Fragment key={idx}>
+                  {idx > 0 && (
+                    <TextSMRegular color={"$lightgrey"}>•</TextSMRegular>
+                  )}
+                  <TextSMRegular color="$secondary">{opt.label}</TextSMRegular>
+                </React.Fragment>
+              ))}
+            </XStack>
+          )}
 
-            <TextSMRegular color={"$lightgrey"}>•</TextSMRegular>
-            <TextSMRegular color="$secondary">Free Delivery</TextSMRegular>
-          </XStack>
-
-          <TextSMMedium color="$green">In Stock ({inStockCount})</TextSMMedium>
+          {inStockCount !== undefined && (
+            <TextSMMedium color="$green">
+              In Stock ({inStockCount})
+            </TextSMMedium>
+          )}
           <Spacer size={"$sm"} />
           <XStack>
             {/* Quantity stepper */}
@@ -100,9 +136,17 @@ export default function CartLineItem(props: CartLineItemProps) {
               paddingHorizontal={"$sm"}
               paddingVertical={"$xs"}
             >
-              <OpTouch onPress={onDecrease}>
+              <OpTouch
+                hitSlop={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                onPress={onDecrease}
+                disabled={quantity <= 1}
+              >
                 <AppImage
-                  tintColor={getTokenValue("$primary")}
+                  tintColor={
+                    quantity <= 1
+                      ? getTokenValue("$icon")
+                      : getTokenValue("$primary")
+                  }
                   name={"minus"}
                   width={10}
                   height={10}
@@ -111,9 +155,17 @@ export default function CartLineItem(props: CartLineItemProps) {
               <Spacer size={"$reg"} />
               <TextMDBold color="$secondary">{quantity}</TextMDBold>
               <Spacer size={"$reg"} />
-              <OpTouch onPress={onIncrease}>
+              <OpTouch
+                hitSlop={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                onPress={onIncrease}
+                disabled={isAtMaxQuantity}
+              >
                 <AppImage
-                  tintColor={getTokenValue("$primary")}
+                  tintColor={
+                    isAtMaxQuantity
+                      ? getTokenValue("$icon")
+                      : getTokenValue("$primary")
+                  }
                   name={"addIcon"}
                   width={10}
                   height={10}

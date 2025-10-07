@@ -1,4 +1,4 @@
-import { useCollectionWithProducts } from "@/api/hooks/useProducts";
+import { useGetProductDetail } from "@/api/generated/products/products";
 import {
   HeadingXSBold,
   TextMDBold,
@@ -9,20 +9,26 @@ import {
   TextXSRegular,
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
+import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
+import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
+import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
 import ProductCarousel from "@/components/molecules/product/pdp/ProductCarousel";
 import ProductSpec from "@/components/molecules/product/pdp/ProductSpec";
 import {
   GRID_COLUMN_GAP,
   GRID_SIDE_PADDING,
-  ProductCard,
 } from "@/components/molecules/ProductCard";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
+import AddToCartSuccessModal from "@/components/organisms/AddToCartSuccessModal";
+import ErrorModal from "@/components/organisms/ErrorModal";
 import { RatingStar } from "@/components/organisms/home";
 import { SCREEN_WIDTH } from "@/constants/styles";
+import useCartStore from "@/store/useCartStore";
 import { t } from "@/translations";
+import { getColorHex } from "@/utils/colorHelper";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { ActivityIndicator, FlatList } from "react-native";
@@ -55,49 +61,157 @@ const ProductDetailsScreen = () => {
   }>();
 
   const { top: TOP_INSET } = useSafeAreaInsets();
+  const { addItem, items, isInCart, getItem, getTotalQuantity } =
+    useCartStore();
+  const cartItemCount = getTotalQuantity();
 
-  // ✅ Parse the product data from navigation params
-  const passedProduct = productData ? JSON.parse(productData as string) : null;
+  console.log(items, "items");
 
-  // ✅ Fetch collection with products if collectionId is provided
-  const { data: collectionData, isLoading: isLoadingCollection } =
-    useCollectionWithProducts(collectionId);
+  // Fetch product details from API
+  const { data: productDetailData, isLoading: isLoadingProduct } =
+    useGetProductDetail(id);
+  console.log("productDetailData", productDetailData);
+  // Parse product data from API response
+  const product = useMemo(() => {
+    if (!productDetailData?.data) return null;
 
-  console.log("ID:", id);
-  console.log("Passed Product Data:", passedProduct);
-  console.log("Collection Data:", collectionData);
+    const apiProduct = productDetailData.data;
 
-  // ✅ Use passed product data
-  const product = passedProduct;
+    return {
+      id: apiProduct.productId,
+      title: apiProduct.title,
+      description: apiProduct.description,
+      descriptionHtml: apiProduct.descriptionHtml,
+      images: apiProduct.images,
+      currentPrice: apiProduct.price,
+      originalPrice: apiProduct.compareAtPrice,
+      currency: apiProduct.currency,
+      discountPercent: apiProduct.badges.discountPercentage,
+      ratingValue: apiProduct.rating,
+      totalReviewCount: apiProduct.reviewsCount,
+      soldThisMonth: apiProduct.soldThisMonth,
+      variants: apiProduct.variants,
+      vendor: apiProduct.vendor,
+      productType: apiProduct.productType,
+      tags: apiProduct.tags,
+      handle: apiProduct.handle,
+      availableForSale: apiProduct.availableForSale,
+      totalInventory: apiProduct.totalInventory,
+      inStock: apiProduct.inStock,
+      isBestSeller: apiProduct.badges.isBestSeller,
+    };
+  }, [productDetailData]);
+
+  // Transform metafields to the format expected by ProductSpec
+  const productSpecsFromMetafields = useMemo(() => {
+    if (
+      !productDetailData?.data?.metafields ||
+      productDetailData.data.metafields.length === 0
+    ) {
+      return [];
+    }
+
+    return productDetailData.data.metafields.map((metafield: any) => ({
+      label: metafield.key.charAt(0).toUpperCase() + metafield.key.slice(1),
+      value: metafield.value,
+    }));
+  }, [productDetailData?.data?.metafields]);
 
   const [viewerIndex, setViewerIndex] = useState(0);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [count, setCount] = useState(1);
+  const [selectedOptions, setSelectedOptions] = useState<
+    Record<string, string>
+  >({});
+  const [selectionError, setSelectionError] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [errorModal, setErrorModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+  }>({ visible: false, title: "", message: "" });
 
-  // ✅ Handle image from API - only use source URI
+  // Handle product images
   const productImages = useMemo(() => {
     if (!product) return [];
-
-    // If has images array (Shopify format)
-    if (product.images && Array.isArray(product.images)) {
-      return product.images
-        .map((img: any) =>
-          typeof img === "string" ? img : img.src || img.url || ""
-        )
-        .filter(Boolean);
-    }
-
-    // If has single image string
-    if (product.image && typeof product.image === "string") {
-      return [product.image];
-    }
-
-    return [];
+    return product.images || [];
   }, [product]);
 
-  // ✅ Create proper image sources for ImageViewing - only URI
+  // Create proper image sources for ImageViewing
   const viewerImages = useMemo(() => {
     return productImages.map((img: string) => ({ uri: img }));
   }, [productImages]);
+
+  const variantTypes = useMemo(() => {
+    if (!product?.variants || product.variants.length === 0) return [];
+
+    const typesMap = new Map<string, Set<string>>();
+
+    product.variants.forEach((variant: any) => {
+      variant.selectedOptions?.forEach((option: any) => {
+        if (!typesMap.has(option.name)) {
+          typesMap.set(option.name, new Set());
+        }
+        typesMap.get(option.name)?.add(option.value);
+      });
+    });
+
+    // Filter out "Title" variant type with only "Default Title"
+    return Array.from(typesMap.entries())
+      .filter(([name, values]) => {
+        const valueArray = Array.from(values);
+        // Hide if it's "Title" type with only "Default Title" value
+        if (
+          name === "Title" &&
+          valueArray.length === 1 &&
+          valueArray[0] === "Default Title"
+        ) {
+          return false;
+        }
+        return true;
+      })
+      .map(([name, values]) => ({
+        name,
+        options: Array.from(values),
+      }));
+  }, [product?.variants]);
+
+  // Check if all required variant options are selected
+  const allVariantsSelected = useMemo(() => {
+    // If no variants or only default variant, no selection required
+    if (variantTypes.length === 0) return true;
+
+    // Check if all variant types have been selected
+    return variantTypes.every(
+      (variantType) => selectedOptions[variantType.name] !== undefined
+    );
+  }, [variantTypes, selectedOptions]);
+
+  // Find the selected variant based on selected options
+  const selectedVariant = useMemo(() => {
+    if (!product?.variants || product.variants.length === 0) {
+      return null;
+    }
+
+    // If no variant types (single variant product), return first variant
+    if (variantTypes.length === 0 && product.variants.length === 1) {
+      return product.variants[0];
+    }
+
+    // If variants exist but no options selected yet, return null
+    if (Object.keys(selectedOptions).length === 0) {
+      return null;
+    }
+
+    // Find matching variant
+    const variant = product.variants.find((variant: any) => {
+      return variant.selectedOptions?.every((option: any) => {
+        return selectedOptions[option.name] === option.value;
+      });
+    });
+
+    return variant || null;
+  }, [product?.variants, selectedOptions, variantTypes.length]);
 
   // Define sections for FlatList
   const sections = [
@@ -121,57 +235,67 @@ const ProductDetailsScreen = () => {
       content: (
         <YStack paddingHorizontal="$md">
           <XStack alignItems="center">
-            <XStack
-              borderWidth={1}
-              borderColor="$primary"
-              paddingHorizontal={"$sm-reg"}
-              paddingVertical={"$xs"}
-              borderRadius={"$full"}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <AppImage
-                tintColor={getTokenValue("$primary")}
-                name={"trophy"}
-                width={15}
-                height={12}
-              />
-              <Spacer size={"$xs-sm"} />
-              <TextSMMedium color="$primary">{"Best Seller"}</TextSMMedium>
-            </XStack>
-            <Spacer size={"$sm"} />
-            <XStack
-              borderWidth={1}
-              borderColor="$error"
-              paddingHorizontal={"$sm-reg"}
-              paddingVertical={"$xs"}
-              borderRadius={"$full"}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <AppImage
-                tintColor={getTokenValue("$error")}
-                name={"offerIcon"}
-                width={14}
-                height={10}
-              />
-              <Spacer size={"$xs-sm"} />
-              <TextSMMedium color="$error">{"15 % OFF"}</TextSMMedium>
-            </XStack>
+            {product?.isBestSeller && (
+              <>
+                <XStack
+                  borderWidth={1}
+                  borderColor="$primary"
+                  paddingHorizontal={"$sm-reg"}
+                  paddingVertical={"$xs"}
+                  borderRadius={"$full"}
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <AppImage
+                    tintColor={getTokenValue("$primary")}
+                    name={"trophy"}
+                    width={15}
+                    height={12}
+                  />
+                  <Spacer size={"$xs-sm"} />
+                  <TextSMMedium color="$primary">{"Best Seller"}</TextSMMedium>
+                </XStack>
+                <Spacer size={"$sm"} />
+              </>
+            )}
+            {product?.discountPercent && product.discountPercent > 0 && (
+              <XStack
+                borderWidth={1}
+                borderColor="$error"
+                paddingHorizontal={"$sm-reg"}
+                paddingVertical={"$xs"}
+                borderRadius={"$full"}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <AppImage
+                  tintColor={getTokenValue("$error")}
+                  name={"offerIcon"}
+                  width={14}
+                  height={10}
+                />
+                <Spacer size={"$xs-sm"} />
+                <TextSMMedium color="$error">{`${product.discountPercent} % OFF`}</TextSMMedium>
+              </XStack>
+            )}
           </XStack>
 
           <Spacer size={"$md"} />
           <TextXLMedium color="$text">{product?.title}</TextXLMedium>
           <Spacer size={"$reg"} />
-          <TextSMRegular color="$secondary">
-            {"187 sold this month"}
-          </TextSMRegular>
+          {product?.soldThisMonth && (
+            <TextSMRegular color="$secondary">
+              {`${product.soldThisMonth} sold this month`}
+            </TextSMRegular>
+          )}
 
           <Spacer size={"$reg"} />
           <XStack justifyContent="space-between" alignItems="center">
             <YStack>
               <XStack alignItems="center">
-                <HeadingXSBold color="$text">{`$ ${product?.currentPrice}`}</HeadingXSBold>
+                <HeadingXSBold color="$text">{`$${(
+                  (product?.currentPrice || 0) * count
+                ).toFixed(2)}`}</HeadingXSBold>
                 <Spacer size="$xs" />
                 {product?.originalPrice && (
                   <TextSMRegular
@@ -182,7 +306,17 @@ const ProductDetailsScreen = () => {
                   </TextSMRegular>
                 )}
               </XStack>
-              <TextSMMedium color="$green">{"In-Stock (12)"}</TextSMMedium>
+              <TextSMMedium
+                color={
+                  product?.inStock && product?.totalInventory > 0
+                    ? "$green"
+                    : "$error"
+                }
+              >
+                {product?.inStock && product?.totalInventory > 0
+                  ? `In-Stock (${product.totalInventory})`
+                  : "Out of Stock"}
+              </TextSMMedium>
             </YStack>
 
             <XStack
@@ -194,44 +328,87 @@ const ProductDetailsScreen = () => {
               borderRadius={"$full"}
               justifyContent="space-between"
             >
-              <OpTouch>
-                <AppImage name={"minus"} size={15} />
+              <OpTouch
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                onPress={() => {
+                  if (count > 1) setCount(count - 1);
+                }}
+                disabled={count <= 1}
+              >
+                <AppImage
+                  name={"minus"}
+                  size={15}
+                  tintColor={count <= 1 ? getTokenValue("$icon") : undefined}
+                />
               </OpTouch>
               <Spacer size={"$md"} />
-              <TextMDSemiBold color="$text">{"1"}</TextMDSemiBold>
+              <TextMDSemiBold color="$text">{count}</TextMDSemiBold>
               <Spacer size={"$md"} />
-              <OpTouch>
-                <AppImage name={"addIcon"} size={15} />
+              <OpTouch
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                onPress={() => {
+                  const maxStock =
+                    selectedVariant?.quantityAvailable ||
+                    product?.totalInventory ||
+                    0;
+                  if (count < maxStock) {
+                    setCount(count + 1);
+                  } else {
+                    setErrorModal({
+                      visible: true,
+                      title: "Maximum Stock Reached",
+                      message: `Only ${maxStock} items available in stock.`,
+                    });
+                  }
+                }}
+                disabled={
+                  count >=
+                  (selectedVariant?.quantityAvailable ||
+                    product?.totalInventory ||
+                    0)
+                }
+              >
+                <AppImage
+                  name={"addIcon"}
+                  size={15}
+                  tintColor={
+                    count >=
+                    (selectedVariant?.quantityAvailable ||
+                      product?.totalInventory ||
+                      0)
+                      ? getTokenValue("$icon")
+                      : undefined
+                  }
+                />
               </OpTouch>
             </XStack>
           </XStack>
 
           <Spacer size={"$reg"} />
-          {product?.ratingValue !== undefined && (
-            <XStack justifyContent="space-between">
-              <XStack alignItems="center">
-                <RatingStar rating={product.ratingValue} />
-                <Spacer size="$sm-reg" />
-                <TextMDBold color="$secondary">
-                  {product.ratingValue.toFixed(1)}
-                </TextMDBold>
-                <Spacer size="$xs" />
-                <TextXSRegular color="$icon">
-                  ({product.totalReviewCount?.toLocaleString()})
-                </TextXSRegular>
+          {product?.ratingValue !== undefined &&
+            product?.totalReviewCount > 0 && (
+              <XStack justifyContent="space-between">
+                <XStack alignItems="center">
+                  <RatingStar rating={product.ratingValue} />
+                  <Spacer size="$sm-reg" />
+                  <TextMDBold color="$secondary">
+                    {product.ratingValue.toFixed(1)}
+                  </TextMDBold>
+                  <Spacer size="$xs" />
+                  <TextXSRegular color="$icon">
+                    ({product.totalReviewCount?.toLocaleString()})
+                  </TextXSRegular>
+                </XStack>
               </XStack>
-              <TextSMMedium color="$primary">{"14 Questions"}</TextSMMedium>
-            </XStack>
-          )}
-
-          <Spacer size={"$reg"} />
+            )}
+          <Spacer size={"$md"} />
           <TextMDBold color="$text">{"Description"}</TextMDBold>
           <Spacer size={"$reg"} />
-          {passedProduct?.description || product?.description ? (
+          {product?.descriptionHtml ? (
             <RenderHTML
               contentWidth={SCREEN_WIDTH - 32}
               source={{
-                html: passedProduct?.description || product?.description || "",
+                html: product.descriptionHtml || "",
               }}
               baseStyle={{
                 color: getTokenValue("$secondary"),
@@ -247,61 +424,111 @@ const ProductDetailsScreen = () => {
         </YStack>
       ),
     },
-    {
-      id: "specs",
-      type: "specs",
+
+    ...variantTypes.map((variantType) => ({
+      id: `variant-${variantType.name}`,
+      type: "variant",
       content: (
-        <YStack>
+        <YStack key={variantType.name}>
           <SectionHeader
-            title={t("home.sectionHeader.productDetailsSpecs")}
-            image={"tableIcon"}
+            title={variantType.name}
+            image={
+              variantType.name.toLowerCase().includes("color")
+                ? "palette"
+                : "tableIcon"
+            }
             tintColor={"darkgrey"}
             color="primary"
             onPressSeeAll={() => {}}
           />
           <Spacer size={"$reg"} />
-          <ProductSpec item={productSpecs} />
+          <FlatList
+            data={variantType.options}
+            renderItem={({ item: optionValue }) => {
+              const isSelected =
+                selectedOptions[variantType.name] === optionValue;
+              const isColorVariant = variantType.name
+                .toLowerCase()
+                .includes("color");
+              const colorHex = isColorVariant ? getColorHex(optionValue) : null;
+
+              return (
+                <OpTouch
+                  onPress={() => {
+                    setSelectedOptions((prev) => ({
+                      ...prev,
+                      [variantType.name]: optionValue,
+                    }));
+                  }}
+                >
+                  <XStack
+                    borderWidth={isSelected ? 2 : 1}
+                    borderColor={isSelected ? "$primary" : "$grey"}
+                    borderRadius={"$full"}
+                    paddingVertical={"$sm"}
+                    paddingHorizontal={"$reg"}
+                    alignItems="center"
+                    alignSelf="center"
+                    backgroundColor={
+                      isSelected ? "$primarylight" : "transparent"
+                    }
+                  >
+                    {colorHex && (
+                      <>
+                        <YStack
+                          backgroundColor={colorHex}
+                          borderRadius={"$full"}
+                          borderWidth={1}
+                          borderColor="$grey"
+                          width={16}
+                          height={16}
+                        />
+                        <Spacer size={"$sm"} />
+                      </>
+                    )}
+                    {!colorHex && <Spacer size={"$sm"} />}
+                    <TextMDRegular color={isSelected ? "$primary" : "$text"}>
+                      {optionValue}
+                    </TextMDRegular>
+                    <Spacer size={"$sm"} />
+                  </XStack>
+                </OpTouch>
+              );
+            }}
+            keyExtractor={(item) => `${variantType.name}-${item}`}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingVertical: 4,
+              paddingHorizontal: GRID_SIDE_PADDING,
+              gap: GRID_COLUMN_GAP,
+            }}
+          />
         </YStack>
       ),
-    },
-    {
-      id: "relatedProducts",
-      type: "relatedProducts",
-      content:
-        collectionData?.products && collectionData.products.length > 0 ? (
-          <YStack>
-            <SectionHeader
-              title={t("home.sectionHeader.youMightAlsoLike")}
-              image={"bulb"}
-              tintColor={"darkgrey"}
-              seeAllText="View All"
-              color="primary"
-              onPressSeeAll={() => {}}
-            />
-
-            <Spacer size={"$reg"} />
-            <FlatList
-              data={collectionData.products.filter(
-                (p: any) => p.id !== product?.id
-              )}
-              renderItem={({ item }) => (
-                <ProductCard
-                  product={item as any}
-                  context="grid"
-                  showProgressBar={false}
+    })),
+    // Only add specs section if metafields exist
+    ...(productSpecsFromMetafields.length > 0
+      ? [
+          {
+            id: "specs",
+            type: "specs",
+            content: (
+              <YStack>
+                <SectionHeader
+                  title={t("home.sectionHeader.productDetailsSpecs")}
+                  image={"tableIcon"}
+                  tintColor={"darkgrey"}
+                  color="primary"
+                  onPressSeeAll={() => {}}
                 />
-              )}
-              keyExtractor={(item) => item.id}
-              showsHorizontalScrollIndicator={false}
-              horizontal
-              contentContainerStyle={{
-                paddingHorizontal: GRID_SIDE_PADDING,
-                gap: GRID_COLUMN_GAP,
-              }}
-            />
-          </YStack>
-        ) : null,
-    },
+                <Spacer size={"$reg"} />
+                <ProductSpec item={productSpecsFromMetafields} />
+              </YStack>
+            ),
+          },
+        ]
+      : []),
   ];
 
   const renderItem = ({ item }: { item: any }) => {
@@ -313,7 +540,79 @@ const ProductDetailsScreen = () => {
     );
   };
 
-  if (!product) {
+  // Handle Add to Cart
+  const handleAddToCart = () => {
+    setSelectionError(null);
+
+    // Check if product is in stock
+    if (!product?.inStock || product?.totalInventory === 0) {
+      setErrorModal({
+        visible: true,
+        title: "Out of Stock",
+        message: "This product is currently out of stock.",
+      });
+      return;
+    }
+
+    // Check if variant selection is required
+    if (variantTypes.length > 0 && !selectedVariant) {
+      setSelectionError(
+        `Please select ${variantTypes.map((v) => v.name).join(", ")}`
+      );
+      return;
+    }
+
+    // Get the variant to add (selected variant or first variant for single variant products)
+    const variantToAdd = selectedVariant || product?.variants?.[0];
+
+    if (!variantToAdd) {
+      setErrorModal({
+        visible: true,
+        title: "Error",
+        message: "Unable to add product to cart.",
+      });
+      return;
+    }
+
+    // Check if quantity is available
+    if (count > variantToAdd.quantityAvailable) {
+      setErrorModal({
+        visible: true,
+        title: "Insufficient Stock",
+        message: `Only ${variantToAdd.quantityAvailable} items available.`,
+      });
+      return;
+    }
+
+    // Create cart item
+    const cartItem = {
+      productId: product.id,
+      variantId: variantToAdd.id,
+      title: product.title,
+      variantTitle:
+        variantToAdd.title === "Default Title" ? "" : variantToAdd.title,
+      image: variantToAdd.image || product.images?.[0] || "",
+      price: variantToAdd.price,
+      compareAtPrice: variantToAdd.compareAtPrice,
+      currency: product.currency,
+      quantity: count,
+      quantityAvailable: variantToAdd.quantityAvailable,
+      selectedOptions: variantToAdd.selectedOptions || [],
+    };
+
+    // Add to cart
+    addItem(cartItem);
+
+    // Show success modal
+    setShowSuccessModal(true);
+  };
+
+  // Handle Buy Now
+  const handleBuyNow = () => {
+    router.navigate("/cart");
+  };
+
+  if (isLoadingProduct || !product) {
     return (
       <YStack
         flex={1}
@@ -342,11 +641,31 @@ const ProductDetailsScreen = () => {
             />
           </OpTouch>
           <OpTouch onPress={() => router.navigate("/cart")}>
-            <AppImage
-              name={"cartIcon"}
-              size={24}
-              tintColor={getTokenValue("$white")}
-            />
+            <YStack>
+              <AppImage
+                name={"cartIcon"}
+                size={24}
+                tintColor={getTokenValue("$white")}
+              />
+              {cartItemCount > 0 && (
+                <XStack
+                  position="absolute"
+                  top={-6}
+                  right={-6}
+                  backgroundColor="$yellow"
+                  borderRadius={"$full"}
+                  minWidth={18}
+                  height={18}
+                  alignItems="center"
+                  justifyContent="center"
+                  paddingHorizontal={"$xs"}
+                >
+                  <TextXSRegular color="$white" fontSize={10}>
+                    {cartItemCount > 99 ? "99+" : cartItemCount}
+                  </TextXSRegular>
+                </XStack>
+              )}
+            </YStack>
           </OpTouch>
         </XStack>
       </YStack>
@@ -357,6 +676,45 @@ const ProductDetailsScreen = () => {
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
       />
+      <Divider />
+      <YStack paddingHorizontal="$md" paddingVertical={"$lg"}>
+        {selectionError && (
+          <>
+            <YStack
+              backgroundColor="$errorlight"
+              borderRadius={"$sm"}
+              padding="$sm"
+            >
+              <TextSMRegular color="$error">{selectionError}</TextSMRegular>
+            </YStack>
+
+            <Spacer size={"$sm"} />
+          </>
+        )}
+
+        <SecondaryButton
+          icon={
+            <AppImage
+              tintColor={getTokenValue(
+                allVariantsSelected ? "$primary" : "$icon"
+              )}
+              size={18}
+              name="cartIcon"
+            />
+          }
+          iconPosition="left"
+          onPress={handleAddToCart}
+          label="Add to Cart "
+          disabled={!allVariantsSelected}
+        />
+
+        <Spacer size={"$sm"} />
+        <PrimaryButton
+          label="Buy Now"
+          onPress={handleBuyNow}
+          disabled={!allVariantsSelected}
+        />
+      </YStack>
 
       {/* Full-screen viewer */}
       <ImageViewing
@@ -365,6 +723,27 @@ const ProductDetailsScreen = () => {
         doubleTapToZoomEnabled={true}
         visible={viewerOpen}
         onRequestClose={() => setViewerOpen(false)}
+      />
+      <AddToCartSuccessModal
+        visible={showSuccessModal}
+        itemCount={count}
+        onViewCart={() => {
+          setShowSuccessModal(false);
+          setCount(1);
+          router.push("/cart");
+        }}
+        onContinueShopping={() => {
+          setShowSuccessModal(false);
+          setCount(1);
+        }}
+      />
+      <ErrorModal
+        visible={errorModal.visible}
+        title={errorModal.title}
+        message={errorModal.message}
+        onClose={() =>
+          setErrorModal({ visible: false, title: "", message: "" })
+        }
       />
     </YStack>
   );
