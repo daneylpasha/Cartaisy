@@ -3,25 +3,17 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { zustandStorage } from '@/utils/storage';
 
 export interface CartItem {
-  // Product identification
   productId: string;
   variantId: string;
-
-  // Display information
+  merchandiseId: string; // Same as variantId (Shopify term)
   title: string;
   variantTitle: string;
-  image: string;
-
-  // Pricing
+  image: string | null;
   price: number;
-  compareAtPrice?: number;
+  compareAtPrice?: number | null;
   currency: string;
-
-  // Quantity
   quantity: number;
   quantityAvailable: number;
-
-  // Additional data
   selectedOptions: Array<{ name: string; value: string }>;
 }
 

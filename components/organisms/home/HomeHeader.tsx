@@ -64,7 +64,7 @@ export const HomeHeader = ({
                   paddingHorizontal={"$xs"}
                 >
                   <TextXSRegular color="$white" textAlign="center">
-                    {cartItemCount}
+                    {String(cartItemCount)}
                   </TextXSRegular>
                 </YStack>
               )}

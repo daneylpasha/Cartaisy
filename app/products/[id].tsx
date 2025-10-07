@@ -30,7 +30,7 @@ import useCartStore from "@/store/useCartStore";
 import { t } from "@/translations";
 import { getColorHex } from "@/utils/colorHelper";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { ActivityIndicator, FlatList } from "react-native";
 import ImageViewing from "react-native-image-viewing";
 import RenderHTML from "react-native-render-html";
@@ -130,6 +130,9 @@ const ProductDetailsScreen = () => {
     title: string;
     message: string;
   }>({ visible: false, title: "", message: "" });
+
+  // Ref for FlatList to enable scrolling
+  const flatListRef = useRef<FlatList>(null);
 
   // Handle product images
   const productImages = useMemo(() => {
@@ -401,7 +404,140 @@ const ProductDetailsScreen = () => {
                 </XStack>
               </XStack>
             )}
-          <Spacer size={"$md"} />
+        </YStack>
+      ),
+    },
+
+    ...variantTypes.map((variantType, index) => ({
+      id: `variant-${variantType.name}`,
+      type: "variant",
+      content: (
+        <YStack key={variantType.name}>
+          {/* Show error only on first variant section */}
+
+          <SectionHeader
+            title={variantType.name}
+            image={
+              variantType.name.toLowerCase().includes("color")
+                ? "palette"
+                : "tableIcon"
+            }
+            tintColor={"darkgrey"}
+            color="primary"
+            onPressSeeAll={() => {}}
+          />
+          <YStack paddingHorizontal={"$md"}>
+            <Spacer size={"$sm"} />
+            {index === 0 && selectionError && (
+              <TextSMRegular color="$error">{selectionError}</TextSMRegular>
+            )}
+          </YStack>
+          <Spacer size={"$reg"} />
+          <FlatList
+            data={variantType.options}
+            renderItem={({ item: optionValue }) => {
+              const isSelected =
+                selectedOptions[variantType.name] === optionValue;
+              const isColorVariant = variantType.name
+                .toLowerCase()
+                .includes("color");
+              const colorHex = isColorVariant ? getColorHex(optionValue) : null;
+
+              // Check if this variant combination is available
+              const isAvailable = product?.variants?.some((variant: any) => {
+                return (
+                  variant.selectedOptions?.some(
+                    (opt: any) =>
+                      opt.name === variantType.name && opt.value === optionValue
+                  ) && variant.quantityAvailable > 0
+                );
+              });
+
+              return (
+                <OpTouch
+                  onPress={() => {
+                    if (!isAvailable) return; // Don't allow selection if unavailable
+                    setSelectedOptions((prev) => ({
+                      ...prev,
+                      [variantType.name]: optionValue,
+                    }));
+                    // Clear error when user selects any variant
+                    setSelectionError(null);
+                  }}
+                  disabled={!isAvailable}
+                >
+                  <XStack
+                    borderWidth={isSelected ? 2 : 1}
+                    borderColor={
+                      !isAvailable
+                        ? "$border"
+                        : isSelected
+                        ? "$primary"
+                        : "$grey"
+                    }
+                    borderRadius={"$full"}
+                    paddingVertical={"$sm"}
+                    paddingHorizontal={"$reg"}
+                    alignItems="center"
+                    alignSelf="center"
+                    backgroundColor={
+                      !isAvailable
+                        ? "$background"
+                        : isSelected
+                        ? "$primarylight"
+                        : "transparent"
+                    }
+                    opacity={!isAvailable ? 0.6 : 1}
+                  >
+                    {colorHex && (
+                      <>
+                        <YStack
+                          backgroundColor={colorHex}
+                          borderRadius={"$full"}
+                          borderWidth={1}
+                          borderColor={!isAvailable ? "$border" : "$grey"}
+                          width={16}
+                          height={16}
+                          opacity={!isAvailable ? 0.4 : 1}
+                        />
+                        <Spacer size={"$sm"} />
+                      </>
+                    )}
+                    {!colorHex && <Spacer size={"$sm"} />}
+                    <TextMDRegular
+                      color={
+                        !isAvailable
+                          ? "$secondary"
+                          : isSelected
+                          ? "$primary"
+                          : "$text"
+                      }
+                    >
+                      {optionValue}
+                    </TextMDRegular>
+                    <Spacer size={"$sm"} />
+                  </XStack>
+                </OpTouch>
+              );
+            }}
+            keyExtractor={(item) => `${variantType.name}-${item}`}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingVertical: 4,
+              paddingHorizontal: GRID_SIDE_PADDING,
+              gap: GRID_COLUMN_GAP,
+            }}
+          />
+        </YStack>
+      ),
+    })),
+    // Description section
+    {
+      id: "description",
+      type: "description",
+      content: (
+        <YStack paddingHorizontal="$md">
           <TextMDBold color="$text">{"Description"}</TextMDBold>
           <Spacer size={"$reg"} />
           {product?.descriptionHtml ? (
@@ -424,89 +560,6 @@ const ProductDetailsScreen = () => {
         </YStack>
       ),
     },
-
-    ...variantTypes.map((variantType) => ({
-      id: `variant-${variantType.name}`,
-      type: "variant",
-      content: (
-        <YStack key={variantType.name}>
-          <SectionHeader
-            title={variantType.name}
-            image={
-              variantType.name.toLowerCase().includes("color")
-                ? "palette"
-                : "tableIcon"
-            }
-            tintColor={"darkgrey"}
-            color="primary"
-            onPressSeeAll={() => {}}
-          />
-          <Spacer size={"$reg"} />
-          <FlatList
-            data={variantType.options}
-            renderItem={({ item: optionValue }) => {
-              const isSelected =
-                selectedOptions[variantType.name] === optionValue;
-              const isColorVariant = variantType.name
-                .toLowerCase()
-                .includes("color");
-              const colorHex = isColorVariant ? getColorHex(optionValue) : null;
-
-              return (
-                <OpTouch
-                  onPress={() => {
-                    setSelectedOptions((prev) => ({
-                      ...prev,
-                      [variantType.name]: optionValue,
-                    }));
-                  }}
-                >
-                  <XStack
-                    borderWidth={isSelected ? 2 : 1}
-                    borderColor={isSelected ? "$primary" : "$grey"}
-                    borderRadius={"$full"}
-                    paddingVertical={"$sm"}
-                    paddingHorizontal={"$reg"}
-                    alignItems="center"
-                    alignSelf="center"
-                    backgroundColor={
-                      isSelected ? "$primarylight" : "transparent"
-                    }
-                  >
-                    {colorHex && (
-                      <>
-                        <YStack
-                          backgroundColor={colorHex}
-                          borderRadius={"$full"}
-                          borderWidth={1}
-                          borderColor="$grey"
-                          width={16}
-                          height={16}
-                        />
-                        <Spacer size={"$sm"} />
-                      </>
-                    )}
-                    {!colorHex && <Spacer size={"$sm"} />}
-                    <TextMDRegular color={isSelected ? "$primary" : "$text"}>
-                      {optionValue}
-                    </TextMDRegular>
-                    <Spacer size={"$sm"} />
-                  </XStack>
-                </OpTouch>
-              );
-            }}
-            keyExtractor={(item) => `${variantType.name}-${item}`}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingVertical: 4,
-              paddingHorizontal: GRID_SIDE_PADDING,
-              gap: GRID_COLUMN_GAP,
-            }}
-          />
-        </YStack>
-      ),
-    })),
     // Only add specs section if metafields exist
     ...(productSpecsFromMetafields.length > 0
       ? [
@@ -556,9 +609,17 @@ const ProductDetailsScreen = () => {
 
     // Check if variant selection is required
     if (variantTypes.length > 0 && !selectedVariant) {
+      // Show error message
       setSelectionError(
         `Please select ${variantTypes.map((v) => v.name).join(", ")}`
       );
+
+      // Scroll to first variant section (index 2: carousel=0, productInfo=1, first variant=2)
+      flatListRef.current?.scrollToIndex({
+        index: 2,
+        animated: true,
+        viewPosition: 0.2, // Position it 20% from top
+      });
       return;
     }
 
@@ -588,12 +649,13 @@ const ProductDetailsScreen = () => {
     const cartItem = {
       productId: product.id,
       variantId: variantToAdd.id,
+      merchandiseId: variantToAdd.id, // Shopify merchandise ID (same as variant ID)
       title: product.title,
       variantTitle:
         variantToAdd.title === "Default Title" ? "" : variantToAdd.title,
-      image: variantToAdd.image || product.images?.[0] || "",
+      image: variantToAdd.image || product.images?.[0] || null,
       price: variantToAdd.price,
-      compareAtPrice: variantToAdd.compareAtPrice,
+      compareAtPrice: variantToAdd.compareAtPrice || null,
       currency: product.currency,
       quantity: count,
       quantityAvailable: variantToAdd.quantityAvailable,
@@ -611,19 +673,6 @@ const ProductDetailsScreen = () => {
   const handleBuyNow = () => {
     router.navigate("/cart");
   };
-
-  if (isLoadingProduct || !product) {
-    return (
-      <YStack
-        flex={1}
-        backgroundColor="$background"
-        justifyContent="center"
-        alignItems="center"
-      >
-        <ActivityIndicator size="large" color={getTokenValue("$primary")} />
-      </YStack>
-    );
-  }
 
   return (
     <YStack flex={1} backgroundColor="$background">
@@ -670,51 +719,53 @@ const ProductDetailsScreen = () => {
         </XStack>
       </YStack>
       {/* <Spacer size={"$md"} /> */}
-      <FlatList
-        data={sections}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-      />
-      <Divider />
-      <YStack paddingHorizontal="$md" paddingVertical={"$lg"}>
-        {selectionError && (
-          <>
-            <YStack
-              backgroundColor="$errorlight"
-              borderRadius={"$sm"}
-              padding="$sm"
-            >
-              <TextSMRegular color="$error">{selectionError}</TextSMRegular>
-            </YStack>
+      {isLoadingProduct || !product ? (
+        <YStack
+          flex={1}
+          backgroundColor="$background"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <ActivityIndicator size="large" color={getTokenValue("$primary")} />
+        </YStack>
+      ) : (
+        <>
+          <FlatList
+            ref={flatListRef}
+            data={sections}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            onScrollToIndexFailed={(info) => {
+              // Handle scroll failure gracefully
+              setTimeout(() => {
+                flatListRef.current?.scrollToIndex({
+                  index: info.index,
+                  animated: true,
+                });
+              }, 100);
+            }}
+          />
+          <Divider />
+          <YStack paddingHorizontal="$md" paddingVertical={"$lg"}>
+            <SecondaryButton
+              icon={
+                <AppImage
+                  tintColor={getTokenValue("$primary")}
+                  size={18}
+                  name="cartIcon"
+                />
+              }
+              iconPosition="left"
+              onPress={handleAddToCart}
+              label="Add to Cart "
+            />
 
             <Spacer size={"$sm"} />
-          </>
-        )}
-
-        <SecondaryButton
-          icon={
-            <AppImage
-              tintColor={getTokenValue(
-                allVariantsSelected ? "$primary" : "$icon"
-              )}
-              size={18}
-              name="cartIcon"
-            />
-          }
-          iconPosition="left"
-          onPress={handleAddToCart}
-          label="Add to Cart "
-          disabled={!allVariantsSelected}
-        />
-
-        <Spacer size={"$sm"} />
-        <PrimaryButton
-          label="Buy Now"
-          onPress={handleBuyNow}
-          disabled={!allVariantsSelected}
-        />
-      </YStack>
+            <PrimaryButton label="Buy Now" onPress={handleBuyNow} />
+          </YStack>
+        </>
+      )}
 
       {/* Full-screen viewer */}
       <ImageViewing
