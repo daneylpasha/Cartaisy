@@ -54,7 +54,7 @@ export const SecondaryButton = ({
       {...containerStyle}
     >
       <XStack alignItems="center" justifyContent="center" gap="$sm-reg">
-        {iconPosition === "left" && icon}
+        {iconPosition === "left" ? icon : null}
         <TextMDSemiBold color={color}>
           {isLoading ? (
             <ActivityIndicator size={"small"} color={color} />
@@ -62,7 +62,7 @@ export const SecondaryButton = ({
             label
           )}
         </TextMDSemiBold>
-        {iconPosition === "right" && icon}
+        {iconPosition === "right" ? icon : null}
       </XStack>
     </OpTouch>
   );

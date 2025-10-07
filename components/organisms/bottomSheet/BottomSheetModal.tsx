@@ -75,14 +75,14 @@ export const BaseBottomSheetModal = forwardRef<
                   <Spacer size="$reg" />
                 </>
               )}
-              {onPrimaryPress && (
+              {onPrimaryPress ? (
                 <PrimaryButton
                   onPress={onPrimaryPress}
                   label={primaryButtonLabel}
-                  icon={icon && <AppImage name={icon} width={15} height={15} />}
+                  icon={icon ? <AppImage name={icon} width={15} height={15} /> : undefined}
                   iconPosition={iconPosition}
                 />
-              )}
+              ) : null}
             </YStack>
           </BottomSheetFooter>
         );

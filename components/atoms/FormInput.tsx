@@ -69,7 +69,7 @@ export const FormInput = ({
         backgroundColor="white"
         style={{ backgroundColor: "white", overflow: "hidden" }}
       >
-        {icon && <XStack marginRight="$2">{icon}</XStack>}
+        {icon ? <XStack marginRight="$2">{icon}</XStack> : null}
         <YStack flex={1} position="relative" style={Styles.inputContainer}>
           <Input
             value={value}

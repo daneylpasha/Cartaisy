@@ -101,9 +101,9 @@ const OpTouch = ({
 
   return (
     <TouchableOpacity {...props} style={[customStyle, style]}>
-      {icon && iconPosition === "left" && icon}
+      {icon && iconPosition === "left" ? icon : null}
       {children}
-      {icon && iconPosition === "right" && icon}
+      {icon && iconPosition === "right" ? icon : null}
     </TouchableOpacity>
   );
 };

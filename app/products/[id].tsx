@@ -503,7 +503,7 @@ const ProductDetailsScreen = () => {
                         <Spacer size={"$sm"} />
                       </>
                     )}
-                    {!colorHex && <Spacer size={"$sm"} />}
+                    {!colorHex ? <Spacer size={"$sm"} /> : null}
                     <TextMDRegular
                       color={
                         !isAvailable
@@ -588,7 +588,7 @@ const ProductDetailsScreen = () => {
     return (
       <YStack>
         {item.content}
-        {item.id !== "relatedProducts" && <Spacer size={"$xl"} />}
+        {item.id !== "relatedProducts" ? <Spacer size={"$xl"} /> : null}
       </YStack>
     );
   };

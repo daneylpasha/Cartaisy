@@ -46,9 +46,9 @@ export const PrimaryButton = ({
           <ActivityIndicator size={"small"} color={"white"} />
         ) : (
           <>
-            {iconPosition === "left" && icon}
+            {iconPosition === "left" ? icon : null}
             <TextMDSemiBold color={"$white"}>{label}</TextMDSemiBold>
-            {iconPosition === "right" && icon}
+            {iconPosition === "right" ? icon : null}
           </>
         )}
       </XStack>

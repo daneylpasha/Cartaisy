@@ -61,7 +61,7 @@ export const CategorySuggestions = ({
             gap: tokens.space.reg,
           }}
           renderItem={({ item: categoryCollection }) => (
-            <OpTouch>
+            <OpTouch width={itemWidth}>
               <ImageBackground
                 source={{ uri: categoryCollection.image }}
                 resizeMode="cover"

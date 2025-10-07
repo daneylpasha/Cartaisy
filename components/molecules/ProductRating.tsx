@@ -60,11 +60,11 @@ export const ProductRating: React.FC<ProductRatingProps> = ({
         ))}
       </XStack>
 
-      {showReviewCount && (
+      {showReviewCount ? (
         <TextXSRegular color="$secondary">
-          ({rating.toFixed(1)}) {reviewsCount > 0 && `• ${reviewsCount} reviews`}
+          ({rating.toFixed(1)}) {reviewsCount > 0 ? `• ${reviewsCount} reviews` : null}
         </TextXSRegular>
-      )}
+      ) : null}
     </XStack>
   );
 };

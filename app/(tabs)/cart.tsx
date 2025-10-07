@@ -266,7 +266,7 @@ const CartScreen = () => {
         ListEmptyComponent={renderEmptyCart}
         ListFooterComponent={() => (
           <YStack>
-            {items.length > 0 && renderRecommendations()}
+            {items.length > 0 ? renderRecommendations() : null}
             <Spacer size={"$3xl"} />
           </YStack>
         )}

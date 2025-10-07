@@ -82,7 +82,7 @@ export const ProductCard = ({
             height={imageHeight}
           />
 
-          {product.compareAtPrice && product.price < product.compareAtPrice && (
+          {product.compareAtPrice && product.price < product.compareAtPrice ? (
             <XStack
               position="absolute"
               top={12}
@@ -111,10 +111,10 @@ export const ProductCard = ({
                 %
               </TextSMMedium>
             </XStack>
-          )}
+          ) : null}
 
           {/* Wishlist */}
-          {showFavoriteIcon && (
+          {showFavoriteIcon ? (
             <OpTouch onPress={() => {}}>
               <BlurView style={styles.blurView} intensity={16} tint="dark">
                 {isFavorite ? (
@@ -134,7 +134,7 @@ export const ProductCard = ({
                 )}
               </BlurView>
             </OpTouch>
-          )}
+          ) : null}
         </YStack>
 
         <YStack paddingVertical="$reg">
@@ -143,7 +143,7 @@ export const ProductCard = ({
           </TextMDSemiBold>
           <Spacer size="$sm-reg" />
 
-          {product.rating !== undefined && (
+          {product.rating !== undefined ? (
             <XStack alignItems="center">
               <RatingStar rating={product.rating} />
               <Spacer size="$sm-reg" />
@@ -155,25 +155,25 @@ export const ProductCard = ({
                 ({product.reviewsCount?.toLocaleString()})
               </TextXSRegular>
             </XStack>
-          )}
+          ) : null}
 
           {<Spacer size="$sm-reg" />}
 
-          {product.price !== undefined && (
+          {product.price !== undefined ? (
             <XStack alignItems="center">
               <TextMDBold>${(product.price || 0).toFixed(2)}</TextMDBold>
               <Spacer size="$xs" />
               {product.compareAtPrice &&
-                product.price !== product.compareAtPrice && (
+                product.price !== product.compareAtPrice ? (
                   <TextSMRegular
                     color="$icon"
                     textDecorationLine="line-through"
                   >
                     ${(product.compareAtPrice || 0).toFixed(2)}
                   </TextSMRegular>
-                )}
+                ) : null}
             </XStack>
-          )}
+          ) : null}
         </YStack>
 
         {showProgressBar &&
