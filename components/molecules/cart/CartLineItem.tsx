@@ -5,7 +5,6 @@ import {
   TextMDBold,
   TextSMMedium,
   TextSMRegular,
-  TextXSRegular,
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
@@ -94,17 +93,10 @@ export default function CartLineItem(props: CartLineItemProps) {
           {/* Price Row */}
           <XStack alignItems="center">
             <TextLGBold>${currentPrice.toFixed(2)}</TextLGBold>
-            {originalPrice && originalPrice > currentPrice && (
-              <>
-                <Spacer size={"$sm"} />
-                <TextXSRegular
-                  textDecorationLine="line-through"
-                  color="$secondary"
-                >
-                  ${originalPrice.toFixed(2)}
-                </TextXSRegular>
-              </>
-            )}
+            <Spacer size="$xs" />
+            <TextSMRegular color="$icon" textDecorationLine="line-through">
+              ${originalPrice}
+            </TextSMRegular>
           </XStack>
 
           {options && options.length > 0 && (
@@ -133,7 +125,9 @@ export default function CartLineItem(props: CartLineItemProps) {
               borderWidth={1}
               borderColor="$lightgrey"
               borderRadius={"$full"}
-              paddingHorizontal={"$sm"}
+              width={90}
+              justifyContent="space-between"
+              paddingHorizontal={"$reg"}
               paddingVertical={"$xs"}
             >
               <OpTouch
