@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { zustandStorage } from '@/utils/storage';
 
 export interface CartItem {
+  lineItemId?: string; // Cart line item ID from Shopify (needed for updates/deletes)
   productId: string;
   variantId: string;
   merchandiseId: string; // Same as variantId (Shopify term)
@@ -18,13 +19,16 @@ export interface CartItem {
 }
 
 interface CartState {
+  cartId: string | null;
   items: CartItem[];
 
   // Actions
+  setCartId: (cartId: string | null) => void;
   addItem: (item: CartItem) => void;
   removeItem: (variantId: string) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
   clearCart: () => void;
+  syncWithApiResponse: (cartData: { cartId: string; items: CartItem[] }) => void;
 
   // Getters
   getItem: (variantId: string) => CartItem | undefined;
@@ -36,7 +40,13 @@ interface CartState {
 const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
+      cartId: null,
       items: [],
+
+      setCartId: (cartId) =>
+        set({
+          cartId,
+        }),
 
       addItem: (item) =>
         set((state) => {
@@ -84,7 +94,14 @@ const useCartStore = create<CartState>()(
 
       clearCart: () =>
         set({
+          cartId: null,
           items: [],
+        }),
+
+      syncWithApiResponse: (cartData) =>
+        set({
+          cartId: cartData.cartId,
+          items: cartData.items,
         }),
 
       getItem: (variantId) => {

@@ -11,7 +11,6 @@ import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
 import { FlatList, PanResponder, Platform } from "react-native";
 
-import Icons from "@/assets/Icons";
 import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { PrimaryButton } from "@/components/molecules/buttons";
@@ -19,16 +18,15 @@ import CartLineItem from "@/components/molecules/cart/CartLineItem";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import ErrorModal from "@/components/organisms/ErrorModal";
 import useCartStore from "@/store/useCartStore";
-import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { useCartManager } from "@/api/hooks/useCartManager";
+import { router, useFocusEffect } from "expo-router";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, Text, XStack, YStack } from "tamagui";
 
-type IconName = keyof typeof Icons;
-
 const CartScreen = () => {
-  const { bottom: BOTTOM_INSET, top: TOP_INSET } = useSafeAreaInsets();
+  const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
   const [errorModal, setErrorModal] = useState<{
     visible: boolean;
@@ -36,13 +34,29 @@ const CartScreen = () => {
     message: string;
   }>({ visible: false, title: "", message: "" });
 
-  const { items, removeItem, updateQuantity, getTotalPrice, getTotalQuantity } =
-    useCartStore();
+  const { items, getTotalPrice, getTotalQuantity, cartId } = useCartStore();
+  const { updateQuantity: updateCartQuantity, removeItem: removeCartItem, syncCart } = useCartManager();
   const totalQuantity = getTotalQuantity();
+  const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
+  const [removingItemId, setRemovingItemId] = useState<string | null>(null);
   console.log(items, "items from store");
   // Animation refs
   const animatedHeight = useRef(new Animated.Value(0)).current;
   const animatedOpacity = useRef(new Animated.Value(0)).current;
+
+  // Sync cart when screen is focused to ensure lineItemIds are populated
+  useFocusEffect(
+    useCallback(() => {
+      if (cartId && items.length > 0) {
+        // Check if any item is missing lineItemId
+        const needsSync = items.some(item => !item.lineItemId);
+        if (needsSync) {
+          console.log('[Cart] Items missing lineItemId, syncing with API...');
+          syncCart();
+        }
+      }
+    }, [cartId, items, syncCart])
+  );
 
   // Auto-open cart summary when items are added
   useEffect(() => {
@@ -133,15 +147,39 @@ const CartScreen = () => {
             item.variantTitle ? ` - ${item.variantTitle}` : ""
           }`}
           currentPrice={item.price * item.quantity}
-          originalPrice={item.compareAtPrice}
+          originalPrice={item.compareAtPrice ? item.compareAtPrice * item.quantity : undefined}
           options={options}
           inStockCount={item.quantityAvailable}
           quantity={item.quantity}
           maxQuantity={item.quantityAvailable}
-          onIncrease={() => {
+          isUpdating={updatingItemId === item.lineItemId}
+          isRemoving={removingItemId === item.lineItemId}
+          onIncrease={async () => {
             // Check if can increase
+            console.log('[Cart] Increase clicked for item:', { lineItemId: item.lineItemId, title: item.title });
+            if (!item.lineItemId) {
+              console.error('[Cart] No lineItemId found for item:', item);
+              setErrorModal({
+                visible: true,
+                title: "Error",
+                message: "Cannot update cart item. Please try again.",
+              });
+              return;
+            }
+
             if (item.quantity < item.quantityAvailable) {
-              updateQuantity(item.variantId, item.quantity + 1);
+              try {
+                setUpdatingItemId(item.lineItemId);
+                await updateCartQuantity(item.lineItemId, item.quantity + 1);
+              } catch (error) {
+                setErrorModal({
+                  visible: true,
+                  title: "Error",
+                  message: "Failed to update quantity. Please try again.",
+                });
+              } finally {
+                setUpdatingItemId(null);
+              }
             } else {
               setErrorModal({
                 visible: true,
@@ -150,19 +188,61 @@ const CartScreen = () => {
               });
             }
           }}
-          onDecrease={() => {
+          onDecrease={async () => {
+            if (!item.lineItemId) {
+              setErrorModal({
+                visible: true,
+                title: "Error",
+                message: "Cannot update cart item. Please try again.",
+              });
+              return;
+            }
+
             // Decrease or remove if quantity is 1
-            if (item.quantity > 1) {
-              updateQuantity(item.variantId, item.quantity - 1);
-            } else {
-              removeItem(item.variantId);
+            try {
+              if (item.quantity > 1) {
+                setUpdatingItemId(item.lineItemId);
+                await updateCartQuantity(item.lineItemId, item.quantity - 1);
+              } else {
+                setRemovingItemId(item.lineItemId);
+                await removeCartItem(item.lineItemId);
+              }
+            } catch (error) {
+              setErrorModal({
+                visible: true,
+                title: "Error",
+                message: "Failed to update cart. Please try again.",
+              });
+            } finally {
+              setUpdatingItemId(null);
+              setRemovingItemId(null);
             }
           }}
           onSaveForLater={() => {
             // Handle save for later (future feature)
           }}
-          onRemove={() => {
-            removeItem(item.variantId);
+          onRemove={async () => {
+            if (!item.lineItemId) {
+              setErrorModal({
+                visible: true,
+                title: "Error",
+                message: "Cannot remove item. Please try again.",
+              });
+              return;
+            }
+
+            try {
+              setRemovingItemId(item.lineItemId);
+              await removeCartItem(item.lineItemId);
+            } catch (error) {
+              setErrorModal({
+                visible: true,
+                title: "Error",
+                message: "Failed to remove item. Please try again.",
+              });
+            } finally {
+              setRemovingItemId(null);
+            }
           }}
           onPressItem={() => {
             router.push(`/products/${item.productId}`);

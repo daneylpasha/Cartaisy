@@ -1,4 +1,5 @@
 import { useGetProductDetail } from "@/api/generated/products/products";
+import { useCartManager } from "@/api/hooks/useCartManager";
 import {
   HeadingXSBold,
   TextMDBold,
@@ -37,33 +38,21 @@ import RenderHTML from "react-native-render-html";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
-const productSpecs = [
-  { label: "Brand", value: "Bose" },
-  { label: "Color", value: "Chilled Lilac" },
-  { label: "Ear Placement", value: "Over Ear" },
-  { label: "Noise Control", value: "Active Noise Cancellation" },
-  {
-    label: "Model Name",
-    value:
-      "Bose QuietComfort Wireless Noise Cancelling Headphones, Bluetooth Over Ear Headphones with Up To 24 Hours",
-  },
-  { label: "Connectivity Technology", value: "Wireless" },
-  { label: "Material", value: "Leather, Plastic" },
-  { label: "Charging Time", value: "2.5 Hours" },
-  { label: "Item Weight", value: "240 grams" },
-];
-
 const ProductDetailsScreen = () => {
-  const { id, productData, collectionId } = useLocalSearchParams<{
+  const { id } = useLocalSearchParams<{
     id: string;
     productData?: string;
     collectionId?: string;
   }>();
 
   const { top: TOP_INSET } = useSafeAreaInsets();
-  const { addItem, items, isInCart, getItem, getTotalQuantity } =
-    useCartStore();
+  const { items, getTotalQuantity } = useCartStore();
   const cartItemCount = getTotalQuantity();
+  const {
+    addToCart,
+    isLoading: isAddingToCart,
+    error: addToCartError,
+  } = useCartManager();
 
   console.log(items, "items");
 
@@ -178,17 +167,6 @@ const ProductDetailsScreen = () => {
         options: Array.from(values),
       }));
   }, [product?.variants]);
-
-  // Check if all required variant options are selected
-  const allVariantsSelected = useMemo(() => {
-    // If no variants or only default variant, no selection required
-    if (variantTypes.length === 0) return true;
-
-    // Check if all variant types have been selected
-    return variantTypes.every(
-      (variantType) => selectedOptions[variantType.name] !== undefined
-    );
-  }, [variantTypes, selectedOptions]);
 
   // Find the selected variant based on selected options
   const selectedVariant = useMemo(() => {
@@ -594,7 +572,7 @@ const ProductDetailsScreen = () => {
   };
 
   // Handle Add to Cart
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     setSelectionError(null);
 
     // Check if product is in stock
@@ -662,11 +640,21 @@ const ProductDetailsScreen = () => {
       selectedOptions: variantToAdd.selectedOptions || [],
     };
 
-    // Add to cart
-    addItem(cartItem);
+    try {
+      // Add to cart via API with validation and recovery
+      await addToCart(cartItem);
 
-    // Show success modal
-    setShowSuccessModal(true);
+      // Show success modal only on successful API response
+      setShowSuccessModal(true);
+    } catch (error) {
+      // Show error modal if API call fails
+      setErrorModal({
+        visible: true,
+        title: "Error",
+        message:
+          addToCartError || "Failed to add item to cart. Please try again.",
+      });
+    }
   };
 
   // Handle Buy Now
@@ -759,6 +747,7 @@ const ProductDetailsScreen = () => {
               iconPosition="left"
               onPress={handleAddToCart}
               label="Add to Cart "
+              isLoading={isAddingToCart}
             />
 
             <Spacer size={"$sm"} />

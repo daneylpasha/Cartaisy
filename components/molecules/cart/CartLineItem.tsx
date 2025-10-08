@@ -5,6 +5,7 @@ import {
   TextMDBold,
   TextSMMedium,
   TextSMRegular,
+  Loader,
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
@@ -32,6 +33,8 @@ export type CartLineItemProps = {
   onRemove: () => void;
   onPressItem?: () => void;
   maxQuantity?: number;
+  isUpdating?: boolean; // Loading state for quantity updates
+  isRemoving?: boolean; // Loading state for remove action
 };
 
 export default function CartLineItem(props: CartLineItemProps) {
@@ -51,6 +54,8 @@ export default function CartLineItem(props: CartLineItemProps) {
     onRemove,
     onPressItem,
     maxQuantity,
+    isUpdating = false,
+    isRemoving = false,
   } = props;
 
   // Check if image is URL or icon name
@@ -93,10 +98,14 @@ export default function CartLineItem(props: CartLineItemProps) {
           {/* Price Row */}
           <XStack alignItems="center">
             <TextLGBold>${currentPrice.toFixed(2)}</TextLGBold>
-            <Spacer size="$xs" />
-            <TextSMRegular color="$icon" textDecorationLine="line-through">
-              ${originalPrice}
-            </TextSMRegular>
+            {originalPrice && originalPrice !== currentPrice ? (
+              <>
+                <Spacer size="$xs" />
+                <TextSMRegular color="$icon" textDecorationLine="line-through">
+                  ${originalPrice.toFixed(2)}
+                </TextSMRegular>
+              </>
+            ) : null}
           </XStack>
 
           {options && options.length > 0 && (
@@ -126,54 +135,66 @@ export default function CartLineItem(props: CartLineItemProps) {
               borderColor="$lightgrey"
               borderRadius={"$full"}
               width={90}
-              justifyContent="space-between"
+              justifyContent="center"
               paddingHorizontal={"$reg"}
               paddingVertical={"$xs"}
             >
-              <OpTouch
-                hitSlop={{ top: 10, right: 10, left: 10, bottom: 10 }}
-                onPress={onDecrease}
-                disabled={quantity <= 1}
-              >
-                <AppImage
-                  tintColor={
-                    quantity <= 1
-                      ? getTokenValue("$icon")
-                      : getTokenValue("$primary")
-                  }
-                  name={"minus"}
-                  width={10}
-                  height={10}
-                />
-              </OpTouch>
-              <Spacer size={"$reg"} />
-              <TextMDBold color="$secondary">{quantity}</TextMDBold>
-              <Spacer size={"$reg"} />
-              <OpTouch
-                hitSlop={{ top: 10, right: 10, left: 10, bottom: 10 }}
-                onPress={onIncrease}
-                disabled={isAtMaxQuantity}
-              >
-                <AppImage
-                  tintColor={
-                    isAtMaxQuantity
-                      ? getTokenValue("$icon")
-                      : getTokenValue("$primary")
-                  }
-                  name={"addIcon"}
-                  width={10}
-                  height={10}
-                />
-              </OpTouch>
+              {isUpdating ? (
+                <Loader size="small" color="$primary" />
+              ) : (
+                <>
+                  <OpTouch
+                    hitSlop={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                    onPress={onDecrease}
+                    disabled={quantity <= 1}
+                  >
+                    <AppImage
+                      tintColor={
+                        quantity <= 1
+                          ? getTokenValue("$icon")
+                          : getTokenValue("$primary")
+                      }
+                      name={"minus"}
+                      width={10}
+                      height={10}
+                    />
+                  </OpTouch>
+                  <Spacer size={"$reg"} />
+                  <TextMDBold color="$secondary">{quantity}</TextMDBold>
+                  <Spacer size={"$reg"} />
+                  <OpTouch
+                    hitSlop={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                    onPress={onIncrease}
+                    disabled={isAtMaxQuantity}
+                  >
+                    <AppImage
+                      tintColor={
+                        isAtMaxQuantity
+                          ? getTokenValue("$icon")
+                          : getTokenValue("$primary")
+                      }
+                      name={"addIcon"}
+                      width={10}
+                      height={10}
+                    />
+                  </OpTouch>
+                </>
+              )}
             </XStack>
             <Spacer size={"$md"} />
             {/* Actions */}
             <XStack alignItems="center">
-              <OpTouch onPress={onRemove}>
+              <OpTouch onPress={onRemove} disabled={isRemoving}>
                 <XStack alignItems="center">
-                  <AppImage name={"trash"} width={14} height={15} />
-                  <Spacer size={"$xs"} />
-                  <TextSMMedium color="$secondary">{"Remove"}</TextSMMedium>
+                  {isRemoving ? (
+                    <Loader size="small" color="$primary" />
+                  ) : (
+                    <>
+                      <AppImage name={"trash"} width={14} height={15} />
+                      <Spacer size={"$xs"} />
+                      <TextSMMedium color="$secondary">{"Remove"}</TextSMMedium>
+                    </>
+                  )}
                 </XStack>
               </OpTouch>
             </XStack>
