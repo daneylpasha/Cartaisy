@@ -1,11 +1,11 @@
 // CartLineItem.tsx
 import Icons from "@/assets/Icons";
 import {
+  Loader,
   TextLGBold,
   TextMDBold,
   TextSMMedium,
   TextSMRegular,
-  Loader,
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
@@ -140,7 +140,14 @@ export default function CartLineItem(props: CartLineItemProps) {
               paddingVertical={"$xs"}
             >
               {isUpdating ? (
-                <Loader size="small" color="$primary" />
+                <YStack paddingVertical={"$xs"}>
+                  <Loader
+                    size="small"
+                    color="$primary"
+                    height={14}
+                    width={14}
+                  />
+                </YStack>
               ) : (
                 <>
                   <OpTouch

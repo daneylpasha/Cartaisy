@@ -53,6 +53,7 @@
     "react-native-gesture-handler": "^2.27.2",
     "react-native-image-viewing": "^0.2.2",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
+    "react-native-loader-kit": "^3.0.0",
     "react-native-phone-number-input": "^2.1.0",
     "react-native-reanimated": "~3.17.4",
     "react-native-render-html": "^6.3.4",

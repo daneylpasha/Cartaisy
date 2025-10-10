@@ -1,5 +1,6 @@
 import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
 import { AppImage } from "@/components/atoms/AppImage";
+import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextXSRegular } from "@/components/atoms/texts/TextXSRegular";
@@ -9,7 +10,7 @@ import { EmptySearches } from "@/components/organisms/search/EmptySearches";
 import { SearchesResults } from "@/components/organisms/search/SearchesResults";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList } from "react-native";
+import { FlatList } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
@@ -150,7 +151,7 @@ const Search = () => {
         return (
           <YStack justifyContent="center" alignItems="center">
             <Spacer size={"$xl"} />
-            <ActivityIndicator size="small" />
+            <Loader size="small" />
           </YStack>
         );
 

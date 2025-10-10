@@ -1,9 +1,10 @@
 import React from 'react';
-import { TouchableOpacity, ActivityIndicator } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import { YStack } from 'tamagui';
 import * as Haptics from 'expo-haptics';
 import { useIsFavorite } from '@/api/hooks/useFavorites';
 import { AppImage } from '@/components/atoms/AppImage';
+import { Loader } from '@/components/atoms/Loader';
 
 interface FavoriteButtonProps {
   productId: string;
@@ -38,7 +39,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
         opacity={isLoading ? 0.6 : 1}
       >
         {isLoading ? (
-          <ActivityIndicator size="small" color="#FF6B6B" />
+          <Loader size="small" color="#FF6B6B" />
         ) : (
           <AppImage
             name={isFavorite ? 'heartFilled' : 'heart'}

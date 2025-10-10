@@ -9,6 +9,7 @@ import {
   TextXLMedium,
   TextXSRegular,
 } from "@/components/atoms";
+import { Loader } from "@/components/atoms/Loader";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
@@ -32,7 +33,7 @@ import { t } from "@/translations";
 import { getColorHex } from "@/utils/colorHelper";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList } from "react-native";
+import { FlatList } from "react-native";
 import ImageViewing from "react-native-image-viewing";
 import RenderHTML from "react-native-render-html";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -714,7 +715,7 @@ const ProductDetailsScreen = () => {
           justifyContent="center"
           alignItems="center"
         >
-          <ActivityIndicator size="large" color={getTokenValue("$primary")} />
+          <Loader size="large" color="$primary" />
         </YStack>
       ) : (
         <>

@@ -1,9 +1,10 @@
 import { tokens } from "@/tamagui/token";
 import React from "react";
-import { ActivityIndicator, DimensionValue } from "react-native";
+import { DimensionValue } from "react-native";
 import { XStack } from "tamagui";
 import { OpTouch, OpTouchProps } from "../../atoms/OpTouch";
 import { TextMDSemiBold } from "../../atoms/texts";
+import { Loader } from "../../atoms/Loader";
 
 type ColorToken = keyof typeof tokens.color;
 type ColorTokenWithPrefix = ColorToken | `$${ColorToken}`;
@@ -55,7 +56,7 @@ export const SecondaryButton = ({
     >
       <XStack alignItems="center" justifyContent="center" gap="$sm-reg">
         {isLoading ? (
-          <ActivityIndicator size={"small"} color={color} />
+          <Loader size="small" color={color} />
         ) : (
           <>
             {iconPosition === "left" ? icon : null}

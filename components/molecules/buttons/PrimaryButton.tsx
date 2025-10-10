@@ -1,9 +1,10 @@
 import { tokens } from "@/tamagui/token";
 import React from "react";
-import { ActivityIndicator, DimensionValue } from "react-native";
+import { DimensionValue } from "react-native";
 import { XStack } from "tamagui";
 import { OpTouch } from "../../atoms/OpTouch";
 import { TextMDSemiBold } from "../../atoms/texts";
+import { Loader } from "../../atoms/Loader";
 
 type PrimaryButtonProps = {
   onPress: () => void;
@@ -43,7 +44,7 @@ export const PrimaryButton = ({
     >
       <XStack alignItems="center" justifyContent="center" gap="$sm-reg">
         {isLoading ? (
-          <ActivityIndicator size={"small"} color={"white"} />
+          <Loader size="small" color="white" />
         ) : (
           <>
             {iconPosition === "left" ? icon : null}
