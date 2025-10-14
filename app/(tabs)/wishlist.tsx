@@ -178,7 +178,12 @@ const WishlistScreen = () => {
     <YStack alignItems="center" justifyContent="center" flex={1}>
       <Spacer size={"$8xl"} />
       <YStack>
-        <AppImage name="wishlistFrame" width={215} height={144} />
+        <AppImage
+          name="wishlistFrame"
+          width={215}
+          height={144}
+          tintColor={tokens.color.primary}
+        />
       </YStack>
       <Spacer size={"$lg"} />
       <TextXLBold>{t("wishlist.title")}</TextXLBold>

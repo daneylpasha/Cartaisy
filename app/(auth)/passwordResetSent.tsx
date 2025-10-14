@@ -7,28 +7,30 @@ import { ParagraphMD } from "@/components/atoms/texts/ParagraphMD";
 import { TextSMRegular } from "@/components/atoms/texts/TextSMRegular";
 import { SecondaryButton } from "@/components/molecules/buttons";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
+import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
-import { router } from "expo-router";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { Alert, Linking } from "react-native";
 import { XStack, YStack } from "tamagui";
 
 const PasswordRestSent = () => {
-
-   const { email, from } = useLocalSearchParams<{ email?: string; from?: string }>();
+  const { email, from } = useLocalSearchParams<{
+    email?: string;
+    from?: string;
+  }>();
 
   const openEmailApp = async () => {
-    const emailDomain = email?.split('@')[1];
-    
+    const emailDomain = email?.split("@")[1];
+
     // Common email providers with their deep links
     const emailApps: { [key: string]: string } = {
-      'gmail.com': 'googlegmail://',
-      'yahoo.com': 'ymail://',
-      'outlook.com': 'ms-outlook://',
-      'hotmail.com': 'ms-outlook://',
-      'icloud.com': 'message://',
-      'me.com': 'message://',
+      "gmail.com": "googlegmail://",
+      "yahoo.com": "ymail://",
+      "outlook.com": "ms-outlook://",
+      "hotmail.com": "ms-outlook://",
+      "icloud.com": "message://",
+      "me.com": "message://",
     };
 
     try {
@@ -42,7 +44,7 @@ const PasswordRestSent = () => {
       }
 
       // Fallback to default mail app
-      const mailUrl = 'message://';
+      const mailUrl = "message://";
       const canOpenMail = await Linking.canOpenURL(mailUrl);
       if (canOpenMail) {
         await Linking.openURL(mailUrl);
@@ -51,15 +53,15 @@ const PasswordRestSent = () => {
 
       // If no mail app found, show alert
       Alert.alert(
-        'No Email App Found',
-        'Please check your email app manually to find the password reset link.',
-        [{ text: 'OK' }]
+        "No Email App Found",
+        "Please check your email app manually to find the password reset link.",
+        [{ text: "OK" }]
       );
     } catch (error) {
       Alert.alert(
-        'Error', 
-        'Could not open email app. Please check your email manually.',
-        [{ text: 'OK' }]
+        "Error",
+        "Could not open email app. Please check your email manually.",
+        [{ text: "OK" }]
       );
     }
   };
@@ -67,7 +69,11 @@ const PasswordRestSent = () => {
   return (
     <ScreenContainer backgroundColor={"background"}>
       <Spacer size={"$6xl"} />
-      <AppImage name="emailSent" height={250} />
+      <AppImage
+        name="emailSent"
+        tintColor={tokens.color.primary}
+        height={250}
+      />
       <Spacer size={"$xl"} />
       <YStack paddingHorizontal={"$md"} alignItems="center">
         <HeadingXSBold>{t("auth.passwordResetSent.title")}</HeadingXSBold>
@@ -85,7 +91,7 @@ const PasswordRestSent = () => {
           onPress={openEmailApp}
         />
         <Spacer size={"$reg"} />
-        <SecondaryButton label="login" onPress={()=> router.push('/login')}/>
+        <SecondaryButton label="login" onPress={() => router.push("/login")} />
         <Spacer size={"$xl"} />
         <YStack alignItems="center">
           <TextSMRegular color={"$secondary"}>

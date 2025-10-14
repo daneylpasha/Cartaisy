@@ -3,6 +3,7 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
+import { tokens } from "@/tamagui/token";
 import { router } from "expo-router";
 import React from "react";
 import { XStack, YStack } from "tamagui";
@@ -13,7 +14,12 @@ const CancelOrder = () => {
     <ScreenContainer backgroundColor={"background"}>
       <YStack paddingHorizontal={"$md"} alignItems="center" justifyContent="center">
         <Spacer size={"$5xl"} />
-        <AppImage name="cancelOrderFrame" width={343} height={203} />
+        <AppImage
+          name="cancelOrderFrame"
+          width={343}
+          height={203}
+          tintColor={tokens.color.primary}
+        />
         <Spacer size={"$xl"} />
         <HeadingSMBold>{"Order Cancelled"}</HeadingSMBold>
         <Spacer size={"$reg"} />

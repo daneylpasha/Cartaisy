@@ -10,6 +10,7 @@ import { SCREEN_WIDTH, SHADOW_STYLES } from "@/constants/styles";
 import React, { useRef, useState } from "react";
 import { FlatList } from "react-native";
 import { XStack, YStack } from "tamagui";
+import { router } from "expo-router";
 
 type FeaturedPromotionsCarouselProps = {
   carousels?: CarouselItem[];
@@ -60,7 +61,7 @@ export const FeaturedPromotionsCarousel = ({
   }, [carousels.length]);
 
   return (
-    <YStack position="relative">
+    <YStack>
       <FlatList
         ref={carouselRef}
         data={carousels}
@@ -90,6 +91,17 @@ export const FeaturedPromotionsCarousel = ({
 
                 // elevation:1,
                 paddingVertical: 30,
+              }}
+              onPress={() => {
+                if (banner.collectionId) {
+                  router.push({
+                    pathname: "/products",
+                    params: {
+                      collectionId: banner.collectionId,
+                      categoryName: banner.title,
+                    },
+                  });
+                }
               }}
             >
               <AppImage
@@ -131,7 +143,17 @@ export const FeaturedPromotionsCarousel = ({
                   width={120}
                   borderColor="$lightgrey"
                   color="$secondary"
-                  onPress={() => {}}
+                  onPress={() => {
+                    if (banner.collectionId) {
+                      router.push({
+                        pathname: "/products",
+                        params: {
+                          collectionId: banner.collectionId,
+                          categoryName: banner.title,
+                        },
+                      });
+                    }
+                  }}
                   label={banner.ctaText || "Shop Now"}
                 />
                 <Spacer size={"$xl"} />
@@ -142,13 +164,13 @@ export const FeaturedPromotionsCarousel = ({
         )}
       />
 
-      {/* Fixed Pagination Indicators outside carousel */}
+      {/* Pagination Indicators below carousel */}
       <XStack
         gap={"$sm-reg"}
-        position="absolute"
-        bottom={50}
-        left={32}
-        zIndex={10}
+        paddingHorizontal={"$md"}
+        marginTop={"$xs"}
+        marginBottom={"$sm"}
+        justifyContent="center"
       >
         {Array.from({ length: totalBanners }, (_, dotIndex) => (
           <YStack

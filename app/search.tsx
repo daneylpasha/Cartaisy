@@ -221,7 +221,10 @@ const Search = () => {
           justifyContent="space-between"
           alignItems="center"
         >
-          <OpTouch onPress={() => router.back()}>
+          <OpTouch
+            hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+            onPress={() => router.back()}
+          >
             <YStack paddingVertical={"$sm"}>
               <AppImage
                 name="arrowBack"

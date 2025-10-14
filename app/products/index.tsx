@@ -1,6 +1,3 @@
-import Icons from "@/assets/Icons";
-import { AppImage } from "@/components/atoms/AppImage";
-import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PlpOptions } from "@/components/molecules/product/plp/PlpOptions";
 import {
@@ -9,28 +6,277 @@ import {
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 
-import { HeadingXSBold } from "@/components/atoms";
+import {
+  CollectionFacets,
+  CollectionProduct,
+  Product,
+  ProductCollectionSortKey,
+} from "@/api/generated/cartaisyAPI.schemas";
+import { useGetCollectionProducts } from "@/api/generated/collections/collections";
+import { HeadingXSBold, Loader, TextMDSemiBold } from "@/components/atoms";
+import { Divider } from "@/components/atoms/Divider";
+import { OpTouch } from "@/components/atoms/OpTouch";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import { ProductCard } from "@/components/molecules/ProductCard";
-import { SectionHeader } from "@/components/molecules/SectionHeader";
-import { FilterBottomSheetContent } from "@/components/organisms/product/FilterBottomSheetContant";
+import {
+  FilterBottomSheetContent,
+  FilterState,
+} from "@/components/organisms/product/FilterBottomSheetContant";
 import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
 import { useLocalSearchParams } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FlatList } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getTokenValue, Text, XStack, YStack } from "tamagui";
+import { Text, XStack, YStack } from "tamagui";
 
 const sidePadding = tokens.space.md;
 const columnGap = tokens.space.md;
 
-const PlpScreen = () => {
-  const { categoryName } = useLocalSearchParams<{ categoryName: string }>();
-  const { bottom: BOTTOM_INSET, top: TOP_INSET } = useSafeAreaInsets();
+const extractNumericId = (gid: string): string => {
+  // If it's already numeric, return as is
+  if (!gid.includes("gid://")) {
+    return gid;
+  }
 
-  // Cart state management
-  const [cartItems, setCartItems] = useState<any[]>([]);
+  const parts = gid.split("/");
+  return parts[parts.length - 1];
+};
+
+const mapCollectionProductToProduct = (
+  collectionProduct: CollectionProduct
+): Product => {
+  return {
+    productId: extractNumericId(collectionProduct.id),
+    title: collectionProduct.title,
+    description: collectionProduct.description,
+    images: collectionProduct.images.map((img) => img.url),
+    price: collectionProduct.minPrice,
+    compareAtPrice: collectionProduct.compareAtPrice ?? undefined,
+    currency: collectionProduct.currency,
+    inStock: collectionProduct.availableForSale,
+    availableQuantity: collectionProduct.totalInventory,
+    totalQuantity: collectionProduct.totalInventory,
+    rating: 0,
+    reviewsCount: 0,
+    handle: collectionProduct.handle,
+    vendor: collectionProduct.vendor,
+    tags: collectionProduct.tags,
+  };
+};
+
+const PlpScreen = () => {
+  const { categoryName, collectionId } = useLocalSearchParams<{
+    categoryName: string;
+    collectionId: string;
+  }>();
+
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>({
+    sort: "",
+    categories: [],
+    priceRange: [0, 1000],
+    colors: [],
+    vendors: [],
+    tags: [],
+  });
+
+  const [pendingFilters, setPendingFilters] = useState<FilterState>({
+    sort: "",
+    categories: [],
+    priceRange: [0, 1000],
+    colors: [],
+    vendors: [],
+    tags: [],
+  });
+
+  // Pagination state
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+
+  // Store initial facets (from first load without filters) - for filter modal
+  const [initialFacets, setInitialFacets] = useState<
+    CollectionFacets | undefined
+  >(undefined);
+
+  // Store initial price range separately to ensure it never changes
+  const [initialPriceRange, setInitialPriceRange] = useState<
+    { min: number; max: number } | undefined
+  >(undefined);
+
+  // Convert filter state to API params
+  const getSortParams = () => {
+    if (appliedFilters.sort === "PRICE_LOW_TO_HIGH") {
+      return { sortKey: "PRICE" as const, reverse: false };
+    } else if (appliedFilters.sort === "PRICE_HIGH_TO_LOW") {
+      return { sortKey: "PRICE" as const, reverse: true };
+    } else if (appliedFilters.sort) {
+      return { sortKey: appliedFilters.sort as any, reverse: undefined };
+    }
+    return { sortKey: undefined, reverse: undefined };
+  };
+
+  const { sortKey, reverse } = getSortParams();
+
+  // Build filters JSON string for API
+  const buildFiltersParam = (): string | undefined => {
+    const filters: any[] = [];
+
+    if (appliedFilters.categories.length > 0) {
+      filters.push({
+        productType: appliedFilters.categories,
+      });
+    }
+
+    // Add color filters
+    if (appliedFilters.colors.length > 0) {
+      filters.push({
+        variantOption: {
+          name: "Color",
+          value: appliedFilters.colors,
+        },
+      });
+    }
+
+    // Add vendor filters
+    if (appliedFilters.vendors && appliedFilters.vendors.length > 0) {
+      filters.push({
+        productVendor: appliedFilters.vendors,
+      });
+    }
+
+    // Add tag filters
+    if (appliedFilters.tags && appliedFilters.tags.length > 0) {
+      filters.push({
+        tag: appliedFilters.tags,
+      });
+    }
+
+    // Add price range filter - only if valid numbers
+    const minPrice = appliedFilters.priceRange[0];
+    const maxPrice = appliedFilters.priceRange[1];
+
+    if (
+      !isNaN(minPrice) &&
+      !isNaN(maxPrice) &&
+      minPrice < maxPrice &&
+      (minPrice > 0 || maxPrice < 10000)
+    ) {
+      filters.push({
+        price: {
+          min: minPrice,
+          max: maxPrice,
+        },
+      });
+    }
+
+    return filters.length > 0 ? JSON.stringify(filters) : undefined;
+  };
+
+  const filtersParam = buildFiltersParam();
+
+  // Fetch collection products
+  const { data, isPending, error, isFetching } = useGetCollectionProducts(
+    collectionId as string,
+    {
+      limit: 20,
+      cursor,
+      sortKey: sortKey as ProductCollectionSortKey,
+      reverse,
+      filters: filtersParam,
+    },
+    {
+      query: {
+        enabled: !!collectionId,
+      },
+    }
+  );
+
+  // Track which collection the current products belong to
+  const [currentCollectionId, setCurrentCollectionId] = useState(collectionId);
+
+  // Reset products and cursor when filters or collection changes
+  useEffect(() => {
+    setCursor(undefined);
+    setAllProducts([]);
+  }, [appliedFilters, collectionId]);
+
+  // Handle pagination: append new products or reset when filters change
+  useEffect(() => {
+    if (data?.data?.products) {
+      const newProducts = data.data.products.map(mapCollectionProductToProduct);
+
+      if (cursor) {
+        // Append to existing products (pagination)
+        setAllProducts((prev) => [...prev, ...newProducts]);
+      } else {
+        // Replace products (initial load or filter change)
+        setAllProducts(newProducts);
+        setCurrentCollectionId(collectionId);
+      }
+    }
+  }, [data, cursor, collectionId]);
+
+  // Store initial facets only on first load (no filters applied)
+  useEffect(() => {
+    if (data?.data?.facets && !initialFacets) {
+      const hasNoFilters =
+        appliedFilters.categories.length === 0 &&
+        appliedFilters.colors.length === 0 &&
+        appliedFilters.vendors?.length === 0 &&
+        appliedFilters.tags?.length === 0 &&
+        !appliedFilters.sort;
+
+      if (hasNoFilters) {
+        setInitialFacets(data.data.facets);
+
+        if (data.data.facets.priceRange && !initialPriceRange) {
+          setInitialPriceRange({
+            min: data.data.facets.priceRange.min,
+            max: data.data.facets.priceRange.max,
+          });
+        }
+      }
+    }
+  }, [data?.data?.facets, initialFacets, appliedFilters, initialPriceRange]);
+
+  useEffect(() => {
+    setInitialFacets(undefined);
+    setInitialPriceRange(undefined);
+  }, [collectionId]);
+
+  useEffect(() => {
+    if (
+      initialPriceRange &&
+      !isNaN(initialPriceRange.min) &&
+      !isNaN(initialPriceRange.max) &&
+      pendingFilters.priceRange[1] === 1000
+    ) {
+      const min = Math.floor(initialPriceRange.min);
+      const max = Math.ceil(initialPriceRange.max);
+
+      if (min < max) {
+        setPendingFilters((prev) => ({
+          ...prev,
+          priceRange: [min, max],
+        }));
+        // Also initialize applied filters with same range
+        setAppliedFilters((prev) => ({
+          ...prev,
+          priceRange: [min, max],
+        }));
+      }
+    }
+  }, [initialPriceRange]);
+
+  // Load more products
+  const handleLoadMore = () => {
+    if (
+      data?.data?.pageInfo?.hasNextPage &&
+      !isFetching &&
+      data?.data?.pageInfo?.endCursor
+    ) {
+      setCursor(data.data.pageInfo.endCursor);
+    }
+  };
 
   const bottomSheetRef = useRef<BottomSheetModal>(null);
 
@@ -42,150 +288,80 @@ const PlpScreen = () => {
       opacity={0.5}
     />
   );
-  // Function to add item to cart
-  const addToCart = (product: any) => {
-    const existingItem = cartItems.find((item) => item.id === product.id);
-
-    if (existingItem) {
-      // If item already exists, increase quantity
-      setCartItems((prev) =>
-        prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: (item.quantity || 1) + 1 }
-            : item
-        )
-      );
-    } else {
-      // If item doesn't exist, add new item
-      const newCartItem = {
-        id: product.id,
-        image: product.image,
-        title: product.title,
-        currentPrice: product.currentPrice,
-        originalPrice: product.originalPrice,
-        couponsCount: 0,
-        freeDelivery: true,
-        options: [],
-        inStockCount: 10,
-        quantity: 1,
-      };
-
-      setCartItems((prev) => [...prev, newCartItem]);
-    }
-  };
-  const products = [
-    {
-      id: "1",
-      price: 100,
-      image: "product1" as keyof typeof Icons,
-      title: "Bose QuietComfort Bluetooth Headphones - Chilled Lilac",
-      currentPrice: 100,
-      originalPrice: 100,
-      discountPercent: 10,
-      progressValue: 50,
-      showProgressBar: true,
-      ratingValue: 5,
-      totalReviewCount: 10,
-      wishlist: true,
-      discountBadge: true,
-    },
-    {
-      id: "2",
-      price: 200,
-      image: "product2" as keyof typeof Icons,
-      title: "Bose QuietComfort Bluetooth Headphones - Chilled Lilac",
-      currentPrice: 200,
-      originalPrice: 200,
-      discountPercent: 10,
-      progressValue: 50,
-      showProgressBar: true,
-      ratingValue: 5,
-      totalReviewCount: 10,
-      wishlist: true,
-      discountBadge: true,
-    },
-    {
-      id: "3",
-      price: 300,
-      image: "product3" as keyof typeof Icons,
-      title: "Bose QuietComfort Bluetooth Headphones - Chilled Lilac",
-      currentPrice: 300,
-      originalPrice: 300,
-      discountPercent: 10,
-      progressValue: 50,
-      showProgressBar: true,
-      ratingValue: 5,
-      totalReviewCount: 10,
-      wishlist: true,
-      discountBadge: true,
-    },
-    {
-      id: "4",
-      price: 400,
-      image: "product4" as keyof typeof Icons,
-      title: "Bose QuietComfort Bluetooth Headphones - Chilled Lilac",
-      currentPrice: 400,
-      originalPrice: 400,
-      discountPercent: 10,
-      progressValue: 50,
-      showProgressBar: true,
-      ratingValue: 5,
-      totalReviewCount: 10,
-      wishlist: true,
-      discountBadge: true,
-    },
-    {
-      id: "5",
-      price: 500,
-      image: "product5" as keyof typeof Icons,
-      title: "Bose QuietComfort Bluetooth Headphones - Chilled Lilac",
-      currentPrice: 500,
-      originalPrice: 500,
-      discountPercent: 10,
-      progressValue: 50,
-      showProgressBar: true,
-      ratingValue: 5,
-      totalReviewCount: 10,
-      wishlist: true,
-      discountBadge: true,
-    },
-  ];
-  const renderItem = ({
-    item,
-  }: {
-    item: {
-      id: string;
-      price: number;
-      image: keyof typeof Icons;
-      title: string;
-      currentPrice: number;
-      originalPrice: number;
-      discountPercent: number;
-      progressValue: number;
-      showProgressBar: boolean;
-      ratingValue: number;
-      totalReviewCount: number;
-      wishlist: boolean;
-      discountBadge: boolean;
-    };
-  }) => {
+  const renderItem = ({ item }: { item: Product }) => {
+    console.log(item, "item in plp");
     return (
       <YStack>
         <ProductCard product={item} context="grid" />
-        <OpTouch onPress={() => addToCart(item)}>
-          <XStack alignItems="center" gap={"$xs"}>
-            <AppImage
-              tintColor={getTokenValue("$primary")}
-              name="cartIcon"
-              width={20}
-              height={20}
-            />
-            <Text color="$primary">{"Add to Cart"}</Text>
-          </XStack>
-        </OpTouch>
       </YStack>
     );
   };
+
+  const renderFooter = () => {
+    if (!isFetching || !data?.data?.pageInfo?.hasNextPage) return null;
+    return (
+      <YStack paddingVertical="$lg" alignItems="center">
+        <Loader size="small" />
+      </YStack>
+    );
+  };
+
+  const renderEmpty = () => {
+    return (
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        paddingVertical="$xl"
+      >
+        <Text fontSize={16} color="$secondary">
+          No products found
+        </Text>
+      </YStack>
+    );
+  };
+
+  // Show loader during initial load or when switching collections
+  const hasRawData = data?.data?.products && data.data.products.length > 0;
+  const hasProcessedData = allProducts.length > 0;
+  const isWrongCollection = currentCollectionId !== collectionId;
+
+  // Show loader if query is loading, data hasn't been processed yet, or showing wrong collection
+  const shouldShowLoader =
+    isPending ||
+    isFetching ||
+    (hasRawData && !hasProcessedData) ||
+    isWrongCollection;
+
+  if (shouldShowLoader) {
+    return (
+      <YStack
+        flex={1}
+        backgroundColor="$background"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <Loader size="large" />
+      </YStack>
+    );
+  }
+
+  // Show error state
+  if (error && allProducts.length === 0) {
+    return (
+      <YStack
+        flex={1}
+        backgroundColor="$background"
+        justifyContent="center"
+        alignItems="center"
+        padding="$lg"
+      >
+        <Text fontSize={16} color="$error" textAlign="center">
+          Failed to load products. Please try again.
+        </Text>
+      </YStack>
+    );
+  }
 
   return (
     <YStack flex={1} backgroundColor="$background">
@@ -198,27 +374,24 @@ const PlpScreen = () => {
           }, 50);
         }}
       />
-      <Spacer size={"$md"} />
-      <SectionHeader
-        title={categoryName}
-        tintColor={"darkgrey"}
-        image="forYou"
-        seeAllText="View All"
-        color="primary"
-        onPressSeeAll={() => {}}
-      />
+
       <Spacer size={"$md"} />
       <FlatList
-        data={products}
+        data={allProducts}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.productId}
         showsVerticalScrollIndicator={false}
         numColumns={2}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={renderEmpty}
         contentContainerStyle={{
           paddingHorizontal: sidePadding,
           backgroundColor: tokens.color.background,
           gap: tokens.space.lg,
           paddingBottom: tokens.space.xl,
+          flexGrow: 1,
         }}
         columnWrapperStyle={{
           columnGap: columnGap,
@@ -251,14 +424,74 @@ const PlpScreen = () => {
           }}
           showsVerticalScrollIndicator={false}
         >
-          <FilterBottomSheetContent />
+          <FilterBottomSheetContent
+            filterState={pendingFilters}
+            onFilterChange={setPendingFilters}
+            facets={
+              initialFacets && initialPriceRange
+                ? {
+                    ...initialFacets,
+                    priceRange: initialPriceRange, // Always use initial price range
+                  }
+                : initialFacets || data?.data?.facets
+            }
+          />
         </BottomSheetScrollView>
+        <Divider />
         <YStack paddingHorizontal={"$md"}>
+          <Spacer size={"$md"} />
           <PrimaryButton
             label={t("sortfilter.btn")}
-            onPress={() => {}}
+            onPress={() => {
+              // Apply pending filters to trigger API call
+              setAppliedFilters(pendingFilters);
+              setCursor(undefined); // Reset pagination when filters change
+              bottomSheetRef.current?.dismiss();
+            }}
             isLoading={false}
           />
+          {/* Show Reset Filters button only when filters are applied */}
+          {(pendingFilters.sort !== "" ||
+            pendingFilters.categories.length > 0 ||
+            pendingFilters.colors.length > 0 ||
+            (pendingFilters.vendors && pendingFilters.vendors.length > 0) ||
+            (pendingFilters.tags && pendingFilters.tags.length > 0)) && (
+            <>
+              <Spacer size={"$sm"} />
+              <OpTouch
+                onPress={() => {
+                  // Reset all filters to default
+                  const defaultFilters: FilterState = {
+                    sort: "",
+                    categories: [],
+                    priceRange: initialPriceRange
+                      ? [
+                          Math.floor(initialPriceRange.min),
+                          Math.ceil(initialPriceRange.max),
+                        ]
+                      : [0, 1000],
+                    colors: [],
+                    vendors: [],
+                    tags: [],
+                  };
+                  setPendingFilters(defaultFilters);
+                  setAppliedFilters(defaultFilters);
+                  setCursor(undefined);
+                  bottomSheetRef.current?.dismiss();
+                }}
+              >
+                <XStack
+                  justifyContent="center"
+                  alignItems="center"
+                  paddingVertical="$sm"
+                >
+                  <TextMDSemiBold color="$primary">
+                    Reset Filters
+                  </TextMDSemiBold>
+                </XStack>
+              </OpTouch>
+            </>
+          )}
           <Spacer size={"$md"} />
         </YStack>
       </BottomSheetModal>

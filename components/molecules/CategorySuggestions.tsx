@@ -7,6 +7,7 @@ import { Spacer, XStack, YStack } from "tamagui";
 import { ParagraphMD, TextMDMedium } from "../atoms";
 import { OpTouch } from "../atoms/OpTouch";
 import { SectionHeader } from "./SectionHeader";
+import { router } from "expo-router";
 
 type CategorySuggestionsProps = {
   categoryCollectionGrid?: CategoryCollectionGridItem[];
@@ -61,7 +62,18 @@ export const CategorySuggestions = ({
             gap: tokens.space.reg,
           }}
           renderItem={({ item: categoryCollection }) => (
-            <OpTouch width={itemWidth}>
+            <OpTouch
+              width={itemWidth}
+              onPress={() => {
+                router.push({
+                  pathname: "/products",
+                  params: {
+                    collectionId: categoryCollection.collectionId,
+                    categoryName: categoryCollection.title,
+                  },
+                });
+              }}
+            >
               <ImageBackground
                 source={{ uri: categoryCollection.image }}
                 resizeMode="cover"

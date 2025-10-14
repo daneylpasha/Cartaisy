@@ -1,5 +1,6 @@
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
+import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
 import React from "react";
 
@@ -35,10 +36,12 @@ export const SearchInput = ({
       placeholder={placeholder || `Search ${t("common.companyName")}`}
       icon={searchIcon}
       width={width}
-      paddingHorizontal={16}
+      paddingHorizontal={tokens.space.md}
       onFocus={onFocus}
       onBlur={onBlur}
       onSubmitEditing={onSubmitEditing}
+      borderRadius={tokens.radius.md}
+      padding={tokens.space.sm}
     />
   );
 };

@@ -1,6 +1,7 @@
 import { HeadingXSBold, ParagraphMD } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
+import { tokens } from "@/tamagui/token";
 import React from "react";
 import { getTokenValue, Spacer, YStack } from "tamagui";
 import AlertModal from "../AlertModal";
@@ -31,7 +32,12 @@ const CardLinkModal = ({
         paddingVertical={"$md"}
       >
         <YStack alignItems="center" justifyContent="center">
-          <AppImage name="debitCardFrame" width={276} height={184} />
+          <AppImage
+            name="debitCardFrame"
+            width={276}
+            height={184}
+            tintColor={tokens.color.primary}
+          />
         </YStack>
         <Spacer size={"$lg"} />
         <YStack alignItems="center">

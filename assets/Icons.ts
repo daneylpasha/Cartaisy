@@ -1,3 +1,10 @@
+import debitCardFrame from "./images/debit-card-frame.svg";
+import emailSent from "./images/email-sent.svg";
+import lock from "./images/lock.svg";
+import orderCancel from "./images/order-cancel.svg";
+import researchIcon from "./images/research-icon.svg";
+import WishlistFrameSvg from "./images/wishlist-frame.svg";
+
 const Icons = {
   arrowRight: require("./images/arrow-right.png"),
   check: require("./images/check.png"),
@@ -10,8 +17,8 @@ const Icons = {
   onboardingFrame7: require("./images/onboarding-frame-7.png"),
   bagWhite: require("./images/bag-white.png"),
   bag: require("./images/bag.png"),
-  lock: require("./images/lock.png"),
-  resetPasswordFrame: require("./images/reset-password-frame.png"),
+  lock: lock,
+  // resetPasswordFrame: require("./images/reset-password-frame.png"),
   loginIcon: require("./images/login-icon.png"),
   leftSlide: require("./images/left-slide.png"),
   rightSlide: require("./images/right-slide.png"),
@@ -21,7 +28,7 @@ const Icons = {
   emailIcon: require("./images/email-icon.png"),
   errorIcon: require("./images/error.png"),
   googleIcon: require("./images/google.png"),
-  emailSent: require("./images/email-sent.png"),
+  emailSent: emailSent,
   notificationFrame: require("./images/notification-frame.png"),
   userIcon: require("./images/user.png"),
   userIdentity: require("./images/user-identity.png"),
@@ -92,7 +99,7 @@ const Icons = {
   warningIcon: require("./images/warning.png"),
   recentIcon: require("./images/recent-icon.png"),
   trendingIcon: require("./images/trending-icon.png"),
-  researchIcon: require("./images/research-icon.png"),
+  researchIcon: researchIcon,
   offerIcon: require("./images/offers-icon.png"),
   filterIcon: require("./images/filter-icon.png"),
   sortIcon: require("./images/sort-icon.png"),
@@ -101,7 +108,7 @@ const Icons = {
   minus: require("./images/minus.png"),
   tableIcon: require("./images/tables.png"),
   trash: require("./images/trash.png"),
-  wishlistFrame: require("./images/wishlist-frame.png"),
+  wishlistFrame: WishlistFrameSvg,
   caretRight: require("./images/caretright.png"),
   piggyBank: require("./images/piggybank.png"),
   calendar: require("./images/calender.png"),
@@ -136,13 +143,13 @@ const Icons = {
   package: require("./images/package.png"),
   list: require("./images/list.png"),
   visa: require("./images/visa.png"),
-  debitCardFrame: require("./images/debit-card-frame.png"),
+  debitCardFrame: debitCardFrame,
   hourGlass: require("./images/hoursglass.png"),
   dotsThree: require("./images/dots-three-outline.png"),
   warningAlert: require("./images/warning-alert.png"),
   trendingIconDown: require("./images/trending-icon-down.png"),
   moneyIcon: require("./images/money.png"),
-  cancelOrderFrame: require("./images/order-cancel-frame.png"),
+  cancelOrderFrame: orderCancel,
   palette: require("./images/palette.png"),
 };
 

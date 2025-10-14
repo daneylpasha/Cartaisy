@@ -6,6 +6,7 @@ import { SCREEN_WIDTH, SHADOW_STYLES } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
 import { FlatList } from "react-native";
 import { Spacer, YStack } from "tamagui";
+import { router } from "expo-router";
 
 type CollectionsGridProps = {
   itemData?: CategoryGridItem[];
@@ -41,7 +42,15 @@ export const CollectionsGrid = ({
           width={ITEM_WIDTH}
           alignItems="center"
           onPress={() => {
-            // Handle category press
+            if (category.collectionId) {
+              router.push({
+                pathname: "/products",
+                params: {
+                  collectionId: category.collectionId,
+                  categoryName: category.title,
+                },
+              });
+            }
           }}
         >
           <YStack

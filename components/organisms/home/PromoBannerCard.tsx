@@ -8,6 +8,7 @@ import { t } from "@/translations";
 import { useState } from "react";
 import { FlatList, StyleSheet } from "react-native";
 import { getTokenValue, Spacer, XStack, YStack } from "tamagui";
+import { router } from "expo-router";
 
 import type { PromoBannerItem as ApiPromoBannerItem } from '@/api/generated/cartaisyAPI.schemas';
 
@@ -62,8 +63,14 @@ export const PromoBannerCard = ({ promoBanners: banners }: PromoBannerCardProps)
             />
           }
           onPress={() => {
-            if (banner.action?.navigateTo) {
-              console.log("Navigate to:", banner.action.navigateTo);
+            if (banner.collectionId) {
+              router.push({
+                pathname: "/products",
+                params: {
+                  collectionId: banner.collectionId,
+                  categoryName: banner.title,
+                },
+              });
             }
           }}
           isLoading={false}

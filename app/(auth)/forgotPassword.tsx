@@ -7,6 +7,7 @@ import { ParagraphMD } from "@/components/atoms/texts/ParagraphMD";
 import { TextSMRegular } from "@/components/atoms/texts/TextSMRegular";
 import { TextSMSemiBold } from "@/components/atoms/texts/TextSMSemiBold";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
+import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
 import { router } from "expo-router";
 import React from "react";
@@ -85,7 +86,7 @@ const ForgotPassword = () => {
             justifyContent="center"
           >
             <AppImage
-              tintColor={"$primary"}
+              tintColor={tokens.color.primary}
               name={"lock"}
               width={75}
               height={98}

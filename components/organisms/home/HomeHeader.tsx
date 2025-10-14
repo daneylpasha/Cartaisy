@@ -75,30 +75,26 @@ export const HomeHeader = ({
       <Spacer size={"$md"} />
 
       {/* Search Bar */}
-      <OpTouch
-        activeOpacity={0.9}
-        onPress={() => router.push("/search")}
-        hitSlop={10}
-      >
-        <XStack
-          backgroundColor="$white"
-          borderRadius="$full"
-          padding={"$sm-reg"}
-          alignItems="center"
-          gap={"$md"}
+      <YStack backgroundColor="$white" borderRadius="$md" padding={"$sm-reg"}>
+        <OpTouch
+          activeOpacity={0.9}
+          onPress={() => router.push("/search")}
+          hitSlop={10}
         >
-          <AppImage
-            name="searchIcon"
-            width={20}
-            height={20}
-            tintColor="$secondary"
-          />
+          <XStack alignItems="center" gap={"$md"}>
+            <AppImage
+              name="searchIcon"
+              width={20}
+              height={20}
+              tintColor="$secondary"
+            />
 
-          <TextMDRegular color="$textgrey">
-            {`Search ${t("common.companyName")}`}
-          </TextMDRegular>
-        </XStack>
-      </OpTouch>
+            <TextMDRegular color="$textgrey">
+              {`Search ${t("common.companyName")}`}
+            </TextMDRegular>
+          </XStack>
+        </OpTouch>
+      </YStack>
       <Spacer size={"$sm"} />
 
       {/* Address Selector */}

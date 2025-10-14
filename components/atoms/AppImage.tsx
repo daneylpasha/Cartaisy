@@ -3,6 +3,7 @@ import type { AppConfig } from "@/tamagui/config";
 import { tokens } from "@/tamagui/token";
 import React from "react";
 import { Image, ImageResizeMode } from "react-native";
+import type { SvgProps } from "react-native-svg";
 import { styled } from "tamagui";
 
 type AppImageProps = {
@@ -42,19 +43,26 @@ export const AppImage: React.FC<AppImageProps> = ({
       : tintColor;
 
   let finalSource;
+  let isSvgComponent = false;
 
   if (name) {
     const iconSource = Icons[name];
-    // Validate icon source is not null/undefined and is a valid object
-    if (iconSource && (typeof iconSource === 'number' || (typeof iconSource === 'object' && iconSource.uri))) {
+
+    if (typeof iconSource === "function") {
+      isSvgComponent = true;
+      finalSource = iconSource;
+    } else if (
+      iconSource &&
+      (typeof iconSource === "number" ||
+        (typeof iconSource === "object" && iconSource.uri))
+    ) {
       finalSource = iconSource;
     }
   } else if (source) {
-    if (typeof source === 'string') {
+    if (typeof source === "string") {
       // Only create URI object if string is not empty
       finalSource = source.trim() ? { uri: source } : undefined;
     } else {
-      // Validate source object has uri property
       finalSource = source?.uri ? source : undefined;
     }
   }
@@ -63,6 +71,21 @@ export const AppImage: React.FC<AppImageProps> = ({
     return null;
   }
 
+  // Render SVG component
+  if (isSvgComponent) {
+    const SvgComponent = finalSource as React.FC<SvgProps>;
+    return (
+      <SvgComponent
+        width={finalWidth}
+        height={finalHeight}
+        style={style}
+        fill={finalTintColor}
+        color={finalTintColor}
+      />
+    );
+  }
+
+  // Render regular image
   return (
     <StyledImage
       source={finalSource}

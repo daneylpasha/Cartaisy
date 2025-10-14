@@ -77,15 +77,14 @@ export function WishlistCarousel({ horizontalPadding = 16 }: Props) {
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={viewabilityConfig}
         />
-        
+
         {/* Absolutely positioned sticky dots */}
-        <XStack 
-          position="absolute" 
-          bottom={30} 
-          alignSelf="center" 
+        <XStack
+          position="absolute"
+          bottom={30}
+          alignSelf="center"
           gap={8}
           zIndex={10}
-
         >
           {data.map((_, i) => (
             <YStack
@@ -93,7 +92,7 @@ export function WishlistCarousel({ horizontalPadding = 16 }: Props) {
               width={8}
               height={8}
               borderRadius={4}
-              backgroundColor={i === activePage ? "#6D4AFF" : "#D9D9E0"}
+              backgroundColor={i === activePage ? "$primary" : "$lightgrey"}
             />
           ))}
         </XStack>

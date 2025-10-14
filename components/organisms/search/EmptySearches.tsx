@@ -2,6 +2,7 @@ import { HeadingSMBold, ParagraphMD, TextSMMedium } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { t } from "@/translations";
+import { tokens } from "@/tamagui/token";
 
 import { Spacer } from "@/components/atoms/Spacer";
 import React from "react";
@@ -15,7 +16,11 @@ export const EmptySearches = () => {
       alignItems="center"
     >
       <Spacer size={138} />
-      <AppImage name={"researchIcon"} size={197} />
+      <AppImage
+        name={"researchIcon"}
+        size={197}
+        tintColor={tokens.color.primary}
+      />
       <Spacer size={"$xl"} />
       <HeadingSMBold textAlign="center">
         {t("search.emptySearches.title")}

@@ -27,7 +27,10 @@ export const CollectionCard = ({ item }: CategoryCardListProps) => {
       onPress={() =>
         router.push({
           pathname: "/products",
-          // params: { categoryName: item.name },
+          params: {
+            collectionId: item.collectionId,
+            categoryName: item.title
+          },
         })
       }
     >

@@ -1,5 +1,4 @@
 import {
-  ParagraphMD,
   TextMDBold,
   TextMDSemiBold,
   TextSMMedium,
@@ -254,7 +253,9 @@ const ordersDetails = () => {
         </YStack>
         <Spacer size={"$md"} />
       </ScrollView>
+
       <YStack paddingHorizontal={"$md"}>
+        <Divider />
         <YStack>
           <Animated.View
             style={{
@@ -344,13 +345,10 @@ const ordersDetails = () => {
           isLoading={false}
         />
         <Spacer size={"$reg"} />
-        <SecondaryButton
-          onPress={() => setShow(true)}
-          label={"Cancel Order"}
-        />
+        <SecondaryButton onPress={() => setShow(true)} label={"Cancel Order"} />
         <Spacer size={bottomSafeAreaInset} />
       </YStack>
-      
+
       <CancelOrderModal
         visible={show}
         expectedName="John Doe"

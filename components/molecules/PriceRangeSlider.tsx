@@ -40,17 +40,39 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
 
   // Initialize positions based on initial values
   React.useEffect(() => {
+    // Validate all values before calculation
+    if (
+      isNaN(minValue) ||
+      isNaN(maxValue) ||
+      isNaN(initialMinValue) ||
+      isNaN(initialMaxValue) ||
+      maxValue <= minValue
+    ) {
+      minThumbPosition.value = 0;
+      maxThumbPosition.value = SLIDER_WIDTH - THUMB_SIZE;
+      return;
+    }
+
     const minPercent = (initialMinValue - minValue) / (maxValue - minValue);
     const maxPercent = (initialMaxValue - minValue) / (maxValue - minValue);
 
-    minThumbPosition.value = minPercent * (SLIDER_WIDTH - THUMB_SIZE);
-    maxThumbPosition.value = maxPercent * (SLIDER_WIDTH - THUMB_SIZE);
+    // Clamp percentages between 0 and 1
+    const clampedMinPercent = Math.max(0, Math.min(1, minPercent));
+    const clampedMaxPercent = Math.max(0, Math.min(1, maxPercent));
+
+    minThumbPosition.value = clampedMinPercent * (SLIDER_WIDTH - THUMB_SIZE);
+    maxThumbPosition.value = clampedMaxPercent * (SLIDER_WIDTH - THUMB_SIZE);
   }, [initialMinValue, initialMaxValue, minValue, maxValue]);
 
   const calculateValue = useCallback(
     (position: number) => {
+      // Validate inputs
+      if (isNaN(minValue) || isNaN(maxValue) || maxValue <= minValue) {
+        return 0;
+      }
       const percent = position / (SLIDER_WIDTH - THUMB_SIZE);
-      return Math.round(minValue + percent * (maxValue - minValue));
+      const value = Math.round(minValue + percent * (maxValue - minValue));
+      return isNaN(value) ? minValue : value;
     },
     [minValue, maxValue]
   );
@@ -231,10 +253,10 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
         paddingHorizontal="$sm"
       >
         <TextMDSemiBold color="$secondary" fontSize={14}>
-          ${displayValues.min}
+          ${isNaN(displayValues.min) ? 0 : displayValues.min}
         </TextMDSemiBold>
         <TextMDSemiBold color="$secondary" fontSize={14}>
-          ${displayValues.max}
+          ${isNaN(displayValues.max) ? 0 : displayValues.max}
         </TextMDSemiBold>
       </XStack>
     </YStack>

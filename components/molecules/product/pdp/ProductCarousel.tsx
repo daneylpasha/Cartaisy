@@ -70,13 +70,14 @@ export default function ProductCarousel({
           top={20}
           left={10}
           zIndex={2}
-          borderWidth={1}
-          borderColor="$icon"
+          backgroundColor="rgba(0, 0, 0, 0.6)"
           paddingHorizontal={"$reg"}
           paddingVertical={"$xs-sm"}
           borderRadius={"$full"}
         >
-          <TextSMMedium>{total ? `${index + 1}/${total}` : "0/0"}</TextSMMedium>
+          <TextSMMedium color="$white">
+            {total ? `${index + 1}/${total}` : "0/0"}
+          </TextSMMedium>
         </XStack>
       )}
 

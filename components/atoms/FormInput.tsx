@@ -1,4 +1,5 @@
 import colors from "@/assets/colors";
+import { tokens } from "@/tamagui/token";
 import React, { useState } from "react";
 import { StyleSheet } from "react-native";
 import { Button, Input, XStack, YStack } from "tamagui";
@@ -23,6 +24,9 @@ interface FormInputProps {
   onBlur?: () => void;
   onSubmitEditing?: () => void;
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  backgroundColor?: string;
+  borderRadius?: number;
+  padding?: number;
 }
 
 export const FormInput = ({
@@ -42,6 +46,9 @@ export const FormInput = ({
   onBlur,
   onSubmitEditing,
   autoCapitalize = "none",
+  backgroundColor = "white",
+  borderRadius = tokens.radius.full,
+  padding = tokens.space["sm-reg"],
 }: FormInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -62,12 +69,12 @@ export const FormInput = ({
       <XStack
         borderWidth={borderWidth}
         borderColor={error ? "red" : "$border"}
-        borderRadius={"$full"}
-        padding={"$sm-reg"}
+        borderRadius={borderRadius}
+        padding={padding}
         paddingHorizontal={paddingHorizontal}
         alignItems="center"
-        backgroundColor="white"
-        style={{ backgroundColor: "white", overflow: "hidden" }}
+        backgroundColor={backgroundColor}
+        style={{ backgroundColor: backgroundColor, overflow: "hidden" }}
       >
         {icon ? <XStack marginRight="$2">{icon}</XStack> : null}
         <YStack flex={1} position="relative" style={Styles.inputContainer}>

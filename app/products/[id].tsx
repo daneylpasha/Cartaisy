@@ -9,9 +9,9 @@ import {
   TextXLMedium,
   TextXSRegular,
 } from "@/components/atoms";
-import { Loader } from "@/components/atoms/Loader";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
+import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
@@ -101,10 +101,25 @@ const ProductDetailsScreen = () => {
       return [];
     }
 
-    return productDetailData.data.metafields.map((metafield: any) => ({
-      label: metafield.key.charAt(0).toUpperCase() + metafield.key.slice(1),
-      value: metafield.value,
-    }));
+    return productDetailData.data.metafields.map((metafield: any) => {
+      const value = metafield.value?.toString() || '';
+
+      // Format the label: remove hyphens, capitalize each word
+      const label = metafield.key
+        .split('-')
+        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+
+      // If value is a GID reference, show "Contact support for details"
+      const displayValue = value.includes('gid://shopify')
+        ? 'Contact support for details'
+        : value;
+
+      return {
+        label,
+        value: displayValue,
+      };
+    });
   }, [productDetailData?.data?.metafields]);
 
   const [viewerIndex, setViewerIndex] = useState(0);
@@ -320,7 +335,7 @@ const ProductDetailsScreen = () => {
                 <AppImage
                   name={"minus"}
                   size={15}
-                  tintColor={count <= 1 ? getTokenValue("$icon") : undefined}
+                  tintColor={getTokenValue("$primary")}
                 />
               </OpTouch>
               <Spacer size={"$md"} />
@@ -353,14 +368,7 @@ const ProductDetailsScreen = () => {
                 <AppImage
                   name={"addIcon"}
                   size={15}
-                  tintColor={
-                    count >=
-                    (selectedVariant?.quantityAvailable ||
-                      product?.totalInventory ||
-                      0)
-                      ? getTokenValue("$icon")
-                      : undefined
-                  }
+                  tintColor={getTokenValue("$primary")}
                 />
               </OpTouch>
             </XStack>
