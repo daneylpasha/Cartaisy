@@ -31,15 +31,64 @@ import CountryPicker, {
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
+import { useAddAddress, getGetAddressesQueryKey, useGetAddresses } from "@/api/generated/addresses/addresses";
+import { AddAddressBody } from "@/api/generated/cartaisyAPI.schemas";
+import { useQueryClient } from "@tanstack/react-query";
+import useUserStore from "@/store/useUserStore";
+
 const AddAddress = () => {
   const form = useForm();
+  const queryClient = useQueryClient();
+
+  // Fetch existing addresses to check if this is the first one
+  const { data: addressesResponse } = useGetAddresses();
+  const { setDefaultAddress } = useUserStore();
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const desc = useWatch({ control: form.control, name: "description" });
   const descLen = (desc ?? "").length;
+
+  // Add address mutation
+  const { mutate: addAddress, isPending } = useAddAddress({
+    mutation: {
+      onSuccess: (response) => {
+        console.log("Address added successfully:", response);
+
+        // If the added address is default, save it to user store
+        if (response?.data?.address?.isDefault) {
+          setDefaultAddress(response.data.address);
+        }
+
+        // Invalidate addresses query to refetch updated list
+        queryClient.invalidateQueries({ queryKey: getGetAddressesQueryKey() });
+        router.back();
+      },
+      onError: (error) => {
+        console.error("Failed to add address:", error);
+        // You can show a toast/alert here
+      },
+    },
+  });
+
   const onSubmit = (data: any) => {
-    router.back();
-    console.log("Form submitted:", data);
-    // Handle form submission
+    // Determine if this should be default (if it's the first address)
+    const existingAddresses = addressesResponse?.data?.addresses || [];
+    const isFirstAddress = existingAddresses.length === 0;
+
+    // Map form data to API format
+    const addressData: AddAddressBody = {
+      label: data.addressName,
+      address1: data.streetAddress,
+      address2: data.apartmentSuite,
+      province: data.stateProvince,
+      country: selectedCountry.name,
+      countryCode: selectedCountry.cca2,
+      zip: data.postCode,
+      deliveryInstructions: data.description,
+      isDefault: isFirstAddress, // Set as default if it's the first address
+      type: "both",
+    };
+
+    addAddress({ data: addressData });
   };
   const [selectedCountry, setSelectedCountry] = useState<Country>({
     callingCode: ["44"],
@@ -364,7 +413,7 @@ const AddAddress = () => {
           onPress={form.handleSubmit(onSubmit)}
           width={"100%"}
           iconPosition="left"
-          isLoading={false}
+          isLoading={isPending}
         />
       </YStack>
       {/* paddingBottom={} */}

@@ -1,4 +1,5 @@
 import useAuthStore from "@/store/useAuthStore";
+import useUserStore from "@/store/useUserStore";
 import Axios, { AxiosError, AxiosRequestConfig } from "axios";
 
 // Backend URL
@@ -66,8 +67,9 @@ axiosInstance.interceptors.response.use(
     console.log("[API Response ERROR] ==================");
 
     if (error.response?.status === 401) {
-      console.log("[API Response ERROR] 401 Unauthorized - Clearing auth");
+      console.log("[API Response ERROR] 401 Unauthorized - Clearing auth and user data");
       useAuthStore.getState().clearAuth();
+      useUserStore.getState().clearUser();
     }
     return Promise.reject(error);
   }

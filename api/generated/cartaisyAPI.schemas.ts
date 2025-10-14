@@ -6,6 +6,197 @@
  * OpenAPI spec version: 1.0.0
  */
 /**
+ * @nullable
+ */
+export type PredictiveSearchProductFeaturedImage = {
+  /** @nullable */
+  altText: string | null;
+  url: string;
+} | null;
+
+export type PredictiveSearchProductPriceRangeMinVariantPrice = {
+  currencyCode: string;
+  amount: string;
+};
+
+export type PredictiveSearchProductPriceRange = {
+  minVariantPrice: PredictiveSearchProductPriceRangeMinVariantPrice;
+};
+
+/**
+ * @nullable
+ */
+export type PredictiveSearchProductCompareAtPriceRangeMinVariantPrice = {
+  currencyCode: string;
+  amount: string;
+} | null;
+
+/**
+ * @nullable
+ */
+export type PredictiveSearchProductCompareAtPriceRange = {
+  /** @nullable */
+  minVariantPrice: PredictiveSearchProductCompareAtPriceRangeMinVariantPrice;
+} | null;
+
+/**
+ * Search API Types
+Based on Shopify Storefront API documentation
+https://shopify.dev/docs/api/storefront/latest/queries/predictiveSearch
+https://shopify.dev/docs/api/storefront/latest/queries/products
+ */
+export interface PredictiveSearchProduct {
+  id: string;
+  title: string;
+  handle: string;
+  vendor: string;
+  productType: string;
+  tags: string[];
+  /** @nullable */
+  featuredImage: PredictiveSearchProductFeaturedImage;
+  priceRange: PredictiveSearchProductPriceRange;
+  /** @nullable */
+  compareAtPriceRange: PredictiveSearchProductCompareAtPriceRange;
+}
+
+/**
+ * @nullable
+ */
+export type PredictiveSearchCollectionImage = {
+  /** @nullable */
+  altText: string | null;
+  url: string;
+} | null;
+
+export interface PredictiveSearchCollection {
+  id: string;
+  title: string;
+  handle: string;
+  /** @nullable */
+  image: PredictiveSearchCollectionImage;
+}
+
+export type PredictiveSearchResponseData = {
+  totalResults: number;
+  collections: PredictiveSearchCollection[];
+  products: PredictiveSearchProduct[];
+  query: string;
+};
+
+export interface PredictiveSearchResponse {
+  success: boolean;
+  data: PredictiveSearchResponseData;
+}
+
+export type SearchProductImagesItem = {
+  /** @nullable */
+  altText: string | null;
+  url: string;
+};
+
+export type SearchProductVariantsItemSelectedOptionsItem = {
+  value: string;
+  name: string;
+};
+
+export type SearchProductVariantsItem = {
+  selectedOptions: SearchProductVariantsItemSelectedOptionsItem[];
+  quantityAvailable: number;
+  availableForSale: boolean;
+  price: number;
+  title: string;
+  id: string;
+};
+
+export interface SearchProduct {
+  id: string;
+  title: string;
+  description: string;
+  handle: string;
+  vendor: string;
+  productType: string;
+  tags: string[];
+  availableForSale: boolean;
+  totalInventory: number;
+  minPrice: number;
+  maxPrice: number;
+  /** @nullable */
+  compareAtPrice: number | null;
+  currency: string;
+  images: SearchProductImagesItem[];
+  variants: SearchProductVariantsItem[];
+}
+
+export interface SearchPageInfo {
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  /** @nullable */
+  endCursor: string | null;
+  /** @nullable */
+  startCursor: string | null;
+}
+
+export type SearchSortKey = typeof SearchSortKey[keyof typeof SearchSortKey];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SearchSortKey = {
+  RELEVANCE: 'RELEVANCE',
+  PRICE: 'PRICE',
+  BEST_SELLING: 'BEST_SELLING',
+  CREATED_AT: 'CREATED_AT',
+  TITLE: 'TITLE',
+  PRODUCT_TYPE: 'PRODUCT_TYPE',
+  VENDOR: 'VENDOR',
+} as const;
+
+export type SearchProductsResponseData = {
+  reverse: boolean;
+  sortKey: SearchSortKey;
+  totalCount: number;
+  pageInfo: SearchPageInfo;
+  products: SearchProduct[];
+  query: string;
+};
+
+export interface SearchProductsResponse {
+  success: boolean;
+  data: SearchProductsResponseData;
+}
+
+export interface PopularSearchItem {
+  query: string;
+  searchCount: number;
+  avgResultsCount: number;
+}
+
+export type PopularSearchesResponseData = {
+  count: number;
+  searches: PopularSearchItem[];
+};
+
+export interface PopularSearchesResponse {
+  success: boolean;
+  data: PopularSearchesResponseData;
+}
+
+export type RecentSearchesResponseDataSearchesItem = {
+  searchedAt: string;
+  resultsCount: number;
+  query: string;
+};
+
+export type RecentSearchesResponseData = {
+  count: number;
+  searches: RecentSearchesResponseDataSearchesItem[];
+};
+
+export interface RecentSearchesResponse {
+  success: boolean;
+  data: RecentSearchesResponseData;
+}
+
+/**
  * Product variant option (color, size, etc.)
  */
 export interface ProductOption {
@@ -523,6 +714,99 @@ export interface ClearCartResponse {
   message: string;
 }
 
+export type IAddressType = typeof IAddressType[keyof typeof IAddressType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const IAddressType = {
+  billing: 'billing',
+  shipping: 'shipping',
+  both: 'both',
+} as const;
+
+export interface IAddress {
+  label?: string;
+  type?: IAddressType;
+  firstName?: string;
+  lastName?: string;
+  company?: string;
+  address1: string;
+  address2?: string;
+  city?: string;
+  province: string;
+  country: string;
+  countryCode?: string;
+  zip: string;
+  phone?: string;
+  deliveryInstructions?: string;
+  isDefault?: boolean;
+}
+
+export type GetSearchSuggestionsParams = {
+/**
+ * - Search query (2+ characters recommended)
+ */
+q: string;
+/**
+ * - Number of results per type (default: 10, max: 10 per Shopify)
+ */
+limit?: number;
+};
+
+export type SearchProductsParams = {
+/**
+ * - Search query
+ */
+q: string;
+/**
+ * - Results per page (default: 20)
+ */
+limit?: number;
+/**
+ * - Pagination cursor
+ */
+cursor?: string;
+/**
+ * - Sort order
+ */
+sortKey?: SearchSortKey;
+/**
+ * - Reverse sort (for high to low)
+ */
+reverse?: boolean;
+};
+
+export type TrackProductClickBody = {
+  productId: string;
+  query: string;
+};
+
+export type TrackProductClick200 = {
+  message: string;
+  success: boolean;
+};
+
+export type GetPopularSearchesParams = {
+/**
+ * - Number of results (default: 10)
+ */
+limit?: number;
+/**
+ * - Days to look back (default: 30)
+ */
+days?: number;
+};
+
+export type GetRecentSearchesParams = {
+limit?: number;
+};
+
+export type ClearSearchHistory200 = {
+  deletedCount: number;
+  message: string;
+  success: boolean;
+};
+
 export type GetCollectionProductsParams = {
 /**
  * - Number of products per page (default: 20)
@@ -544,5 +828,118 @@ reverse?: boolean;
  * - JSON string of ProductFilter array for filtering products
  */
 filters?: string;
+};
+
+export type GetAddresses200Data = {
+  count: number;
+  addresses: IAddress[];
+};
+
+export type GetAddresses200 = {
+  data: GetAddresses200Data;
+  success: boolean;
+};
+
+export type AddAddressBodyType = typeof AddAddressBodyType[keyof typeof AddAddressBodyType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AddAddressBodyType = {
+  billing: 'billing',
+  shipping: 'shipping',
+  both: 'both',
+} as const;
+
+/**
+ * - Address details
+ */
+export type AddAddressBody = {
+  isDefault?: boolean;
+  deliveryInstructions?: string;
+  phone?: string;
+  zip: string;
+  countryCode?: string;
+  country: string;
+  province: string;
+  city?: string;
+  address2?: string;
+  address1: string;
+  company?: string;
+  lastName?: string;
+  firstName?: string;
+  type?: AddAddressBodyType;
+  label?: string;
+};
+
+export type AddAddress200Data = {
+  index: number;
+  address: IAddress;
+};
+
+export type AddAddress200 = {
+  message: string;
+  data: AddAddress200Data;
+  success: boolean;
+};
+
+export type UpdateAddressBodyType = typeof UpdateAddressBodyType[keyof typeof UpdateAddressBodyType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateAddressBodyType = {
+  billing: 'billing',
+  shipping: 'shipping',
+  both: 'both',
+} as const;
+
+/**
+ * - Updated address details
+ */
+export type UpdateAddressBody = {
+  deliveryInstructions?: string;
+  phone?: string;
+  zip?: string;
+  countryCode?: string;
+  country?: string;
+  province?: string;
+  city?: string;
+  address2?: string;
+  address1?: string;
+  company?: string;
+  lastName?: string;
+  firstName?: string;
+  type?: UpdateAddressBodyType;
+  label?: string;
+};
+
+export type UpdateAddress200Data = {
+  index: number;
+  address: IAddress;
+};
+
+export type UpdateAddress200 = {
+  message: string;
+  data: UpdateAddress200Data;
+  success: boolean;
+};
+
+export type DeleteAddress200 = {
+  message: string;
+  success: boolean;
+};
+
+export type SetDefaultAddress200 = {
+  message: string;
+  success: boolean;
+};
+
+export type GetDefaultAddress200Data = {
+  index: number;
+  address: IAddress;
+};
+
+export type GetDefaultAddress200 = {
+  data: GetDefaultAddress200Data;
+  success: boolean;
 };
 

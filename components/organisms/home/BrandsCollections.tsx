@@ -5,6 +5,7 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { TextSMMedium } from "@/components/atoms/texts";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { tokens } from "@/tamagui/token";
+import { router } from "expo-router";
 import React from "react";
 import { FlatList } from "react-native";
 import { YStack } from "tamagui";
@@ -49,7 +50,13 @@ const BrandsCollections = ({
             height={76}
             alignItems="center"
             onPress={() => {
-              console.log("pressed");
+              router.push({
+                pathname: "/products",
+                params: {
+                  collectionId: brand.collectionId,
+                  categoryName: brand.title,
+                },
+              });
             }}
           >
             <YStack

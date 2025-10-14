@@ -22,6 +22,7 @@ import { Alert } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { getTokenValue, XStack, YStack } from "tamagui";
 import useAuthStore from "@/store/useAuthStore";
+import useUserStore from "@/store/useUserStore";
 type LoginForm = {
   email: string;
   password: string;
@@ -29,7 +30,8 @@ type LoginForm = {
 
 const Login = () => {
   const [isChecked, setIsChecked] = useState(false);
-  const { setToken, setUser } = useAuthStore();
+  const { setToken } = useAuthStore();
+  const { setUser } = useUserStore();
 
   const {
     mutateAsync: loginUser,

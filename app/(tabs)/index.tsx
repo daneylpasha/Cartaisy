@@ -15,8 +15,8 @@ import { PromoBannerCard } from "@/components/organisms/home/PromoBannerCard";
 import ProductsHorizontalScroller from "@/components/organisms/productHorizontalScroller/ProductsHorizontalScroller";
 import ProductsGridScroller from "@/components/organisms/ProductsGridScroller/ProductsGridScroller";
 import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller/SalesHorizontalScroller";
-import { router } from "expo-router";
-import React, { useRef, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
@@ -29,60 +29,75 @@ import { getTokenValue, XStack, YStack } from "tamagui";
 //
 
 import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
+import { useGetAddresses, useSetDefaultAddress, useGetDefaultAddress } from "@/api/generated/addresses/addresses";
 import { AddressCard } from "@/components/molecules/AddressCard";
 import { CollectionsGrid } from "@/components/molecules/home/CollectionsGrid";
 import { BottomSheetModalWithFlatList } from "@/components/organisms/bottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import useUserStore from "@/store/useUserStore";
 
 const HomeScreen = () => {
   const { top: TOP_INSET, bottom: BOTTOM_INSET } = useSafeAreaInsets();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [open, setOpen] = useState(false);
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  const addressData = [
-    {
-      id: 1,
-      name: "Lily Vermillion",
-      address: "18752 January Avenue, North Manhattan, New York, NY, 10013",
-      shipping: "Shipping Available",
+
+  // Get user data from store
+  const { user, setDefaultAddress } = useUserStore();
+  const userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.fullName || 'User' : 'User';
+
+  // Fetch addresses from API
+  const { data: addressesResponse, isLoading: isLoadingAddresses, error: addressError, refetch: refetchAddresses } = useGetAddresses();
+
+  // Fetch default address on mount
+  const { data: defaultAddressResponse } = useGetDefaultAddress();
+
+  // Update user store when default address is fetched
+  React.useEffect(() => {
+    if (defaultAddressResponse?.data?.address) {
+      setDefaultAddress(defaultAddressResponse.data.address);
+    }
+  }, [defaultAddressResponse, setDefaultAddress]);
+
+  // Set default address mutation
+  const { mutate: setDefaultAddressMutation, isPending: isSettingDefault } = useSetDefaultAddress({
+    mutation: {
+      onSuccess: (response, variables) => {
+        // Find the address that was set as default
+        const addresses = addressesResponse?.data?.addresses || [];
+        const defaultAddress = addresses[variables.index];
+        if (defaultAddress) {
+          setDefaultAddress(defaultAddress);
+        }
+        // Refetch addresses to get updated list
+        refetchAddresses();
+      },
     },
-    {
-      id: 2,
-      name: "JMarcus Gray",
-      address: "456 Main St, Anytown, USA",
-      shipping: "Shipping Available",
-    },
-    {
-      id: 3,
-      name: "John Doe",
-      address: "123 Main St, Anytown, USA",
-      shipping: "Shipping Available",
-    },
-    {
-      id: 4,
-      name: "Sarah Johnson",
-      address: "789 Oak Road, Seattle, WA, 98101",
-      shipping: "Shipping Available",
-    },
-    {
-      id: 5,
-      name: "Michael Chen",
-      address: "321 Pine Street, San Francisco, CA, 94105",
-      shipping: "Shipping Available",
-    },
-    {
-      id: 6,
-      name: "Emma Wilson",
-      address: "567 Maple Drive, Chicago, IL, 60601",
-      shipping: "Shipping Available",
-    },
-    {
-      id: 7,
-      name: "Robert Taylor",
-      address: "432 Elm Court, Boston, MA, 02108",
-      shipping: "Shipping Available",
-    },
-  ];
+  });
+
+  // Refetch addresses when screen comes into focus (e.g., after adding new address)
+  useFocusEffect(
+    useCallback(() => {
+      refetchAddresses();
+    }, [refetchAddresses])
+  );
+
+  console.log('[HomeScreen] Addresses:', {
+    count: addressesResponse?.data?.addresses?.length,
+    error: addressError,
+    isLoading: isLoadingAddresses
+  });
+
+  // Map API addresses to AddressCard format
+  const addressData = (addressesResponse?.data?.addresses || []).map((addr, index) => ({
+    id: index,
+    name: addr.label || userName,
+    address: [addr.address1, addr.address2, addr.city, addr.province, addr.country, addr.zip]
+      .filter(Boolean)
+      .join(', '),
+    shipping: "Shipping Available",
+    isDefault: addr.isDefault || false,
+  }));
 
   const { data, isLoading, refetch, isFetching, error } = useHomeScreenData();
 
@@ -113,6 +128,10 @@ const HomeScreen = () => {
   };
 
   const handleApply = () => {
+    if (selectedAddress !== null) {
+      // Call API to set default address
+      setDefaultAddressMutation({ index: selectedAddress });
+    }
     setOpen(false);
     Animated.timing(rotateAnim, {
       toValue: 0,
@@ -122,7 +141,7 @@ const HomeScreen = () => {
     bottomSheetModalRef.current?.close();
   };
 
-  const [selectedAddress, setSelectedAddress] = useState<number>(0);
+  const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
 
   const sections = [
     {
@@ -223,6 +242,8 @@ const HomeScreen = () => {
         topInset={TOP_INSET}
         rotateAnim={rotateAnim}
         onAddressPress={() => {
+          // Refetch addresses when opening bottomsheet
+          refetchAddresses();
           bottomSheetModalRef.current?.present();
           setOpen(true);
           Animated.timing(rotateAnim, {

@@ -10,6 +10,7 @@ import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import useAuthStore from "@/store/useAuthStore";
+import useUserStore from "@/store/useUserStore";
 import { t } from "@/translations";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -21,7 +22,8 @@ type FullnameForm = {
 };
 
 const Fullname = () => {
-  const { token, updateProfileData, updateUser, profileData } = useAuthStore();
+  const { token } = useAuthStore();
+  const { updateProfileData, updateUser, profileData } = useUserStore();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FullnameForm>({

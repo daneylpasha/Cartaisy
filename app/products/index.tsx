@@ -26,8 +26,8 @@ import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { FlatList } from "react-native";
-import { Text, XStack, YStack } from "tamagui";
+import { FlatList, RefreshControl } from "react-native";
+import { getTokenValue, Text, XStack, YStack } from "tamagui";
 
 const sidePadding = tokens.space.md;
 const columnGap = tokens.space.md;
@@ -174,7 +174,7 @@ const PlpScreen = () => {
   const filtersParam = buildFiltersParam();
 
   // Fetch collection products
-  const { data, isPending, error, isFetching } = useGetCollectionProducts(
+  const { data, isPending, error, isFetching, refetch } = useGetCollectionProducts(
     collectionId as string,
     {
       limit: 20,
@@ -189,6 +189,13 @@ const PlpScreen = () => {
       },
     }
   );
+
+  // Pull to refresh handler
+  const handleRefresh = () => {
+    setCursor(undefined); // Reset pagination
+    setAllProducts([]); // Clear products
+    refetch(); // Refetch data
+  };
 
   // Track which collection the current products belong to
   const [currentCollectionId, setCurrentCollectionId] = useState(collectionId);
@@ -386,6 +393,14 @@ const PlpScreen = () => {
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetching && allProducts.length > 0}
+            onRefresh={handleRefresh}
+            tintColor={getTokenValue("$primary")}
+            colors={[getTokenValue("$primary")]}
+          />
+        }
         contentContainerStyle={{
           paddingHorizontal: sidePadding,
           backgroundColor: tokens.color.background,

@@ -11,8 +11,9 @@ type AddressCardProps = {
     name: string;
     address: string;
     shipping: string;
+    isDefault?: boolean;
   };
-  selectedAddress: number;
+  selectedAddress: number | null;
   defaultBg?: string;
   setSelectedAddress: (id: number) => void;
 };

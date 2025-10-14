@@ -8,6 +8,7 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
 import useCartStore from "@/store/useCartStore";
+import useUserStore from "@/store/useUserStore";
 import { t } from "@/translations";
 import { router } from "expo-router";
 import React from "react";
@@ -26,7 +27,16 @@ export const HomeHeader = ({
   onAddressPress,
 }: HomeHeaderProps) => {
   const { items, getTotalQuantity } = useCartStore();
+  const { defaultAddress } = useUserStore();
   const cartItemCount = getTotalQuantity();
+
+  // Format default address for display
+  const displayAddress = defaultAddress
+    ? [defaultAddress.address1, defaultAddress.city, defaultAddress.province, defaultAddress.zip]
+        .filter(Boolean)
+        .join(', ')
+    : "Add delivery address";
+
   return (
     <YStack
       paddingTop={Platform.OS === "android" ? topInset + 24 : 0}
@@ -112,7 +122,7 @@ export const HomeHeader = ({
             />
             <Spacer size={"$sm"} />
             <TextSMSemiBold color="$white">
-              {"1752 January Avenue, NY 10013"}
+              {displayAddress}
             </TextSMSemiBold>
           </XStack>
           <Animated.View

@@ -12,6 +12,7 @@ import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import useAuthStore from "@/store/useAuthStore";
+import useUserStore from "@/store/useUserStore";
 import { t } from "@/translations";
 import { router } from "expo-router";
 import { isValidPhoneNumber } from "libphonenumber-js";
@@ -29,8 +30,8 @@ type PhoneNumberForm = {
 };
 
 const PhoneNumber = () => {
-  const { token, updateUser, setProfileData, updateProfileData } =
-    useAuthStore();
+  const { token } = useAuthStore();
+  const { updateUser, setProfileData, updateProfileData } = useUserStore();
   const [selectedCountry, setSelectedCountry] = useState<Country>({
     callingCode: ["44"],
     cca2: "GB",

@@ -9,6 +9,7 @@ import { TextMDSemiBold } from "@/components/atoms/texts/TextMDSemiBold";
 import { TextSMSemiBold } from "@/components/atoms/texts/TextSMSemiBold";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import useAuthStore from "@/store/useAuthStore";
+import useUserStore from "@/store/useUserStore";
 import { t } from "@/translations";
 import { router } from "expo-router";
 import React from "react";
@@ -25,7 +26,8 @@ type SignUpForm = {
 };
 
 const SignUp = () => {
-  const { setToken, setUser } = useAuthStore();
+  const { setToken } = useAuthStore();
+  const { setUser } = useUserStore();
 
   const { mutateAsync: signUpUser, isPending: isSigningUp } = useSignUp({
     onSuccess: (data) => {
