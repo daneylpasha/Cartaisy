@@ -8,56 +8,42 @@ import { FlatList } from "react-native";
 import { YStack } from "tamagui";
 
 interface SearchResult {
-  id: number;
+  id: string | number;
   title: string;
   type: string;
+  handle?: string;
+  productData?: any;
 }
 
 export const SearchesResults = ({
   searchResults = [],
   searchQuery = "",
+  onProductClick,
+  categoryCollectionGrid,
+  recentSearches = [],
+  trendingSearches = [],
+  onClearRecentSearches,
+  onClearTrendingSearches,
+  onSearchClick,
 }: {
   searchResults: SearchResult[];
   searchQuery: string;
+  onProductClick?: (product: SearchResult) => void;
+  categoryCollectionGrid?: any[];
+  recentSearches?: Array<{
+    query: string;
+    resultsCount?: number;
+    searchedAt?: string;
+  }>;
+  trendingSearches?: Array<{
+    query: string;
+    searchCount?: number;
+    avgResultsCount?: number;
+  }>;
+  onClearRecentSearches?: () => void;
+  onClearTrendingSearches?: () => void;
+  onSearchClick?: (query: string) => void;
 }) => {
-  const RECENTS = [
-    {
-      id: 1,
-      title: "video games for ps4",
-    },
-    {
-      id: 2,
-      title: "cozy sweaters",
-    },
-    {
-      id: 3,
-      title: "organic skincare",
-    },
-    {
-      id: 4,
-      title: "gaming consoles",
-    },
-  ];
-
-  const TRENDING = [
-    {
-      id: 1,
-      title: "holiday gift",
-    },
-    {
-      id: 2,
-      title: "pet essentials",
-    },
-    {
-      id: 3,
-      title: "gaming accessories",
-    },
-    {
-      id: 4,
-      title: "personal jewelries",
-    },
-  ];
-
   const CATEGORIES = [
     "Electronics",
     "Dress",
@@ -70,11 +56,18 @@ export const SearchesResults = ({
   if (searchResults.length > 0) {
     return (
       <YStack paddingHorizontal={"$md"}>
-        <Spacer size={"$lg"} />
         <YStack>
           <FlatList
             data={searchResults}
-            renderItem={({ item }) => <SearchSuggestionItem item={item} />}
+            renderItem={({ item }) => {
+              return (
+                <SearchSuggestionItem
+                  item={item}
+                  onPress={() => onProductClick?.(item)}
+                />
+              );
+            }}
+            keyExtractor={(item) => String(item.id)}
           />
         </YStack>
       </YStack>
@@ -82,31 +75,60 @@ export const SearchesResults = ({
   }
 
   // Show default content (Recent Searches, Trending Searches, Categories)
+  // Convert API data to format expected by SearchSuggestions
+  // Filter out searches with less than 3 characters
+  const recentSearchesData = recentSearches
+    .filter((search) => search.query.trim().length >= 3)
+    .map((search, index) => ({
+      id: index + 1,
+      title: search.query,
+    }));
+
+  const trendingSearchesData = trendingSearches
+    .filter((search) => search.query.trim().length >= 3)
+    .map((search, index) => ({
+      id: index + 1,
+      title: search.query,
+    }));
+
   return (
     <YStack>
       <YStack paddingHorizontal={"$md"}>
         <Spacer size={"$xl"} />
 
-        <SearchSuggestions
-          title="Recent Searches"
-          data={RECENTS}
-          onPick={() => {}}
-          onClearAll={() => {}}
-          defaultIcon="recentIcon"
-        />
+        {recentSearchesData.length > 0 && (
+          <>
+            <SearchSuggestions
+              title="Recent Searches"
+              data={recentSearchesData}
+              onPick={(query) => onSearchClick?.(query)}
+              onClearAll={() => onClearRecentSearches?.()}
+              defaultIcon="recentIcon"
+            />
+            <Spacer size={"$xl"} />
+          </>
+        )}
 
-        <Spacer size={"$xl"} />
-
-        <SearchSuggestions
-          title="Trending Searches"
-          data={TRENDING}
-          onPick={() => {}}
-          onClearAll={() => {}}
-          defaultIcon="trendingIcon"
-        />
+        {trendingSearchesData.length > 0 && (
+          <>
+            <SearchSuggestions
+              title="Trending Searches"
+              data={trendingSearchesData}
+              onPick={(query) => onSearchClick?.(query)}
+              onClearAll={() => {}} // Don't allow clearing global trending searches
+              defaultIcon="trendingIcon"
+              hideClearAll={true} // Hide Clear All for trending
+            />
+            {/* <Spacer size={"$xl"} /> */}
+          </>
+        )}
       </YStack>
-      <Spacer size={"$xl"} />
-      <CategoriesSearches categories={CATEGORIES} onPick={() => {}} />
+
+      <CategoriesSearches
+        categories={CATEGORIES}
+        onPick={() => {}}
+        categoryCollectionGrid={categoryCollectionGrid}
+      />
     </YStack>
   );
 };

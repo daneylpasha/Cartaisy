@@ -28,13 +28,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 //
 
+import {
+  useGetAddresses,
+  useGetDefaultAddress,
+  useSetDefaultAddress,
+} from "@/api/generated/addresses/addresses";
 import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
-import { useGetAddresses, useSetDefaultAddress, useGetDefaultAddress } from "@/api/generated/addresses/addresses";
 import { AddressCard } from "@/components/molecules/AddressCard";
 import { CollectionsGrid } from "@/components/molecules/home/CollectionsGrid";
 import { BottomSheetModalWithFlatList } from "@/components/organisms/bottomSheet";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import useUserStore from "@/store/useUserStore";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 const HomeScreen = () => {
   const { top: TOP_INSET, bottom: BOTTOM_INSET } = useSafeAreaInsets();
@@ -44,10 +48,19 @@ const HomeScreen = () => {
 
   // Get user data from store
   const { user, setDefaultAddress } = useUserStore();
-  const userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.fullName || 'User' : 'User';
+  const userName = user
+    ? `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+      user.fullName ||
+      "User"
+    : "User";
 
   // Fetch addresses from API
-  const { data: addressesResponse, isLoading: isLoadingAddresses, error: addressError, refetch: refetchAddresses } = useGetAddresses();
+  const {
+    data: addressesResponse,
+    isLoading: isLoadingAddresses,
+    error: addressError,
+    refetch: refetchAddresses,
+  } = useGetAddresses();
 
   // Fetch default address on mount
   const { data: defaultAddressResponse } = useGetDefaultAddress();
@@ -60,20 +73,21 @@ const HomeScreen = () => {
   }, [defaultAddressResponse, setDefaultAddress]);
 
   // Set default address mutation
-  const { mutate: setDefaultAddressMutation, isPending: isSettingDefault } = useSetDefaultAddress({
-    mutation: {
-      onSuccess: (response, variables) => {
-        // Find the address that was set as default
-        const addresses = addressesResponse?.data?.addresses || [];
-        const defaultAddress = addresses[variables.index];
-        if (defaultAddress) {
-          setDefaultAddress(defaultAddress);
-        }
-        // Refetch addresses to get updated list
-        refetchAddresses();
+  const { mutate: setDefaultAddressMutation, isPending: isSettingDefault } =
+    useSetDefaultAddress({
+      mutation: {
+        onSuccess: (response, variables) => {
+          // Find the address that was set as default
+          const addresses = addressesResponse?.data?.addresses || [];
+          const defaultAddress = addresses[variables.index];
+          if (defaultAddress) {
+            setDefaultAddress(defaultAddress);
+          }
+          // Refetch addresses to get updated list
+          refetchAddresses();
+        },
       },
-    },
-  });
+    });
 
   // Refetch addresses when screen comes into focus (e.g., after adding new address)
   useFocusEffect(
@@ -82,34 +96,35 @@ const HomeScreen = () => {
     }, [refetchAddresses])
   );
 
-  console.log('[HomeScreen] Addresses:', {
+  console.log("[HomeScreen] Addresses:", {
     count: addressesResponse?.data?.addresses?.length,
     error: addressError,
-    isLoading: isLoadingAddresses
+    isLoading: isLoadingAddresses,
   });
 
   // Map API addresses to AddressCard format
-  const addressData = (addressesResponse?.data?.addresses || []).map((addr, index) => ({
-    id: index,
-    name: addr.label || userName,
-    address: [addr.address1, addr.address2, addr.city, addr.province, addr.country, addr.zip]
-      .filter(Boolean)
-      .join(', '),
-    shipping: "Shipping Available",
-    isDefault: addr.isDefault || false,
-  }));
+  const addressData = (addressesResponse?.data?.addresses || []).map(
+    (addr, index) => ({
+      id: index,
+      name: addr.label || userName,
+      address: [
+        addr.address1,
+        addr.address2,
+        addr.city,
+        addr.province,
+        addr.country,
+        addr.zip,
+      ]
+        .filter(Boolean)
+        .join(", "),
+      shipping: "Shipping Available",
+      isDefault: addr.isDefault || false,
+    })
+  );
 
   const { data, isLoading, refetch, isFetching, error } = useHomeScreenData();
 
-  console.log("[HomeScreen] Query State:", {
-    isLoading,
-    isFetching,
-    data,
-    hasError: !!error,
-  });
-
   const onRefresh = () => {
-    console.log("[HomeScreen] Refetching data...");
     refetch();
   };
 

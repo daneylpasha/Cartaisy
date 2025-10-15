@@ -1,4 +1,5 @@
 import { CollectionDisplay } from "@/api/generated/cartaisyAPI.schemas";
+import { router } from "expo-router";
 import React from "react";
 import { FlatList } from "react-native";
 import { Spacer, YStack } from "tamagui";
@@ -25,7 +26,15 @@ const ProductsGridScroller = ({
         image="forYou"
         seeAllText="View All"
         color="primary"
-        onPressSeeAll={() => {}}
+        onPressSeeAll={() => {
+          router.push({
+            pathname: "/products",
+            params: {
+              title: targetCollection?.collection.title,
+              collectionId: targetCollection?.collection.id || "",
+            },
+          });
+        }}
       />
       <YStack paddingHorizontal="$md">
         <Spacer size={"$reg"} />

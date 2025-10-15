@@ -7,6 +7,9 @@ interface SearchBarProps {
   width?: string;
   onFocus?: () => void;
   onBlur?: () => void;
+  value?: string; // Add value prop for controlled component
+  onCancel?: () => void; // Add onCancel prop
+  onSubmit?: (query: string) => void; // Add onSubmit prop for tracking
 }
 
 export const SearchBar = ({
@@ -14,12 +17,24 @@ export const SearchBar = ({
   width,
   onFocus,
   onBlur,
+  value: externalValue,
+  onCancel,
+  onSubmit,
 }: SearchBarProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [internalSearchQuery, setInternalSearchQuery] = useState("");
+
+  // Use external value if provided, otherwise use internal state
+  const searchQuery = externalValue !== undefined ? externalValue : internalSearchQuery;
 
   const handleSearch = (text: string) => {
-    setSearchQuery(text);
+    setInternalSearchQuery(text);
     onSearch?.(text);
+  };
+
+  const handleSubmit = () => {
+    if (searchQuery.trim().length >= 3) {
+      onSubmit?.(searchQuery.trim());
+    }
   };
 
   return (
@@ -30,6 +45,8 @@ export const SearchBar = ({
       placeholder={`Search ${t("common.companyName")}`}
       onFocus={onFocus}
       onBlur={onBlur}
+      onCancel={onCancel}
+      onSubmitEditing={handleSubmit}
     />
   );
 };

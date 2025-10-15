@@ -5,12 +5,12 @@ import { PrimaryButton } from "@/components/molecules/buttons";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
+import { router } from "expo-router";
 import { useState } from "react";
 import { FlatList, StyleSheet } from "react-native";
 import { getTokenValue, Spacer, XStack, YStack } from "tamagui";
-import { router } from "expo-router";
 
-import type { PromoBannerItem as ApiPromoBannerItem } from '@/api/generated/cartaisyAPI.schemas';
+import type { PromoBannerItem as ApiPromoBannerItem } from "@/api/generated/cartaisyAPI.schemas";
 
 // Note: API uses ctaText instead of buttonText
 type PromoBannerItem = ApiPromoBannerItem;
@@ -19,8 +19,12 @@ type PromoBannerCardProps = {
   promoBanners?: PromoBannerItem[];
 };
 
-export const PromoBannerCard = ({ promoBanners: banners }: PromoBannerCardProps) => {
+export const PromoBannerCard = ({
+  promoBanners: banners,
+}: PromoBannerCardProps) => {
   const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
+
+  console.log("bannerr..........", banners);
   const totalBanners = banners?.length || 0;
 
   if (!banners || banners.length === 0) {
@@ -36,54 +40,55 @@ export const PromoBannerCard = ({ promoBanners: banners }: PromoBannerCardProps)
         justifyContent="space-between"
         backgroundColor={"$white"}
       >
-      {/* Left Section */}
-      <YStack padding={"$md"} width={"60%"}>
-        <TextMDBold color="$darkgrey">
-          {banner.title || t("home.promoBannerCard.title")}
-        </TextMDBold>
+        {/* Left Section */}
+        <YStack padding={"$md"} width={"60%"}>
+          <TextMDBold color="$darkgrey">
+            {banner.title || t("home.promoBannerCard.title")}
+          </TextMDBold>
 
-        <Spacer size="$sm" />
+          <Spacer size="$sm" />
 
-        <ParagraphSM color="$textgrey">
-          {banner.subtitle || t("home.promoBannerCard.subtitle")}
-        </ParagraphSM>
+          <ParagraphSM color="$textgrey">
+            {banner.subtitle || t("home.promoBannerCard.subtitle")}
+          </ParagraphSM>
 
-        <Spacer size="$reg" />
+          <Spacer size="$reg" />
 
-        <PrimaryButton
-          width={"80%"}
-          label={banner.ctaText || t("home.promoBannerCard.buttonText")}
-          paddingVertical="xs"
-          icon={
-            <AppImage
-              name="arrowRight"
-              tintColor={getTokenValue("$white")}
-              width={16}
-              height={16}
-            />
-          }
-          onPress={() => {
-            if (banner.collectionId) {
-              router.push({
-                pathname: "/products",
-                params: {
-                  collectionId: banner.collectionId,
-                  categoryName: banner.title,
-                },
-              });
+          <PrimaryButton
+            width={"80%"}
+            label={banner.ctaText || t("home.promoBannerCard.buttonText")}
+            paddingVertical="xs"
+            icon={
+              <AppImage
+                name="arrowRight"
+                tintColor={getTokenValue("$white")}
+                width={16}
+                height={16}
+              />
             }
-          }}
-          isLoading={false}
-        />
-      </YStack>
+            onPress={() => {
+              if (banner.collectionId) {
+                router.push({
+                  pathname: "/products",
+                  params: {
+                    collectionId: banner.collectionId,
+                    categoryName: banner.title,
+                  },
+                });
+              }
+            }}
+            isLoading={false}
+          />
+        </YStack>
 
-      {/* Right Image */}
-      <AppImage
-        resizeMode="cover"
-        style={Styles.ImageStyle}
-        width={128}
-        source={banner.image}
-      />
+        {/* Right Image */}
+        <AppImage
+          resizeMode="cover"
+          style={Styles.ImageStyle}
+          width={128}
+          height={150}
+          source={banner.image}
+        />
       </XStack>
     </XStack>
   );
@@ -98,7 +103,9 @@ export const PromoBannerCard = ({ promoBanners: banners }: PromoBannerCardProps)
     <YStack>
       <FlatList
         data={banners}
-        keyExtractor={(banner, index) => `promo-${banner.collectionId}-${index}`}
+        keyExtractor={(banner, index) =>
+          `promo-${banner.collectionId}-${index}`
+        }
         horizontal
         pagingEnabled
         bounces={false}
@@ -126,7 +133,9 @@ export const PromoBannerCard = ({ promoBanners: banners }: PromoBannerCardProps)
               borderRadius="$full"
               width={8}
               height={8}
-              backgroundColor={activeCarouselIndex === dotIndex ? "$primary" : "$lightgrey"}
+              backgroundColor={
+                activeCarouselIndex === dotIndex ? "$primary" : "$lightgrey"
+              }
             />
           ))}
         </XStack>

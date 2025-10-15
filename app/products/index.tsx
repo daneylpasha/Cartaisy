@@ -91,6 +91,7 @@ const PlpScreen = () => {
   // Pagination state
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Store initial facets (from first load without filters) - for filter modal
   const [initialFacets, setInitialFacets] = useState<
@@ -192,8 +193,9 @@ const PlpScreen = () => {
 
   // Pull to refresh handler
   const handleRefresh = () => {
+    setIsRefreshing(true);
     setCursor(undefined); // Reset pagination
-    setAllProducts([]); // Clear products
+    // Don't clear products immediately - keep them visible during refresh
     refetch(); // Refetch data
   };
 
@@ -219,8 +221,18 @@ const PlpScreen = () => {
         setAllProducts(newProducts);
         setCurrentCollectionId(collectionId);
       }
+
+      // Stop refreshing indicator when data arrives
+      setIsRefreshing(false);
     }
   }, [data, cursor, collectionId]);
+
+  // Stop refreshing if fetch completes (success or error)
+  useEffect(() => {
+    if (!isFetching && isRefreshing) {
+      setIsRefreshing(false);
+    }
+  }, [isFetching, isRefreshing]);
 
   // Store initial facets only on first load (no filters applied)
   useEffect(() => {
@@ -314,6 +326,11 @@ const PlpScreen = () => {
   };
 
   const renderEmpty = () => {
+    // Don't show "No products found" during refresh or initial load
+    if (isRefreshing || isPending || isFetching) {
+      return null;
+    }
+
     return (
       <YStack
         flex={1}
@@ -328,17 +345,10 @@ const PlpScreen = () => {
     );
   };
 
-  // Show loader during initial load or when switching collections
-  const hasRawData = data?.data?.products && data.data.products.length > 0;
-  const hasProcessedData = allProducts.length > 0;
-  const isWrongCollection = currentCollectionId !== collectionId;
-
-  // Show loader if query is loading, data hasn't been processed yet, or showing wrong collection
+  // Show loader ONLY on initial load - not during refresh or pagination
   const shouldShowLoader =
-    isPending ||
-    isFetching ||
-    (hasRawData && !hasProcessedData) ||
-    isWrongCollection;
+    (isPending || (isFetching && allProducts.length === 0)) &&
+    !isRefreshing;
 
   if (shouldShowLoader) {
     return (
@@ -395,7 +405,7 @@ const PlpScreen = () => {
         ListEmptyComponent={renderEmpty}
         refreshControl={
           <RefreshControl
-            refreshing={isFetching && allProducts.length > 0}
+            refreshing={isRefreshing}
             onRefresh={handleRefresh}
             tintColor={getTokenValue("$primary")}
             colors={[getTokenValue("$primary")]}

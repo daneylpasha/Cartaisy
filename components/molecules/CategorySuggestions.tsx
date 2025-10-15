@@ -1,13 +1,13 @@
 import { CategoryCollectionGridItem } from "@/api/generated/cartaisyAPI.schemas";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
+import { router } from "expo-router";
 import React from "react";
 import { FlatList, ImageBackground, StyleSheet } from "react-native";
 import { Spacer, XStack, YStack } from "tamagui";
 import { ParagraphMD, TextMDMedium } from "../atoms";
 import { OpTouch } from "../atoms/OpTouch";
 import { SectionHeader } from "./SectionHeader";
-import { router } from "expo-router";
 
 type CategorySuggestionsProps = {
   categoryCollectionGrid?: CategoryCollectionGridItem[];

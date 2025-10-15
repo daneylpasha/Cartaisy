@@ -14,34 +14,56 @@ type Props = {
   onPick: (t: string) => void;
   onClearAll: () => void;
   defaultIcon?: keyof typeof Icons; // Optional default icon if item doesn't have image
+  hideClearAll?: boolean; // Hide Clear All button
 };
 
 const SearchSuggestionItem = ({
   item,
   defaultIcon,
+  onPress,
 }: {
-  item: { id: number; title: string; image?: keyof typeof Icons };
+  item: {
+    id: number | string;
+    title: string;
+    image?: keyof typeof Icons | string;
+    productData?: any;
+  };
   defaultIcon?: keyof typeof Icons;
-}) => (
-  <OpTouch>
-    <XStack
-      justifyContent="space-between"
-      paddingVertical={"$md"}
-      alignItems="center"
-    >
-      <TextMDRegular>{item.title}</TextMDRegular>
-      <Spacer size={"$sm"} />
-      <OpTouch onPress={() => console.log(item)}>
-        <AppImage
-          name={item.image || defaultIcon || "searchIcon"}
-          width={16}
-          height={16}
-        />
-      </OpTouch>
-    </XStack>
-    <Divider />
-  </OpTouch>
-);
+  onPress?: () => void;
+}) => {
+  // Get product image URL from productData if available
+  const productImageUrl = item.productData?.featuredImage?.url;
+
+  return (
+    <OpTouch onPress={onPress}>
+      <XStack paddingVertical={"$md"} alignItems="center" gap="$sm">
+        {/* Product Image or Icon */}
+        {productImageUrl ? (
+          <AppImage
+            source={productImageUrl}
+            width={40}
+            height={40}
+            resizeMode="cover"
+          />
+        ) : (
+          <AppImage
+            name={
+              (item.image as keyof typeof Icons) || defaultIcon || "searchIcon"
+            }
+            width={20}
+            height={20}
+          />
+        )}
+
+        {/* Product Title */}
+        <TextMDRegular flex={1} numberOfLines={2}>
+          {item.title}
+        </TextMDRegular>
+      </XStack>
+      <Divider />
+    </OpTouch>
+  );
+};
 
 export const SearchSuggestions = ({
   title,
@@ -49,6 +71,7 @@ export const SearchSuggestions = ({
   onPick,
   onClearAll,
   defaultIcon,
+  hideClearAll = false,
 }: Props) => (
   <YStack>
     <XStack
@@ -58,15 +81,34 @@ export const SearchSuggestions = ({
     >
       <TextMDBold>{title}</TextMDBold>
 
-      <OpTouch onPress={onClearAll}>
-        <TextSMMedium color="$primary">Clear All</TextSMMedium>
-      </OpTouch>
+      {!hideClearAll && (
+        <OpTouch onPress={onClearAll}>
+          <TextSMMedium color="$primary">{"Clear All"}</TextSMMedium>
+        </OpTouch>
+      )}
     </XStack>
     <Spacer size={"$reg"} />
     <FlatList
       data={data}
       renderItem={({ item }) => (
-        <SearchSuggestionItem item={item} defaultIcon={defaultIcon} />
+        <OpTouch onPress={() => onPick(item.title)}>
+          <XStack paddingVertical={"$md"} alignItems="center" gap="$sm">
+            <AppImage
+              name={
+                (item.image as keyof typeof Icons) ||
+                defaultIcon ||
+                "searchIcon"
+              }
+              width={20}
+              height={20}
+            />
+
+            <TextMDRegular flex={1} numberOfLines={2}>
+              {item.title}
+            </TextMDRegular>
+          </XStack>
+          <Divider />
+        </OpTouch>
       )}
       keyExtractor={(item) => item.id.toString()}
     />

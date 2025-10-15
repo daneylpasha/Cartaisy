@@ -46,6 +46,8 @@ const ProductDetailsScreen = () => {
     collectionId?: string;
   }>();
 
+  console.log("📦 [PDP] Received ID from route:", id);
+
   const { top: TOP_INSET } = useSafeAreaInsets();
   const { items, getTotalQuantity } = useCartStore();
   const cartItemCount = getTotalQuantity();
@@ -58,9 +60,10 @@ const ProductDetailsScreen = () => {
   console.log(items, "items");
 
   // Fetch product details from API
+  console.log("📦 [PDP] Calling API with ID:", id);
   const { data: productDetailData, isLoading: isLoadingProduct } =
     useGetProductDetail(id);
-  console.log("productDetailData", productDetailData);
+  console.log("📦 [PDP] API Response:", productDetailData);
   // Parse product data from API response
   const product = useMemo(() => {
     if (!productDetailData?.data) return null;
