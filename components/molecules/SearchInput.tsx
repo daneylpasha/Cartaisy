@@ -44,6 +44,7 @@ export const SearchInput = ({
   };
 
   const handleCancel = () => {
+    console.log("🚫 SearchInput: Cancel button clicked");
     setIsFocused(false); // Immediately update focus state
     inputRef.current?.blur(); // Blur the input to dismiss keyboard
     onCancel?.();

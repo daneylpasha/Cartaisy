@@ -11,12 +11,14 @@ import { SectionHeader } from "./SectionHeader";
 
 type CategorySuggestionsProps = {
   categoryCollectionGrid?: CategoryCollectionGridItem[];
+  onCollectionClick?: (collectionId: string, collectionTitle: string) => void;
 };
 
 const itemWidth = (SCREEN_WIDTH - 56) / 3;
 
 export const CategorySuggestions = ({
   categoryCollectionGrid: gridItems,
+  onCollectionClick,
 }: CategorySuggestionsProps) => {
   if (!gridItems || gridItems.length === 0) {
     return null;
@@ -65,6 +67,12 @@ export const CategorySuggestions = ({
             <OpTouch
               width={itemWidth}
               onPress={() => {
+                // Call the callback to log the collection click
+                onCollectionClick?.(
+                  categoryCollection.collectionId,
+                  categoryCollection.title
+                );
+
                 router.push({
                   pathname: "/products",
                   params: {

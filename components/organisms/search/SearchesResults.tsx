@@ -1,21 +1,32 @@
+import type {
+  CategoryCollectionGridItem,
+  CollectionWithProducts,
+  EnrichedProduct,
+  Product,
+} from "@/api/generated/cartaisyAPI.schemas";
+import { Loader } from "@/components/atoms";
 import { Spacer } from "@/components/atoms/Spacer";
 import { CategoriesSearches } from "@/components/molecules/search";
 import {
   SearchSuggestionItem,
+  SearchSuggestionItemData,
   SearchSuggestions,
 } from "@/components/molecules/search/SearchSuggestions";
 import { FlatList } from "react-native";
 import { YStack } from "tamagui";
 
-interface SearchResult {
+export interface SearchResult {
   id: string | number;
   title: string;
   type: string;
   handle?: string;
-  productData?: any;
+  productData?: Product;
+  collectionData?: CollectionWithProducts;
+  searchContextLoading?: boolean;
 }
 
 export const SearchesResults = ({
+  searchContextLoading,
   searchResults = [],
   searchQuery = "",
   onProductClick,
@@ -24,25 +35,34 @@ export const SearchesResults = ({
   trendingSearches = [],
   onClearRecentSearches,
   onClearTrendingSearches,
-  onSearchClick,
+  onSearchItemClick,
+  onCollectionClick,
 }: {
   searchResults: SearchResult[];
   searchQuery: string;
+  searchContextLoading?: boolean;
   onProductClick?: (product: SearchResult) => void;
-  categoryCollectionGrid?: any[];
+  categoryCollectionGrid?: CategoryCollectionGridItem[];
   recentSearches?: Array<{
     query: string;
     resultsCount?: number;
     searchedAt?: string;
+    type?: string;
+    product?: EnrichedProduct;
+    collection?: CollectionWithProducts;
   }>;
   trendingSearches?: Array<{
     query: string;
     searchCount?: number;
     avgResultsCount?: number;
+    type?: string;
+    product?: EnrichedProduct;
+    collection?: CollectionWithProducts;
   }>;
   onClearRecentSearches?: () => void;
   onClearTrendingSearches?: () => void;
-  onSearchClick?: (query: string) => void;
+  onSearchItemClick?: (title: string, item: SearchSuggestionItemData) => void;
+  onCollectionClick?: (collectionId: string, collectionTitle: string) => void;
 }) => {
   const CATEGORIES = [
     "Electronics",
@@ -82,6 +102,9 @@ export const SearchesResults = ({
     .map((search, index) => ({
       id: index + 1,
       title: search.query,
+      type: search.type,
+      productData: search.product,
+      collectionData: search.collection,
     }));
 
   const trendingSearchesData = trendingSearches
@@ -89,6 +112,9 @@ export const SearchesResults = ({
     .map((search, index) => ({
       id: index + 1,
       title: search.query,
+      type: search.type,
+      productData: search.product,
+      collectionData: search.collection,
     }));
 
   return (
@@ -101,7 +127,7 @@ export const SearchesResults = ({
             <SearchSuggestions
               title="Recent Searches"
               data={recentSearchesData}
-              onPick={(query) => onSearchClick?.(query)}
+              onPick={(title, item) => onSearchItemClick?.(title, item)}
               onClearAll={() => onClearRecentSearches?.()}
               defaultIcon="recentIcon"
             />
@@ -109,18 +135,26 @@ export const SearchesResults = ({
           </>
         )}
 
-        {trendingSearchesData.length > 0 && (
-          <>
+        {searchContextLoading ? (
+          <YStack
+            justifyContent="center"
+            alignItems="center"
+            paddingVertical={"$lg"}
+          >
+            <Spacer size={"$md"} />
+            <Loader />
+          </YStack>
+        ) : (
+          trendingSearchesData.length > 0 && (
             <SearchSuggestions
               title="Trending Searches"
               data={trendingSearchesData}
-              onPick={(query) => onSearchClick?.(query)}
+              onPick={(title, item) => onSearchItemClick?.(title, item)}
               onClearAll={() => {}} // Don't allow clearing global trending searches
               defaultIcon="trendingIcon"
               hideClearAll={true} // Hide Clear All for trending
             />
-            {/* <Spacer size={"$xl"} /> */}
-          </>
+          )
         )}
       </YStack>
 
@@ -128,6 +162,7 @@ export const SearchesResults = ({
         categories={CATEGORIES}
         onPick={() => {}}
         categoryCollectionGrid={categoryCollectionGrid}
+        onCollectionClick={onCollectionClick}
       />
     </YStack>
   );

@@ -49,13 +49,11 @@ export const AppImage: React.FC<AppImageProps> = ({
   // Reset loading state when source changes
   React.useEffect(() => {
     if (sourceKey && isRemoteSource) {
-      console.log("🔄 Setting loading=true for:", sourceKey);
       setIsLoading(true);
       setHasError(false);
 
       // Fallback: Hide shimmer after 5 seconds even if onLoadEnd doesn't fire
       const timeout = setTimeout(() => {
-        console.log("⏱️ Timeout: Forcing shimmer hide for", sourceKey);
         setIsLoading(false);
       }, 5000);
 
@@ -64,9 +62,7 @@ export const AppImage: React.FC<AppImageProps> = ({
   }, [sourceKey, isRemoteSource]);
 
   // Debug: Log loading state changes
-  React.useEffect(() => {
-    console.log(`📊 [${sourceKey}] isLoading state:`, isLoading);
-  }, [isLoading, sourceKey]);
+  React.useEffect(() => {}, [isLoading, sourceKey]);
 
   const finalWidth = size || width;
   const finalHeight = size || height;
@@ -98,11 +94,9 @@ export const AppImage: React.FC<AppImageProps> = ({
       // Only create URI object if string is not empty
       finalSource = source.trim() ? { uri: source } : undefined;
       isRemoteImage = !!finalSource;
-      console.log("🖼️ [AppImage] String source:", source, "finalSource:", finalSource);
     } else {
       finalSource = source?.uri ? source : undefined;
       isRemoteImage = !!finalSource;
-      console.log("🖼️ [AppImage] Object source:", source, "finalSource:", finalSource);
     }
   }
 
@@ -110,8 +104,6 @@ export const AppImage: React.FC<AppImageProps> = ({
     console.log("❌ [AppImage] No finalSource, returning null");
     return null;
   }
-
-  console.log("✅ [AppImage] Rendering - isRemoteImage:", isRemoteImage, "finalSource:", finalSource);
 
   // Render SVG component
   if (isSvgComponent) {
@@ -129,8 +121,6 @@ export const AppImage: React.FC<AppImageProps> = ({
 
   // Render regular image with shimmer placeholder for remote images
   if (isRemoteImage) {
-    console.log(`🎨 Rendering image - isLoading: ${isLoading}, sourceKey: ${sourceKey}`);
-
     return (
       <YStack
         width={finalWidth as any}
@@ -172,16 +162,13 @@ export const AppImage: React.FC<AppImageProps> = ({
           tintColor={finalTintColor}
           resizeMode={resizeMode}
           onLoadStart={() => {
-            console.log("🖼️ Loading:", sourceKey);
             setIsLoading(true);
             setHasError(false);
           }}
           onLoadEnd={() => {
-            console.log("✅ Loaded:", sourceKey);
             setIsLoading(false);
           }}
           onError={() => {
-            console.log("❌ Error:", sourceKey);
             setIsLoading(false);
             setHasError(true);
           }}

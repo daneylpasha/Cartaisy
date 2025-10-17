@@ -48,7 +48,6 @@ export const ProductCard = ({
 }: ProductCardProps) => {
   const imageHeight = context === "grid" ? 163.5 : 240;
   const cardWidth = context === "grid" ? GRID_CARD_WIDTH : INLINE_CARD_WIDTH;
-  console.log(product, "product in card");
 
   const handlePress = () => {
     if (onPress) {
@@ -164,14 +163,11 @@ export const ProductCard = ({
               <TextMDBold>${(product.price || 0).toFixed(2)}</TextMDBold>
               <Spacer size="$xs" />
               {product.compareAtPrice &&
-                product.price !== product.compareAtPrice ? (
-                  <TextSMRegular
-                    color="$icon"
-                    textDecorationLine="line-through"
-                  >
-                    ${(product.compareAtPrice || 0).toFixed(2)}
-                  </TextSMRegular>
-                ) : null}
+              product.price !== product.compareAtPrice ? (
+                <TextSMRegular color="$icon" textDecorationLine="line-through">
+                  ${(product.compareAtPrice || 0).toFixed(2)}
+                </TextSMRegular>
+              ) : null}
             </XStack>
           ) : null}
         </YStack>

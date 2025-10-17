@@ -17,7 +17,6 @@ const CollectionsCardGrid = ({
   const targetShowcase = showcases?.find(
     (showcase) => showcase.type === "grid"
   );
-  console.log(targetShowcase, "targetShowcase");
 
   // If no grid collection found, return null or fallback
   if (!targetShowcase) {

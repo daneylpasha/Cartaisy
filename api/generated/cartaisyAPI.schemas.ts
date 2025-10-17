@@ -88,6 +88,18 @@ export interface PredictiveSearchResponse {
   data: PredictiveSearchResponseData;
 }
 
+export type EnrichedSearchResponseData = {
+  totalResults: number;
+  collections: CollectionWithProducts[];
+  products: EnrichedProduct[];
+  query: string;
+};
+
+export interface EnrichedSearchResponse {
+  success: boolean;
+  data: EnrichedSearchResponseData;
+}
+
 export type SearchProductImagesItem = {
   /** @nullable */
   altText: string | null;
@@ -194,6 +206,143 @@ export type RecentSearchesResponseData = {
 export interface RecentSearchesResponse {
   success: boolean;
   data: RecentSearchesResponseData;
+}
+
+/**
+ * Product with enriched rating data (matches homescreen format)
+ */
+export interface EnrichedProduct {
+  productId: string;
+  title: string;
+  description: string;
+  images: string[];
+  price: number;
+  compareAtPrice: number;
+  currency: string;
+  inStock: boolean;
+  availableQuantity: number;
+  totalQuantity: number;
+  handle: string;
+  vendor: string;
+  tags: string[];
+  rating: number;
+  reviewsCount: number;
+}
+
+/**
+ * Collection with products (matches homescreen categoryCollectionGrid format)
+ */
+export interface CollectionWithProducts {
+  id: string;
+  title: string;
+  description?: string;
+  handle: string;
+  image?: string;
+  products: EnrichedProduct[];
+}
+
+export type InitialSearchScreenResponseDataMetadataIsFallback = {
+  collections: boolean;
+  products: boolean;
+};
+
+export type InitialSearchScreenResponseDataMetadata = {
+  isFallback: InitialSearchScreenResponseDataMetadataIsFallback;
+  lastUpdated: string;
+  collectionsCount: number;
+  productsCount: number;
+  timeframe: number;
+};
+
+export type InitialSearchScreenResponseData = {
+  metadata: InitialSearchScreenResponseDataMetadata;
+  trendingCollections: CollectionWithProducts[];
+  trendingProducts: EnrichedProduct[];
+};
+
+/**
+ * Response for GET /customer/search/initial-screen
+Returns trending products and collections for the search screen
+ */
+export interface InitialSearchScreenResponse {
+  success: boolean;
+  data: InitialSearchScreenResponseData;
+}
+
+export type EnrichedSearchItemType = typeof EnrichedSearchItemType[keyof typeof EnrichedSearchItemType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EnrichedSearchItemType = {
+  product: 'product',
+  collection: 'collection',
+} as const;
+
+/**
+ * Enriched search item - can be either a product or collection with complete Shopify data
+ */
+export interface EnrichedSearchItem {
+  query: string;
+  searchedAt: string;
+  type: EnrichedSearchItemType;
+  productId?: string;
+  collectionId?: string;
+  product?: EnrichedProduct;
+  collection?: CollectionWithProducts;
+}
+
+export type EnrichedTrendingSearchType = typeof EnrichedTrendingSearchType[keyof typeof EnrichedTrendingSearchType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EnrichedTrendingSearchType = {
+  product: 'product',
+  collection: 'collection',
+} as const;
+
+/**
+ * Enriched trending search - similar to EnrichedSearchItem but with trending metrics
+ */
+export interface EnrichedTrendingSearch {
+  query: string;
+  type: EnrichedTrendingSearchType;
+  recentCount: number;
+  growthRate: number;
+  productId?: string;
+  collectionId?: string;
+  product?: EnrichedProduct;
+  collection?: CollectionWithProducts;
+}
+
+export type SearchContextResponseDataMetadataIsFallback = {
+  trendingSearches: boolean;
+  products: boolean;
+};
+
+export type SearchContextResponseDataMetadata = {
+  isFallback: SearchContextResponseDataMetadataIsFallback;
+  lastUpdated: string;
+  timeframe: number;
+  productsCount: number;
+  trendingSearchesCount: number;
+  recentSearchesCount: number;
+  isAuthenticated: boolean;
+};
+
+export type SearchContextResponseData = {
+  metadata: SearchContextResponseDataMetadata;
+  trendingProducts: EnrichedProduct[];
+  trendingSearches: EnrichedTrendingSearch[];
+  recentSearches: EnrichedSearchItem[];
+};
+
+/**
+ * Response for GET /customer/search/context
+Returns personalized search context including recent searches, trending searches, and trending products
+ */
+export interface SearchContextResponse {
+  success: boolean;
+  data: SearchContextResponseData;
 }
 
 /**
@@ -803,6 +952,176 @@ limit?: number;
 
 export type ClearSearchHistory200 = {
   deletedCount: number;
+  message: string;
+  success: boolean;
+};
+
+export type GetInitialSearchScreenParams = {
+/**
+ * - Number of items to return (default: 10)
+ */
+limit?: number;
+/**
+ * - Timeframe in days for trending calculation (default: 7)
+ */
+timeframe?: number;
+};
+
+export type GetSearchContextParams = {
+/**
+ * - Number of items to return per category (default: 5, max 5)
+ */
+limit?: number;
+/**
+ * - Timeframe in days for trending calculation (default: 7)
+ */
+timeframe?: number;
+};
+
+export type SearchParams = {
+/**
+ * - Search query
+ */
+q: string;
+/**
+ * - Page number (default: 1)
+ */
+page?: number;
+/**
+ * - Results per page (default: 20)
+ */
+limit?: number;
+/**
+ * - Category filter (ObjectId)
+ */
+category?: string;
+/**
+ * - Minimum price filter
+ */
+priceMin?: number;
+/**
+ * - Maximum price filter
+ */
+priceMax?: number;
+/**
+ * - Brand/vendor filter
+ */
+brand?: string;
+/**
+ * - Minimum rating filter
+ */
+rating?: number;
+/**
+ * - Only in-stock products
+ */
+inStock?: string;
+/**
+ * - Sort order (relevance, price_low, price_high, rating, popular, newest)
+ */
+sortBy?: string;
+};
+
+export type GetTrendingSearchesParams = {
+/**
+ * - Number of results (default: 10)
+ */
+limit?: number;
+};
+
+export type GetFailedSearchesParams = {
+/**
+ * - Number of results (default: 10)
+ */
+limit?: number;
+/**
+ * - Days to look back (default: 7)
+ */
+days?: number;
+};
+
+export type TrackSearchClickBody = {
+  position?: number;
+  productId: string;
+  searchId: string;
+};
+
+export type TrackSearchClick200 = {
+  message: string;
+  success: boolean;
+};
+
+export type GetUserSearchHistoryParams = {
+/**
+ * - Number of results (default: 20)
+ */
+limit?: number;
+};
+
+export type ClearUserSearchHistory200 = {
+  message: string;
+  success: boolean;
+};
+
+export type GetSearchAnalyticsParams = {
+/**
+ * - Days to analyze (default: 30)
+ */
+timeframe?: number;
+};
+
+export type GetTrendingCollectionsParams = {
+/**
+ * - Number of results (default: 10)
+ */
+limit?: number;
+/**
+ * - Days to look back (default: 7)
+ */
+timeframe?: number;
+};
+
+export type TrackCollectionViewBody = {
+  deviceInfo?: unknown;
+  sessionId?: string;
+  searchQuery?: string;
+  viewContext?: string;
+  interactions?: unknown;
+  scrollDepth?: number;
+  viewDuration?: number;
+  collectionTitle?: string;
+  collectionHandle?: string;
+  collectionId: string;
+};
+
+export type TrackCollectionView200 = {
+  message: string;
+  success: boolean;
+};
+
+export type LogSearchBodySearchType = typeof LogSearchBodySearchType[keyof typeof LogSearchBodySearchType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LogSearchBodySearchType = {
+  text: 'text',
+  product: 'product',
+  collection: 'collection',
+} as const;
+
+/**
+ * - Search details
+ */
+export type LogSearchBody = {
+  sessionId?: string;
+  resultsCount?: number;
+  selectedCollectionId?: string;
+  selectedProductId?: string;
+  searchType: LogSearchBodySearchType;
+  query: string;
+};
+
+export type LogSearch200 = {
+  searchId: string;
   message: string;
   success: boolean;
 };

@@ -175,21 +175,22 @@ const PlpScreen = () => {
   const filtersParam = buildFiltersParam();
 
   // Fetch collection products
-  const { data, isPending, error, isFetching, refetch } = useGetCollectionProducts(
-    collectionId as string,
-    {
-      limit: 20,
-      cursor,
-      sortKey: sortKey as ProductCollectionSortKey,
-      reverse,
-      filters: filtersParam,
-    },
-    {
-      query: {
-        enabled: !!collectionId,
+  const { data, isPending, error, isFetching, refetch } =
+    useGetCollectionProducts(
+      collectionId as string,
+      {
+        limit: 20,
+        cursor,
+        sortKey: sortKey as ProductCollectionSortKey,
+        reverse,
+        filters: filtersParam,
       },
-    }
-  );
+      {
+        query: {
+          enabled: !!collectionId,
+        },
+      }
+    );
 
   // Pull to refresh handler
   const handleRefresh = () => {
@@ -308,7 +309,6 @@ const PlpScreen = () => {
     />
   );
   const renderItem = ({ item }: { item: Product }) => {
-    console.log(item, "item in plp");
     return (
       <YStack>
         <ProductCard product={item} context="grid" />
@@ -347,8 +347,7 @@ const PlpScreen = () => {
 
   // Show loader ONLY on initial load - not during refresh or pagination
   const shouldShowLoader =
-    (isPending || (isFetching && allProducts.length === 0)) &&
-    !isRefreshing;
+    (isPending || (isFetching && allProducts.length === 0)) && !isRefreshing;
 
   if (shouldShowLoader) {
     return (

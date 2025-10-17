@@ -5,13 +5,23 @@ import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
+import type { EnrichedProduct, CollectionWithProducts, Product } from "@/api/generated/cartaisyAPI.schemas";
 import { FlatList } from "react-native";
 import { XStack, YStack } from "tamagui";
 
+export type SearchSuggestionItemData = {
+  id: number | string;
+  title: string;
+  image?: keyof typeof Icons;
+  type?: string;
+  productData?: EnrichedProduct | Product;
+  collectionData?: CollectionWithProducts;
+};
+
 type Props = {
   title: string;
-  data: { id: number; title: string; image?: keyof typeof Icons }[];
-  onPick: (t: string) => void;
+  data: SearchSuggestionItemData[];
+  onPick: (title: string, item: SearchSuggestionItemData) => void;
   onClearAll: () => void;
   defaultIcon?: keyof typeof Icons; // Optional default icon if item doesn't have image
   hideClearAll?: boolean; // Hide Clear All button
@@ -22,28 +32,28 @@ const SearchSuggestionItem = ({
   defaultIcon,
   onPress,
 }: {
-  item: {
-    id: number | string;
-    title: string;
-    image?: keyof typeof Icons | string;
-    productData?: any;
-  };
+  item: SearchSuggestionItemData;
   defaultIcon?: keyof typeof Icons;
   onPress?: () => void;
 }) => {
-  // Get product image URL from productData if available
-  const productImageUrl = item.productData?.featuredImage?.url;
+  // Get product or collection image URL
+  // Product images are stored in the images array
+  // Collection images are stored in the image property
+  const productImageUrl = item.productData?.images?.[0];
+  const collectionImageUrl = item.collectionData?.image;
+  const imageUrl = productImageUrl || collectionImageUrl;
 
   return (
     <OpTouch onPress={onPress}>
       <XStack paddingVertical={"$md"} alignItems="center" gap="$sm">
-        {/* Product Image or Icon */}
-        {productImageUrl ? (
+        {/* Product/Collection Image or Icon */}
+        {imageUrl ? (
           <AppImage
-            source={productImageUrl}
+            source={imageUrl}
             width={40}
             height={40}
             resizeMode="cover"
+            style={{ borderRadius: 8 }}
           />
         ) : (
           <AppImage
@@ -55,7 +65,7 @@ const SearchSuggestionItem = ({
           />
         )}
 
-        {/* Product Title */}
+        {/* Title */}
         <TextMDRegular flex={1} numberOfLines={2}>
           {item.title}
         </TextMDRegular>
@@ -90,26 +100,43 @@ export const SearchSuggestions = ({
     <Spacer size={"$reg"} />
     <FlatList
       data={data}
-      renderItem={({ item }) => (
-        <OpTouch onPress={() => onPick(item.title)}>
-          <XStack paddingVertical={"$md"} alignItems="center" gap="$sm">
-            <AppImage
-              name={
-                (item.image as keyof typeof Icons) ||
-                defaultIcon ||
-                "searchIcon"
-              }
-              width={20}
-              height={20}
-            />
+      renderItem={({ item }) => {
+        // Get product or collection image URL
+        const productImageUrl = item.productData?.images?.[0];
+        const collectionImageUrl = item.collectionData?.image;
+        const imageUrl = productImageUrl || collectionImageUrl;
 
-            <TextMDRegular flex={1} numberOfLines={2}>
-              {item.title}
-            </TextMDRegular>
-          </XStack>
-          <Divider />
-        </OpTouch>
-      )}
+        return (
+          <OpTouch onPress={() => onPick(item.title, item)}>
+            <XStack paddingVertical={"$md"} alignItems="center" gap="$sm">
+              {imageUrl ? (
+                <AppImage
+                  source={imageUrl}
+                  width={40}
+                  height={40}
+                  resizeMode="cover"
+                  style={{ borderRadius: 8 }}
+                />
+              ) : (
+                <AppImage
+                  name={
+                    (item.image as keyof typeof Icons) ||
+                    defaultIcon ||
+                    "searchIcon"
+                  }
+                  width={20}
+                  height={20}
+                />
+              )}
+
+              <TextMDRegular flex={1} numberOfLines={2}>
+                {item.title}
+              </TextMDRegular>
+            </XStack>
+            <Divider />
+          </OpTouch>
+        );
+      }}
       keyExtractor={(item) => item.id.toString()}
     />
   </YStack>

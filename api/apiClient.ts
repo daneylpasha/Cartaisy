@@ -44,12 +44,6 @@ axiosInstance.interceptors.request.use(
 // Response interceptor to handle auth errors
 axiosInstance.interceptors.response.use(
   (response) => {
-    console.log("[API Response SUCCESS] URL:", response.config.url);
-    console.log("[API Response SUCCESS] Status:", response.status);
-    console.log(
-      "[API Response SUCCESS] Data preview:",
-      JSON.stringify(response.data).substring(0, 200)
-    );
     console.log("[API Response SUCCESS] Time taken: Request completed");
     return response;
   },
@@ -67,7 +61,9 @@ axiosInstance.interceptors.response.use(
     console.log("[API Response ERROR] ==================");
 
     if (error.response?.status === 401) {
-      console.log("[API Response ERROR] 401 Unauthorized - Clearing auth and user data");
+      console.log(
+        "[API Response ERROR] 401 Unauthorized - Clearing auth and user data"
+      );
       useAuthStore.getState().clearAuth();
       useUserStore.getState().clearUser();
     }

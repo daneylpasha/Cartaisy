@@ -1,18 +1,28 @@
 import {
-  searchProducts,
   useClearSearchHistory,
-  useGetPopularSearches,
-  useGetRecentSearches,
-  useGetSearchSuggestions,
+  useGetInitialSearchScreen,
+  useGetSearchContext,
+  useLogSearch,
+  useSearch,
 } from "@/api/generated/search/search";
 
+import type {
+  CollectionWithProducts,
+  EnrichedProduct,
+  Product,
+} from "@/api/generated/cartaisyAPI.schemas";
 import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextXSRegular } from "@/components/atoms/texts/TextXSRegular";
-import ProductsGridScroller from "@/components/organisms/ProductsGridScroller/ProductsGridScroller";
+import { CollectionCard } from "@/components/molecules/CollectionCard";
+import {
+  GRID_COLUMN_GAP,
+  ProductCard,
+} from "@/components/molecules/ProductCard";
+import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { SearchBar } from "@/components/organisms/SearchBar";
 import { EmptySearches } from "@/components/organisms/search/EmptySearches";
 import { SearchesResults } from "@/components/organisms/search/SearchesResults";
@@ -43,6 +53,39 @@ if (
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
+/**
+ * Transform EnrichedProduct to Product format for ProductCard
+ * EnrichedProduct already matches Product format, so this is mostly a type cast with validation
+ */
+const transformEnrichedProduct = (
+  product: EnrichedProduct | undefined
+): Product | null => {
+  if (!product) {
+    console.warn("⚠️ transformEnrichedProduct: product is undefined");
+    return null;
+  }
+
+  // EnrichedProduct already has the exact same structure as Product
+  // Just ensure all fields are present
+  return {
+    productId: product.productId,
+    title: product.title,
+    description: product.description || "",
+    images: product.images || [],
+    price: product.price,
+    compareAtPrice: product.compareAtPrice,
+    currency: product.currency,
+    inStock: product.inStock,
+    availableQuantity: product.availableQuantity,
+    totalQuantity: product.totalQuantity,
+    rating: product.rating,
+    reviewsCount: product.reviewsCount,
+    handle: product.handle || "",
+    vendor: product.vendor || "",
+    tags: product.tags || [],
+  };
+};
+
 const Search = () => {
   const queryClient = useQueryClient();
   const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
@@ -51,31 +94,57 @@ const Search = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { getTotalQuantity } = useCartStore();
   const cartItemCount = getTotalQuantity();
+  const { data: homeData } = useHomeScreenData();
+
+  // Fetch initial search screen data (trending products and collections)
   const {
-    data: homeData,
-    isLoading,
-    refetch,
-    isFetching,
-    error,
-  } = useHomeScreenData();
+    data: initialSearchData,
+    isLoading: isLoadingInitialData,
+    refetch: refetchInitialData,
+  } = useGetInitialSearchScreen(
+    { limit: 10, timeframe: 7 },
+    {
+      query: {
+        enabled: !isInputFocused && searchQuery.length === 0, // Only fetch when showing default content
+      },
+    }
+  );
+
+  // Debug initial search data
+  React.useEffect(() => {
+    if (!isInputFocused && searchQuery.length === 0) {
+      console.log(
+        "📊 Initial Search Data:",
+        JSON.stringify(initialSearchData, null, 2)
+      );
+      console.log(
+        "📦 Trending Products:",
+        initialSearchData?.data?.trendingProducts
+      );
+      console.log(
+        "📦 Trending Products Length:",
+        initialSearchData?.data?.trendingProducts?.length
+      );
+      console.log(
+        "🗂️ Trending Collections:",
+        initialSearchData?.data?.trendingCollections
+      );
+      console.log(
+        "🗂️ Trending Collections Length:",
+        initialSearchData?.data?.trendingCollections?.length
+      );
+    }
+  }, [isInputFocused, searchQuery, initialSearchData]);
 
   // Debounce search query for API call (300ms delay)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  // API Hooks - Only fetch when needed
-  // 1. Recent Searches - When input focused and query < 3 chars
-  const { data: recentSearchesData, refetch: refetchRecentSearches } =
-    useGetRecentSearches(
-      { limit: 5 },
-      {
-        query: {
-          enabled: isInputFocused && searchQuery.length < 3,
-        },
-      }
-    );
-
-  // 2. Popular Searches - When input focused and query < 3 chars
-  const { data: popularSearchesData } = useGetPopularSearches(
+  // API Hook - Search Context (Recent + Trending Searches) - When input focused and query < 3 chars
+  const {
+    data: searchContextData,
+    isLoading: searchContextLoading,
+    refetch: refetchSearchContext,
+  } = useGetSearchContext(
     { limit: 5 },
     {
       query: {
@@ -84,75 +153,147 @@ const Search = () => {
     }
   );
 
-  // Debug logs
+  // Debug logs for search context
   React.useEffect(() => {
     if (isInputFocused && searchQuery.length < 3) {
-      console.log("📊 Recent Searches Data:", recentSearchesData);
-      console.log("📊 Popular Searches Data:", popularSearchesData);
+      console.log(
+        "📊 [CONTEXT] Recent Searches Count:",
+        searchContextData?.data?.recentSearches?.length
+      );
+      console.log(
+        "📊 [CONTEXT] Trending Searches Count:",
+        searchContextData?.data?.trendingSearches?.length
+      );
+      console.log(
+        "📊 [CONTEXT] Is Authenticated:",
+        searchContextData?.data?.metadata?.isAuthenticated
+      );
     }
-  }, [isInputFocused, searchQuery, recentSearchesData, popularSearchesData]);
+  }, [isInputFocused, searchQuery, searchContextData]);
 
-  // Invalidate recent searches when screen comes into focus
+  // Invalidate search context when screen comes into focus
   // This ensures recent searches are updated when user returns from PDP
   useFocusEffect(
     useCallback(() => {
-      console.log("🎯 Screen focused - invalidating recent searches cache");
-      queryClient.invalidateQueries({ queryKey: ["/search/history"] });
+      console.log("🎯 Screen focused - invalidating search context cache");
+      queryClient.invalidateQueries({ queryKey: ["/customer/search/context"] });
     }, [queryClient])
   );
 
   /**
-   * Track search by calling searchProducts API
-   *
-   * The backend automatically saves searches to history when searchProducts is called.
-   * This function is called when:
-   * 1. User presses Enter/Return with 3+ characters
-   * 2. User clicks on a search suggestion
-   * 3. User clicks on a recent/trending search term
-   * 4. User clicks on a product from suggestions
+   * Log text search when user types and submits search
+   * This is called when user presses Enter/Return with 3+ characters
    */
-  const trackSearch = async (query: string) => {
+  const logTextSearch = async (query: string) => {
     if (query.trim().length < 3) {
-      console.log("⚠️ Not tracking search (too short):", query);
-      return; // Don't track searches < 3 chars
+      console.log("⚠️ Not logging search (too short):", query);
+      return;
     }
 
     try {
-      console.log("🔍 Tracking search:", query);
-      // Call searchProducts to trigger backend search tracking
-      const result = await searchProducts({ q: query, limit: 1 });
-      console.log("✅ Search tracked successfully:", result);
+      console.log("🔍 [LOG SEARCH] Logging text search:", query);
+      console.log(
+        "🔍 [LOG SEARCH] Results count:",
+        searchSuggestionsData?.data?.totalResults
+      );
 
-      // Invalidate recent searches cache to trigger refetch when query becomes enabled
-      console.log("🔄 Invalidating recent searches cache...");
-      await queryClient.invalidateQueries({ queryKey: ["/search/history"] });
+      logSearchMutation(
+        {
+          data: {
+            query: query.trim(),
+            searchType: "text",
+            resultsCount: searchSuggestionsData?.data?.totalResults,
+          },
+        },
+        {
+          onSuccess: (response) => {
+            console.log(
+              "✅ [LOG SEARCH] Text search logged successfully:",
+              response
+            );
+            console.log("✅ [LOG SEARCH] Search ID:", response.searchId);
 
-      // Also try to refetch if the query is currently enabled
-      refetchRecentSearches();
+            // Invalidate search context to refresh recent searches
+            console.log("🔄 [LOG SEARCH] Invalidating search context cache...");
+            queryClient.invalidateQueries({
+              queryKey: ["/customer/search/context"],
+            });
+
+            // Force refetch if conditions are met
+            if (isInputFocused && searchQuery.length < 3) {
+              console.log("🔄 [LOG SEARCH] Force refetching search context...");
+              refetchSearchContext();
+            }
+          },
+          onError: (error) => {
+            console.error("❌ [LOG SEARCH] Failed to log text search:", error);
+            console.error(
+              "❌ [LOG SEARCH] Error details:",
+              JSON.stringify(error, null, 2)
+            );
+          },
+        }
+      );
     } catch (error) {
-      console.error("❌ Failed to track search:", error);
+      console.error("❌ [LOG SEARCH] Catch block error:", error);
     }
   };
 
-  // 3. Search Suggestions - When user types (minimum 3 characters)
-  const { data: suggestionsData, isFetching: isFetchingSuggestions } =
-    useGetSearchSuggestions(
-      { q: debouncedSearchQuery, limit: 10 },
-      {
-        query: {
-          enabled: debouncedSearchQuery.length >= 3,
-        },
+  // 3. Search - When user types (minimum 3 characters)
+  // This returns both products AND collections
+  const {
+    data: searchSuggestionsData,
+    isFetching: isFetchingSuggestions,
+    error: suggestionsError,
+  } = useSearch(
+    {
+      q: debouncedSearchQuery,
+      limit: 20,
+    },
+    {
+      query: {
+        enabled: debouncedSearchQuery.length >= 3,
+      },
+    }
+  );
+
+  // Debug search suggestions (but don't log automatically)
+  React.useEffect(() => {
+    if (debouncedSearchQuery.length >= 3) {
+      console.log("🔍 Debounced Query:", debouncedSearchQuery);
+
+      if (searchSuggestionsData?.data) {
+        console.log(
+          "🔍 Products Count:",
+          searchSuggestionsData.data.products?.length || 0
+        );
+        console.log(
+          "🔍 Collections Count:",
+          searchSuggestionsData.data.collections?.length || 0
+        );
+        console.log(
+          "🔍 Total Results:",
+          searchSuggestionsData.data.totalResults
+        );
       }
-    );
+    }
+
+    if (suggestionsError) {
+      console.error("❌ Search Suggestions Error:", suggestionsError);
+    }
+  }, [debouncedSearchQuery, searchSuggestionsData, suggestionsError]);
 
   // 4. Clear Search History mutation
   const { mutate: clearHistory } = useClearSearchHistory();
+
+  // 5. Log Search mutation - For tracking product/collection clicks
+  const { mutate: logSearchMutation } = useLogSearch();
 
   // Handle clear history
   const handleClearHistory = () => {
     clearHistory(undefined, {
       onSuccess: () => {
-        refetchRecentSearches();
+        refetchSearchContext();
       },
     });
   };
@@ -205,6 +346,7 @@ const Search = () => {
 
   // Handle cancel button press
   const handleCancel = () => {
+    console.log("🚫 Cancel button pressed - should navigate back");
     LayoutAnimation.configureNext({
       duration: 200,
       create: {
@@ -224,6 +366,7 @@ const Search = () => {
     });
     setSearchQuery("");
     setIsInputFocused(false);
+    router.back(); // Navigate back when cancel is pressed
   };
 
   // Handle pull-to-refresh
@@ -233,22 +376,21 @@ const Search = () => {
 
     try {
       if (shouldShowDefaultContent) {
-        // Refresh home products
-        console.log("📦 Refreshing home products");
-        await refetch();
+        // Refresh trending products and collections
+        console.log("📦 Refreshing trending products and collections");
+        await refetchInitialData();
       } else if (shouldShowRecentAndTrending) {
-        // Refresh recent & trending searches
-        console.log("🔍 Refreshing recent & trending searches");
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ["/search/history"] }),
-          queryClient.invalidateQueries({ queryKey: ["/search/popular"] }),
-        ]);
-        await refetchRecentSearches();
-      } else if (shouldShowSuggestions) {
-        // Re-run current search suggestions
-        console.log("🔎 Refreshing search suggestions");
+        // Refresh search context (recent & trending searches)
+        console.log("🔍 Refreshing search context");
         await queryClient.invalidateQueries({
-          queryKey: ["/search/suggestions"],
+          queryKey: ["/customer/search/context"],
+        });
+        await refetchSearchContext();
+      } else if (shouldShowSuggestions) {
+        // Re-run current search products
+        console.log("🔎 Refreshing search products");
+        await queryClient.invalidateQueries({
+          queryKey: ["/search/products"],
         });
       }
     } catch (error) {
@@ -259,28 +401,13 @@ const Search = () => {
   };
 
   // Convert API data to format expected by SearchesResults component
-  const getSearchResultsData = () => {
-    if (searchQuery.length === 0) {
-      return [];
+  // Helper function to extract numeric ID from Shopify GID
+  const extractNumericId = (gid: string | undefined): string => {
+    if (!gid) {
+      console.warn("⚠️ extractNumericId: gid is undefined");
+      return "";
     }
 
-    // Convert suggestions to SearchResult format
-    const products = suggestionsData?.data?.products || [];
-    console.log("🔍 [SEARCH] API Products:", JSON.stringify(products, null, 2));
-
-    const mappedResults = products.map((product: any) => ({
-      id: product.id,
-      title: product.title,
-      type: "product",
-      handle: product.handle,
-      productData: product,
-    }));
-
-    return mappedResults;
-  };
-
-  // Helper function to extract numeric ID from Shopify GID
-  const extractNumericId = (gid: string): string => {
     // If it's already numeric or not a GID, return as is
     if (!gid.includes("gid://")) {
       return gid;
@@ -292,27 +419,143 @@ const Search = () => {
     return parts[parts.length - 1];
   };
 
-  const handleProductClick = (product: any) => {
-    const productToNavigate = product.productData || product;
-
-    if (!productToNavigate.id) {
-      console.error("❌ [ERROR] No product ID found:", productToNavigate);
-      return;
+  const getSearchResultsData = () => {
+    if (searchQuery.length === 0) {
+      return [];
     }
 
-    // Track the search before navigating
-    if (searchQuery.trim().length >= 3) {
-      trackSearch(searchQuery.trim());
-    }
+    const results: any[] = [];
 
-    const numericId = extractNumericId(productToNavigate.id);
+    // Get products and collections from search API
+    // These are already enriched with full data (EnrichedProduct and CollectionWithProducts)
+    const products = searchSuggestionsData?.data?.products || [];
+    const collections = searchSuggestionsData?.data?.collections || [];
 
-    router.push({
-      pathname: "/products/[id]",
-      params: {
-        id: numericId,
-      },
+    // Add products - already in EnrichedProduct format
+    products.forEach((enrichedProduct: EnrichedProduct) => {
+      const product = transformEnrichedProduct(enrichedProduct);
+      if (product) {
+        results.push({
+          id: extractNumericId(product.productId),
+          title: product.title,
+          type: "product" as const,
+          handle: product.handle,
+          productData: product,
+        });
+      }
     });
+
+    // Add collections - already in CollectionWithProducts format
+    collections.forEach((collection: CollectionWithProducts) => {
+      results.push({
+        id: extractNumericId(collection.id),
+        title: collection.title,
+        type: "collection" as const,
+        handle: collection.handle,
+        collectionData: collection,
+      });
+    });
+
+    return results;
+  };
+
+  const handleSuggestionClick = async (suggestion: any) => {
+    console.log("🖱️ Suggestion clicked:", suggestion);
+
+    // Handle collection click
+    if (suggestion.type === "collection" && suggestion.collectionData) {
+      const collection = suggestion.collectionData;
+      const numericCollectionId = extractNumericId(collection.id);
+
+      // Log collection search
+      logSearchMutation(
+        {
+          data: {
+            query: collection.title,
+            searchType: "collection",
+            selectedCollectionId: numericCollectionId,
+          },
+        },
+        {
+          onSuccess: (response) => {
+            console.log("✅ Collection search logged successfully:", response);
+            queryClient.invalidateQueries({
+              queryKey: ["/customer/search/context"],
+            });
+          },
+          onError: (error) => {
+            console.warn(
+              "⚠️ Failed to log collection search (non-critical):",
+              error
+            );
+          },
+        }
+      );
+
+      // Navigate to PLP with numeric ID
+      router.push({
+        pathname: "/products",
+        params: {
+          collectionId: numericCollectionId,
+          categoryName: collection.title,
+        },
+      });
+    }
+    // Handle product click
+    else if (suggestion.type === "product") {
+      const productToNavigate = suggestion.productData || suggestion;
+      console.log("📦 Product suggestion clicked:", productToNavigate);
+
+      // Get ID - EnrichedProduct uses 'productId'
+      const productId = productToNavigate.productId || productToNavigate.id;
+
+      if (!productId) {
+        console.error("❌ [ERROR] No product ID found:", productToNavigate);
+        return;
+      }
+
+      // Extract numeric ID from GID format
+      const numericId = extractNumericId(productId);
+
+      // Log the search with product selection
+      // Use product title as the query so it appears in recent searches
+      const productTitle = productToNavigate.title || searchQuery.trim();
+
+      if (productTitle.length > 0) {
+        logSearchMutation(
+          {
+            data: {
+              query: productTitle,
+              searchType: "product",
+              selectedProductId: numericId,
+              resultsCount: searchSuggestionsData?.data?.totalResults || 0,
+            },
+          },
+          {
+            onSuccess: (response) => {
+              console.log("✅ Product search logged successfully:", response);
+              queryClient.invalidateQueries({
+                queryKey: ["/customer/search/context"],
+              });
+            },
+            onError: (error) => {
+              console.warn(
+                "⚠️ Failed to log product search (non-critical):",
+                error
+              );
+            },
+          }
+        );
+      }
+
+      // Navigate to PDP
+      router.push({
+        pathname: "/products/[id]",
+        params: {
+          id: numericId,
+        },
+      });
+    }
   };
 
   // Determine which view to show
@@ -338,7 +581,7 @@ const Search = () => {
       data.push({ type: "searching", id: "searching" });
     }
 
-    // State 3: Show suggestions when available
+    // State 3: Show search results when available
     if (shouldShowSuggestions && !isFetchingSuggestions && hasResults) {
       data.push({ type: "suggestions", id: "suggestions" });
     }
@@ -365,13 +608,196 @@ const Search = () => {
             searchResults={[]}
             searchQuery={searchQuery}
             categoryCollectionGrid={homeData?.data?.categoryCollectionGrid}
-            recentSearches={recentSearchesData?.data?.searches || []}
-            trendingSearches={popularSearchesData?.data?.searches || []}
+            searchContextLoading={searchContextLoading}
+            recentSearches={
+              searchContextData?.data?.recentSearches?.map((item) => ({
+                query: item.query,
+                searchedAt: item.searchedAt,
+                type: item.type,
+                product: item.product,
+                collection: item.collection,
+              })) || []
+            }
+            trendingSearches={
+              searchContextData?.data?.trendingSearches?.map((item) => ({
+                query: item.query,
+                searchCount: item.recentCount,
+                avgResultsCount: 0, // Not provided in enriched response
+                type: item.type,
+                product: item.product,
+                collection: item.collection,
+              })) || []
+            }
             onClearRecentSearches={handleClearHistory}
             onClearTrendingSearches={() => {}}
-            onSearchClick={(query) => {
-              setSearchQuery(query);
-              trackSearch(query); // Track when clicking recent/trending
+            onSearchItemClick={(title, item) => {
+              console.log("🔍 Search suggestion clicked:", { title, item });
+
+              // If it's a collection type, navigate to PLP
+              if (item.type === "collection" && item.collectionData) {
+                console.log(
+                  "📁 Collection type - navigating to PLP:",
+                  item.collectionData
+                );
+
+                // Log collection search
+                logSearchMutation(
+                  {
+                    data: {
+                      query: title,
+                      searchType: "collection",
+                      selectedCollectionId: item.collectionData.id,
+                    },
+                  },
+                  {
+                    onSuccess: (response) => {
+                      console.log(
+                        "✅ Collection search logged successfully:",
+                        response
+                      );
+                      queryClient.invalidateQueries({
+                        queryKey: ["/customer/search/context"],
+                      });
+                    },
+                    onError: (error) => {
+                      console.warn(
+                        "⚠️ Failed to log collection search (non-critical):",
+                        error
+                      );
+                    },
+                  }
+                );
+
+                // Navigate to ProductListingScreen
+                router.push({
+                  pathname: "/products",
+                  params: {
+                    collectionId: item.collectionData.id,
+                    categoryName: item.collectionData.title,
+                  },
+                });
+              } else if (item.type === "product" && item.productData) {
+                // If it's a product type, navigate to PDP
+                console.log(
+                  "📦 Product type - navigating to PDP:",
+                  item.productData
+                );
+
+                const numericId = item.productData.productId;
+
+                // Log product search
+                logSearchMutation(
+                  {
+                    data: {
+                      query: title,
+                      searchType: "product",
+                      selectedProductId: numericId,
+                    },
+                  },
+                  {
+                    onSuccess: (response) => {
+                      console.log(
+                        "✅ Product search logged successfully:",
+                        response
+                      );
+                      queryClient.invalidateQueries({
+                        queryKey: ["/customer/search/context"],
+                      });
+                    },
+                    onError: (error) => {
+                      console.warn(
+                        "⚠️ Failed to log product search (non-critical):",
+                        error
+                      );
+                    },
+                  }
+                );
+
+                // Navigate to Product Detail Page
+                router.push({
+                  pathname: "/products/[id]",
+                  params: {
+                    id: numericId,
+                  },
+                });
+              } else {
+                // For text searches, set the query to trigger search
+                setSearchQuery(title);
+
+                // Log the text search when clicking recent/trending search suggestions
+                if (title.trim().length >= 3) {
+                  logSearchMutation(
+                    {
+                      data: {
+                        query: title.trim(),
+                        searchType: "text",
+                      },
+                    },
+                    {
+                      onSuccess: (response) => {
+                        console.log(
+                          "✅ Text search logged successfully:",
+                          response
+                        );
+                        queryClient.invalidateQueries({
+                          queryKey: ["/customer/search/context"],
+                        });
+                      },
+                      onError: (error) => {
+                        console.warn(
+                          "⚠️ Failed to log text search (non-critical):",
+                          error
+                        );
+                      },
+                    }
+                  );
+                }
+              }
+            }}
+            onCollectionClick={(collectionId, collectionTitle) => {
+              console.log("🔍 Collection suggestion clicked:", {
+                collectionId,
+                collectionTitle,
+              });
+
+              // Log the collection search when clicking a collection suggestion
+              logSearchMutation(
+                {
+                  data: {
+                    query: collectionTitle,
+                    searchType: "collection",
+                    selectedCollectionId: collectionId,
+                  },
+                },
+                {
+                  onSuccess: (response) => {
+                    console.log(
+                      "✅ Collection search logged successfully:",
+                      response
+                    );
+                    // Invalidate search context to refresh recent searches
+                    queryClient.invalidateQueries({
+                      queryKey: ["/customer/search/context"],
+                    });
+                  },
+                  onError: (error) => {
+                    console.warn(
+                      "⚠️ Failed to log collection search (non-critical):",
+                      error
+                    );
+                    // Don't block user interaction - this is a tracking feature
+                  },
+                }
+              );
+
+              // Navigate to ProductListingScreen
+              router.push({
+                pathname: "/products",
+                params: {
+                  collectionId,
+                  categoryName: collectionTitle,
+                },
+              });
             }}
           />
         );
@@ -395,7 +821,7 @@ const Search = () => {
           <SearchesResults
             searchResults={searchResultsData}
             searchQuery={searchQuery}
-            onProductClick={handleProductClick}
+            onProductClick={handleSuggestionClick}
           />
         );
 
@@ -403,13 +829,115 @@ const Search = () => {
         return <EmptySearches />;
 
       case "defaultContent":
+        if (isLoadingInitialData) {
+          const headerHeight = topInset + 60;
+          const availableHeight = SCREEN_HEIGHT - headerHeight - bottomInset;
+
+          return (
+            <YStack
+              height={availableHeight}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Loader size="small" />
+            </YStack>
+          );
+        }
+
+        const trendingProducts = (
+          initialSearchData?.data?.trendingProducts || []
+        ).slice(0, 9); // Limit to 9 products (3 rows x 3 columns)
+        const trendingCollections =
+          initialSearchData?.data?.trendingCollections || [];
+
+        console.log("🎯 Rendering default content:");
+        console.log("  - Trending Products Count:", trendingProducts.length);
+        console.log(
+          "  - Trending Collections Count:",
+          trendingCollections.length
+        );
+        console.log("  - Trending Collections Data:", trendingCollections);
+
         return (
           <YStack flex={1}>
             <Spacer size={"$reg"} />
 
-            <ProductsGridScroller
-              collection={homeData?.data?.collectionDisplays}
-            />
+            {/* Trending Products Section */}
+            {trendingProducts.length > 0 && (
+              <YStack paddingVertical={"$md"}>
+                <SectionHeader
+                  title="Trending Products"
+                  tintColor={"darkgrey"}
+                  image="trendingIcon"
+                  color="primary"
+                />
+                <Spacer size={"$sm"} />
+                <YStack paddingHorizontal="$md">
+                  <Spacer size={"$sm"} />
+                  <FlatList
+                    data={trendingProducts}
+                    keyExtractor={(item, index) =>
+                      `trending-product-${item.productId}-${index}`
+                    }
+                    horizontal={false}
+                    numColumns={2}
+                    showsVerticalScrollIndicator={false}
+                    columnWrapperStyle={{
+                      columnGap: GRID_COLUMN_GAP,
+                    }}
+                    renderItem={({ item }) => {
+                      const product = transformEnrichedProduct(item);
+                      if (!product) return null;
+
+                      return (
+                        <ProductCard
+                          product={product}
+                          context="grid"
+                          showFavoriteIcon={true}
+                        />
+                      );
+                    }}
+                  />
+                </YStack>
+              </YStack>
+            )}
+
+            {/* Trending Collections Section */}
+            {trendingCollections.length > 0 && (
+              <YStack paddingVertical={"$md"}>
+                <SectionHeader
+                  title="Trending Collections"
+                  tintColor={"darkgrey"}
+                  image="trendingIcon"
+                  color="primary"
+                />
+                <Spacer size={"$sm"} />
+                <YStack paddingHorizontal="$md">
+                  <Spacer size={"$sm"} />
+                  <FlatList
+                    data={trendingCollections}
+                    keyExtractor={(item, index) =>
+                      `trending-collection-${item.id}-${index}`
+                    }
+                    horizontal={false}
+                    numColumns={2}
+                    showsVerticalScrollIndicator={false}
+                    columnWrapperStyle={{
+                      columnGap: GRID_COLUMN_GAP,
+                    }}
+                    renderItem={({ item }) => (
+                      <CollectionCard
+                        item={{
+                          collectionId: item.id,
+                          title: item.title,
+                          image: item.image || "",
+                        }}
+                      />
+                    )}
+                  />
+                </YStack>
+              </YStack>
+            )}
 
             <Spacer size={bottomInset} />
           </YStack>
@@ -448,7 +976,7 @@ const Search = () => {
             onFocus={handleSearchFocus}
             onBlur={handleSearchBlur}
             onCancel={handleCancel}
-            onSubmit={trackSearch}
+            onSubmit={logTextSearch}
             width={isInputFocused ? "90%" : "80%"}
           />
 

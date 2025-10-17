@@ -96,12 +96,6 @@ const HomeScreen = () => {
     }, [refetchAddresses])
   );
 
-  console.log("[HomeScreen] Addresses:", {
-    count: addressesResponse?.data?.addresses?.length,
-    error: addressError,
-    isLoading: isLoadingAddresses,
-  });
-
   // Map API addresses to AddressCard format
   const addressData = (addressesResponse?.data?.addresses || []).map(
     (addr, index) => ({
@@ -122,14 +116,20 @@ const HomeScreen = () => {
     })
   );
 
-  const { data, isLoading, refetch, isFetching, error } = useHomeScreenData();
+  const { data, isLoading, refetch, error } = useHomeScreenData();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const onRefresh = () => {
-    refetch();
+  const onRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const homescreenData = data?.data;
-  console.log("[HomeScreen] Data:", homescreenData);
+  console.log("HomeScreen Data:", homescreenData);
 
   const handleAddNewAddress = () => {
     setOpen(false);
@@ -280,7 +280,7 @@ const HomeScreen = () => {
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
-                refreshing={isFetching}
+                refreshing={isRefreshing}
                 onRefresh={onRefresh}
                 tintColor={getTokenValue("$primary")}
                 colors={[getTokenValue("$primary")]}

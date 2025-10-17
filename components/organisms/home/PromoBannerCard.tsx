@@ -24,7 +24,6 @@ export const PromoBannerCard = ({
 }: PromoBannerCardProps) => {
   const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
 
-  console.log("bannerr..........", banners);
   const totalBanners = banners?.length || 0;
 
   if (!banners || banners.length === 0) {
