@@ -92,6 +92,7 @@ const PlpScreen = () => {
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isScreenLoading, setIsScreenLoading] = useState(true);
 
   // Store initial facets (from first load without filters) - for filter modal
   const [initialFacets, setInitialFacets] = useState<
@@ -151,15 +152,16 @@ const PlpScreen = () => {
       });
     }
 
-    // Add price range filter - only if valid numbers
+    // Add price range filter - only if it's different from default [0, 1000]
     const minPrice = appliedFilters.priceRange[0];
     const maxPrice = appliedFilters.priceRange[1];
+    const isDefaultPriceRange = minPrice === 0 && maxPrice === 1000;
 
     if (
       !isNaN(minPrice) &&
       !isNaN(maxPrice) &&
       minPrice < maxPrice &&
-      (minPrice > 0 || maxPrice < 10000)
+      !isDefaultPriceRange // Don't send price filter if it's default
     ) {
       filters.push({
         price: {
@@ -175,7 +177,7 @@ const PlpScreen = () => {
   const filtersParam = buildFiltersParam();
 
   // Fetch collection products
-  const { data, isPending, error, isFetching, refetch } =
+  const { data, error, isFetching, isLoading, refetch } =
     useGetCollectionProducts(
       collectionId as string,
       {
@@ -203,11 +205,21 @@ const PlpScreen = () => {
   // Track which collection the current products belong to
   const [currentCollectionId, setCurrentCollectionId] = useState(collectionId);
 
-  // Reset products and cursor when filters or collection changes
+  // Reset cursor when filters or collection changes
   useEffect(() => {
     setCursor(undefined);
     setAllProducts([]);
-  }, [appliedFilters, collectionId]);
+    setIsScreenLoading(true);
+  }, [
+    collectionId,
+    appliedFilters.sort,
+    appliedFilters.categories.length,
+    appliedFilters.colors.length,
+    appliedFilters.vendors?.length,
+    appliedFilters.tags?.length,
+    appliedFilters.priceRange[0],
+    appliedFilters.priceRange[1],
+  ]);
 
   // Handle pagination: append new products or reset when filters change
   useEffect(() => {
@@ -223,8 +235,9 @@ const PlpScreen = () => {
         setCurrentCollectionId(collectionId);
       }
 
-      // Stop refreshing indicator when data arrives
+      // Stop all loading indicators when data arrives
       setIsRefreshing(false);
+      setIsScreenLoading(false);
     }
   }, [data, cursor, collectionId]);
 
@@ -274,12 +287,9 @@ const PlpScreen = () => {
       const max = Math.ceil(initialPriceRange.max);
 
       if (min < max) {
+        // Only update pendingFilters for the filter modal
+        // Don't update appliedFilters - it should start with default [0, 1000]
         setPendingFilters((prev) => ({
-          ...prev,
-          priceRange: [min, max],
-        }));
-        // Also initialize applied filters with same range
-        setAppliedFilters((prev) => ({
           ...prev,
           priceRange: [min, max],
         }));
@@ -325,31 +335,28 @@ const PlpScreen = () => {
     );
   };
 
-  const renderEmpty = () => {
-    // Don't show "No products found" during refresh or initial load
-    if (isRefreshing || isPending || isFetching) {
-      return null;
-    }
+  // const renderEmpty = () => {
+  //   // Don't show "No products found" during refresh or initial load
+  //   if (isRefreshing || isPending || isFetching) {
+  //     return null;
+  //   }
 
-    return (
-      <YStack
-        flex={1}
-        justifyContent="center"
-        alignItems="center"
-        paddingVertical="$xl"
-      >
-        <Text fontSize={16} color="$secondary">
-          No products found
-        </Text>
-      </YStack>
-    );
-  };
+  //   return (
+  //     <YStack
+  //       flex={1}
+  //       justifyContent="center"
+  //       alignItems="center"
+  //       paddingVertical="$xl"
+  //     >
+  //       <Text fontSize={16} color="$secondary">
+  //         {"No products found"}
+  //       </Text>
+  //     </YStack>
+  //   );
+  // };
 
-  // Show loader ONLY on initial load - not during refresh or pagination
-  const shouldShowLoader =
-    (isPending || (isFetching && allProducts.length === 0)) && !isRefreshing;
-
-  if (shouldShowLoader) {
+  // Show full screen loader when loading and no products to show
+  if (isScreenLoading) {
     return (
       <YStack
         flex={1}
@@ -392,35 +399,36 @@ const PlpScreen = () => {
       />
 
       <Spacer size={"$md"} />
-      <FlatList
-        data={allProducts}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.productId}
-        showsVerticalScrollIndicator={false}
-        numColumns={2}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={renderFooter}
-        ListEmptyComponent={renderEmpty}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor={getTokenValue("$primary")}
-            colors={[getTokenValue("$primary")]}
-          />
-        }
-        contentContainerStyle={{
-          paddingHorizontal: sidePadding,
-          backgroundColor: tokens.color.background,
-          gap: tokens.space.lg,
-          paddingBottom: tokens.space.xl,
-          flexGrow: 1,
-        }}
-        columnWrapperStyle={{
-          columnGap: columnGap,
-        }}
-      />
+      <YStack flex={1}>
+        <FlatList
+          data={allProducts}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.productId}
+          showsVerticalScrollIndicator={false}
+          numColumns={2}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={renderFooter}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={getTokenValue("$primary")}
+              colors={[getTokenValue("$primary")]}
+            />
+          }
+          contentContainerStyle={{
+            paddingHorizontal: sidePadding,
+            backgroundColor: tokens.color.background,
+            gap: tokens.space.lg,
+            paddingBottom: tokens.space.xl,
+            flexGrow: 1,
+          }}
+          columnWrapperStyle={{
+            columnGap: columnGap,
+          }}
+        />
+      </YStack>
       <BottomSheetModal
         snapPoints={["50%", "90%"]}
         ref={bottomSheetRef}
