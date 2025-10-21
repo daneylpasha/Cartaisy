@@ -25,9 +25,11 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  DetailedFavoritesResponse,
   FavoriteOperationResponse,
   FavoriteRequest,
-  FavoritesResponse
+  FavoritesResponse,
+  GetDetailedFavoritesParams
 } from '../cartaisyAPI.schemas';
 
 import { customInstance } from '../../apiClient';
@@ -245,4 +247,93 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
+    /**
+ * Get user's favorite products with full details and pagination
+Returns complete product data matching the PLP (Product Listing Page) structure
+ */
+export const getDetailedFavorites = (
+    params?: GetDetailedFavoritesParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<DetailedFavoritesResponse>(
+      {url: `/customer/favorites/detailed`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetDetailedFavoritesQueryKey = (params?: GetDetailedFavoritesParams,) => {
+    return [
+    `/customer/favorites/detailed`, ...(params ? [params]: [])
+    ] as const;
+    }
+
     
+export const getGetDetailedFavoritesQueryOptions = <TData = Awaited<ReturnType<typeof getDetailedFavorites>>, TError = void | void | void>(params?: GetDetailedFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDetailedFavorites>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDetailedFavoritesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDetailedFavorites>>> = ({ signal }) => getDetailedFavorites(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDetailedFavorites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetDetailedFavoritesQueryResult = NonNullable<Awaited<ReturnType<typeof getDetailedFavorites>>>
+export type GetDetailedFavoritesQueryError = void | void | void
+
+
+export function useGetDetailedFavorites<TData = Awaited<ReturnType<typeof getDetailedFavorites>>, TError = void | void | void>(
+ params: undefined |  GetDetailedFavoritesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDetailedFavorites>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDetailedFavorites>>,
+          TError,
+          Awaited<ReturnType<typeof getDetailedFavorites>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDetailedFavorites<TData = Awaited<ReturnType<typeof getDetailedFavorites>>, TError = void | void | void>(
+ params?: GetDetailedFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDetailedFavorites>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDetailedFavorites>>,
+          TError,
+          Awaited<ReturnType<typeof getDetailedFavorites>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDetailedFavorites<TData = Awaited<ReturnType<typeof getDetailedFavorites>>, TError = void | void | void>(
+ params?: GetDetailedFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDetailedFavorites>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetDetailedFavorites<TData = Awaited<ReturnType<typeof getDetailedFavorites>>, TError = void | void | void>(
+ params?: GetDetailedFavoritesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDetailedFavorites>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetDetailedFavoritesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+

@@ -12,6 +12,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/api/config/queryClient";
 import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
+import { AppInitializer } from "@/components/providers/AppInitializer";
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -56,6 +57,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
+          <AppInitializer />
           <TamaguiProvider config={config} defaultTheme={colorScheme ?? "light"}>
             <BottomSheetModalProvider>
               <Stack

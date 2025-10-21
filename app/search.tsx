@@ -105,7 +105,7 @@ const Search = () => {
     { limit: 10, timeframe: 7 },
     {
       query: {
-        enabled: !isInputFocused && searchQuery.length === 0, // Only fetch when showing default content
+        enabled: !isInputFocused && searchQuery.length === 0,
       },
     }
   );

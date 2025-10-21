@@ -88,18 +88,6 @@ export interface PredictiveSearchResponse {
   data: PredictiveSearchResponseData;
 }
 
-export type EnrichedSearchResponseData = {
-  totalResults: number;
-  collections: CollectionWithProducts[];
-  products: EnrichedProduct[];
-  query: string;
-};
-
-export interface EnrichedSearchResponse {
-  success: boolean;
-  data: EnrichedSearchResponseData;
-}
-
 export type SearchProductImagesItem = {
   /** @nullable */
   altText: string | null;
@@ -670,6 +658,31 @@ export interface FavoriteRequest {
   productId: string;
 }
 
+/**
+ * Construct a type with a set of properties K of type T
+ */
+export interface RecordStringAny {[key: string]: unknown}
+
+export type DetailedFavoritesResponseDataPagination = {
+  totalProducts: number;
+  count: number;
+  total: number;
+  current: number;
+};
+
+export type DetailedFavoritesResponseData = {
+  pagination: DetailedFavoritesResponseDataPagination;
+  products: RecordStringAny[];
+};
+
+/**
+ * Detailed favorites response with full product data and pagination
+ */
+export interface DetailedFavoritesResponse {
+  success: boolean;
+  data: DetailedFavoritesResponseData;
+}
+
 export type CollectionProductImagesItem = {
   /** @nullable */
   altText: string | null;
@@ -1021,6 +1034,28 @@ inStock?: string;
 sortBy?: string;
 };
 
+export type GetSearchSuggestionsParams = {
+/**
+ * - Search query (minimum 2 characters)
+ */
+q?: string;
+/**
+ * - Number of suggestions (default: 10)
+ */
+limit?: number;
+};
+
+export type GetPopularSearchesParams = {
+/**
+ * - Number of results (default: 10)
+ */
+limit?: number;
+/**
+ * - Days to look back (default: 30)
+ */
+days?: number;
+};
+
 export type GetTrendingSearchesParams = {
 /**
  * - Number of results (default: 10)
@@ -1124,6 +1159,11 @@ export type LogSearch200 = {
   searchId: string;
   message: string;
   success: boolean;
+};
+
+export type GetDetailedFavoritesParams = {
+page?: number;
+limit?: number;
 };
 
 export type GetCollectionProductsParams = {

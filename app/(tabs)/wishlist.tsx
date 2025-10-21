@@ -2,178 +2,139 @@ import { HeadingSMBold, TextXLBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Spacer } from "@/components/atoms/Spacer";
 import { t } from "@/translations";
-import { FlatList } from "react-native";
+import { FlatList, LayoutAnimation, Platform, UIManager } from "react-native";
 
-import Icons from "@/assets/Icons";
+import { useGetDetailedFavorites } from "@/api/generated/favorites/favorites";
+import { useGetHomescreenData } from "@/api/generated/homescreen/homescreen";
+import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { ProductCard } from "@/components/molecules/ProductCard";
+import useFavoritesStore from "@/store/useFavoritesStore";
 import { tokens } from "@/tamagui/token";
-import React, { useState } from "react";
+import { router } from "expo-router";
+import React, { useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Text, YStack } from "tamagui";
-type IconName = keyof typeof Icons;
+import { YStack } from "tamagui";
 
-type Product = {
-  id: string;
-  price: number;
-  image: IconName[]; // ALWAYS array
-  title: string;
-  currentPrice: number;
-  originalPrice: number;
-  discountPercent: number;
-  progressValue: number;
-  showProgressBar: boolean;
-  ratingValue: number;
-  totalReviewCount: number;
-  wishlist: boolean;
-  discountBadge: boolean;
-};
+// Enable LayoutAnimation on Android
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
-const products: Product[] = [
-  {
-    id: "1",
-    price: 100,
-    image: ["product1", "product2", "product3", "product4", "product5"],
-    title: "Bose QuietComfort Bluetooth Headphones - Chilled Lilac",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "2",
-    price: 100,
-    image: ["product2"],
-    title: "Product2",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "3",
-    price: 100,
-    image: ["product3"],
-    title: "Product3",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "4",
-    price: 100,
-    image: ["product4"],
-    title: "Product4",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "5",
-    price: 100,
-    image: ["product5"],
-    title: "Product5",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 0,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-];
 const sidePadding = tokens.space.md;
 const columnGap = tokens.space.md;
+
+// Memoized render item component to prevent re-renders
+const WishlistItem = React.memo(({ item, isFavorite }: { item: any; isFavorite: (id: string) => boolean }) => (
+  <ProductCard
+    product={item}
+    context="grid"
+    showProgressBar={false}
+    showFavoriteIcon={true}
+    isFavorite={isFavorite(item.productId)}
+  />
+));
+
 const WishlistScreen = () => {
-  // State for cart items - replace with your actual cart state management
-  const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
-  const { bottom: BOTTOM_INSET, top: TOP_INSET } = useSafeAreaInsets();
-
-  // Function to add item to cart
-  const addToWishlist = (product: Product) => {
-    const existingItem = wishlistItems.find((item) => item.id === product.id);
-
-    if (existingItem) {
-      // If item already exists, increase quantity
-      setWishlistItems((prev) =>
-        prev.map((item) =>
-          item.id === product.id ? { ...item, wishlist: !item.wishlist } : item
-        )
-      );
-    } else {
-      // If item doesn't exist, add new item
-      const newWishlistItem = {
-        id: product.id,
-        image: product.image[0] as IconName, // Take first image
-        title: product.title,
-        wishlist: true,
-        discountBadge: false,
-      };
-
-      setWishlistItems((prev) => [
-        ...prev,
-        newWishlistItem as unknown as Product,
-      ]);
-    }
-  };
-
-  // Render cart item
-  const renderWishlistItem = ({ item }: { item: any }) => (
-    <YStack paddingHorizontal={"$md"}>
-      <FlatList
-        data={products}
-        horizontal={false}
-        numColumns={2}
-        renderItem={({ item }) => (
-          <ProductCard
-            product={item as any}
-            context="grid"
-            showProgressBar={false}
-            showFavoriteIcon={true}
-            isFavorite={true}
-          />
-        )}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: sidePadding,
-          // gap: tokens.space.md,
-        }}
-        columnWrapperStyle={{
-          columnGap: columnGap,
-          paddingBottom: tokens.space.md,
-        }}
-      />
-    </YStack>
+  const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
+  const isFavorite = useFavoritesStore((state) => state.isFavorite);
+  const favoriteProductIds = useFavoritesStore(
+    (state) => state.favoriteProductIds
   );
 
-  // Render empty cart state
+  // Try detailed favorites API first
+  const { data: favoritesData, isLoading: isLoadingDetailed } =
+    useGetDetailedFavorites({
+      page: 1,
+      limit: 100,
+    });
+
+  // Fallback: Get all products from home screen and filter by favorites
+  const { data: homescreenData, isLoading: isLoadingHome } =
+    useGetHomescreenData();
+
+  // Combine products from all collections and remove duplicates
+  // Use a Map to preserve object references
+  const allProductsMap = React.useMemo(() => {
+    const productMap = new Map<string, any>();
+
+    if (homescreenData?.data?.collectionDisplays) {
+      homescreenData.data.collectionDisplays.forEach((display) => {
+        if (display.collection?.products) {
+          display.collection.products.forEach((product) => {
+            // Only add if we haven't seen this productId before
+            if (!productMap.has(product.productId)) {
+              productMap.set(product.productId, product);
+            }
+          });
+        }
+      });
+    }
+
+    return productMap;
+  }, [homescreenData]);
+
+  const allProducts = React.useMemo(() => {
+    return Array.from(allProductsMap.values());
+  }, [allProductsMap]);
+
+  // Filter products that are in favorites
+  // Use Map to preserve object references and avoid re-creating array
+  const favoriteProducts = React.useMemo(() => {
+    // First try detailed API response
+    if (
+      favoritesData?.data?.products &&
+      favoritesData.data.products.length > 0
+    ) {
+      return favoritesData.data.products;
+    }
+
+    // Fallback: Use Map to get products by ID (preserves object reference)
+    const favorites: any[] = [];
+    favoriteProductIds.forEach((productId) => {
+      const product = allProductsMap.get(productId);
+      if (product) {
+        favorites.push(product);
+      }
+    });
+
+    return favorites;
+  }, [favoritesData, allProductsMap, favoriteProductIds]);
+
+  const isLoading = isLoadingDetailed || isLoadingHome;
+
+  // Track previous count to detect removal (not initial load)
+  const prevCountRef = React.useRef(favoriteProducts.length);
+
+  // Animate layout when favoriteProducts change (when item is removed)
+  useEffect(() => {
+    const currentCount = favoriteProducts.length;
+    const prevCount = prevCountRef.current;
+
+    // Only animate if count decreased (item removed) and not initial load
+    if (!isLoading && currentCount < prevCount && prevCount > 0) {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    }
+
+    // Update ref for next comparison
+    prevCountRef.current = currentCount;
+  }, [favoriteProducts.length, isLoading]);
+
+  // Memoized render function
+  const renderItem = React.useCallback(
+    ({ item }: { item: any }) => <WishlistItem item={item} isFavorite={isFavorite} />,
+    [isFavorite]
+  );
+
+  // Memoized key extractor
+  const keyExtractor = React.useCallback(
+    (item: any) => `wishlist-${item.productId}`,
+    []
+  );
+
+  // Render empty wishlist state
   const renderEmptyWishlist = () => (
     <YStack alignItems="center" justifyContent="center" flex={1}>
       <Spacer size={"$8xl"} />
@@ -192,13 +153,24 @@ const WishlistScreen = () => {
       <Spacer size={"$reg"} />
       <OpTouch
         onPress={() => {
-          addToWishlist(products[Math.floor(Math.random() * products.length)]);
+          router.push("/(tabs)");
         }}
       >
-        <Text color="$secondary">{"Add wishlist"}</Text>
+        <ParagraphSM color="$primary">{"Start Shopping"}</ParagraphSM>
       </OpTouch>
     </YStack>
   );
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <ScreenContainer backgroundColor="$background">
+        <YStack flex={1} justifyContent="center" alignItems="center">
+          <Loader size="large" color="$primary" />
+        </YStack>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer backgroundColor="$background">
@@ -208,18 +180,37 @@ const WishlistScreen = () => {
         paddingHorizontal={"$md"}
       >
         <Spacer size={"$lg"} />
-        <HeadingSMBold>{"My Wish List"}</HeadingSMBold>
+        <HeadingSMBold>{"My Wishlist"}</HeadingSMBold>
         <Spacer size={"$lg"} />
       </YStack>
-      <FlatList
-        data={wishlistItems.length === 0 ? [] : wishlistItems}
-        renderItem={renderWishlistItem}
-        ItemSeparatorComponent={() => <Spacer size={"$lg"} />}
-        keyExtractor={(item) => item.id}
-        ListEmptyComponent={renderEmptyWishlist}
-        showsVerticalScrollIndicator={false}
-      />
-      <Spacer size={BOTTOM_INSET + 20} />
+
+      {favoriteProducts.length === 0 ? (
+        renderEmptyWishlist()
+      ) : (
+        <YStack paddingHorizontal={"$md"}>
+          <FlatList
+            data={favoriteProducts}
+            horizontal={false}
+            numColumns={2}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            extraData={favoriteProducts.length}
+            showsVerticalScrollIndicator={false}
+            removeClippedSubviews={Platform.OS === 'android'}
+            maxToRenderPerBatch={4}
+            windowSize={5}
+            initialNumToRender={6}
+            updateCellsBatchingPeriod={50}
+            contentContainerStyle={{
+              paddingBottom: BOTTOM_INSET + 90,
+            }}
+            columnWrapperStyle={{
+              columnGap: columnGap,
+              paddingBottom: tokens.space.md,
+            }}
+          />
+        </YStack>
+      )}
     </ScreenContainer>
   );
 };

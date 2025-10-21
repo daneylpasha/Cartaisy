@@ -6,8 +6,13 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { tokens } from "@/tamagui/token";
 import { BlurView } from "expo-blur";
 import React, { useRef, useState } from "react";
-import { FlatList, StyleSheet, useWindowDimensions } from "react-native";
-import { Stack, XStack, YStack } from "tamagui";
+import {
+  Animated,
+  FlatList,
+  StyleSheet,
+  useWindowDimensions,
+} from "react-native";
+import { getTokenValue, Stack, XStack, YStack } from "tamagui";
 
 type Props = {
   images: (keyof typeof Icons)[] | keyof typeof Icons | string[] | string;
@@ -18,6 +23,10 @@ type Props = {
   dotColor?: string;
   activeDotColor?: string;
   onImagePress?: (index: number) => void;
+  isFavorited?: boolean;
+  onFavoritePress?: () => void;
+  scaleAnim?: Animated.Value;
+  blinkAnim?: Animated.Value;
 };
 
 export default function ProductCarousel({
@@ -29,6 +38,10 @@ export default function ProductCarousel({
   dotColor = "#D1D5DB",
   activeDotColor = tokens.color.primary,
   onImagePress,
+  isFavorited = false,
+  onFavoritePress,
+  scaleAnim,
+  blinkAnim,
 }: Props) {
   const { width } = useWindowDimensions();
   const h = height ?? width;
@@ -101,7 +114,8 @@ export default function ProductCarousel({
             >
               <Stack pointerEvents="none" style={{ width, height: h }}>
                 {/* Check if it's a URL or icon name */}
-                {item && (item.startsWith("http") || item.startsWith("https")) ? (
+                {item &&
+                (item.startsWith("http") || item.startsWith("https")) ? (
                   <AppImage
                     resizeMode="cover"
                     source={item}
@@ -139,17 +153,32 @@ export default function ProductCarousel({
               <Spacer size={"$reg"} />
               <OpTouch
                 style={{ zIndex: 100 }}
-                onPress={() => {
-                  // Handle wishlist button press
-                }}
+                onPress={onFavoritePress}
+                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
               >
                 <BlurView intensity={45} tint="dark" style={styles.blurView}>
-                  <AppImage
-                    name="heart"
-                    tintColor="$black"
-                    width={21}
-                    height={18}
-                  />
+                  <Animated.View
+                    style={{
+                      transform: scaleAnim ? [{ scale: scaleAnim }] : [],
+                      opacity: blinkAnim || 1,
+                      width: 21,
+                      height: 21,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <AppImage
+                      name={isFavorited ? "wishlistIcon" : "heart"}
+                      tintColor={
+                        isFavorited
+                          ? getTokenValue("$error")
+                          : getTokenValue("$white")
+                      }
+                      width={isFavorited ? 22 : 20}
+                      height={isFavorited ? 22 : 20}
+                      resizeMode="contain"
+                    />
+                  </Animated.View>
                 </BlurView>
               </OpTouch>
             </XStack>

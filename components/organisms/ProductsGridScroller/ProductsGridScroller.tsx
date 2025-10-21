@@ -1,4 +1,5 @@
 import { CollectionDisplay } from "@/api/generated/cartaisyAPI.schemas";
+import useFavoritesStore from "@/store/useFavoritesStore";
 import { router } from "expo-router";
 import React from "react";
 import { FlatList } from "react-native";
@@ -14,6 +15,7 @@ const numColumns = 2;
 const ProductsGridScroller = ({
   collection: collections,
 }: ProductsGridScrollerProps) => {
+  const isFavorite = useFavoritesStore((state) => state.isFavorite);
   const targetCollection = collections?.find(
     (collectionItem) => collectionItem.type === "small_grid"
   );
@@ -54,7 +56,7 @@ const ProductsGridScroller = ({
               product={product}
               context="grid"
               showFavoriteIcon={true}
-              isFavorite={true}
+              isFavorite={isFavorite(product.productId)}
             />
           )}
         />

@@ -38,6 +38,7 @@ export const PromoBannerCard = ({
         borderBottomLeftRadius={"$2xl"}
         justifyContent="space-between"
         backgroundColor={"$white"}
+        height={170}
       >
         {/* Left Section */}
         <YStack padding={"$md"} width={"60%"}>
@@ -84,8 +85,8 @@ export const PromoBannerCard = ({
         <AppImage
           resizeMode="cover"
           style={Styles.ImageStyle}
-          width={128}
-          height={150}
+          width={140}
+          height={170}
           source={banner.image}
         />
       </XStack>
@@ -126,7 +127,7 @@ export const PromoBannerCard = ({
           gap="$reg"
           paddingTop="$md"
         >
-          {banners?.map((banner, dotIndex) => (
+          {banners?.map((_, dotIndex) => (
             <YStack
               key={`promo-dot-${dotIndex}`}
               borderRadius="$full"

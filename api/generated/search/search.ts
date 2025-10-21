@@ -27,7 +27,6 @@ import type {
 import type {
   ClearSearchHistory200,
   ClearUserSearchHistory200,
-  EnrichedSearchResponse,
   GetFailedSearchesParams,
   GetInitialSearchScreenParams,
   GetPopularSearchesParams,
@@ -41,7 +40,6 @@ import type {
   InitialSearchScreenResponse,
   LogSearch200,
   LogSearchBody,
-  PredictiveSearchResponse,
   RecentSearchesResponse,
   SearchContextResponse,
   SearchParams,
@@ -70,9 +68,9 @@ export const getSearchSuggestions = (
     params?: GetSearchSuggestionsParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-
-
-      return customInstance<PredictiveSearchResponse>(
+      
+      
+      return customInstance<unknown>(
       {url: `/customer/search/suggestions`, method: 'GET',
         params, signal
     },
@@ -743,9 +741,9 @@ export const search = (
     params: SearchParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-
-
-      return customInstance<EnrichedSearchResponse>(
+      
+      
+      return customInstance<unknown>(
       {url: `/customer/search`, method: 'GET',
         params, signal
     },

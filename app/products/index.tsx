@@ -335,26 +335,6 @@ const PlpScreen = () => {
     );
   };
 
-  // const renderEmpty = () => {
-  //   // Don't show "No products found" during refresh or initial load
-  //   if (isRefreshing || isPending || isFetching) {
-  //     return null;
-  //   }
-
-  //   return (
-  //     <YStack
-  //       flex={1}
-  //       justifyContent="center"
-  //       alignItems="center"
-  //       paddingVertical="$xl"
-  //     >
-  //       <Text fontSize={16} color="$secondary">
-  //         {"No products found"}
-  //       </Text>
-  //     </YStack>
-  //   );
-  // };
-
   // Show full screen loader when loading and no products to show
   if (isScreenLoading) {
     return (

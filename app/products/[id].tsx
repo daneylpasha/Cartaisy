@@ -1,3 +1,7 @@
+import {
+  useAddFavorite,
+  useRemoveFavorite,
+} from "@/api/generated/favorites/favorites";
 import { useGetProductDetail } from "@/api/generated/products/products";
 import { useCartManager } from "@/api/hooks/useCartManager";
 import {
@@ -29,15 +33,24 @@ import ErrorModal from "@/components/organisms/ErrorModal";
 import { RatingStar } from "@/components/organisms/home";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import useCartStore from "@/store/useCartStore";
+import useFavoritesStore from "@/store/useFavoritesStore";
 import { t } from "@/translations";
 import { getColorHex } from "@/utils/colorHelper";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
-import { FlatList } from "react-native";
+import { Animated, FlatList, Platform, UIManager } from "react-native";
 import ImageViewing from "react-native-image-viewing";
 import RenderHTML from "react-native-render-html";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
+
+// Enable LayoutAnimation for Android
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 const ProductDetailsScreen = () => {
   const { id } = useLocalSearchParams<{
@@ -64,6 +77,14 @@ const ProductDetailsScreen = () => {
   const { data: productDetailData, isLoading: isLoadingProduct } =
     useGetProductDetail(id);
   console.log("📦 [PDP] API Response:", productDetailData);
+
+  // Use Zustand store for favorites
+  const isFavoriteInStore = useFavoritesStore((state) => state.isFavorite(id));
+  const addFavoriteToStore = useFavoritesStore((state) => state.addFavorite);
+  const removeFavoriteFromStore = useFavoritesStore(
+    (state) => state.removeFavorite
+  );
+
   // Parse product data from API response
   const product = useMemo(() => {
     if (!productDetailData?.data) return null;
@@ -105,17 +126,17 @@ const ProductDetailsScreen = () => {
     }
 
     return productDetailData.data.metafields.map((metafield: any) => {
-      const value = metafield.value?.toString() || '';
+      const value = metafield.value?.toString() || "";
 
       // Format the label: remove hyphens, capitalize each word
       const label = metafield.key
-        .split('-')
+        .split("-")
         .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
+        .join(" ");
 
       // If value is a GID reference, show "Contact support for details"
-      const displayValue = value.includes('gid://shopify')
-        ? 'Contact support for details'
+      const displayValue = value.includes("gid://shopify")
+        ? "Contact support for details"
         : value;
 
       return {
@@ -138,6 +159,121 @@ const ProductDetailsScreen = () => {
     title: string;
     message: string;
   }>({ visible: false, title: "", message: "" });
+
+  // Favorite state from Zustand store
+  const [isFavorited, setIsFavorited] = useState(isFavoriteInStore);
+
+  // Sync with Zustand store when it changes
+  React.useEffect(() => {
+    setIsFavorited(isFavoriteInStore);
+  }, [isFavoriteInStore]);
+
+  // Scale animation for heart
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  // Blink animation for heart (during API call)
+  const blinkAnim = useRef(new Animated.Value(1)).current;
+  const blinkAnimationRef = useRef<Animated.CompositeAnimation | null>(null);
+
+  // Start blinking animation
+  const startBlinking = () => {
+    blinkAnimationRef.current?.stop();
+    blinkAnimationRef.current = Animated.loop(
+      Animated.sequence([
+        Animated.timing(blinkAnim, {
+          toValue: 0.6,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(blinkAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    blinkAnimationRef.current.start();
+  };
+
+  // Stop blinking animation
+  const stopBlinking = () => {
+    blinkAnimationRef.current?.stop();
+    blinkAnim.setValue(1);
+  };
+
+  // Add favorite mutation
+  const { mutate: addFavoriteMutation } = useAddFavorite({
+    mutation: {
+      onMutate: () => {
+        // Optimistic update: Add to Zustand store immediately
+        addFavoriteToStore(id);
+      },
+      onSuccess: () => {
+        console.log("Successfully added to favorites");
+        stopBlinking();
+        // Zustand already updated in onMutate
+      },
+      onError: (error) => {
+        console.error("Failed to add favorite:", error);
+        setIsFavorited(false);
+        // Remove from Zustand store since API failed
+        removeFavoriteFromStore(id);
+        stopBlinking();
+      },
+    },
+  });
+
+  // Remove favorite mutation
+  const { mutate: removeFavoriteMutation } = useRemoveFavorite({
+    mutation: {
+      onMutate: () => {
+        // Optimistic update: Remove from Zustand store immediately
+        removeFavoriteFromStore(id);
+      },
+      onSuccess: () => {
+        console.log("Successfully removed from favorites");
+        stopBlinking();
+        // Zustand already updated in onMutate
+      },
+      onError: (error) => {
+        console.error("Failed to remove favorite:", error);
+        setIsFavorited(true);
+        // Re-add to Zustand store since API failed
+        addFavoriteToStore(id);
+        stopBlinking();
+      },
+    },
+  });
+
+  // Handle favorite press
+  const handleFavoritePress = () => {
+    const willBeFavorited = !isFavorited;
+
+    // Heart pop animation
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 1.3,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Start blinking animation
+    startBlinking();
+
+    setIsFavorited(willBeFavorited);
+
+    if (willBeFavorited) {
+      addFavoriteMutation({ data: { productId: id } });
+    } else {
+      removeFavoriteMutation({ productId: id });
+    }
+  };
 
   // Ref for FlatList to enable scrolling
   const flatListRef = useRef<FlatList>(null);
@@ -226,6 +362,10 @@ const ProductDetailsScreen = () => {
             setViewerIndex(i);
             setViewerOpen(true);
           }}
+          isFavorited={isFavorited}
+          onFavoritePress={handleFavoritePress}
+          scaleAnim={scaleAnim}
+          blinkAnim={blinkAnim}
         />
       ),
     },
@@ -676,11 +816,15 @@ const ProductDetailsScreen = () => {
 
   return (
     <YStack flex={1} backgroundColor="$background">
-      <YStack backgroundColor="$primary" paddingTop={TOP_INSET - 22}>
+      <YStack
+        backgroundColor="$primary"
+        paddingTop={Platform.OS === "ios" ? TOP_INSET - 22 : TOP_INSET}
+      >
         <XStack
           paddingHorizontal="$md"
           paddingVertical={"$md"}
           justifyContent="space-between"
+          alignItems="center"
         >
           <OpTouch onPress={() => router.back()}>
             <AppImage
@@ -689,6 +833,8 @@ const ProductDetailsScreen = () => {
               tintColor={getTokenValue("$white")}
             />
           </OpTouch>
+
+          {/* Cart Icon */}
           <OpTouch onPress={() => router.navigate("/cart")}>
             <YStack>
               <AppImage
