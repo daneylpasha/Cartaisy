@@ -16,6 +16,7 @@ type AddressCardProps = {
   selectedAddress: number | null;
   defaultBg?: string;
   setSelectedAddress: (id: number) => void;
+  onEdit?: () => void;
 };
 
 export const AddressCard = ({
@@ -23,21 +24,27 @@ export const AddressCard = ({
   selectedAddress,
   defaultBg = "$background",
   setSelectedAddress,
+  onEdit,
 }: AddressCardProps) => {
+  const isEditMode = !!onEdit;
+
   return (
     <OpTouch
       onPress={() => {
-        setSelectedAddress(item.id);
+        if (isEditMode && onEdit) {
+          onEdit();
+        } else {
+          setSelectedAddress(item.id);
+        }
       }}
     >
       <XStack
-      
         borderWidth={"$xxxs"}
-        borderColor={selectedAddress === item.id ? "$primary" : "$white"}
+        borderColor={selectedAddress === item.id && !isEditMode ? "$primary" : "$lightgrey"}
         borderRadius="$2xl"
         padding={"$reg"}
         backgroundColor={
-          selectedAddress === item.id ? "$primarylight" : defaultBg
+          selectedAddress === item.id && !isEditMode ? "$primarylight" : defaultBg
         }
         justifyContent="space-between"
       >
@@ -76,31 +83,42 @@ export const AddressCard = ({
           </YStack>
         </XStack>
 
-        <YStack
-          width={"$lg"}
-          height={"$lg"}
-          borderRadius="$full"
-          borderWidth={"$xxxs"}
-          position="relative"
-          marginTop={"$xl"}
-          borderColor={selectedAddress === item.id ? "$primary" : "$icon"}
-        >
+        {onEdit ? (
+          <YStack marginTop={"$xl"}>
+            <AppImage
+              name="editIcon"
+              tintColor={getTokenValue("$primary")}
+              width={16}
+              height={16}
+            />
+          </YStack>
+        ) : (
           <YStack
-            width={"$sm-reg"}
-            height={"$sm-reg"}
+            width={"$lg"}
+            height={"$lg"}
             borderRadius="$full"
-            backgroundColor={
-              selectedAddress === item.id ? "$primary" : defaultBg
-            }
-            position="absolute"
-            justifyContent="center"
-            alignItems="center"
-            top={6}
-            left={6}
-            right={0}
-            bottom={0}
-          ></YStack>
-        </YStack>
+            borderWidth={"$xxxs"}
+            position="relative"
+            marginTop={"$xl"}
+            borderColor={selectedAddress === item.id ? "$primary" : "$icon"}
+          >
+            <YStack
+              width={"$sm-reg"}
+              height={"$sm-reg"}
+              borderRadius="$full"
+              backgroundColor={
+                selectedAddress === item.id ? "$primary" : defaultBg
+              }
+              position="absolute"
+              justifyContent="center"
+              alignItems="center"
+              top={6}
+              left={6}
+              right={0}
+              bottom={0}
+            ></YStack>
+          </YStack>
+        )}
       </XStack>
     </OpTouch>
   );

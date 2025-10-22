@@ -7,7 +7,7 @@ import { AppImage } from "./AppImage";
 import { TextSMSemiBold } from "./texts";
 
 interface FormInputProps {
-  value: string;
+  value?: string;
   onChangeText: (text: string) => void;
   placeholder: string;
   secureTextEntry?: boolean;
@@ -29,6 +29,7 @@ interface FormInputProps {
   borderRadius?: number;
   padding?: number;
   inputRef?: React.RefObject<TextInput | null>; // Add ref prop
+  editable?: boolean; // Add editable prop
 }
 
 export const FormInput = ({
@@ -53,6 +54,7 @@ export const FormInput = ({
   borderRadius = tokens.radius.full,
   padding = tokens.space["sm-reg"],
   inputRef,
+  editable = true,
 }: FormInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -84,9 +86,12 @@ export const FormInput = ({
         <YStack flex={1} position="relative" style={Styles.inputContainer}>
           <Input
             ref={inputRef as any}
-            value={value}
+            value={value || ""}
             borderWidth={0}
-            onChangeText={onChangeText}
+            onChangeText={(text) => {
+              console.log("[FormInput] onChange called with:", text);
+              onChangeText(text);
+            }}
             style={[Styles.input, { backgroundColor: "white" }]}
             multiline={multiline}
             height={"$lg"}
@@ -111,6 +116,7 @@ export const FormInput = ({
             keyboardAppearance="default"
             clearButtonMode="never"
             enablesReturnKeyAutomatically={false}
+            editable={editable}
           />
           {!value && !isFocused && (
             <YStack

@@ -20,8 +20,8 @@ import {
 } from "@/components/molecules/bottom-sheets";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
-import { router } from "expo-router";
-import { useRef, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { ScrollView, StyleSheet, TextInput } from "react-native";
 import CountryPicker, {
@@ -31,13 +31,36 @@ import CountryPicker, {
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
-import { useAddAddress, getGetAddressesQueryKey, useGetAddresses, useSetDefaultAddress } from "@/api/generated/addresses/addresses";
-import { AddAddressBody } from "@/api/generated/cartaisyAPI.schemas";
+import { useAddAddress, getGetAddressesQueryKey, useGetAddresses, useSetDefaultAddress, useUpdateAddress } from "@/api/generated/addresses/addresses";
+import { AddAddressBody, UpdateAddressBody, IAddress } from "@/api/generated/cartaisyAPI.schemas";
 import { useQueryClient } from "@tanstack/react-query";
 import useUserStore from "@/store/useUserStore";
 
 const AddAddress = () => {
-  const form = useForm();
+  const params = useLocalSearchParams();
+  const editData = useMemo(() => {
+    return params.editData ? JSON.parse(params.editData as string) as IAddress : null;
+  }, [params.editData]);
+
+  const editIndex = params.editIndex ? Number(params.editIndex) : null;
+  const isEditMode = !!editData && editIndex !== null;
+
+  console.log("[AddAddress] Edit mode:", isEditMode, "Edit data:", editData);
+
+  const defaultValues = useMemo(() => ({
+    addressName: editData?.label || "",
+    streetAddress: editData?.address1 || "",
+    apartmentSuite: editData?.address2 || "",
+    city: editData?.city || "",
+    stateProvince: editData?.province || "",
+    postCode: editData?.zip || "",
+    description: editData?.deliveryInstructions || "",
+  }), [editData]);
+
+  const form = useForm({
+    mode: "onChange",
+    defaultValues,
+  });
   const queryClient = useQueryClient();
 
   // Fetch existing addresses to check if this is the first one
@@ -52,10 +75,8 @@ const AddAddress = () => {
     mutation: {
       onSuccess: (response) => {
         console.log("[AddAddress] Default address set successfully:", response);
-        // Update the default address in the store
-        if (response?.data?.address) {
-          setDefaultAddress(response.data.address);
-        }
+        // Refetch addresses to get updated default
+        queryClient.invalidateQueries({ queryKey: getGetAddressesQueryKey() });
       },
       onError: (error) => {
         console.error("[AddAddress] Failed to set default address:", error);
@@ -64,7 +85,7 @@ const AddAddress = () => {
   });
 
   // Add address mutation
-  const { mutate: addAddress, isPending } = useAddAddress({
+  const { mutate: addAddress, isPending: isAddPending } = useAddAddress({
     mutation: {
       onSuccess: (response) => {
         console.log("[AddAddress] Address added successfully:", response);
@@ -93,29 +114,67 @@ const AddAddress = () => {
     },
   });
 
+  // Update address mutation
+  const { mutate: updateAddress, isPending: isUpdatePending } = useUpdateAddress({
+    mutation: {
+      onSuccess: (response) => {
+        console.log("[AddAddress] Address updated successfully:", response);
+
+        // Invalidate addresses query to refetch updated list
+        queryClient.invalidateQueries({ queryKey: getGetAddressesQueryKey() });
+        router.back();
+      },
+      onError: (error) => {
+        console.error("[AddAddress] Failed to update address:", error);
+        // You can show a toast/alert here
+      },
+    },
+  });
+
+  const isPending = isAddPending || isUpdatePending;
+
   const onSubmit = (data: any) => {
     console.log("[AddAddress] Form submitted with data:", data);
 
-    // Determine if this should be default (if it's the first address)
-    const existingAddresses = addressesResponse?.data?.addresses || [];
-    const isFirstAddress = existingAddresses.length === 0;
+    if (isEditMode) {
+      // Update existing address
+      const updateData: UpdateAddressBody = {
+        label: data.addressName,
+        address1: data.streetAddress,
+        address2: data.apartmentSuite,
+        city: data.city,
+        province: data.stateProvince,
+        country: selectedCountry.cca2,
+        countryCode: selectedCountry.cca2,
+        zip: data.postCode,
+        deliveryInstructions: data.description,
+        type: "both",
+      };
 
-    // Map form data to API format
-    const addressData: AddAddressBody = {
-      label: data.addressName,
-      address1: data.streetAddress,
-      address2: data.apartmentSuite,
-      province: data.stateProvince,
-      country: selectedCountry.name,
-      countryCode: selectedCountry.cca2,
-      zip: data.postCode,
-      deliveryInstructions: data.description,
-      isDefault: isFirstAddress, // Set as default if it's the first address
-      type: "both",
-    };
+      console.log("[AddAddress] Updating address with data:", updateData);
+      updateAddress({ index: editIndex!, data: updateData });
+    } else {
+      // Add new address
+      const existingAddresses = addressesResponse?.data?.addresses || [];
+      const isFirstAddress = existingAddresses.length === 0;
 
-    console.log("[AddAddress] Calling API with addressData:", addressData);
-    addAddress({ data: addressData });
+      const addressData: AddAddressBody = {
+        label: data.addressName,
+        address1: data.streetAddress,
+        address2: data.apartmentSuite,
+        city: data.city,
+        province: data.stateProvince,
+        country: selectedCountry.cca2,
+        countryCode: selectedCountry.cca2,
+        zip: data.postCode,
+        deliveryInstructions: data.description,
+        isDefault: isFirstAddress,
+        type: "both",
+      };
+
+      console.log("[AddAddress] Adding new address with data:", addressData);
+      addAddress({ data: addressData });
+    }
   };
   const [selectedCountry, setSelectedCountry] = useState<Country>({
     callingCode: ["44"],
@@ -128,6 +187,35 @@ const AddAddress = () => {
   });
   const helpBottomSheetRef = useRef<BaseBottomSheetRef>(null);
   const { bottom: bottomSafeAreaInset } = useSafeAreaInsets();
+
+  // Pre-fill form data when in edit mode
+  useEffect(() => {
+    console.log("[AddAddress] useEffect triggered - Edit mode:", isEditMode);
+
+    if (isEditMode && editData) {
+      console.log("[AddAddress] Pre-filling form with edit data:", editData);
+      console.log("[AddAddress] Current form values before reset:", form.getValues());
+
+      // Use reset to properly re-render all fields with new values
+      form.reset(defaultValues, {
+        keepDefaultValues: false,
+        keepValues: false,
+      });
+
+      console.log("[AddAddress] Form values after reset:", form.getValues());
+
+      // Set selected country based on edit data
+      if (editData.countryCode) {
+        // Try to find the country by code
+        const countryCode = editData.countryCode.toUpperCase() as CountryCode;
+        setSelectedCountry((prev) => ({
+          ...prev,
+          cca2: countryCode,
+          name: editData.country || prev.name,
+        }));
+      }
+    }
+  }, [isEditMode, editData, defaultValues, form]);
 
   const onSelectCountry = (country: Country) => {
     setSelectedCountry(country);
@@ -148,9 +236,15 @@ const AddAddress = () => {
         keyboardDismissMode="interactive"
       >
         <YStack padding={"$md"}>
-          <HeadingSMBold>{t("addAddress.title")}</HeadingSMBold>
+          <HeadingSMBold>
+            {isEditMode ? "Edit Address" : t("addAddress.title")}
+          </HeadingSMBold>
           <Spacer size={"$sm"} />
-          <ParagraphMD>{t("addAddress.subtitle")}</ParagraphMD>
+          <ParagraphMD>
+            {isEditMode
+              ? "Update your delivery address details"
+              : t("addAddress.subtitle")}
+          </ParagraphMD>
         </YStack>
         <Spacer size={"$lg"} />
         <YStack paddingHorizontal={"$md"}>
@@ -162,40 +256,44 @@ const AddAddress = () => {
             rules={{
               required: "Address Name is required",
             }}
-            render={({ field, fieldState }) => (
-              <XStack
-                borderWidth={1}
-                borderColor="$lightgrey"
-                borderRadius="$full"
-                alignItems="center"
-                backgroundColor="$white"
-              >
-                <FormInput
-                  value={field.value}
-                  paddingHorizontal={16}
-                  onChangeText={field.onChange}
-                  placeholder={"Lily 2, London"}
-                  width={"90%"}
-                  borderWidth={0}
-                  icon={
-                    <AppImage
-                      tintColor={getTokenValue("$secondary")}
-                      name="locationUnfilled"
-                      width={14}
-                      height={18}
-                    />
-                  }
-                  // error={fieldState.error?.message}
-                  onSubmitEditing={() => form.setFocus("streetAddress")}
-                />
-                <OpTouch
-                  hitSlop={{ bottom: 10, top: 10, left: 10, right: 10 }}
-                  onPress={() => helpBottomSheetRef.current?.handleOpenPress()}
+            render={({ field, fieldState }) => {
+              console.log("[AddAddress] addressName field value:", field.value);
+              return (
+                <XStack
+                  borderWidth={1}
+                  borderColor="$lightgrey"
+                  borderRadius="$full"
+                  alignItems="center"
+                  backgroundColor="$white"
                 >
-                  <AppImage name="warningIcon" width={16} height={16} />
-                </OpTouch>
-              </XStack>
-            )}
+                  <FormInput
+                    value={field.value}
+                    paddingHorizontal={16}
+                    onChangeText={field.onChange}
+                    placeholder={"Lily 2, London"}
+                    width={"90%"}
+                    borderWidth={0}
+                    editable={true}
+                    icon={
+                      <AppImage
+                        tintColor={getTokenValue("$secondary")}
+                        name="locationUnfilled"
+                        width={14}
+                        height={18}
+                      />
+                    }
+                    // error={fieldState.error?.message}
+                    onSubmitEditing={() => form.setFocus("streetAddress")}
+                  />
+                  <OpTouch
+                    hitSlop={{ bottom: 10, top: 10, left: 10, right: 10 }}
+                    onPress={() => helpBottomSheetRef.current?.handleOpenPress()}
+                  >
+                    <AppImage name="warningIcon" width={16} height={16} />
+                  </OpTouch>
+                </XStack>
+              );
+            }}
           />
           <Spacer size={"$reg"} />
           <TextSMSemiBold>{t("addAddress.fieldsecond")}</TextSMSemiBold>
@@ -322,7 +420,44 @@ const AddAddress = () => {
               </XStack>
             )}
           />
-          {}
+          <Spacer size={"$reg"} />
+          <TextSMSemiBold>{"City"}</TextSMSemiBold>
+          <Spacer size={"$sm"} />
+          <Controller
+            name="city"
+            control={form.control}
+            rules={{
+              required: "City is required",
+            }}
+            render={({ field, fieldState }) => (
+              <XStack
+                borderWidth={1}
+                borderColor="$lightgrey"
+                borderRadius="$full"
+                alignItems="center"
+                backgroundColor="$white"
+              >
+                <FormInput
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  placeholder={"London"}
+                  paddingHorizontal={16}
+                  width={"90%"}
+                  borderWidth={0}
+                  icon={
+                    <AppImage
+                      tintColor={getTokenValue("$secondary")}
+                      name="locationIconUnfilled"
+                      width={14}
+                      height={18}
+                    />
+                  }
+                  // error={fieldState.error?.message}
+                  onSubmitEditing={() => form.setFocus("stateProvince")}
+                />
+              </XStack>
+            )}
+          />
           <Spacer size={"$reg"} />
           <XStack width={"100%"}>
             <YStack flex={1}>
@@ -441,9 +576,9 @@ const AddAddress = () => {
           </>
         )}
         <PrimaryButton
-          label="Save Address"
+          label={isEditMode ? "Update Address" : "Save Address"}
           onPress={() => {
-            console.log("[AddAddress] Save Address button pressed");
+            console.log(`[AddAddress] ${isEditMode ? "Update" : "Save"} Address button pressed`);
             console.log("[AddAddress] Form errors:", form.formState.errors);
             console.log("[AddAddress] Form values:", form.getValues());
             form.handleSubmit(onSubmit)();

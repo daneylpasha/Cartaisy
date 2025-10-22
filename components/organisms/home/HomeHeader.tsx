@@ -112,8 +112,8 @@ export const HomeHeader = ({
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         onPress={onAddressPress}
       >
-        <XStack justifyContent="space-between" alignItems="center">
-          <XStack alignItems="center" gap={"$xs"}>
+        <XStack justifyContent="space-between" alignItems="center" gap="$sm">
+          <XStack alignItems="center" gap={"$xs"} flex={1} flexShrink={1}>
             <AppImage
               tintColor={getTokenValue("$primarylight")}
               name="locationIcon"
@@ -121,7 +121,12 @@ export const HomeHeader = ({
               height={17}
             />
             <Spacer size={"$sm"} />
-            <TextSMSemiBold color="$white">
+            <TextSMSemiBold
+              color="$white"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              flexShrink={1}
+            >
               {displayAddress}
             </TextSMSemiBold>
           </XStack>

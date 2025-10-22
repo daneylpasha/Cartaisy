@@ -79,7 +79,11 @@ export const BaseBottomSheetModal = forwardRef<
                 <PrimaryButton
                   onPress={onPrimaryPress}
                   label={primaryButtonLabel}
-                  icon={icon ? <AppImage name={icon} width={15} height={15} /> : undefined}
+                  icon={
+                    icon ? (
+                      <AppImage name={icon} width={15} height={15} />
+                    ) : undefined
+                  }
                   iconPosition={iconPosition}
                 />
               ) : null}

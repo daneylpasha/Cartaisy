@@ -19,7 +19,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
 
 // Enable LayoutAnimation on Android
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
@@ -27,15 +30,23 @@ const sidePadding = tokens.space.md;
 const columnGap = tokens.space.md;
 
 // Memoized render item component to prevent re-renders
-const WishlistItem = React.memo(({ item, isFavorite }: { item: any; isFavorite: (id: string) => boolean }) => (
-  <ProductCard
-    product={item}
-    context="grid"
-    showProgressBar={false}
-    showFavoriteIcon={true}
-    isFavorite={isFavorite(item.productId)}
-  />
-));
+const WishlistItem = React.memo(
+  ({
+    item,
+    isFavorite,
+  }: {
+    item: any;
+    isFavorite: (id: string) => boolean;
+  }) => (
+    <ProductCard
+      product={item}
+      context="grid"
+      showProgressBar={false}
+      showFavoriteIcon={true}
+      isFavorite={isFavorite(item.productId)}
+    />
+  )
+);
 
 const WishlistScreen = () => {
   const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
@@ -124,7 +135,9 @@ const WishlistScreen = () => {
 
   // Memoized render function
   const renderItem = React.useCallback(
-    ({ item }: { item: any }) => <WishlistItem item={item} isFavorite={isFavorite} />,
+    ({ item }: { item: any }) => (
+      <WishlistItem item={item} isFavorite={isFavorite} />
+    ),
     [isFavorite]
   );
 
@@ -137,7 +150,6 @@ const WishlistScreen = () => {
   // Render empty wishlist state
   const renderEmptyWishlist = () => (
     <YStack alignItems="center" justifyContent="center" flex={1}>
-      <Spacer size={"$8xl"} />
       <YStack>
         <AppImage
           name="wishlistFrame"
@@ -196,7 +208,7 @@ const WishlistScreen = () => {
             keyExtractor={keyExtractor}
             extraData={favoriteProducts.length}
             showsVerticalScrollIndicator={false}
-            removeClippedSubviews={Platform.OS === 'android'}
+            removeClippedSubviews={Platform.OS === "android"}
             maxToRenderPerBatch={4}
             windowSize={5}
             initialNumToRender={6}

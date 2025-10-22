@@ -142,12 +142,40 @@ const HomeScreen = () => {
     setTimeout(() => router.push("/addAddress"), 300);
   };
 
+  const handleEditAddress = (index: number) => {
+    const addressToEdit = addressesResponse?.data?.addresses?.[index];
+    if (addressToEdit) {
+      // First close the bottom sheet
+      bottomSheetModalRef.current?.close();
+      setOpen(false);
+      setIsEditMode(false);
+
+      Animated.timing(rotateAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+
+      // Wait for bottom sheet to fully close before navigating
+      setTimeout(() => {
+        router.push({
+          pathname: "/addAddress",
+          params: {
+            editData: JSON.stringify(addressToEdit),
+            editIndex: index.toString(),
+          },
+        });
+      }, 400);
+    }
+  };
+
   const handleApply = () => {
     if (selectedAddress !== null) {
       // Call API to set default address
       setDefaultAddressMutation({ index: selectedAddress });
     }
     setOpen(false);
+    setIsEditMode(false); // Reset edit mode
     Animated.timing(rotateAnim, {
       toValue: 0,
       duration: 200,
@@ -157,6 +185,7 @@ const HomeScreen = () => {
   };
 
   const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const sections = [
     {
@@ -297,6 +326,7 @@ const HomeScreen = () => {
         data={addressData}
         onDismiss={() => {
           setOpen(false);
+          setIsEditMode(false); // Reset edit mode
           Animated.timing(rotateAnim, {
             toValue: 0,
             duration: 200,
@@ -308,7 +338,8 @@ const HomeScreen = () => {
             <AddressCard
               item={item}
               selectedAddress={selectedAddress}
-              setSelectedAddress={setSelectedAddress}
+              setSelectedAddress={isEditMode ? () => {} : setSelectedAddress}
+              onEdit={isEditMode ? () => handleEditAddress(item.id) : undefined}
             />
           </YStack>
         )}
@@ -320,6 +351,7 @@ const HomeScreen = () => {
               <OpTouch
                 onPress={() => {
                   setOpen(false);
+                  setIsEditMode(false);
                   Animated.timing(rotateAnim, {
                     toValue: 0,
                     duration: 200,
@@ -331,17 +363,30 @@ const HomeScreen = () => {
                 <AppImage name="closeIcon" width={15} height={15} />
               </OpTouch>
             </XStack>
+            <Spacer size={"$xs"} />
             <ParagraphMD color="$secondary">
-              {
-                "Select a delivery location to see product availability and delivery options."
-              }
+              {isEditMode
+                ? "Tap on any address to edit it"
+                : "Select a delivery location to see product availability and delivery options."}
             </ParagraphMD>
-            <Spacer size={"$2xl"} />
+            <Spacer size={"$md"} />
+            <XStack alignItems="center" justifyContent="flex-end">
+              <OpTouch
+                onPress={() => {
+                  setIsEditMode(!isEditMode);
+                }}
+              >
+                <TextSMSemiBold color="$primary">
+                  {isEditMode ? "Done" : "Edit"}
+                </TextSMSemiBold>
+              </OpTouch>
+            </XStack>
+            <Spacer size={"$md"} />
           </YStack>
         }
-        snapPoints={["60%"]}
+        snapPoints={["60%", "90%"]}
         enableDynamicSizing={false}
-        showFooter={true}
+        showFooter={!isEditMode}
         showBackdrop={true}
         onPrimaryPress={handleApply}
         onSecondaryPress={handleAddNewAddress}
