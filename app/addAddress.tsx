@@ -31,7 +31,7 @@ import CountryPicker, {
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
-import { useAddAddress, getGetAddressesQueryKey, useGetAddresses } from "@/api/generated/addresses/addresses";
+import { useAddAddress, getGetAddressesQueryKey, useGetAddresses, useSetDefaultAddress } from "@/api/generated/addresses/addresses";
 import { AddAddressBody } from "@/api/generated/cartaisyAPI.schemas";
 import { useQueryClient } from "@tanstack/react-query";
 import useUserStore from "@/store/useUserStore";
@@ -47,14 +47,38 @@ const AddAddress = () => {
   const desc = useWatch({ control: form.control, name: "description" });
   const descLen = (desc ?? "").length;
 
+  // Set default address mutation
+  const { mutate: setDefaultAddressAPI } = useSetDefaultAddress({
+    mutation: {
+      onSuccess: (response) => {
+        console.log("[AddAddress] Default address set successfully:", response);
+        // Update the default address in the store
+        if (response?.data?.address) {
+          setDefaultAddress(response.data.address);
+        }
+      },
+      onError: (error) => {
+        console.error("[AddAddress] Failed to set default address:", error);
+      },
+    },
+  });
+
   // Add address mutation
   const { mutate: addAddress, isPending } = useAddAddress({
     mutation: {
       onSuccess: (response) => {
-        console.log("Address added successfully:", response);
+        console.log("[AddAddress] Address added successfully:", response);
 
-        // If the added address is default, save it to user store
-        if (response?.data?.address?.isDefault) {
+        const addedIndex = response?.data?.index;
+        const existingAddresses = addressesResponse?.data?.addresses || [];
+        const isFirstAddress = existingAddresses.length === 0;
+
+        // If this is the first address, set it as default via API
+        if (isFirstAddress && addedIndex !== undefined) {
+          console.log("[AddAddress] This is the first address, setting as default...");
+          setDefaultAddressAPI({ index: addedIndex });
+        } else if (response?.data?.address?.isDefault) {
+          // If the API already marked it as default, update the store
           setDefaultAddress(response.data.address);
         }
 
@@ -63,13 +87,15 @@ const AddAddress = () => {
         router.back();
       },
       onError: (error) => {
-        console.error("Failed to add address:", error);
+        console.error("[AddAddress] Failed to add address:", error);
         // You can show a toast/alert here
       },
     },
   });
 
   const onSubmit = (data: any) => {
+    console.log("[AddAddress] Form submitted with data:", data);
+
     // Determine if this should be default (if it's the first address)
     const existingAddresses = addressesResponse?.data?.addresses || [];
     const isFirstAddress = existingAddresses.length === 0;
@@ -88,6 +114,7 @@ const AddAddress = () => {
       type: "both",
     };
 
+    console.log("[AddAddress] Calling API with addressData:", addressData);
     addAddress({ data: addressData });
   };
   const [selectedCountry, setSelectedCountry] = useState<Country>({
@@ -374,9 +401,6 @@ const AddAddress = () => {
             <Controller
               name="description"
               control={form.control}
-              rules={{
-                required: "Description is required",
-              }}
               render={({ field, fieldState }) => (
                 <>
                   <TextInput
@@ -408,9 +432,22 @@ const AddAddress = () => {
       </KeyboardAwareScrollView>
       <ScrollView showsVerticalScrollIndicator={false}></ScrollView>
       <YStack paddingHorizontal={"$md"}>
+        {Object.keys(form.formState.errors).length > 0 && (
+          <>
+            <TextSMSemiBold color="$error">
+              {Object.values(form.formState.errors)[0]?.message as string}
+            </TextSMSemiBold>
+            <Spacer size={"$sm"} />
+          </>
+        )}
         <PrimaryButton
           label="Save Address"
-          onPress={form.handleSubmit(onSubmit)}
+          onPress={() => {
+            console.log("[AddAddress] Save Address button pressed");
+            console.log("[AddAddress] Form errors:", form.formState.errors);
+            console.log("[AddAddress] Form values:", form.getValues());
+            form.handleSubmit(onSubmit)();
+          }}
           width={"100%"}
           iconPosition="left"
           isLoading={isPending}

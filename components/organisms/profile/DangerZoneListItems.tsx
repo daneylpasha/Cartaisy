@@ -4,6 +4,8 @@ import { GeneralCard } from "@/components/molecules/profile/GeneralCard";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { FlatList } from "react-native";
+import useAuthStore from "@/store/useAuthStore";
+import useUserStore from "@/store/useUserStore";
 
 import { YStack } from "tamagui";
 import CloseAccountModal from "./CloseAccountModal";
@@ -12,6 +14,8 @@ import SignoutAccountModal from "./SignoutAccountModal";
 export const DangerZoneListItem = () => {
   const [show, setShow] = useState(false);
   const [signout, setSignout] = useState(false);
+  const { clearAuth } = useAuthStore();
+  const { clearUser } = useUserStore();
   const DATA = [
     {
       id: 1,
@@ -55,8 +59,12 @@ export const DangerZoneListItem = () => {
         visible={signout}
         expectedName="John Doe"
         onConfirm={() => {
-          router.push("/login");
+          console.log("[SignOut] Clearing auth and user data...");
+          clearAuth();
+          clearUser();
           setSignout(false);
+          console.log("[SignOut] Redirecting to login...");
+          router.replace("/(auth)/login");
         }}
         onCancel={() => setSignout(false)}
       />
