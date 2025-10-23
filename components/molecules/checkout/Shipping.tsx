@@ -6,7 +6,6 @@ import {
   TextXSRegular,
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
-import { Divider } from "@/components/atoms/Divider";
 import { FormInput } from "@/components/atoms/FormInput";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
@@ -15,7 +14,7 @@ import { SectionHeader } from "@/components/molecules/SectionHeader";
 
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, {
   forwardRef,
   useEffect,
@@ -24,18 +23,14 @@ import React, {
   useState,
 } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Alert, FlatList, StyleSheet, TextInput } from "react-native";
+import { Alert, StyleSheet, TextInput } from "react-native";
 import CountryPicker, {
   Country,
   CountryCode,
 } from "react-native-country-picker-modal";
 
 import { useGetAddresses } from "@/api/generated/addresses/addresses";
-// COMMENTED OUT - Uncomment when needed
-// import {
-//   useGetShippingRates,
-//   useSaveStep1,
-// } from "@/api/generated/checkout/checkout";
+import { useGetShippingRates, useSaveShipping } from "@/api/generated/checkout/checkout";
 import { BottomSheetModalWithFlatList } from "@/components/organisms/bottomSheet";
 import { fonts } from "@/tamagui/fonts";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -61,12 +56,58 @@ export interface ShippingRef {
 
 const Shipping = forwardRef<ShippingRef, ShippingProps>(
   ({ sessionId, onStepComplete }, ref) => {
+    const params = useLocalSearchParams();
+    console.log("[Shipping] Component rendered with params:", params);
+
     const [selectedAddress, setSelectedAddress] = useState<number>(0);
     const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
       null
     );
     const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
     const { data: addressesResponse } = useGetAddresses();
+
+    // Fetch shipping rates when address is selected
+    // Note: addressId is the array index (0, 1, 2...) from the /addresses endpoint
+    const shippingRatesParams = {
+      sessionId,
+      addressId: selectedAddressId ?? 0,
+    };
+
+    const { data: shippingRatesResponse, isLoading: isLoadingShippingRates } =
+      useGetShippingRates(shippingRatesParams, {
+        query: {
+          enabled: !!sessionId && selectedAddressId !== null,
+        },
+      });
+
+    // Save shipping mutation
+    const { mutate: saveShippingInfo, isPending: isSavingShipping } = useSaveShipping({
+      mutation: {
+        onSuccess: (response) => {
+          console.log("[Shipping] Saved successfully:", response);
+          Alert.alert("Success", "Shipping information saved! Moving to payment step.");
+          // Call parent callback to move to next step
+          onStepComplete?.();
+        },
+        onError: (error: any) => {
+          console.error("[Shipping] Save error:", error);
+          Alert.alert(
+            "Error",
+            error?.response?.data?.error || "Failed to save shipping information"
+          );
+        },
+      },
+    });
+
+    // Log shipping rates when data changes
+    useEffect(() => {
+      if (shippingRatesResponse) {
+        console.log("[Shipping] Shipping rates fetched successfully:", {
+          params: shippingRatesParams,
+          rates: shippingRatesResponse.data.shippingRates,
+        });
+      }
+    }, [shippingRatesResponse]);
 
     const addressData = (addressesResponse?.data?.addresses || []).map(
       (addr, index) => ({
@@ -89,18 +130,27 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
 
     // Handle address selection
     const handleAddressSelect = (addressIndex: number) => {
+      console.log("[Shipping] Address selected:", { addressIndex, sessionId });
       setSelectedAddress(addressIndex);
       setSelectedAddressId(addressIndex);
+      // Reset shipping selection when address changes
+      setSelectedShippingHandle(null);
     };
 
     // Auto-select default or first address on mount
     useEffect(() => {
-      if (addressData.length > 0 && selectedAddressId === null) {
+      // If params has selectedAddressId, use that
+      if (params.selectedAddressId !== undefined) {
+        const addressId = Number(params.selectedAddressId);
+        console.log("[Shipping] Setting address from params:", addressId);
+        handleAddressSelect(addressId);
+      } else if (addressData.length > 0 && selectedAddressId === null) {
+        // Otherwise, auto-select default or first address
         const defaultAddr =
           addressData.find((a) => a.isDefault) || addressData[0];
         handleAddressSelect(defaultAddr.id);
       }
-    }, [addressData.length, selectedAddressId]);
+    }, [addressData.length, params.selectedAddressId]);
 
     const form = useForm();
     const bottomSheetRef = useRef<BottomSheetModal>(null);
@@ -125,28 +175,37 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
       price: number;
     };
 
-    // COMMENTED OUT - Using mock empty data
-    // const deliveryData: DeliveryDataItem[] = (
-    //   shippingRatesResponse?.data?.shippingRates || []
-    // ).map((rate, index) => ({
-    //   id: index + 1,
-    //   handle: rate.handle,
-    //   title: rate.title,
-    //   estimateddays: rate.estimatedDelivery
-    //     ? `Estimated Delivery: ${rate.estimatedDelivery}`
-    //     : "Estimated Delivery: Not available",
-    //   image: "upsIcon" as const,
-    //   cost: `Cost: $${rate.price.toFixed(2)}`,
-    //   price: rate.price,
-    // }));
-
-    // Mock empty delivery data
-    const deliveryData: DeliveryDataItem[] = [];
+    // Convert shipping rates to delivery data format
+    const deliveryData: DeliveryDataItem[] = (
+      shippingRatesResponse?.data?.shippingRates || []
+    ).map((rate, index) => ({
+      id: index + 1,
+      handle: rate.handle,
+      title: rate.title,
+      estimateddays:
+        rate.description ||
+        rate.estimatedDelivery ||
+        "Estimated Delivery: Not available",
+      image: "upsIcon" as const,
+      cost: `Cost: $${rate.price.toFixed(2)}`,
+      price: rate.price,
+    }));
 
     const [selectedDelivery, setSelectedDelivery] = useState<number>(0);
     const [selectedShippingHandle, setSelectedShippingHandle] = useState<
       string | null
     >(null);
+
+    // Auto-select first shipping rate when data loads
+    useEffect(() => {
+      if (deliveryData.length > 0 && !selectedShippingHandle) {
+        console.log("[Shipping] Shipping rates loaded:", deliveryData);
+        const firstRate = deliveryData[0];
+        setSelectedDelivery(firstRate.id);
+        setSelectedShippingHandle(firstRate.handle);
+        console.log("[Shipping] Auto-selected first rate:", firstRate);
+      }
+    }, [deliveryData.length]);
 
     const handleApply = () => {
       const selectedOption = deliveryData.find(
@@ -185,7 +244,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
 
     const onSubmit = (data: PhoneNumberForm) => {
       // Validate all required fields
-      if (!selectedAddressId) {
+      if (!selectedAddressId && selectedAddressId !== 0) {
         Alert.alert("Validation Error", "Please select a shipping address");
         return;
       }
@@ -202,19 +261,24 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
 
       const fullPhoneNumber = `+${selectedCountry.callingCode[0]}${data.phone}`;
 
-      // COMMENTED OUT - Save shipping info
-      // saveShippingInfo({
-      //   data: {
-      //     sessionId,
-      //     shippingAddressId: selectedAddressId,
-      //     contactNumber: fullPhoneNumber,
-      //     shippingRateHandle: selectedShippingHandle,
-      //     deliveryInstructions: data.deliveryinstructions,
-      //   },
-      // });
+      console.log("[Shipping] Submitting shipping info:", {
+        sessionId,
+        shippingAddressId: selectedAddressId,
+        contactNumber: fullPhoneNumber,
+        shippingRateHandle: selectedShippingHandle,
+        deliveryInstructions: data.deliveryinstructions,
+      });
 
-      console.log('[Shipping] Mock save - checkout APIs disabled');
-      Alert.alert('Info', 'Checkout functionality is currently disabled');
+      // Save shipping info
+      saveShippingInfo({
+        data: {
+          sessionId,
+          shippingAddressId: selectedAddressId,
+          contactNumber: fullPhoneNumber,
+          shippingRateHandle: selectedShippingHandle,
+          deliveryInstructions: data.deliveryinstructions,
+        },
+      });
     };
 
     const onSelectCountry = (country: Country) => {
@@ -225,6 +289,10 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
     // Expose methods to parent component
     useImperativeHandle(ref, () => ({
       handleContinue: () => {
+        if (isSavingShipping) {
+          console.log("[Shipping] Already saving, please wait...");
+          return;
+        }
         handleSubmit(onSubmit)();
       },
       isValid: () => {
@@ -259,7 +327,15 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
           image="mapPinIcon"
           seeAllText="View All"
           color="primary"
-          onPressSeeAll={() => {}}
+          onPressSeeAll={() => {
+            router.push({
+              pathname: "/allAddressList",
+              params: {
+                selectedAddressId: selectedAddressId?.toString(),
+                sessionId: sessionId,
+              },
+            });
+          }}
         />
         <Spacer size={"$reg"} />
         <YStack paddingHorizontal={"$md"}>
@@ -288,73 +364,54 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
                 <TextSMRegular color="$textgrey" textAlign="center">
                   {"Add a delivery address to continue"}
                 </TextSMRegular>
-                <Spacer size={"$xl"} />
-                <OpTouch onPress={() => router.push("/addAddress")}>
-                  <XStack alignItems="center" justifyContent="center">
-                    <AppImage
-                      tintColor={getTokenValue("$primary")}
-                      name="addIcon"
-                      width={15}
-                      height={15}
-                    />
-                    <Spacer size={"$sm"} />
-                    <TextSMSemiBold color="$primary">
-                      {"Add New Address"}
-                    </TextSMSemiBold>
-                  </XStack>
-                </OpTouch>
-                <Spacer size={"$md"} />
               </YStack>
             ) : (
-              // Has addresses - Show list
+              // Has addresses - Show only selected address
               <>
-                <FlatList
-                  data={addressData}
-                  keyExtractor={(item) => item.id.toString()}
-                  style={
-                    {
-                      // paddingTop: 10,
-                    }
-                  }
-                  contentContainerStyle={{
-                    gap: getTokenValue("$reg"),
-                    paddingTop: getTokenValue("$md"),
-                  }}
-                  showsVerticalScrollIndicator={false}
-                  nestedScrollEnabled={true}
-                  renderItem={({ item }: { item: AddressDataItem }) => (
-                    <YStack paddingVertical={"$reg"}>
+                <YStack paddingVertical={"$md"}>
+                  {addressData
+                    .filter((item) => item.id === selectedAddressId)
+                    .map((item) => (
                       <AddressCard
+                        key={item.id}
                         item={item}
                         selectedAddress={selectedAddress}
                         setSelectedAddress={handleAddressSelect}
                         defaultBg="$white"
                       />
-                    </YStack>
-                  )}
-                />
-                <Divider />
-                <Spacer size={"$sm"} />
-                <YStack paddingTop="$md">
-                  <OpTouch onPress={() => router.push("/addAddress")}>
-                    <XStack alignItems="center" justifyContent="center">
-                      <AppImage
-                        tintColor={getTokenValue("$primary")}
-                        name="addIcon"
-                        width={15}
-                        height={15}
-                      />
-                      <Spacer size={"$sm"} />
-                      <TextSMSemiBold color="$primary">
-                        {"Add New Address"}
-                      </TextSMSemiBold>
-                    </XStack>
-                  </OpTouch>
+                    ))}
                 </YStack>
-                <Spacer size={"$md"} />
               </>
             )}
           </YStack>
+        </YStack>
+        <Spacer size={"$reg"} />
+        <YStack paddingHorizontal={"$md"}>
+          <OpTouch onPress={() => router.push("/addAddress")}>
+            <YStack
+              backgroundColor="$white"
+              borderRadius="$3xl"
+              borderWidth={1}
+              borderColor="$lightgrey"
+              borderStyle="dashed"
+              padding="$md"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <XStack alignItems="center">
+                <AppImage
+                  tintColor={getTokenValue("$primary")}
+                  name="addIcon"
+                  width={15}
+                  height={15}
+                />
+                <Spacer size={"$sm"} />
+                <TextSMSemiBold color="$primary">
+                  {"Add New Address"}
+                </TextSMSemiBold>
+              </XStack>
+            </YStack>
+          </OpTouch>
         </YStack>
         <Spacer size={"$xl"} />
         <SectionHeader
@@ -542,6 +599,34 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
                 </XStack>
               </XStack>
             </YStack>
+          ) : isLoadingShippingRates ? (
+            <YStack
+              style={{ ...SHADOW_STYLES }}
+              backgroundColor="$white"
+              borderRadius="$2xl"
+              padding="$reg"
+              justifyContent="center"
+              alignItems="center"
+              minHeight={80}
+            >
+              <TextSMRegular color="$secondary">
+                Loading shipping options...
+              </TextSMRegular>
+            </YStack>
+          ) : selectedAddressId === null ? (
+            <YStack
+              style={{ ...SHADOW_STYLES }}
+              backgroundColor="$white"
+              borderRadius="$2xl"
+              padding="$reg"
+              justifyContent="center"
+              alignItems="center"
+              minHeight={80}
+            >
+              <TextSMRegular color="$secondary">
+                Please select a shipping address first
+              </TextSMRegular>
+            </YStack>
           ) : (
             <YStack
               style={{ ...SHADOW_STYLES }}
@@ -553,7 +638,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
               minHeight={80}
             >
               <TextSMRegular color="$secondary">
-                Shipping options temporarily unavailable
+                No shipping options available for this address
               </TextSMRegular>
             </YStack>
           )}

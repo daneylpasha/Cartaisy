@@ -11,6 +11,8 @@ import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
 import { FlatList, PanResponder, Platform } from "react-native";
 
+import { useInitializeCheckout } from "@/api/generated/checkout/checkout";
+import { useCartManager } from "@/api/hooks/useCartManager";
 import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { PrimaryButton } from "@/components/molecules/buttons";
@@ -18,9 +20,8 @@ import CartLineItem from "@/components/molecules/cart/CartLineItem";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import ErrorModal from "@/components/organisms/ErrorModal";
 import useCartStore from "@/store/useCartStore";
-import { useCartManager } from "@/api/hooks/useCartManager";
 import { router, useFocusEffect } from "expo-router";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, Text, XStack, YStack } from "tamagui";
@@ -35,11 +36,18 @@ const CartScreen = () => {
   }>({ visible: false, title: "", message: "" });
 
   const { items, getTotalPrice, getTotalQuantity, cartId } = useCartStore();
-  const { updateQuantity: updateCartQuantity, removeItem: removeCartItem, syncCart } = useCartManager();
+  const {
+    updateQuantity: updateCartQuantity,
+    removeItem: removeCartItem,
+    syncCart,
+  } = useCartManager();
   const totalQuantity = getTotalQuantity();
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
-  console.log(items, "items from store");
+  const [isInitializingCheckout, setIsInitializingCheckout] = useState(false);
+
+  // Initialize checkout mutation
+  const { mutate: initializeCheckoutMutation } = useInitializeCheckout();
   // Animation refs
   const animatedHeight = useRef(new Animated.Value(0)).current;
   const animatedOpacity = useRef(new Animated.Value(0)).current;
@@ -49,9 +57,9 @@ const CartScreen = () => {
     useCallback(() => {
       if (cartId && items.length > 0) {
         // Check if any item is missing lineItemId
-        const needsSync = items.some(item => !item.lineItemId);
+        const needsSync = items.some((item) => !item.lineItemId);
         if (needsSync) {
-          console.log('[Cart] Items missing lineItemId, syncing with API...');
+          console.log("[Cart] Items missing lineItemId, syncing with API...");
           syncCart();
         }
       }
@@ -147,7 +155,11 @@ const CartScreen = () => {
             item.variantTitle ? ` - ${item.variantTitle}` : ""
           }`}
           currentPrice={item.price * item.quantity}
-          originalPrice={item.compareAtPrice ? item.compareAtPrice * item.quantity : undefined}
+          originalPrice={
+            item.compareAtPrice
+              ? item.compareAtPrice * item.quantity
+              : undefined
+          }
           options={options}
           inStockCount={item.quantityAvailable}
           quantity={item.quantity}
@@ -156,9 +168,12 @@ const CartScreen = () => {
           isRemoving={removingItemId === item.lineItemId}
           onIncrease={async () => {
             // Check if can increase
-            console.log('[Cart] Increase clicked for item:', { lineItemId: item.lineItemId, title: item.title });
+            console.log("[Cart] Increase clicked for item:", {
+              lineItemId: item.lineItemId,
+              title: item.title,
+            });
             if (!item.lineItemId) {
-              console.error('[Cart] No lineItemId found for item:', item);
+              console.error("[Cart] No lineItemId found for item:", item);
               setErrorModal({
                 visible: true,
                 title: "Error",
@@ -449,9 +464,42 @@ const CartScreen = () => {
             <Spacer size={"$md"} />
             <PrimaryButton
               onPress={() => {
-                router.push("/checkout");
+                if (!cartId) {
+                  setErrorModal({
+                    visible: true,
+                    title: "Error",
+                    message: "Cart ID not found. Please try again.",
+                  });
+                  return;
+                }
+
+                setIsInitializingCheckout(true);
+                initializeCheckoutMutation(
+                  { data: { cartId } },
+                  {
+                    onSuccess: (response) => {
+                      console.log("[Checkout] Init success:", response);
+                      // Store sessionId in cart store or pass to checkout screen
+                      router.push(
+                        `/checkout?sessionId=${response.data.sessionId}`
+                      );
+                      setIsInitializingCheckout(false);
+                    },
+                    onError: (error: any) => {
+                      console.error("[Checkout] Init error:", error);
+                      setErrorModal({
+                        visible: true,
+                        title: "Checkout Error",
+                        message:
+                          error?.response?.data?.error?.message ||
+                          "Failed to initialize checkout. Please try again.",
+                      });
+                      setIsInitializingCheckout(false);
+                    },
+                  }
+                );
               }}
-              isLoading={false}
+              isLoading={isInitializingCheckout}
               label={`Proceed to Checkout (${totalQuantity})`}
             />
             <Spacer size={Platform.OS === "ios" ? "$md" : "$xs"} />

@@ -2362,7 +2362,7 @@
 
 "@stripe/stripe-react-native@^0.55.0":
   version "0.55.0"
-  resolved "https://registry.yarnpkg.com/@stripe/stripe-react-native/-/stripe-react-native-0.55.0.tgz#4948c18fc4121342bc3e58261104529999ab9d44"
+  resolved "https://registry.npmjs.org/@stripe/stripe-react-native/-/stripe-react-native-0.55.0.tgz"
   integrity sha512-9vOlgCoBmmcYYJk2HpRCTzA6X7hMyOuKQZt0ZTRLIVqODIhUqIn1E8mXKhHYlHTseQ44TcCqNVJvZtricRtd7Q==
 
 "@svgr/babel-plugin-add-jsx-attribute@8.0.0":
@@ -5752,9 +5752,9 @@ expo-constants@~17.1.7:
     "@expo/config" "~11.0.12"
     "@expo/env" "~1.0.7"
 
-expo-dev-client@^5.2.4:
+expo-dev-client@~5.2.4:
   version "5.2.4"
-  resolved "https://registry.npmjs.org/expo-dev-client/-/expo-dev-client-5.2.4.tgz"
+  resolved "https://registry.yarnpkg.com/expo-dev-client/-/expo-dev-client-5.2.4.tgz#cdffaea81841b2903cb9585bdd1566dea275a097"
   integrity sha512-s/N/nK5LPo0QZJpV4aPijxyrzV4O49S3dN8D2fljqrX2WwFZzWwFO6dX1elPbTmddxumdcpczsdUPY+Ms8g43g==
   dependencies:
     expo-dev-launcher "5.1.16"

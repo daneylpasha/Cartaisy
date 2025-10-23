@@ -9,27 +9,27 @@
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		4B80D042D486CACA3539F353 /* libPods-cartaisy.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 498D299E1E66E55283CE28C3 /* libPods-cartaisy.a */; };
-		81AECDC5417038C47B028EAB /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5538BF2BECA0760E46652B1 /* ExpoModulesProvider.swift */; };
-		88C07D8357D42D059BB31391 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 57128307FDAF1EAAC565EE00 /* PrivacyInfo.xcprivacy */; };
+		4421CB6A901111A2B0073D5D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC4469F2F3F50CD8DF9B699 /* ExpoModulesProvider.swift */; };
+		73532956718CDF9F617FE828 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = EC36EE8DC6946A48905AFA3D /* PrivacyInfo.xcprivacy */; };
+		B49F29BEF2C88C8D0E5FFCB1 /* libPods-cartaisy.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 06A550C140CE8BA4631CD539 /* libPods-cartaisy.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		092B2CBFDBE87E8C4CCCC3E0 /* Pods-cartaisy.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-cartaisy.release.xcconfig"; path = "Target Support Files/Pods-cartaisy/Pods-cartaisy.release.xcconfig"; sourceTree = "<group>"; };
-		111CF804086EACB96F34FA98 /* Pods-cartaisy.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-cartaisy.debug.xcconfig"; path = "Target Support Files/Pods-cartaisy/Pods-cartaisy.debug.xcconfig"; sourceTree = "<group>"; };
+		06A550C140CE8BA4631CD539 /* libPods-cartaisy.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-cartaisy.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07F961A680F5B00A75B9A /* cartaisy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = cartaisy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = cartaisy/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = cartaisy/Info.plist; sourceTree = "<group>"; };
-		498D299E1E66E55283CE28C3 /* libPods-cartaisy.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-cartaisy.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		57128307FDAF1EAAC565EE00 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = cartaisy/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		4FC4469F2F3F50CD8DF9B699 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-cartaisy/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = cartaisy/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
+		BF288151FBF9DF4970EC745B /* Pods-cartaisy.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-cartaisy.debug.xcconfig"; path = "Target Support Files/Pods-cartaisy/Pods-cartaisy.debug.xcconfig"; sourceTree = "<group>"; };
+		C051A7E4B858ED2115744446 /* Pods-cartaisy.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-cartaisy.release.xcconfig"; path = "Target Support Files/Pods-cartaisy/Pods-cartaisy.release.xcconfig"; sourceTree = "<group>"; };
+		EC36EE8DC6946A48905AFA3D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = cartaisy/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = cartaisy/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* cartaisy-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "cartaisy-Bridging-Header.h"; path = "cartaisy/cartaisy-Bridging-Header.h"; sourceTree = "<group>"; };
-		F5538BF2BECA0760E46652B1 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-cartaisy/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4B80D042D486CACA3539F353 /* libPods-cartaisy.a in Frameworks */,
+				B49F29BEF2C88C8D0E5FFCB1 /* libPods-cartaisy.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,7 +53,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				57128307FDAF1EAAC565EE00 /* PrivacyInfo.xcprivacy */,
+				EC36EE8DC6946A48905AFA3D /* PrivacyInfo.xcprivacy */,
 			);
 			name = cartaisy;
 			sourceTree = "<group>";
@@ -62,19 +62,27 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				498D299E1E66E55283CE28C3 /* libPods-cartaisy.a */,
+				06A550C140CE8BA4631CD539 /* libPods-cartaisy.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		63EB5CA63411F34809AC6250 /* Pods */ = {
+		5F4D63C53FD487930759E98E /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				111CF804086EACB96F34FA98 /* Pods-cartaisy.debug.xcconfig */,
-				092B2CBFDBE87E8C4CCCC3E0 /* Pods-cartaisy.release.xcconfig */,
+				BF288151FBF9DF4970EC745B /* Pods-cartaisy.debug.xcconfig */,
+				C051A7E4B858ED2115744446 /* Pods-cartaisy.release.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		63D7A708F1D823EC031375E1 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				B836A5108EBE5B6C15DAD583 /* cartaisy */,
+			);
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -91,8 +99,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				63EB5CA63411F34809AC6250 /* Pods */,
-				DF575A379662AA2CCD94CC2E /* ExpoModulesProviders */,
+				5F4D63C53FD487930759E98E /* Pods */,
+				63D7A708F1D823EC031375E1 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -107,6 +115,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		B836A5108EBE5B6C15DAD583 /* cartaisy */ = {
+			isa = PBXGroup;
+			children = (
+				4FC4469F2F3F50CD8DF9B699 /* ExpoModulesProvider.swift */,
+			);
+			name = cartaisy;
+			sourceTree = "<group>";
+		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
@@ -114,22 +130,6 @@
 			);
 			name = Supporting;
 			path = cartaisy/Supporting;
-			sourceTree = "<group>";
-		};
-		DBFDC39634C3B961607FED10 /* cartaisy */ = {
-			isa = PBXGroup;
-			children = (
-				F5538BF2BECA0760E46652B1 /* ExpoModulesProvider.swift */,
-			);
-			name = cartaisy;
-			sourceTree = "<group>";
-		};
-		DF575A379662AA2CCD94CC2E /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				DBFDC39634C3B961607FED10 /* cartaisy */,
-			);
-			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -140,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "cartaisy" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				4C70D74AEB883A95CF5C7BF2 /* [Expo] Configure project */,
+				A04B636D79BA2684B1A62EAF /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				2710A3929EE3907A04DB9F71 /* [CP] Embed Pods Frameworks */,
+				E2EF9F0C87D1963575ABB8A4 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				88C07D8357D42D059BB31391 /* PrivacyInfo.xcprivacy in Resources */,
+				73532956718CDF9F617FE828 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,43 +239,6 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
-		};
-		2710A3929EE3907A04DB9F71 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-cartaisy/Pods-cartaisy-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-cartaisy/Pods-cartaisy-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		4C70D74AEB883A95CF5C7BF2 /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-cartaisy/expo-configure-project.sh\"\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -341,6 +304,43 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-cartaisy/Pods-cartaisy-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		A04B636D79BA2684B1A62EAF /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-cartaisy/expo-configure-project.sh\"\n";
+		};
+		E2EF9F0C87D1963575ABB8A4 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-cartaisy/Pods-cartaisy-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-cartaisy/Pods-cartaisy-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -349,7 +349,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				81AECDC5417038C47B028EAB /* ExpoModulesProvider.swift in Sources */,
+				4421CB6A901111A2B0073D5D /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -358,7 +358,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 111CF804086EACB96F34FA98 /* Pods-cartaisy.debug.xcconfig */;
+			baseConfigurationReference = BF288151FBF9DF4970EC745B /* Pods-cartaisy.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -394,7 +394,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 092B2CBFDBE87E8C4CCCC3E0 /* Pods-cartaisy.release.xcconfig */;
+			baseConfigurationReference = C051A7E4B858ED2115744446 /* Pods-cartaisy.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;

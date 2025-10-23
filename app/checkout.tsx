@@ -13,6 +13,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Animated, FlatList, PanResponder } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLocalSearchParams } from "expo-router";
 
 import { getTokenValue, XStack, YStack } from "tamagui";
 
@@ -22,9 +23,13 @@ type PhoneNumberForm = {
 type CheckoutStep = "shipping" | "payment" | "confirmation" | "succesfull";
 
 const CheckoutScreen = () => {
+  const params = useLocalSearchParams();
+  const sessionId = params.sessionId as string;
+
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
   const form = useForm();
   const [open, setOpen] = useState(false);
+  const shippingRef = useRef<any>(null);
 
   // Animation refs
   const animatedHeight = useRef(new Animated.Value(0)).current;
@@ -109,12 +114,20 @@ const CheckoutScreen = () => {
 
   const handleContinue = () => {
     if (currentStep === "shipping") {
-      setCurrentStep("payment");
+      // Trigger shipping form submission
+      if (shippingRef.current?.handleContinue) {
+        shippingRef.current.handleContinue();
+      }
     } else if (currentStep === "payment") {
       setCurrentStep("confirmation");
     } else if (currentStep === "confirmation") {
       setCurrentStep("succesfull");
     }
+  };
+
+  const handleShippingComplete = () => {
+    console.log("[Checkout] Shipping step completed, moving to payment");
+    setCurrentStep("payment");
   };
 
   const getCurrentStepIndex = () => {
@@ -144,7 +157,7 @@ const CheckoutScreen = () => {
   const renderSection = ({ item }: { item: any }) => {
     switch (item.type) {
       case "shipping-addresses":
-        return <Shipping />;
+        return <Shipping ref={shippingRef} sessionId={sessionId} onStepComplete={handleShippingComplete} />;
 
       case "payment-methods":
         return <PaymentStepper />;

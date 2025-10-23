@@ -409,6 +409,114 @@ export interface ProductDetailResponse {
   data: ProductDetail;
 }
 
+export type PaymentMethodDataType = typeof PaymentMethodDataType[keyof typeof PaymentMethodDataType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PaymentMethodDataType = {
+  card: 'card',
+  google_pay: 'google_pay',
+  apple_pay: 'apple_pay',
+} as const;
+
+export type PaymentMethodDataCard = {
+  expYear: number;
+  expMonth: number;
+  last4: string;
+  brand: string;
+};
+
+export type PaymentMethodDataBillingAddress = {
+  zip: string;
+  country: string;
+  province: string;
+  city: string;
+  address2?: string;
+  address1: string;
+};
+
+/**
+ * Payment method data for responses
+ */
+export interface PaymentMethodData {
+  id: string;
+  type: PaymentMethodDataType;
+  displayName: string;
+  card?: PaymentMethodDataCard;
+  billingAddress: PaymentMethodDataBillingAddress;
+  isDefault: boolean;
+  isExpired: boolean;
+  createdAt: string;
+}
+
+export type GetPaymentMethodsResponseData = {
+  hasDefault: boolean;
+  count: number;
+  paymentMethods: PaymentMethodData[];
+};
+
+/**
+ * Response for get payment methods
+ */
+export interface GetPaymentMethodsResponse {
+  success: boolean;
+  data: GetPaymentMethodsResponseData;
+}
+
+export type AddPaymentMethodResponseData = {
+  paymentMethod: PaymentMethodData;
+};
+
+/**
+ * Response for add payment method
+ */
+export interface AddPaymentMethodResponse {
+  success: boolean;
+  data: AddPaymentMethodResponseData;
+  message: string;
+}
+
+export type AddPaymentMethodRequestBillingAddress = {
+  lastName?: string;
+  firstName?: string;
+  zip: string;
+  country: string;
+  province: string;
+  city: string;
+  address2?: string;
+  address1: string;
+};
+
+/**
+ * Request to add payment method
+ */
+export interface AddPaymentMethodRequest {
+  stripePaymentMethodId: string;
+  billingAddress: AddPaymentMethodRequestBillingAddress;
+  isDefault?: boolean;
+}
+
+/**
+ * Response for delete payment method
+ */
+export interface DeletePaymentMethodResponse {
+  success: boolean;
+  message: string;
+}
+
+export type SetDefaultPaymentMethodResponseData = {
+  paymentMethod: PaymentMethodData;
+};
+
+/**
+ * Response for set default payment method
+ */
+export interface SetDefaultPaymentMethodResponse {
+  success: boolean;
+  data: SetDefaultPaymentMethodResponseData;
+  message: string;
+}
+
 /**
  * PromoTag for promotional badges on carousel items
  */
@@ -802,6 +910,300 @@ export const ProductCollectionSortKey = {
   DISCOUNT: 'DISCOUNT',
 } as const;
 
+export type InitCheckoutResponseData = {
+  expiresAt: string;
+  itemCount: number;
+  currency: string;
+  subtotal: number;
+  cartId: string;
+  sessionId: string;
+};
+
+/**
+ * Response for checkout session initialization
+ */
+export interface InitCheckoutResponse {
+  success: boolean;
+  data: InitCheckoutResponseData;
+}
+
+/**
+ * Request to initialize checkout session
+ */
+export interface InitCheckoutRequest {
+  cartId: string;
+}
+
+/**
+ * Checkout API Types
+
+TypeScript interfaces for checkout flow requests and responses
+Ensures type safety across checkout controllers and services
+ */
+export interface ShippingRate {
+  handle: string;
+  title: string;
+  price: number;
+  description?: string;
+  estimatedDelivery?: string;
+  deliveryMethodType?: string;
+}
+
+export interface AddressSummary {
+  address1: string;
+  address2?: string;
+  city: string;
+  province: string;
+  country: string;
+  zip: string;
+  phone?: string;
+}
+
+export type GetShippingRatesResponseData = {
+  address: AddressSummary;
+  shippingRates: ShippingRate[];
+};
+
+/**
+ * Response with available shipping rates
+ */
+export interface GetShippingRatesResponse {
+  success: boolean;
+  data: GetShippingRatesResponseData;
+}
+
+export type SaveShippingResponseData = {
+  estimatedDelivery?: string;
+  shippingCost: number;
+  completedSteps: number[];
+  currentStep: number;
+  status: string;
+  sessionId: string;
+};
+
+/**
+ * Response for saving shipping information
+ */
+export interface SaveShippingResponse {
+  success: boolean;
+  data: SaveShippingResponseData;
+  message: string;
+}
+
+/**
+ * Request to save shipping information
+ */
+export interface SaveShippingRequest {
+  sessionId: string;
+  shippingAddressId: number;
+  deliveryInstructions?: string;
+  contactNumber: string;
+  shippingRateHandle: string;
+}
+
+export type SaveStep2ResponseDataPaymentMethod = {
+  type: string;
+  displayName: string;
+  id: string;
+};
+
+export type SaveStep2ResponseData = {
+  paymentMethod: SaveStep2ResponseDataPaymentMethod;
+  completedSteps: number[];
+  currentStep: number;
+  status: string;
+  sessionId: string;
+};
+
+/**
+ * Response for Step 2 completion
+ */
+export interface SaveStep2Response {
+  success: boolean;
+  data: SaveStep2ResponseData;
+  message: string;
+}
+
+/**
+ * Request to save Step 2 (payment method) data
+ */
+export interface SaveStep2Request {
+  sessionId: string;
+  paymentMethodId: string;
+}
+
+export type DiscountInfoType = typeof DiscountInfoType[keyof typeof DiscountInfoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const DiscountInfoType = {
+  percentage: 'percentage',
+  fixed_amount: 'fixed_amount',
+} as const;
+
+export interface DiscountInfo {
+  code: string;
+  amount: number;
+  type: DiscountInfoType;
+  applicable: boolean;
+}
+
+export interface PricingBreakdown {
+  subtotal: number;
+  shippingCost: number;
+  discountAmount: number;
+  couponDiscount: number;
+  tax: number;
+  grandTotal: number;
+  currency: string;
+}
+
+export type ApplyPromoResponseData = {
+  pricing: PricingBreakdown;
+  discount: DiscountInfo;
+};
+
+/**
+ * Response for promo code application
+ */
+export interface ApplyPromoResponse {
+  success: boolean;
+  data: ApplyPromoResponseData;
+  message?: string;
+}
+
+/**
+ * Request to apply promo code
+ */
+export interface ApplyPromoRequest {
+  sessionId: string;
+  promoCode: string;
+}
+
+export type CheckoutSummaryResponseDataPaymentMethod = {
+  last4?: string;
+  type: string;
+  displayName: string;
+  id: string;
+};
+
+export type CheckoutSummaryResponseDataShippingMethod = {
+  estimatedDelivery?: string;
+  price: number;
+  title: string;
+};
+
+export type CheckoutSummaryResponseDataShippingAddressAllOf = {
+  lastName?: string;
+  firstName?: string;
+};
+
+export type CheckoutSummaryResponseDataShippingAddress = AddressSummary & CheckoutSummaryResponseDataShippingAddressAllOf;
+
+export type CheckoutSummaryResponseDataItemsItem = {
+  total: number;
+  quantity: number;
+  price: number;
+  /** @nullable */
+  image: string | null;
+  variantTitle?: string;
+  title: string;
+  id: string;
+};
+
+export type CheckoutSummaryResponseData = {
+  expiresAt: string;
+  status: string;
+  promoCode?: string;
+  deliveryInstructions?: string;
+  pricing: PricingBreakdown;
+  paymentMethod: CheckoutSummaryResponseDataPaymentMethod;
+  shippingMethod: CheckoutSummaryResponseDataShippingMethod;
+  shippingAddress: CheckoutSummaryResponseDataShippingAddress;
+  items: CheckoutSummaryResponseDataItemsItem[];
+  sessionId: string;
+};
+
+/**
+ * Response for checkout summary
+ */
+export interface CheckoutSummaryResponse {
+  success: boolean;
+  data: CheckoutSummaryResponseData;
+}
+
+export type CompleteCheckoutResponseDataPaymentStatus = typeof CompleteCheckoutResponseDataPaymentStatus[keyof typeof CompleteCheckoutResponseDataPaymentStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CompleteCheckoutResponseDataPaymentStatus = {
+  succeeded: 'succeeded',
+  requires_action: 'requires_action',
+  processing: 'processing',
+} as const;
+
+export type CompleteCheckoutResponseDataPayment = {
+  clientSecret?: string;
+  paymentIntentId: string;
+  status: CompleteCheckoutResponseDataPaymentStatus;
+};
+
+export type CompleteCheckoutResponseDataOrder = {
+  estimatedDelivery?: string;
+  status: string;
+  currency: string;
+  totalPrice: number;
+  confirmationNumber?: string;
+  shopifyOrderId?: string;
+  orderNumber: string;
+  id: string;
+};
+
+export type CompleteCheckoutResponseData = {
+  payment: CompleteCheckoutResponseDataPayment;
+  order: CompleteCheckoutResponseDataOrder;
+};
+
+/**
+ * Response for successful checkout completion
+ */
+export interface CompleteCheckoutResponse {
+  success: boolean;
+  data: CompleteCheckoutResponseData;
+  message: string;
+}
+
+export type CheckoutRequiresActionResponseDataNextAction = {
+  redirectUrl?: string;
+  type: string;
+};
+
+export type CheckoutRequiresActionResponseData = {
+  nextAction: CheckoutRequiresActionResponseDataNextAction;
+  clientSecret: string;
+  paymentIntentId: string;
+};
+
+/**
+ * Response when checkout requires additional action (3D Secure)
+ */
+export interface CheckoutRequiresActionResponse {
+  /** */
+  success: boolean;
+  /** */
+  requiresAction: boolean;
+  data: CheckoutRequiresActionResponseData;
+  message: string;
+}
+
+/**
+ * Request to complete checkout and process payment
+ */
+export interface CompleteCheckoutRequest {
+  sessionId: string;
+  paymentIntentId?: string;
+}
+
 /**
  * Cart line item details
  */
@@ -1188,6 +1590,19 @@ reverse?: boolean;
  */
 filters?: string;
 };
+
+export type GetShippingRatesParams = {
+/**
+ * - Checkout session ID
+ */
+sessionId: string;
+/**
+ * - User address array index
+ */
+addressId: number;
+};
+
+export type CompleteCheckout200 = CompleteCheckoutResponse | CheckoutRequiresActionResponse;
 
 export type GetAddresses200Data = {
   count: number;

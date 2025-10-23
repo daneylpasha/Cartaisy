@@ -13,6 +13,7 @@ import { queryClient } from "@/api/config/queryClient";
 import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
 import { AppInitializer } from "@/components/providers/AppInitializer";
+import { StripeProvider } from "@stripe/stripe-react-native";
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -58,8 +59,13 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <AppInitializer />
-          <TamaguiProvider config={config} defaultTheme={colorScheme ?? "light"}>
-            <BottomSheetModalProvider>
+          <StripeProvider
+            publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""}
+            urlScheme="cartaisy"
+            merchantIdentifier="merchant.com.cartaisy"
+          >
+            <TamaguiProvider config={config} defaultTheme={colorScheme ?? "light"}>
+              <BottomSheetModalProvider>
               <Stack
                 screenOptions={{ headerShown: false }}
                 initialRouteName="splash"
@@ -112,6 +118,10 @@ export default function RootLayout() {
                 name="ordersDetails"
                 options={HEADER_CONFIGS.ordersDetails}
               />
+              <Stack.Screen
+                name="allAddressList"
+                options={HEADER_CONFIGS.allAddressList}
+              />
 
               <Stack.Screen
                 name="_modal"
@@ -123,6 +133,7 @@ export default function RootLayout() {
             </Stack>
           </BottomSheetModalProvider>
         </TamaguiProvider>
+      </StripeProvider>
       </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
