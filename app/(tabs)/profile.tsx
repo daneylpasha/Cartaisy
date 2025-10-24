@@ -14,6 +14,7 @@ import { SecurityListItem } from "@/components/organisms/profile/SecurityListIte
 import { WishlistCarousel } from "@/components/organisms/profile/WishListCarousel";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
+import useFavoritesStore from "@/store/useFavoritesStore";
 import { router } from "expo-router";
 import React from "react";
 import { FlatList, Platform } from "react-native";
@@ -22,6 +23,10 @@ import { XStack, YStack } from "tamagui";
 
 const ProfileScreen = () => {
   const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
+
+  // Check if wishlist has items
+  const favoriteProductIds = useFavoritesStore((state) => state.favoriteProductIds);
+  const hasWishlistItems = favoriteProductIds.size > 0;
   const profileData = [
     {
       id: "header",
@@ -101,32 +106,37 @@ const ProfileScreen = () => {
         </>
       ),
     },
-    {
-      id: "wishlist",
-      type: "wishlist",
-      content: (
-        <>
-          <Spacer size="$xl" />
-          <SectionHeader
-            title="My Wishlist"
-            image="heart"
-            tintColor="darkgrey"
-            showImage={false}
-            color="primary"
-            seeAllText="View All"
-            onPressSeeAll={() => {
-              router.push("/wishlist");
-            }}
-          />
-          <Spacer size="$reg" />
-        </>
-      ),
-    },
-    {
-      id: "wishlistCarousel",
-      type: "wishlistCarousel",
-      content: <WishlistCarousel />,
-    },
+    // Conditionally include wishlist sections only if there are items
+    ...(hasWishlistItems
+      ? [
+          {
+            id: "wishlist",
+            type: "wishlist",
+            content: (
+              <>
+                <Spacer size="$xl" />
+                <SectionHeader
+                  title="My Wishlist"
+                  image="heart"
+                  tintColor="darkgrey"
+                  showImage={false}
+                  color="primary"
+                  seeAllText="View All"
+                  onPressSeeAll={() => {
+                    router.push("/wishlist");
+                  }}
+                />
+                <Spacer size="$reg" />
+              </>
+            ),
+          },
+          {
+            id: "wishlistCarousel",
+            type: "wishlistCarousel",
+            content: <WishlistCarousel />,
+          },
+        ]
+      : []),
     {
       id: "generalListItem",
       type: "generalListItem",

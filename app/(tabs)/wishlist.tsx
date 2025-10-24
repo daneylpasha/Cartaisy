@@ -5,7 +5,6 @@ import { t } from "@/translations";
 import { FlatList, LayoutAnimation, Platform, UIManager } from "react-native";
 
 import { useGetDetailedFavorites } from "@/api/generated/favorites/favorites";
-import { useGetHomescreenData } from "@/api/generated/homescreen/homescreen";
 import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
@@ -55,66 +54,43 @@ const WishlistScreen = () => {
     (state) => state.favoriteProductIds
   );
 
-  // Try detailed favorites API first
-  const { data: favoritesData, isLoading: isLoadingDetailed } =
-    useGetDetailedFavorites({
+  // Get detailed favorites with complete product data
+  const { data: favoritesData, isLoading } = useGetDetailedFavorites(
+    {
       page: 1,
       limit: 100,
-    });
-
-  // Fallback: Get all products from home screen and filter by favorites
-  const { data: homescreenData, isLoading: isLoadingHome } =
-    useGetHomescreenData();
-
-  // Combine products from all collections and remove duplicates
-  // Use a Map to preserve object references
-  const allProductsMap = React.useMemo(() => {
-    const productMap = new Map<string, any>();
-
-    if (homescreenData?.data?.collectionDisplays) {
-      homescreenData.data.collectionDisplays.forEach((display) => {
-        if (display.collection?.products) {
-          display.collection.products.forEach((product) => {
-            // Only add if we haven't seen this productId before
-            if (!productMap.has(product.productId)) {
-              productMap.set(product.productId, product);
-            }
-          });
-        }
-      });
+    },
+    {
+      query: {
+        refetchOnMount: "always", // Always refetch when component mounts
+        staleTime: 0, // Always consider data stale for immediate updates
+      },
     }
+  );
 
-    return productMap;
-  }, [homescreenData]);
-
-  const allProducts = React.useMemo(() => {
-    return Array.from(allProductsMap.values());
-  }, [allProductsMap]);
-
-  // Filter products that are in favorites
-  // Use Map to preserve object references and avoid re-creating array
+  // Use detailed favorites API directly - backend returns complete product details
+  // Transform the data to match Product schema (images as string array)
+  // Also filter by zustand store for instant removal when unfavorited
   const favoriteProducts = React.useMemo(() => {
-    // First try detailed API response
-    if (
-      favoritesData?.data?.products &&
-      favoritesData.data.products.length > 0
-    ) {
-      return favoritesData.data.products;
-    }
-
-    // Fallback: Use Map to get products by ID (preserves object reference)
-    const favorites: any[] = [];
-    favoriteProductIds.forEach((productId) => {
-      const product = allProductsMap.get(productId);
-      if (product) {
-        favorites.push(product);
-      }
-    });
-
-    return favorites;
-  }, [favoritesData, allProductsMap, favoriteProductIds]);
-
-  const isLoading = isLoadingDetailed || isLoadingHome;
+    const products = favoritesData?.data?.products || [];
+    return products
+      .filter((product: any) => {
+        const productId = product.productId || product.id;
+        // Only show products that are still in favoriteProductIds (zustand store)
+        return favoriteProductIds.has(productId);
+      })
+      .map((product: any) => ({
+        ...product,
+        // Convert images from object array to string array
+        images: Array.isArray(product.images)
+          ? product.images.map((img: any) =>
+              typeof img === 'string' ? img : img.url
+            )
+          : [],
+        // Ensure productId exists
+        productId: product.productId || product.id,
+      }));
+  }, [favoritesData, favoriteProductIds]);
 
   // Track previous count to detect removal (not initial load)
   const prevCountRef = React.useRef(favoriteProducts.length);
@@ -143,7 +119,7 @@ const WishlistScreen = () => {
 
   // Memoized key extractor
   const keyExtractor = React.useCallback(
-    (item: any) => `wishlist-${item.productId}`,
+    (item: any, index: number) => `wishlist-${item.productId || item.id || index}`,
     []
   );
 

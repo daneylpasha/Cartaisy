@@ -1,8 +1,7 @@
-import { TextSMSemiBold } from "@/components/atoms";
+import { TextLGBold, TextSMSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
-import { TextLGBold } from "@/components/atoms/texts/TextLGBold";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
 import { router } from "expo-router";
 import React from "react";
@@ -10,11 +9,16 @@ import { Platform, ViewStyle } from "react-native";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
 export type WishlistItem = {
-  id: string;
+  productId?: string;
+  id?: string;
   title: string;
-  subtitleLeft: string;
-  subtitleRight: string;
-  saleCount?: number;
+  images?: { url: string; altText?: string | null }[] | string[];
+  inventory?: { available: number };
+  totalInventory?: number;
+  availableQuantity?: number;
+  totalQuantity?: number;
+  price?: number;
+  compareAtPrice?: number | null;
 };
 
 export const SHADOW_STYLES: ViewStyle =
@@ -38,12 +42,30 @@ export const SHADOW_STYLES: ViewStyle =
 type Props = { item: WishlistItem; onPress?: () => void };
 
 export function WishlistCard({ item, onPress }: Props) {
+  // Handle both image formats: array of objects or array of strings
+  const productImage = Array.isArray(item?.images)
+    ? typeof item.images[0] === "string"
+      ? item.images[0]
+      : item.images[0]?.url
+    : undefined;
+
+  const stockAvailable =
+    item?.availableQuantity ||
+    item?.totalQuantity ||
+    item?.inventory?.available ||
+    item?.totalInventory ||
+    0;
+  const isOnSale =
+    item?.compareAtPrice && item?.price && item.price < item.compareAtPrice;
+
+  const productIdValue = item.productId || item.id || "";
+
   return (
     <OpTouch
       onPress={() =>
         router.push({
-          pathname: "/wishlist",
-          params: { id: item.id },
+          pathname: "/products/[id]",
+          params: { id: productIdValue },
         })
       }
     >
@@ -54,7 +76,7 @@ export function WishlistCard({ item, onPress }: Props) {
         borderRadius={"$2xl"}
         padding={"$reg"}
         position="relative"
-        style={{ ...SHADOW_STYLES }} // ✅ shadow only here
+        style={{ ...SHADOW_STYLES }}
       >
         {/* Top Row */}
         <XStack>
@@ -66,25 +88,26 @@ export function WishlistCard({ item, onPress }: Props) {
             borderWidth={"$xxxs"}
             borderColor={"$lightgrey"}
           >
-            <AppImage name="product1" width={64} height={64} />
+            {productImage ? (
+              <AppImage
+                resizeMode="cover"
+                source={{ uri: productImage }}
+                width={64}
+                height={64}
+              />
+            ) : null}
           </YStack>
           <Spacer size={"$reg"} />
           <YStack flex={1}>
-            <TextLGBold>{item.title}</TextLGBold>
+            <TextLGBold numberOfLines={2}>{item.title}</TextLGBold>
             <Spacer size={"$xs-sm"} />
             <XStack alignItems="center">
               <TextMDRegular color="$secondary">
-                {item.subtitleLeft}
-              </TextMDRegular>
-              <Spacer size={"$sm"} />
-              <TextMDRegular color="$lightgrey">•</TextMDRegular>
-              <Spacer size={"$sm"} />
-              <TextMDRegular color="$secondary">
-                {item.subtitleRight}
+                Stock: {stockAvailable}
               </TextMDRegular>
             </XStack>
             <Spacer size={"$xs-sm"} />
-            {typeof item.saleCount === "number" && item.saleCount > 0 && (
+            {isOnSale && (
               <>
                 <XStack alignItems="center" borderRadius={8} gap={6}>
                   <AppImage
@@ -94,7 +117,7 @@ export function WishlistCard({ item, onPress }: Props) {
                     height={16}
                   />
                   <TextSMSemiBold color="$green">
-                    {item.saleCount} items are on sale
+                    {"Item On Sale"}
                   </TextSMSemiBold>
                 </XStack>
               </>

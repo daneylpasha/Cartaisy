@@ -1,8 +1,8 @@
-import {
-  WishlistCard,
-  WishlistItem,
-} from "@/components/molecules/profile/WishlistCard";
+import { useGetDetailedFavorites } from "@/api/generated/favorites/favorites";
+import type { RecordStringAny } from "@/api/generated/cartaisyAPI.schemas";
+import { WishlistCard, type WishlistItem } from "@/components/molecules/profile/WishlistCard";
 import { SCREEN_WIDTH } from "@/constants/styles";
+import useFavoritesStore from "@/store/useFavoritesStore";
 import React, { useRef, useState } from "react";
 import { FlatList, ViewToken } from "react-native";
 import { XStack, YStack } from "tamagui";
@@ -12,36 +12,42 @@ type Props = {
 };
 
 export function WishlistCarousel({ horizontalPadding = 16 }: Props) {
-  const data: WishlistItem[] = [
+  // Get detailed favorites with complete product data
+  const { data: favoritesData } = useGetDetailedFavorites(
+    undefined,
     {
-      id: "1",
-      title: "Wishlist #1",
-      subtitleLeft: "Default",
-      subtitleRight: "24 Items",
-      saleCount: 3,
-    },
-    {
-      id: "2",
-      title: "Wishlist #2",
-      subtitleLeft: "Default",
-      subtitleRight: "12 Items",
-      saleCount: 1,
-    },
-    {
-      id: "3",
-      title: "Wishlist #3",
-      subtitleLeft: "Travel",
-      subtitleRight: "9 Items",
-      saleCount: 0,
-    },
-    {
-      id: "4",
-      title: "Wishlist #4",
-      subtitleLeft: "Gifts",
-      subtitleRight: "18 Items",
-      saleCount: 5,
-    },
-  ];
+      query: {
+        refetchOnMount: "always", // Always refetch when component mounts
+        staleTime: 0, // Always consider data stale for immediate updates
+      },
+    }
+  );
+
+  // Get favoriteProductIds from store for client-side filtering
+  const favoriteProductIds = useFavoritesStore((state) => state.favoriteProductIds);
+
+  // Use detailed favorites API directly - transform data to match expected schema
+  // Also filter by zustand store for instant removal when unfavorited
+  const wishlistProducts = React.useMemo(() => {
+    const products = favoritesData?.data?.products || [];
+    return products
+      .filter((product: RecordStringAny) => {
+        const productId = product.productId || product.id;
+        // Only show products that are still in favoriteProductIds (zustand store)
+        return favoriteProductIds.has(String(productId));
+      })
+      .map((product: RecordStringAny) => ({
+        ...product,
+        // Convert images from object array to string array for ProductCard compatibility
+        images: Array.isArray(product.images)
+          ? product.images.map((img: any) =>
+              typeof img === 'string' ? img : img?.url
+            )
+          : [],
+        // Ensure productId exists
+        productId: product.productId || product.id,
+      }));
+  }, [favoritesData, favoriteProductIds]);
 
   const pageWidth = SCREEN_WIDTH;
   const cardWidthOne = pageWidth - horizontalPadding * 2;
@@ -57,20 +63,23 @@ export function WishlistCarousel({ horizontalPadding = 16 }: Props) {
     }
   ).current;
 
+  // Show only first 4 products
+  const displayProducts = wishlistProducts.slice(0, 4);
+
   return (
     <YStack>
       <YStack position="relative">
-        <FlatList
-          data={data}
-          keyExtractor={(_, idx) => `page-${idx}`}
+        <FlatList<RecordStringAny>
+          data={displayProducts}
+          keyExtractor={(item) => String(item.productId || item.id || Math.random())}
           horizontal
           pagingEnabled
           bounces={false}
           showsHorizontalScrollIndicator={false}
-          renderItem={({ item: page }) => (
+          renderItem={({ item }) => (
             <XStack justifyContent="center" padding={"$reg"} width={pageWidth}>
               <YStack width={cardWidthOne}>
-                <WishlistCard item={page} />
+                <WishlistCard item={item as WishlistItem} />
               </YStack>
             </XStack>
           )}
@@ -79,14 +88,8 @@ export function WishlistCarousel({ horizontalPadding = 16 }: Props) {
         />
 
         {/* Absolutely positioned sticky dots */}
-        <XStack
-          position="absolute"
-          bottom={30}
-          alignSelf="center"
-          gap={8}
-          zIndex={10}
-        >
-          {data.map((_, i) => (
+        <XStack alignSelf="center" gap={8}>
+          {displayProducts.map((_, i) => (
             <YStack
               key={i}
               width={8}

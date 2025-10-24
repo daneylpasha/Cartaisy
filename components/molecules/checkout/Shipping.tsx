@@ -182,10 +182,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
       id: index + 1,
       handle: rate.handle,
       title: rate.title,
-      estimateddays:
-        rate.description ||
-        rate.estimatedDelivery ||
-        "Estimated Delivery: Not available",
+      estimateddays: rate.estimatedDelivery || rate.description || "Estimated delivery: Not available",
       image: "upsIcon" as const,
       cost: `Cost: $${rate.price.toFixed(2)}`,
       price: rate.price,

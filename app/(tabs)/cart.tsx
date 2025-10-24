@@ -166,6 +166,23 @@ const CartScreen = () => {
           maxQuantity={item.quantityAvailable}
           isUpdating={updatingItemId === item.lineItemId}
           isRemoving={removingItemId === item.lineItemId}
+          onPressItem={() => {
+            // Navigate to PDP
+            console.log("Cart item pressed:", {
+              handle: item.handle,
+              productId: item.productId,
+            });
+
+            const productIdNumber = item.productId?.split("/").pop(); // Extract ID from gid://shopify/Product/14817102528884
+
+            if (item.handle) {
+              router.push(`/products/${item.handle}` as any);
+            } else if (productIdNumber) {
+              router.push(`/products/${productIdNumber}` as any);
+            } else {
+              console.log("No handle or productId found for item");
+            }
+          }}
           onIncrease={async () => {
             // Check if can increase
             console.log("[Cart] Increase clicked for item:", {
@@ -259,15 +276,11 @@ const CartScreen = () => {
               setRemovingItemId(null);
             }
           }}
-          onPressItem={() => {
-            router.push(`/products/${item.productId}`);
-          }}
         />
       </YStack>
     );
   };
 
-  // Render empty cart state
   const renderEmptyCart = () => (
     <YStack alignItems="center" justifyContent="center" flex={1}>
       <Spacer size={"$2xl"} />

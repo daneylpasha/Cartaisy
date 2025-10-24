@@ -249,7 +249,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     }
     /**
  * Get user's favorite products with full details and pagination
-Returns complete product data matching the PLP (Product Listing Page) structure
+Fetches product data directly from Shopify for real-time accuracy
  */
 export const getDetailedFavorites = (
     params?: GetDetailedFavoritesParams,

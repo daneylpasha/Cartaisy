@@ -7,6 +7,7 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import { tokens } from "@/tamagui/token";
+import { useQueryClient } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
@@ -68,6 +69,9 @@ export const ProductCard = ({
   const addFavoriteToStore = useFavoritesStore((state) => state.addFavorite);
   const removeFavoriteFromStore = useFavoritesStore((state) => state.removeFavorite);
 
+  // Query client for invalidation
+  const queryClient = useQueryClient();
+
   // Local state for favorite - synced with prop
   const [isFavorited, setIsFavorited] = useState(isFavorite);
 
@@ -123,6 +127,8 @@ export const ProductCard = ({
         console.log("Successfully added to favorites");
         // Stop blinking animation on success
         stopBlinking();
+        // Invalidate detailed favorites query to refetch wishlist
+        queryClient.invalidateQueries({ queryKey: ['/customer/favorites/detailed'] });
         // Zustand already updated in onMutate
       },
       onError: (error) => {
@@ -148,6 +154,8 @@ export const ProductCard = ({
         console.log("Successfully removed from favorites");
         // Stop blinking animation on success
         stopBlinking();
+        // Invalidate detailed favorites query to refetch wishlist
+        queryClient.invalidateQueries({ queryKey: ['/customer/favorites/detailed'] });
         // Zustand already updated in onMutate
       },
       onError: (error) => {
