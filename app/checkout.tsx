@@ -28,9 +28,11 @@ const CheckoutScreen = () => {
 
   const [sessionId, setSessionId] = useState<string>(initialSessionId || "");
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
+  const [isProcessing, setIsProcessing] = useState(false);
   const form = useForm();
   const [open, setOpen] = useState(false);
   const shippingRef = useRef<any>(null);
+  const paymentRef = useRef<any>(null);
 
   // Animation refs
   const animatedHeight = useRef(new Animated.Value(0)).current;
@@ -114,26 +116,33 @@ const CheckoutScreen = () => {
   };
 
   const handleContinue = () => {
+    setIsProcessing(true);
     if (currentStep === "shipping") {
       // Trigger shipping form submission
       if (shippingRef.current?.handleContinue) {
         shippingRef.current.handleContinue();
       }
     } else if (currentStep === "payment") {
-      setCurrentStep("confirmation");
+      // Trigger payment step submission
+      if (paymentRef.current?.handleContinue) {
+        paymentRef.current.handleContinue();
+      }
     } else if (currentStep === "confirmation") {
       setCurrentStep("succesfull");
+      setIsProcessing(false);
     }
   };
 
   const handleShippingComplete = (newSessionId: string) => {
     console.log("[Checkout] Shipping step completed, sessionId:", newSessionId);
     setSessionId(newSessionId);
+    setIsProcessing(false);
     setCurrentStep("payment");
   };
 
   const handlePaymentComplete = () => {
     console.log("[Checkout] Payment step completed, moving to confirmation");
+    setIsProcessing(false);
     setCurrentStep("confirmation");
   };
 
@@ -164,10 +173,10 @@ const CheckoutScreen = () => {
   const renderSection = ({ item }: { item: any }) => {
     switch (item.type) {
       case "shipping-addresses":
-        return <Shipping ref={shippingRef} sessionId={sessionId} onStepComplete={handleShippingComplete} />;
+        return <Shipping ref={shippingRef} sessionId={sessionId} onStepComplete={handleShippingComplete} onError={() => setIsProcessing(false)} />;
 
       case "payment-methods":
-        return <PaymentStepper />;
+        return <PaymentStepper ref={paymentRef} sessionId={sessionId} onStepComplete={handlePaymentComplete} onError={() => setIsProcessing(false)} />;
 
       case "confirmation":
         return <Confirmation />;
@@ -325,7 +334,7 @@ const CheckoutScreen = () => {
               <PrimaryButton
                 label="Continue"
                 onPress={handleContinue}
-                isLoading={false}
+                isLoading={isProcessing}
               />
             </YStack>
           )}

@@ -48,6 +48,7 @@ type PhoneNumberForm = {
 interface ShippingProps {
   sessionId: string;
   onStepComplete?: (sessionId: string) => void;
+  onError?: () => void;
 }
 
 export interface ShippingRef {
@@ -56,7 +57,7 @@ export interface ShippingRef {
 }
 
 const Shipping = forwardRef<ShippingRef, ShippingProps>(
-  ({ sessionId, onStepComplete }, ref) => {
+  ({ sessionId, onStepComplete, onError }, ref) => {
     const params = useLocalSearchParams();
     console.log("[Shipping] Component rendered with params:", params);
 
@@ -88,23 +89,13 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
         onSuccess: (response) => {
           console.log("[Shipping] Saved successfully:", response);
           const newSessionId = response.data?.sessionId || sessionId;
-          showAlert({
-            type: "success",
-            title: "Success",
-            message: "Shipping information saved! Moving to payment step.",
-            buttons: [
-              {
-                text: "OK",
-                onPress: () => {
-                  // Call parent callback to move to next step with sessionId
-                  onStepComplete?.(newSessionId);
-                },
-              },
-            ],
-          });
+          // Call parent callback to move to next step with sessionId
+          onStepComplete?.(newSessionId);
         },
         onError: (error: any) => {
           console.error("[Shipping] Save error:", error);
+          // Call onError callback to stop loader
+          onError?.();
           showAlert({
             type: "error",
             title: "Error",

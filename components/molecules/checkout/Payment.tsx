@@ -1,13 +1,15 @@
 import { useListPaymentMethods } from "@/api/generated/payment-methods/payment-methods";
+import { useSaveStep2 } from "@/api/generated/checkout/checkout";
 import Icons from "@/assets/Icons";
 import { TextSMMedium, TextSMSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
 import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
+import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import { t } from "@/translations";
 import { router, useFocusEffect } from "expo-router";
-import React, { useState } from "react";
+import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { FlatList } from "react-native";
 import { getTokenValue, Spacer, XStack, YStack } from "tamagui";
 import { SectionHeader } from "../SectionHeader";
@@ -20,13 +22,49 @@ type PaymentProps = {
   image?: keyof typeof Icons;
 };
 
-const PaymentStepper = () => {
+interface PaymentStepperProps {
+  sessionId: string;
+  onStepComplete: () => void;
+  onError?: () => void;
+}
+
+export interface PaymentStepperRef {
+  handleContinue: () => void;
+  isLoading: boolean;
+}
+
+const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
+  ({ sessionId, onStepComplete, onError }, ref) => {
   const [selectedPayment, setSelectedPayment] = useState<string>("");
+  const { showAlert, AlertComponent } = useCustomAlert();
+
   const {
     data: paymentMethodsResponse,
     isLoading,
     refetch,
   } = useListPaymentMethods();
+
+  const { mutate: savePaymentStep, isPending: isSavingPayment } = useSaveStep2({
+    mutation: {
+      onSuccess: () => {
+        console.log("[Payment] Payment method saved successfully");
+        // Navigate to next step on success
+        onStepComplete();
+      },
+      onError: (error: any) => {
+        console.error("[Payment] Failed to save payment method:", error);
+        // Call onError callback to stop loader
+        onError?.();
+        // Show error alert
+        showAlert({
+          type: "error",
+          title: "Error",
+          message: error?.response?.data?.error || "Failed to save payment selection. Please try again.",
+          buttons: [{ text: "OK" }],
+        });
+      },
+    },
+  });
 
   useFocusEffect(
     React.useCallback(() => {
@@ -47,6 +85,32 @@ const PaymentStepper = () => {
       }
     }
   }, [paymentMethods, selectedPayment]);
+
+  // Expose handleContinue method and loading state to parent via ref
+  useImperativeHandle(ref, () => ({
+    handleContinue: () => {
+      // Validate payment method selection
+      if (!selectedPayment) {
+        showAlert({
+          type: "warning",
+          title: "Validation Error",
+          message: "Please select a payment method",
+          buttons: [{ text: "OK" }],
+        });
+        return;
+      }
+
+      // Save payment method
+      console.log("[Payment] Saving payment method:", selectedPayment);
+      savePaymentStep({
+        data: {
+          sessionId: sessionId,
+          paymentMethodId: selectedPayment,
+        },
+      });
+    },
+    isLoading: isSavingPayment,
+  }));
 
   // const paymentMethods = [
   //   {
@@ -232,8 +296,9 @@ const PaymentStepper = () => {
           </OpTouch>
         </YStack>
       </YStack>
+      <AlertComponent />
     </YStack>
   );
-};
+});
 
 export default PaymentStepper;
