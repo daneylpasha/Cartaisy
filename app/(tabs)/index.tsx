@@ -16,7 +16,7 @@ import ProductsHorizontalScroller from "@/components/organisms/productHorizontal
 import ProductsGridScroller from "@/components/organisms/ProductsGridScroller/ProductsGridScroller";
 import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller/SalesHorizontalScroller";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
@@ -116,6 +116,9 @@ const HomeScreen = () => {
     })
   );
 
+  // Find the default address index
+  const defaultAddressIndex = addressData.findIndex((addr) => addr.isDefault);
+
   const { data, isLoading, refetch, error } = useHomeScreenData();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -186,6 +189,14 @@ const HomeScreen = () => {
 
   const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+
+  // Update selectedAddress when addresses refetch and default changes
+  useEffect(() => {
+    if (defaultAddressIndex !== -1 && selectedAddress !== defaultAddressIndex) {
+      console.log("[Homescreen] Setting selected address to default:", defaultAddressIndex);
+      setSelectedAddress(defaultAddressIndex);
+    }
+  }, [defaultAddressIndex]);
 
   const sections = [
     {

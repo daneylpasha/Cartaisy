@@ -1278,6 +1278,342 @@ export interface ClearCartResponse {
   message: string;
 }
 
+export type RegisterResponseStatus = typeof RegisterResponseStatus[keyof typeof RegisterResponseStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RegisterResponseStatus = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type RegisterResponseDataUser = {
+  createdAt: string;
+  isActive: boolean;
+  isEmailVerified: boolean;
+  role: string;
+  email: string;
+  name?: string;
+  id: string;
+};
+
+export type RegisterResponseData = {
+  refreshToken: string;
+  token: string;
+  user: RegisterResponseDataUser;
+};
+
+/**
+ * User registration response
+ */
+export interface RegisterResponse {
+  status: RegisterResponseStatus;
+  message: string;
+  data?: RegisterResponseData;
+}
+
+/**
+ * User registration request
+ */
+export interface RegisterRequest {
+  email: string;
+  password: string;
+}
+
+export type LoginResponseStatus = typeof LoginResponseStatus[keyof typeof LoginResponseStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LoginResponseStatus = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type LoginResponseDataUser = {
+  lastLoginAt?: string;
+  avatar?: string;
+  isActive: boolean;
+  isEmailVerified: boolean;
+  role: string;
+  email: string;
+  name?: string;
+  id: string;
+};
+
+export type LoginResponseData = {
+  refreshToken: string;
+  token: string;
+  user: LoginResponseDataUser;
+};
+
+/**
+ * User login response
+ */
+export interface LoginResponse {
+  status: LoginResponseStatus;
+  message: string;
+  data?: LoginResponseData;
+}
+
+/**
+ * User login request
+ */
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export type ForgotPasswordResponseStatus = typeof ForgotPasswordResponseStatus[keyof typeof ForgotPasswordResponseStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ForgotPasswordResponseStatus = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+/**
+ * Forgot password response
+ */
+export interface ForgotPasswordResponse {
+  status: ForgotPasswordResponseStatus;
+  message: string;
+}
+
+/**
+ * Forgot password request
+ */
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export type ResetPasswordResponseStatus = typeof ResetPasswordResponseStatus[keyof typeof ResetPasswordResponseStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ResetPasswordResponseStatus = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type ResetPasswordResponseData = {
+  token: string;
+};
+
+/**
+ * Reset password response
+ */
+export interface ResetPasswordResponse {
+  status: ResetPasswordResponseStatus;
+  message: string;
+  data?: ResetPasswordResponseData;
+}
+
+/**
+ * Reset password request
+ */
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+export type GetProfileResponseStatus = typeof GetProfileResponseStatus[keyof typeof GetProfileResponseStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetProfileResponseStatus = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+/**
+ * @nullable
+ */
+export type GetProfileResponseDataUserDefaultAddress = unknown | null;
+
+export type GetProfileResponseDataUser = {
+  lastLoginAt?: string;
+  createdAt: string;
+  totalSpent?: number;
+  totalOrdersCount?: number;
+  preferences?: unknown;
+  addresses?: unknown[];
+  avatar?: string;
+  isActive: boolean;
+  isEmailVerified: boolean;
+  role: string;
+  /** @nullable */
+  defaultAddress: GetProfileResponseDataUserDefaultAddress;
+  dateOfBirth: string;
+  gender: string;
+  country: string;
+  phoneNumber: string;
+  email: string;
+  fullName: string;
+  id: string;
+};
+
+export type GetProfileResponseData = {
+  user: GetProfileResponseDataUser;
+};
+
+/**
+ * Get profile response
+ */
+export interface GetProfileResponse {
+  status: GetProfileResponseStatus;
+  message?: string;
+  data?: GetProfileResponseData;
+}
+
+export type UpdateProfileResponseStatus = typeof UpdateProfileResponseStatus[keyof typeof UpdateProfileResponseStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateProfileResponseStatus = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type UpdateProfileResponseData = {
+  updatedFields: string[];
+  user: unknown;
+};
+
+/**
+ * Update profile response
+ */
+export interface UpdateProfileResponse {
+  status: UpdateProfileResponseStatus;
+  message: string;
+  data?: UpdateProfileResponseData;
+}
+
+/**
+ * Construct a type with a set of properties K of type T
+ */
+export interface RecordStringString {[key: string]: string}
+
+export type AddressDataType = typeof AddressDataType[keyof typeof AddressDataType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AddressDataType = {
+  billing: 'billing',
+  shipping: 'shipping',
+  both: 'both',
+} as const;
+
+/**
+ * Address data structure
+ */
+export interface AddressData {
+  label?: string;
+  type?: AddressDataType;
+  firstName?: string;
+  lastName?: string;
+  company?: string;
+  address1: string;
+  address2?: string;
+  city?: string;
+  province: string;
+  country: string;
+  countryCode?: string;
+  zip: string;
+  phone?: string;
+  deliveryInstructions?: string;
+}
+
+/**
+ * Construct a type with a set of properties K of type T
+ */
+export interface RecordStringBoolean {[key: string]: boolean}
+
+export type UpdateProfileRequestDateOfBirth = string | string;
+
+/**
+ * Update profile request - accepts any key/value pairs
+Restricted fields cannot be updated
+ */
+export interface UpdateProfileRequest {
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  avatar?: string;
+  dateOfBirth?: UpdateProfileRequestDateOfBirth;
+  gender?: string;
+  country?: string;
+  interests?: string[];
+  bio?: string;
+  occupation?: string;
+  company?: string;
+  website?: string;
+  socialLinks?: RecordStringString;
+  address?: AddressData;
+  addressIndex?: number;
+  addresses?: unknown[];
+  currency?: string;
+  language?: string;
+  theme?: string;
+  notifications?: RecordStringBoolean;
+  [key: string]: unknown;
+}
+
+export type ChangePasswordResponseStatus = typeof ChangePasswordResponseStatus[keyof typeof ChangePasswordResponseStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ChangePasswordResponseStatus = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type ChangePasswordResponseData = {
+  token: string;
+};
+
+/**
+ * Change password response
+ */
+export interface ChangePasswordResponse {
+  status: ChangePasswordResponseStatus;
+  message: string;
+  data?: ChangePasswordResponseData;
+}
+
+/**
+ * Change password request
+ */
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export type DeleteAccountResponseStatus = typeof DeleteAccountResponseStatus[keyof typeof DeleteAccountResponseStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const DeleteAccountResponseStatus = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+/**
+ * Delete account response
+ */
+export interface DeleteAccountResponse {
+  status: DeleteAccountResponseStatus;
+  message: string;
+}
+
+/**
+ * Delete account request
+ */
+export interface DeleteAccountRequest {
+  password: string;
+}
+
 export type IAddressType = typeof IAddressType[keyof typeof IAddressType];
 
 

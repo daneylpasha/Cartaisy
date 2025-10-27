@@ -4,6 +4,7 @@ import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
+import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import { ActiveOrders } from "@/components/molecules/profile/ActiveOrders";
 import { ActiveListItem } from "@/components/organisms/profile/ActiveListItems";
 import { DangerZoneListItem } from "@/components/organisms/profile/DangerZoneListItems";
@@ -15,14 +16,56 @@ import { WishlistCarousel } from "@/components/organisms/profile/WishListCarouse
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
 import useFavoritesStore from "@/store/useFavoritesStore";
-import { router } from "expo-router";
-import React from "react";
+import { useGetProfile } from "@/api/generated/authentication/authentication";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect } from "react";
 import { FlatList, Platform } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { XStack, YStack } from "tamagui";
 
 const ProfileScreen = () => {
   const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
+  const { showAlert, AlertComponent } = useCustomAlert();
+
+  // Get user profile data
+  const { data: profileApiData, isLoading: isLoadingProfile } = useGetProfile();
+  const user = profileApiData?.data?.user;
+
+  // Check for success message from profile update
+  useFocusEffect(
+    React.useCallback(() => {
+      AsyncStorage.getItem("profileUpdateSuccess")
+        .then((data) => {
+          if (data === "true") {
+            console.log("[Profile] Showing success alert");
+            showAlert({
+              type: "success",
+              title: "Success",
+              message: "Profile updated successfully!",
+            });
+            // Clear the flag
+            AsyncStorage.removeItem("profileUpdateSuccess");
+          }
+        })
+        .catch((error) => {
+          console.error("[Profile] Failed to read success flag:", error);
+        });
+    }, [showAlert])
+  );
+
+  // Extract user info using updated schema fields
+  const userName = (user as any)?.fullName || user?.email?.split('@')[0] || "Guest User";
+
+  // Use defaultAddress field directly from API
+  const defaultAddr = (user as any)?.defaultAddress;
+  const location = defaultAddr
+    ? `${defaultAddr.city || ''}, ${defaultAddr.province || ''} ${defaultAddr.zip || ''}`.trim()
+    : "No address added";
+
+  const userSince = user?.createdAt ? new Date(user.createdAt).getFullYear().toString() : "2024";
+  const totalPurchases = user?.totalOrdersCount || 0;
 
   // Check if wishlist has items
   const favoriteProductIds = useFavoritesStore((state) => state.favoriteProductIds);
@@ -35,10 +78,10 @@ const ProfileScreen = () => {
         <YStack paddingHorizontal="$md">
           <Spacer size="$md" />
           <YStack justifyContent="center" alignItems="center">
-            <TextXLBold>{"Lily Vermillon"}</TextXLBold>
+            <TextXLBold>{userName}</TextXLBold>
             <Spacer size="$md" />
             <TextMDRegular color="$secondary">
-              {"New York City, NY 10013"}
+              {location}
             </TextMDRegular>
             <Spacer size="$lg" />
           </YStack>
@@ -54,7 +97,7 @@ const ProfileScreen = () => {
               <AppImage name="calendar" width={18} height={19} />
               <Spacer size="$reg" />
               <TextSMRegular color="$secondary">{"User Since"}</TextSMRegular>
-              <TextXLBold>{"2018"}</TextXLBold>
+              <TextXLBold>{userSince}</TextXLBold>
             </YStack>
             <YStack
               paddingHorizontal={"$md"}
@@ -67,7 +110,7 @@ const ProfileScreen = () => {
               <TextSMRegular color="$secondary">
                 {"Total Purchase"}
               </TextSMRegular>
-              <TextXLBold>{"158"}</TextXLBold>
+              <TextXLBold>{totalPurchases}</TextXLBold>
             </YStack>
           </XStack>
         </YStack>
@@ -204,8 +247,10 @@ const ProfileScreen = () => {
   };
 
   return (
-    <ScreenContainer backgroundColor="background">
-      <FlatList
+    <>
+      <AlertComponent />
+      <ScreenContainer backgroundColor="background">
+        <FlatList
         data={profileData}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
@@ -225,6 +270,7 @@ const ProfileScreen = () => {
       />
       <Spacer size={Platform.OS === 'ios' ? BOTTOM_INSET + 20 : 0} />
     </ScreenContainer>
+    </>
   );
 };
 

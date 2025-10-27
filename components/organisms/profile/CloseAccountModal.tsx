@@ -13,7 +13,7 @@ import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
 type Props = {
   visible: boolean;
   expectedName: string; // user ka full name, e.g. "John Doe"
-  onConfirm: () => void;
+  onConfirm: (password: string) => void;
   onCancel: () => void;
   avatarUri?: string; // optional avatar
   loading?: boolean; // close button spinner state (agar aap add karna chahen)
@@ -91,9 +91,14 @@ export default function CloseAccountModal({
         <Spacer size={"$lg"} />
         <PrimaryButton
           label="Close Account"
-          isLoading={false}
+          isLoading={loading}
           background={"red"}
-          onPress={onConfirm}
+          onPress={() => {
+            const password = form.getValues("password");
+            if (password) {
+              onConfirm(password);
+            }
+          }}
           icon={
             <AppImage
               name="closeIcon"

@@ -19,7 +19,7 @@ export const GeneralListItems = () => {
       id: 2,
       image: "locationUnfilled" as keyof typeof Icons,
       title: "Address",
-      route: "/addAddress",
+      route: "/allAddressList",
     },
     {
       id: 3,

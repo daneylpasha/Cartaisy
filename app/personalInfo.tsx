@@ -18,9 +18,12 @@ import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { Controller, useForm } from "react-hook-form";
 import { ScrollView } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import { Calendar } from "react-native-calendars";
 import CountryPicker, {
   Country,
@@ -28,6 +31,10 @@ import CountryPicker, {
 } from "react-native-country-picker-modal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
+import { useGetProfile, useUpdateProfile } from "@/api/generated/authentication/authentication";
+import { useGetAddresses } from "@/api/generated/addresses/addresses";
+import { useQueryClient } from "@tanstack/react-query";
+import { router, useLocalSearchParams } from "expo-router";
 
 const toISO = (d: Date) => {
   const y = d.getFullYear();
@@ -47,8 +54,13 @@ const formatDMY = (d: Date) => {
 };
 
 const PersonalInfo = () => {
+  const queryClient = useQueryClient();
+  const params = useLocalSearchParams();
   const form = useForm();
+  const { showAlert, AlertComponent } = useCustomAlert();
   const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [pendingAddressId, setPendingAddressId] = useState<string | null>(null);
+  const [pendingAddressText, setPendingAddressText] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<Country>({
     callingCode: ["44"],
     cca2: "GB",
@@ -74,14 +86,210 @@ const PersonalInfo = () => {
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const { bottom: bottomSafeAreaInset } = useSafeAreaInsets();
   const todayISO = useMemo(() => toISO(new Date()), []);
+
+  // Get user profile data
+  const { data: profileApiData, isLoading: isLoadingProfile, refetch: refetchProfile } = useGetProfile();
+  const user = profileApiData?.data?.user;
+
+  // Get addresses to display selected address
+  const { data: addressesData } = useGetAddresses();
+
+  // Refetch profile when screen comes back into focus (after address selection)
+  useFocusEffect(
+    useCallback(() => {
+      console.log("PersonalInfo screen focused - refetching profile");
+      refetchProfile();
+
+      // Check AsyncStorage for pending selected address
+      AsyncStorage.getItem("pendingSelectedAddress")
+        .then((data) => {
+          if (data) {
+            console.log("[PersonalInfo] Found pending address in storage:", data);
+            const addressData = JSON.parse(data);
+            setPendingAddressId(addressData.id);
+            setPendingAddressText(addressData.text);
+
+            // Clear the storage after reading
+            AsyncStorage.removeItem("pendingSelectedAddress");
+          }
+        })
+        .catch((error) => {
+          console.error("[PersonalInfo] Failed to read pending address:", error);
+        });
+    }, [refetchProfile])
+  );
+
+  // Check if address was selected from address list
+  useEffect(() => {
+    console.log("Params changed:", params);
+    if (params.selectedAddressId) {
+      console.log("Address selected from list:", params.selectedAddressId);
+      console.log("Address text:", params.selectedAddressText);
+      setPendingAddressId(params.selectedAddressId as string);
+      setPendingAddressText(params.selectedAddressText as string);
+    }
+  }, [params.selectedAddressId, params.selectedAddressText]);
+
+  // Debug: log pending address and addresses data
+  useEffect(() => {
+    if (pendingAddressId) {
+      console.log("Pending address ID:", pendingAddressId);
+      console.log("Available addresses:", addressesData?.data?.addresses);
+      if (addressesData?.data?.addresses) {
+        const found = addressesData.data.addresses.find((addr: any) => addr.id === pendingAddressId);
+        console.log("Found selected address:", found);
+      }
+    }
+  }, [pendingAddressId, addressesData]);
+
+  // Update profile mutation
+  const { mutate: updateProfileMutation, isPending: isUpdating } = useUpdateProfile({
+    mutation: {
+      onSuccess: () => {
+        // Invalidate all related queries
+        queryClient.invalidateQueries({ queryKey: ['/auth/profile'] });
+        queryClient.invalidateQueries({ queryKey: ['/addresses'] }); // Invalidate addresses list
+        queryClient.invalidateQueries({ queryKey: ['/addresses/default'] }); // Invalidate default address
+        console.log("[PersonalInfo] Invalidated all address-related caches");
+        // Don't show alert here - will show on profile screen after navigation
+      },
+      onError: (error: any) => {
+        showAlert({
+          type: "error",
+          title: "Error",
+          message: error?.response?.data?.message || "Failed to update profile",
+        });
+      },
+    },
+  });
+
+  // Prefill form with user data
+  useEffect(() => {
+    if (user) {
+      console.log("Prefilling form with user data:", JSON.stringify(user, null, 2));
+
+      // Full Name - now guaranteed to be present (empty string if not set)
+      form.setValue("fullname", (user as any).fullName || "");
+
+      // Email (read-only)
+      form.setValue("email", user.email || "");
+
+      // Phone Number - correct field name
+      form.setValue("phone", (user as any).phoneNumber || "");
+
+      // Gender - now guaranteed to be present (empty string if not set)
+      const userGender = (user as any).gender;
+      if (userGender) {
+        form.setValue("gender", userGender);
+        setSelectedGender(userGender as "male" | "female");
+      }
+
+      // Date of Birth - now guaranteed to be present (empty string if not set)
+      const userDOB = (user as any).dateOfBirth;
+      if (userDOB) {
+        try {
+          // Parse the ISO date and convert to YYYY-MM-DD format for form
+          const dateObj = new Date(userDOB);
+          const isoDate = toISO(dateObj); // Convert to YYYY-MM-DD
+          form.setValue("dob", isoDate);
+          setCalendarDate(dateObj);
+          console.log("Parsed DOB:", userDOB, "->", isoDate);
+        } catch (e) {
+          console.log("Invalid date format:", userDOB);
+        }
+      }
+
+      // Country - set the country picker based on country code from API
+      const userCountry = (user as any).country;
+      if (userCountry && userCountry !== selectedCountry.cca2) {
+        console.log("Setting user country to:", userCountry);
+        // Manually create country object for common countries
+        const countryData: Record<string, Country> = {
+          US: { cca2: "US", name: "United States", callingCode: ["1"], currency: ["USD"], flag: "flag-us", region: "Americas", subregion: "North America" },
+          GB: { cca2: "GB", name: "United Kingdom", callingCode: ["44"], currency: ["GBP"], flag: "flag-gb", region: "Europe", subregion: "Northern Europe" },
+          CA: { cca2: "CA", name: "Canada", callingCode: ["1"], currency: ["CAD"], flag: "flag-ca", region: "Americas", subregion: "North America" },
+          PK: { cca2: "PK", name: "Pakistan", callingCode: ["92"], currency: ["PKR"], flag: "flag-pk", region: "Asia", subregion: "Southern Asia" },
+          IN: { cca2: "IN", name: "India", callingCode: ["91"], currency: ["INR"], flag: "flag-in", region: "Asia", subregion: "Southern Asia" },
+        };
+
+        if (countryData[userCountry]) {
+          setSelectedCountry(countryData[userCountry]);
+        }
+      }
+
+      // Default Address - new field
+      const defaultAddr = (user as any).defaultAddress;
+      if (defaultAddr) {
+        console.log("Default address:", defaultAddr);
+      }
+    }
+  }, [user]);
+
   const onSelectCountry = (country: Country) => {
     setSelectedCountry(country);
     setShowCountryPicker(false);
   };
 
+  const handleSaveChanges = () => {
+    const formData = form.getValues();
+
+    console.log("[PersonalInfo] Saving profile with data:", formData);
+    console.log("[PersonalInfo] Pending address ID:", pendingAddressId);
+
+    // Prepare the update data
+    const updateData: any = {
+      name: formData.fullname,
+      phone: formData.phone,
+      gender: formData.gender || "",
+      dateOfBirth: formData.dob || "",
+      country: selectedCountry.cca2 || "",
+    };
+
+    // If there's a pending address, include it in the profile update
+    // The backend expects addressIndex (the index of address in the addresses array)
+    if (pendingAddressId && pendingAddressId !== "undefined") {
+      console.log("[PersonalInfo] Including address index in profile update:", pendingAddressId);
+
+      // The pendingAddressId is the index (0, 1, 2, etc.) from the address list
+      updateData.addressIndex = parseInt(pendingAddressId, 10);
+    }
+
+    console.log("[PersonalInfo] Final update data:", JSON.stringify(updateData, null, 2));
+
+    // Update profile (including address if selected)
+    updateProfileMutation(
+      { data: updateData },
+      {
+        onSuccess: async (response) => {
+          console.log("[PersonalInfo] Profile update response:", JSON.stringify(response, null, 2));
+
+          // Wait a bit for the backend to process the address update
+          // Then refetch profile to get the updated default address
+          const refetchResult = await refetchProfile();
+          console.log("[PersonalInfo] Refetched profile:", JSON.stringify(refetchResult.data?.data?.user?.defaultAddress, null, 2));
+
+          // Clear pending state after refetch completes
+          setPendingAddressId(null);
+          setPendingAddressText(null);
+
+          // Set success flag for profile screen
+          await AsyncStorage.setItem("profileUpdateSuccess", "true");
+
+          // Navigate back to profile screen
+          router.back();
+        },
+        onError: (error: any) => {
+          console.error("[PersonalInfo] Profile update error:", JSON.stringify(error?.response?.data, null, 2));
+        },
+      }
+    );
+  };
+
   return (
-    <YStack
-      backgroundColor="$background"
+    <>
+      <AlertComponent />
+      <YStack
+        backgroundColor="$background"
       paddingBottom={bottomSafeAreaInset}
       flex={1}
     >
@@ -248,7 +456,7 @@ const PersonalInfo = () => {
             name="dob" // e.g. "dateOfBirth"
             control={form.control}
             rules={{ required: "Date of Birth is required" }}
-            render={({ field, fieldState }) => {
+            render={({ field }) => {
               const iso = field.value as string | undefined;
               const display = iso ? formatDMY(fromISO(iso)) : "";
 
@@ -261,12 +469,11 @@ const PersonalInfo = () => {
                   backgroundColor="$white"
                 >
                   <FormInput
-                    value={field.value}
-                    onChangeText={field.onChange}
+                    value={display}
+                    editable={false}
                     placeholder={"DD / MM / YYYY"}
                     width={"90%"}
                     borderWidth={0}
-                    error={fieldState.error?.message}
                   />
                   <OpTouch
                     onPress={() => {
@@ -412,91 +619,84 @@ const PersonalInfo = () => {
               </XStack>
             )}
           />
-          <Spacer size={"$reg"} />
-          <TextSMSemiBold>{"Age"}</TextSMSemiBold>
-          <Spacer size={"$sm"} />
-          <Controller
-            name="age"
-            control={form.control}
-            rules={{
-              required: "Age is required",
-            }}
-            render={({ field, fieldState }) => (
-              <XStack
-                borderWidth={1}
-                borderColor="$lightgrey"
-                borderRadius="$full"
-                alignItems="center"
-                backgroundColor="$white"
-              >
-                <FormInput
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  placeholder={"18 "}
-                  width={"90%"}
-                  paddingHorizontal={16}
-                  keyboardType="numeric"
-                  borderWidth={0}
-                  icon={
-                    <AppImage
-                      tintColor={getTokenValue("$secondary")}
-                      name="userIcon"
-                      width={14}
-                      height={18}
-                    />
-                  }
-                  error={fieldState.error?.message}
-                />
-                <OpTouch>
-                  <AppImage name="editIcon" width={14} height={14} />
-                </OpTouch>
-              </XStack>
-            )}
-          />
           <Spacer size={"$lg"} />
 
           <XStack justifyContent="space-between">
             <TextMDBold>{"Address"}</TextMDBold>
-            <OpTouch>
+            <OpTouch
+              onPress={() =>
+                router.push({
+                  pathname: "/allAddressList",
+                  params: { returnTo: "personalInfo" },
+                })
+              }
+            >
               <TextSMMedium color="$primary">{"Change"}</TextSMMedium>
             </OpTouch>
           </XStack>
           <Spacer size={"$lg"} />
 
-          <YStack
-            style={{
-              ...SHADOW_STYLES,
-            }}
-            backgroundColor="$white"
-            borderRadius={"$2xl"}
-            padding="$reg"
+          <OpTouch
+            onPress={() =>
+              router.push({
+                pathname: "/allAddressList",
+                params: { returnTo: "personalInfo" },
+              })
+            }
           >
-            <XStack>
-              <YStack
-                marginTop={-2}
-                justifyContent="center"
-                alignItems="center"
-                borderRadius={"$full"}
-                // paddingTop={"$xs"}
-                width={40}
-                height={40}
-                backgroundColor={"$background"}
-              >
-                <AppImage
-                  name="locationIconUnfilled"
-                  width={14}
-                  height={18}
-                  tintColor={getTokenValue("$secondary")}
-                />
-              </YStack>
-              <Spacer size={"$sm"} />
-              <ParagraphMD width={"70%"} color="$secondary">
-                {
-                  "Cornwall Street 44, Star Avenue, New York City, New York, NY 1121"
-                }
-              </ParagraphMD>
-            </XStack>
-          </YStack>
+            <YStack
+              style={{
+                ...SHADOW_STYLES,
+              }}
+              backgroundColor="$white"
+              borderRadius={"$2xl"}
+              padding="$reg"
+            >
+              <XStack>
+                <YStack
+                  marginTop={-2}
+                  justifyContent="center"
+                  alignItems="center"
+                  borderRadius={"$full"}
+                  width={40}
+                  height={40}
+                  backgroundColor={"$background"}
+                >
+                  <AppImage
+                    name="locationIconUnfilled"
+                    width={14}
+                    height={18}
+                    tintColor={getTokenValue("$secondary")}
+                  />
+                </YStack>
+                <Spacer size={"$sm"} />
+                <ParagraphMD flex={1} color="$secondary" flexWrap="wrap">
+                  {(() => {
+                    // If there's a pending address text, show it directly
+                    if (pendingAddressText) {
+                      return pendingAddressText;
+                    }
+                    // Otherwise show default address
+                    const defaultAddr = (user as any)?.defaultAddress;
+                    if (defaultAddr) {
+                      // Format address same way as address list screen
+                      return [
+                        defaultAddr.address1,
+                        defaultAddr.address2,
+                        defaultAddr.city,
+                        defaultAddr.province,
+                        defaultAddr.country,
+                        defaultAddr.zip,
+                      ]
+                        .filter(Boolean)
+                        .join(", ");
+                    }
+                    return "No address added. Tap to add an address.";
+                  })()}
+                </ParagraphMD>
+              </XStack>
+            </YStack>
+          </OpTouch>
           <Spacer size={"$lg"} />
           <YStack justifyContent="center" alignItems="center">
             <AppImage name="unLock" width={15} height={16} />
@@ -513,7 +713,7 @@ const PersonalInfo = () => {
       <YStack paddingHorizontal={"$md"}>
         <PrimaryButton
           label="Save Changes"
-          onPress={() => {}}
+          onPress={handleSaveChanges}
           width={"100%"}
           iconPosition="right"
           icon={
@@ -524,7 +724,7 @@ const PersonalInfo = () => {
               height={16}
             />
           }
-          isLoading={false}
+          isLoading={isUpdating}
         />
       </YStack>
 
@@ -1137,6 +1337,7 @@ const PersonalInfo = () => {
         </YStack>
       </BottomSheetModalWithView>
     </YStack>
+    </>
   );
 };
 
