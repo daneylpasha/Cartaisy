@@ -24,8 +24,9 @@ type CheckoutStep = "shipping" | "payment" | "confirmation" | "succesfull";
 
 const CheckoutScreen = () => {
   const params = useLocalSearchParams();
-  const sessionId = params.sessionId as string;
+  const initialSessionId = params.sessionId as string;
 
+  const [sessionId, setSessionId] = useState<string>(initialSessionId || "");
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
   const form = useForm();
   const [open, setOpen] = useState(false);
@@ -125,9 +126,15 @@ const CheckoutScreen = () => {
     }
   };
 
-  const handleShippingComplete = () => {
-    console.log("[Checkout] Shipping step completed, moving to payment");
+  const handleShippingComplete = (newSessionId: string) => {
+    console.log("[Checkout] Shipping step completed, sessionId:", newSessionId);
+    setSessionId(newSessionId);
     setCurrentStep("payment");
+  };
+
+  const handlePaymentComplete = () => {
+    console.log("[Checkout] Payment step completed, moving to confirmation");
+    setCurrentStep("confirmation");
   };
 
   const getCurrentStepIndex = () => {

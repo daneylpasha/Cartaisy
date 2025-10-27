@@ -1,14 +1,23 @@
-import { useGetAddresses, useSetDefaultAddress } from "@/api/generated/addresses/addresses";
-import { HeadingSMBold, ParagraphMD, TextMDBold, TextSMSemiBold } from "@/components/atoms";
+import {
+  useGetAddresses,
+  useSetDefaultAddress,
+} from "@/api/generated/addresses/addresses";
+import {
+  HeadingSMBold,
+  ParagraphMD,
+  TextMDBold,
+  TextSMSemiBold,
+} from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { AddressCard } from "@/components/molecules/AddressCard";
 import { PrimaryButton } from "@/components/molecules/buttons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { FlatList, Platform } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
@@ -31,30 +40,49 @@ const SelectAddressScreen = () => {
   const [selectedAddress, setSelectedAddress] = useState<number>(
     currentSelectedId ?? 0
   );
-  const { data: addressesResponse, refetch: refetchAddresses } = useGetAddresses();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const { data: addressesResponse, refetch: refetchAddresses } =
+    useGetAddresses();
 
   // Mutation to set default address
-  const { mutate: setDefaultAddress, isPending: isSettingDefault } = useSetDefaultAddress({
-    mutation: {
-      onSuccess: () => {
-        console.log("Default address set successfully");
-        refetchAddresses();
+  const { mutate: setDefaultAddress, isPending: isSettingDefault } =
+    useSetDefaultAddress({
+      mutation: {
+        onSuccess: () => {
+          console.log("[AllAddressList] Default address set successfully");
+          refetchAddresses();
+        },
+        onError: (error: any) => {
+          console.error(
+            "[AllAddressList] Failed to set default address:",
+            error
+          );
+        },
       },
-      onError: (error: any) => {
-        console.error("Failed to set default address:", error);
-      },
-    },
-  });
-  console.log("[AllAddressList] RAW API RESPONSE:", JSON.stringify(addressesResponse?.data.addresses, null, 2));
+    });
+
+  // Refetch addresses when screen comes into focus (after adding new address)
+  useFocusEffect(
+    React.useCallback(() => {
+      refetchAddresses();
+    }, [refetchAddresses])
+  );
+  console.log(
+    "[AllAddressList] RAW API RESPONSE:",
+    JSON.stringify(addressesResponse?.data.addresses, null, 2)
+  );
 
   // Store raw addresses to get real IDs
   const rawAddresses = addressesResponse?.data?.addresses || [];
 
   const addressData: AddressDataItem[] = rawAddresses.map((addr, index) => {
-    console.log(`[AllAddressList] Mapping address ${index}, full object:`, JSON.stringify(addr, null, 2));
+    console.log(
+      `[AllAddressList] Mapping address ${index}, full object:`,
+      JSON.stringify(addr, null, 2)
+    );
     return {
       id: index,
-      addressId: addr.id || addr._id, // Store the actual API address ID (try both id and _id)
+      addressId: String(index), // Use array index as the address identifier
       name: addr.label || "Address",
       address: [
         addr.address1,
@@ -71,19 +99,41 @@ const SelectAddressScreen = () => {
     };
   });
 
-  // Set selected address on mount
+  // Set selected address on mount or when default address changes
   useEffect(() => {
     if (currentSelectedId !== null) {
       setSelectedAddress(currentSelectedId);
     } else if (addressData.length > 0) {
-      const defaultAddr =
-        addressData.find((a) => a.isDefault) || addressData[0];
-      setSelectedAddress(defaultAddr.id);
+      const defaultAddr = addressData.find((a) => a.isDefault);
+      if (defaultAddr) {
+        console.log(
+          "[AllAddressList] Setting default address as selected:",
+          defaultAddr.id
+        );
+        setSelectedAddress(defaultAddr.id);
+      } else if (selectedAddress === 0 || selectedAddress === null) {
+        // Only set first address if nothing is selected yet
+        setSelectedAddress(addressData[0].id);
+      }
     }
-  }, [currentSelectedId, addressData.length]);
+  }, [currentSelectedId, addressData.length, rawAddresses]);
 
   const handleAddressSelect = (addressId: number) => {
     setSelectedAddress(addressId);
+
+    // Check if we're coming from profile (not from checkout or personalInfo form)
+    const returnTo = params.returnTo as string;
+    const sessionId = params.sessionId as string;
+    const isFromProfile = !returnTo && !sessionId;
+
+    // If from profile, automatically set as default address using array index
+    if (isFromProfile) {
+      console.log(
+        "[AllAddressList] Setting default address from profile, index:",
+        addressId
+      );
+      setDefaultAddress({ index: addressId });
+    }
   };
 
   const handleConfirm = () => {
@@ -92,23 +142,26 @@ const SelectAddressScreen = () => {
     console.log("[AllAddressList] Address data:", addressData);
 
     // Get the selected address data
-    const selectedAddressData = addressData.find((addr) => addr.id === selectedAddress);
+    const selectedAddressData = addressData.find(
+      (addr) => addr.id === selectedAddress
+    );
     console.log("[AllAddressList] Selected address data:", selectedAddressData);
 
     // Get the raw address from API response
     const rawAddress = rawAddresses[selectedAddress];
     console.log("[AllAddressList] Raw address from API:", rawAddress);
-    const realAddressId = rawAddress?.id || rawAddress?._id;
-    console.log("[AllAddressList] Real address ID:", realAddressId);
 
     // Check if we came from checkout or profile
     const returnTo = params.returnTo as string;
     console.log("[AllAddressList] Return to:", returnTo);
 
     if (returnTo === "personalInfo") {
-      // Use the address ID or fallback to index
-      const addressIdToPass = realAddressId || String(selectedAddress);
-      console.log("[AllAddressList] Returning to personal info with address ID:", addressIdToPass);
+      // Use array index as address identifier
+      const addressIdToPass = String(selectedAddress);
+      console.log(
+        "[AllAddressList] Returning to personal info with address index:",
+        addressIdToPass
+      );
 
       // Store selected address in AsyncStorage temporarily
       const addressToStore = {
@@ -116,11 +169,14 @@ const SelectAddressScreen = () => {
         text: selectedAddressData?.address || "",
       };
 
-      console.log("[AllAddressList] About to store address data:", JSON.stringify(addressToStore));
-
-      AsyncStorage.setItem("pendingSelectedAddress", JSON.stringify(addressToStore))
+      AsyncStorage.setItem(
+        "pendingSelectedAddress",
+        JSON.stringify(addressToStore)
+      )
         .then(() => {
-          console.log("[AllAddressList] ✅ Address successfully stored in AsyncStorage");
+          console.log(
+            "[AllAddressList] ✅ Address successfully stored in AsyncStorage"
+          );
           // Verify it was stored
           return AsyncStorage.getItem("pendingSelectedAddress");
         })
@@ -192,6 +248,17 @@ const SelectAddressScreen = () => {
         renderEmptyState()
       ) : (
         <>
+          <XStack
+            paddingHorizontal="$md"
+            justifyContent="flex-end"
+            marginBottom="$sm"
+          >
+            <OpTouch onPress={() => setIsEditMode(!isEditMode)}>
+              <TextMDBold color="$primary">
+                {isEditMode ? "Done" : "Edit"}
+              </TextMDBold>
+            </OpTouch>
+          </XStack>
           <FlatList
             data={addressData}
             keyExtractor={(item) => item.id.toString()}
@@ -205,21 +272,20 @@ const SelectAddressScreen = () => {
               // Get the full address object from raw addresses
               const fullAddress = rawAddresses[item.id];
 
-              // Check if we're coming from personalInfo (profile form)
-              const returnTo = params.returnTo as string;
-              const isFromProfile = returnTo === "personalInfo";
-
               return (
                 <AddressCard
                   item={item}
                   selectedAddress={selectedAddress}
                   setSelectedAddress={handleAddressSelect}
                   defaultBg="$white"
-                  // Only provide onEdit if NOT coming from profile form
+                  // Show edit icon only when in edit mode
                   onEdit={
-                    !isFromProfile
+                    isEditMode
                       ? () => {
-                          console.log("[AllAddressList] Editing address:", fullAddress);
+                          console.log(
+                            "[AllAddressList] Editing address:",
+                            fullAddress
+                          );
                           router.push({
                             pathname: "/addAddress",
                             params: {
@@ -254,9 +320,7 @@ const SelectAddressScreen = () => {
             borderTopColor="$lightgrey"
             gap="$sm"
           >
-            <OpTouch
-              onPress={() => router.push("/addAddress")}
-            >
+            <OpTouch onPress={() => router.push("/addAddress")}>
               <YStack
                 backgroundColor="$white"
                 paddingVertical="$md"
@@ -270,11 +334,14 @@ const SelectAddressScreen = () => {
               </YStack>
             </OpTouch>
 
-            <PrimaryButton
-              label="Confirm Address"
-              onPress={handleConfirm}
-              isLoading={isSettingDefault}
-            />
+            {/* Only show Confirm button if coming from checkout or personalInfo form */}
+            {(params.returnTo === "personalInfo" || params.sessionId) && (
+              <PrimaryButton
+                label="Confirm Address"
+                onPress={handleConfirm}
+                isLoading={isSettingDefault}
+              />
+            )}
           </YStack>
         </>
       )}

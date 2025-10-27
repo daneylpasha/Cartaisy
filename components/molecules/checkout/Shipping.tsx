@@ -23,7 +23,8 @@ import React, {
   useState,
 } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Alert, StyleSheet, TextInput } from "react-native";
+import { StyleSheet, TextInput } from "react-native";
+import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import CountryPicker, {
   Country,
   CountryCode,
@@ -46,7 +47,7 @@ type PhoneNumberForm = {
 
 interface ShippingProps {
   sessionId: string;
-  onStepComplete?: () => void;
+  onStepComplete?: (sessionId: string) => void;
 }
 
 export interface ShippingRef {
@@ -59,6 +60,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
     const params = useLocalSearchParams();
     console.log("[Shipping] Component rendered with params:", params);
 
+    const { showAlert, AlertComponent } = useCustomAlert();
     const [selectedAddress, setSelectedAddress] = useState<number>(0);
     const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
       null
@@ -85,16 +87,30 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
       mutation: {
         onSuccess: (response) => {
           console.log("[Shipping] Saved successfully:", response);
-          Alert.alert("Success", "Shipping information saved! Moving to payment step.");
-          // Call parent callback to move to next step
-          onStepComplete?.();
+          const newSessionId = response.data?.sessionId || sessionId;
+          showAlert({
+            type: "success",
+            title: "Success",
+            message: "Shipping information saved! Moving to payment step.",
+            buttons: [
+              {
+                text: "OK",
+                onPress: () => {
+                  // Call parent callback to move to next step with sessionId
+                  onStepComplete?.(newSessionId);
+                },
+              },
+            ],
+          });
         },
         onError: (error: any) => {
           console.error("[Shipping] Save error:", error);
-          Alert.alert(
-            "Error",
-            error?.response?.data?.error || "Failed to save shipping information"
-          );
+          showAlert({
+            type: "error",
+            title: "Error",
+            message: error?.response?.data?.error || "Failed to save shipping information",
+            buttons: [{ text: "OK" }],
+          });
         },
       },
     });
@@ -242,17 +258,32 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
     const onSubmit = (data: PhoneNumberForm) => {
       // Validate all required fields
       if (!selectedAddressId && selectedAddressId !== 0) {
-        Alert.alert("Validation Error", "Please select a shipping address");
+        showAlert({
+          type: "warning",
+          title: "Validation Error",
+          message: "Please select a shipping address",
+          buttons: [{ text: "OK" }],
+        });
         return;
       }
 
       if (!selectedShippingHandle) {
-        Alert.alert("Validation Error", "Please select a shipping method");
+        showAlert({
+          type: "warning",
+          title: "Validation Error",
+          message: "Please select a shipping method",
+          buttons: [{ text: "OK" }],
+        });
         return;
       }
 
       if (!data.phone) {
-        Alert.alert("Validation Error", "Please enter your contact number");
+        showAlert({
+          type: "warning",
+          title: "Validation Error",
+          message: "Please enter your contact number",
+          buttons: [{ text: "OK" }],
+        });
         return;
       }
 
@@ -680,6 +711,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
           style={{ flex: 1 }}
           ListFooterComponent={<Spacer size={48 + BOTTOM_INSET} />}
         />
+        <AlertComponent />
       </YStack>
     );
   }

@@ -409,112 +409,103 @@ export interface ProductDetailResponse {
   data: ProductDetail;
 }
 
-export type PaymentMethodDataType = typeof PaymentMethodDataType[keyof typeof PaymentMethodDataType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PaymentMethodDataType = {
-  card: 'card',
-  google_pay: 'google_pay',
-  apple_pay: 'apple_pay',
-} as const;
-
-export type PaymentMethodDataCard = {
-  expYear: number;
-  expMonth: number;
-  last4: string;
+/**
+ * Stored payment method card details
+ */
+export interface StoredPaymentCard {
   brand: string;
-};
-
-export type PaymentMethodDataBillingAddress = {
-  zip: string;
-  country: string;
-  province: string;
-  city: string;
-  address2?: string;
-  address1: string;
-};
+  last4: string;
+  exp_month: number;
+  exp_year: number;
+  country?: string;
+}
 
 /**
- * Payment method data for responses
+ * Stored payment method object (sanitized from Stripe)
  */
-export interface PaymentMethodData {
+export interface StoredPaymentMethod {
   id: string;
-  type: PaymentMethodDataType;
-  displayName: string;
-  card?: PaymentMethodDataCard;
-  billingAddress: PaymentMethodDataBillingAddress;
+  type: string;
+  card?: StoredPaymentCard;
   isDefault: boolean;
-  isExpired: boolean;
-  createdAt: string;
+  created: number;
+  allow_redisplay?: string;
 }
 
-export type GetPaymentMethodsResponseData = {
-  hasDefault: boolean;
+export type ListStoredPaymentMethodsResponseData = {
   count: number;
-  paymentMethods: PaymentMethodData[];
+  defaultPaymentMethodId?: string;
+  paymentMethods: StoredPaymentMethod[];
 };
 
 /**
- * Response for get payment methods
+ * List stored payment methods response
  */
-export interface GetPaymentMethodsResponse {
+export interface ListStoredPaymentMethodsResponse {
   success: boolean;
-  data: GetPaymentMethodsResponseData;
+  data: ListStoredPaymentMethodsResponseData;
 }
 
-export type AddPaymentMethodResponseData = {
-  paymentMethod: PaymentMethodData;
+export type StorePaymentMethodResponseData = {
+  paymentMethod: StoredPaymentMethod;
 };
 
 /**
- * Response for add payment method
+ * Store payment method response
  */
-export interface AddPaymentMethodResponse {
+export interface StorePaymentMethodResponse {
   success: boolean;
-  data: AddPaymentMethodResponseData;
   message: string;
-}
-
-export type AddPaymentMethodRequestBillingAddress = {
-  lastName?: string;
-  firstName?: string;
-  zip: string;
-  country: string;
-  province: string;
-  city: string;
-  address2?: string;
-  address1: string;
-};
-
-/**
- * Request to add payment method
- */
-export interface AddPaymentMethodRequest {
-  stripePaymentMethodId: string;
-  billingAddress: AddPaymentMethodRequestBillingAddress;
-  isDefault?: boolean;
+  data?: StorePaymentMethodResponseData;
 }
 
 /**
- * Response for delete payment method
+ * Store payment method request
  */
-export interface DeletePaymentMethodResponse {
+export interface StorePaymentMethodRequest {
+  paymentMethodId: string;
+  setAsDefault?: boolean;
+}
+
+/**
+ * Delete stored payment method response
+ */
+export interface DeleteStoredPaymentMethodResponse {
   success: boolean;
   message: string;
 }
 
-export type SetDefaultPaymentMethodResponseData = {
-  paymentMethod: PaymentMethodData;
+export type UpdateDefaultPaymentMethodResponseData = {
+  paymentMethodId: string;
 };
 
 /**
- * Response for set default payment method
+ * Update default payment method response
  */
-export interface SetDefaultPaymentMethodResponse {
+export interface UpdateDefaultPaymentMethodResponse {
   success: boolean;
-  data: SetDefaultPaymentMethodResponseData;
   message: string;
+  data?: UpdateDefaultPaymentMethodResponseData;
+}
+
+/**
+ * Update default payment method request
+ */
+export interface UpdateDefaultPaymentMethodRequest {
+  paymentMethodId: string;
+}
+
+export type GetDefaultStoredPaymentMethodResponseData = {
+  paymentMethod: StoredPaymentMethod;
+};
+
+/**
+ * Get default stored payment method response
+ */
+export interface GetDefaultStoredPaymentMethodResponse {
+  success: boolean;
+  data?: GetDefaultStoredPaymentMethodResponseData;
+  message?: string;
 }
 
 /**

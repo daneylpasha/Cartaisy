@@ -27,6 +27,9 @@ import { Modal, ScrollView } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { getTokenValue, XStack, YStack } from "tamagui";
+import { CardField, useStripe } from '@stripe/stripe-react-native';
+import { useAddPaymentMethod } from "@/api/generated/payment-methods/payment-methods";
+import { router } from "expo-router";
 const toISO = (d: Date) => {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -45,33 +48,83 @@ const formatDMY = (d: Date) => {
 };
 const AddNewCardDetails = () => {
   const form = useForm();
+  const { createPaymentMethod } = useStripe();
   const calendarBottomSheetRef = useRef<BaseBottomSheetRef>(null);
 
-  const onSubmit = (data: any) => {
-    console.log("Form submitted:", data);
-    handleLinkCard();
-  };
-  const [tempDateSelection, setTempDateSelection] = useState<string | null>(
-    null
-  );
+  // Card state
+  const [cardComplete, setCardComplete] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
+  const [showCardLinkModal, setShowCardLinkModal] = useState(false);
+  const [tempDateSelection, setTempDateSelection] = useState<string | null>(null);
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
-  const [showLoader, setShowLoader] = useState(false);
-  const [showCardLinkModal, setShowCardLinkModal] = useState(false);
   const todayISO = useMemo(() => toISO(new Date()), []);
 
-  const handleLinkCard = () => {
-    setShowLoader(true);
-  };
+  // Add payment method mutation
+  const { mutate: addPaymentMethod, isPending: isStoringPayment } = useAddPaymentMethod({
+    mutation: {
+      onSuccess: (response) => {
+        console.log("[AddCard] Payment method stored successfully:", response);
+        setShowLoader(false);
+        setShowCardLinkModal(true);
+      },
+      onError: (error: any) => {
+        console.error("[AddCard] Failed to store payment method:", error);
+        setShowLoader(false);
+        alert(error.message || 'Failed to save card. Please try again.');
+      },
+    },
+  });
 
-  const handleLoaderComplete = () => {
-    setShowLoader(false);
-    setShowCardLinkModal(true);
+  const onSubmit = async (data: any) => {
+    if (!cardComplete) {
+      alert('Please complete card details');
+      return;
+    }
+
+    setShowLoader(true);
+
+    try {
+      // Step 1: Create payment method with Stripe SDK
+      const { paymentMethod, error } = await createPaymentMethod({
+        paymentMethodType: 'Card',
+        billingDetails: {
+          address: {
+            line1: data.streetAddress,
+            line2: data.apartmentnumber,
+            state: data.province,
+            postalCode: data.postalcode,
+            country: 'US', // You can make this dynamic
+          },
+        },
+      });
+
+      if (error) {
+        console.error('[AddCard] Stripe error:', error);
+        setShowLoader(false);
+        alert(error.message || 'Card validation failed');
+        return;
+      }
+
+      // Step 2: Send payment method ID to backend
+      console.log('[AddCard] Payment method created:', paymentMethod.id);
+      addPaymentMethod({
+        data: {
+          paymentMethodId: paymentMethod.id,
+          setAsDefault: true, // Set first card as default
+        },
+      });
+    } catch (err) {
+      console.error('[AddCard] Error:', err);
+      setShowLoader(false);
+      alert('Failed to add card. Please try again.');
+    }
   };
 
   const handleCardLinkConfirm = () => {
     setShowCardLinkModal(false);
+    router.back(); // Go back to payment methods list
   };
 
   const handleCardLinkCancel = () => {
@@ -160,182 +213,38 @@ const AddNewCardDetails = () => {
               <TextMDBold>{t("addnewcarddetails.cardinfo")}</TextMDBold>
             </XStack>
             <YStack>
-              <TextSMSemiBold>
-                {t("addnewcarddetails.fieldfirst")}
-              </TextSMSemiBold>
-              <Spacer size={"$sm"} />
-              <Controller
-                name="cardholderName"
-                control={form.control}
-                rules={{
-                  required: "Card Holder Name is required",
-                }}
-                render={({ field, fieldState }) => (
-                  <XStack
-                    borderWidth={1}
-                    borderColor="$lightgrey"
-                    borderRadius="$full"
-                    alignItems="center"
-                    backgroundColor="$white"
-                  >
-                    <FormInput
-                      value={field.value}
-                      paddingHorizontal={16}
-                      onChangeText={field.onChange}
-                      placeholder={"Lily 2, London"}
-                      width={"90%"}
-                      borderWidth={0}
-                      icon={
-                        <AppImage
-                          tintColor={getTokenValue("$secondary")}
-                          name="userIcon"
-                          width={14}
-                          height={18}
-                        />
-                      }
-                      // error={fieldState.error?.message}
-                      onSubmitEditing={() => form.setFocus("cardnumber")}
-                    />
-                    {/* <AppImage name="warningIcon" width={16} height={16} /> */}
-                  </XStack>
-                )}
-              />
-              <Spacer size={"$reg"} />
-              <TextSMSemiBold>
-                {t("addnewcarddetails.fieldsecond")}
-              </TextSMSemiBold>
-              <Spacer size={"$sm"} />
-              <Controller
-                name="cardnumber"
-                control={form.control}
-                rules={{
-                  required: "Card Number is required",
-                }}
-                render={({ field, fieldState }) => (
-                  <XStack
-                    borderWidth={1}
-                    borderColor="$lightgrey"
-                    borderRadius="$full"
-                    alignItems="center"
-                    backgroundColor="$white"
-                  >
-                    <FormInput
-                      value={field.value}
-                      paddingHorizontal={16}
-                      onChangeText={field.onChange}
-                      placeholder={"0000 0000 0000 0000"}
-                      width={"90%"}
-                      borderWidth={0}
-                      keyboardType="numeric"
-                      icon={
-                        <AppImage
-                          tintColor={getTokenValue("$secondary")}
-                          name="userIcon"
-                          width={14}
-                          height={18}
-                        />
-                      }
-                      // error={fieldState.error?.message}
-                      onSubmitEditing={() => form.setFocus("dob")}
-                    />
-                  </XStack>
-                )}
-              />
-              <Spacer size={"$reg"} />
-              <XStack width={"100%"}>
-                <YStack flex={1}>
-                  <TextSMSemiBold>
-                    {t("addnewcarddetails.fieldthird")}
-                  </TextSMSemiBold>
-                  <Spacer size={"$sm"} />
-                  <Controller
-                    name="dob" // e.g. "dateOfBirth"
-                    control={form.control}
-                    rules={{ required: "Date of Birth is required" }}
-                    render={({ field, fieldState }) => {
-                      const iso = field.value as string | undefined;
-                      const display = iso ? formatDMY(fromISO(iso)) : "";
-
-                      return (
-                        <XStack
-                          borderWidth={1}
-                          borderColor="$lightgrey"
-                          borderRadius="$full"
-                          alignItems="center"
-                          backgroundColor="$white"
-                        >
-                          <FormInput
-                            value={field.value}
-                            onChangeText={field.onChange}
-                            placeholder={"00 / 00 / 0000"}
-                            width={"85%"}
-                            borderWidth={0}
-                            keyboardType="numeric"
-                            // error={fieldState.error?.message}
-                            onSubmitEditing={() => form.setFocus("cvv")}
-                          />
-                          <OpTouch
-                            onPress={() => {
-                              setTempDateSelection(iso || null);
-                              if (iso) {
-                                setCalendarDate(fromISO(iso));
-                              }
-                              calendarBottomSheetRef.current?.handleOpenPress();
-                            }}
-                            hitSlop={{
-                              top: 12,
-                              bottom: 12,
-                              left: 12,
-                              right: 12,
-                            }}
-                          >
-                            <AppImage
-                              name="calendar"
-                              width={16}
-                              height={16}
-                              tintColor={getTokenValue("$secondary")}
-                            />
-                          </OpTouch>
-                        </XStack>
-                      );
-                    }}
-                  />
-                </YStack>
-                <Spacer size={"$sm"} />
-                <YStack flex={0.5}>
-                  <TextSMSemiBold>
-                    {t("addnewcarddetails.fieldfourth")}
-                  </TextSMSemiBold>
-                  <Spacer size={"$sm"} />
-                  <Controller
-                    name="cvv"
-                    control={form.control}
-                    rules={{
-                      required: "Postcode is required",
-                    }}
-                    render={({ field, fieldState }) => (
-                      <FormInput
-                        value={field.value}
-                        onChangeText={field.onChange}
-                        placeholder={"000"}
-                        //   width={"100%"}
-                        borderWidth={1}
-                        keyboardType="numeric"
-                        icon={
-                          <AppImage
-                            tintColor={getTokenValue("$secondary")}
-                            name="userIcon"
-                            width={19}
-                            height={16}
-                          />
-                        }
-                        // error={fieldState.error?.message}
-                        onSubmitEditing={() => form.setFocus("streetAddress")}
-                      />
-                    )}
-                  />
-                </YStack>
-              </XStack>
+              {/* Stripe CardField - Replaces all 4 insecure card inputs */}
+              <TextSMSemiBold marginBottom="$sm">Card Details</TextSMSemiBold>
+              <YStack
+                borderWidth={1}
+                borderColor="$lightgrey"
+                borderRadius="$2xl"
+                backgroundColor="$white"
+                paddingVertical="$md"
+                paddingHorizontal="$md"
+              >
+                <CardField
+                  postalCodeEnabled={false}
+                  placeholders={{
+                    number: '4242 4242 4242 4242',
+                  }}
+                  cardStyle={{
+                    backgroundColor: '#FFFFFF',
+                    textColor: '#000000',
+                    placeholderColor: '#999999',
+                    borderWidth: 0,
+                    borderRadius: 12,
+                  }}
+                  style={{
+                    width: '100%',
+                    height: 50,
+                  }}
+                  onCardChange={(details) => {
+                    console.log('[CardField] Card details changed:', details.complete);
+                    setCardComplete(details.complete);
+                  }}
+                />
+              </YStack>
               <Spacer size={"$lg"} />
               <TextMDBold>{t("addnewcarddetails.bilingaddress")}</TextMDBold>
 
@@ -505,11 +414,12 @@ const AddNewCardDetails = () => {
       </KeyboardAwareScrollView>
       {/* <ScrollView showsVerticalScrollIndicator={false}>
       </ScrollView> */}
-      <YStack paddingHorizontal={"$md"}>
+      <YStack paddingHorizontal={"$md"} opacity={!cardComplete ? 0.5 : 1}>
         <PrimaryButton
-          label={t("addnewcarddetails.btn")}
-          isLoading={false}
+          label={showLoader ? "Processing..." : t("addnewcarddetails.btn")}
+          isLoading={showLoader || isStoringPayment}
           onPress={form.handleSubmit(onSubmit)}
+          disabled={!cardComplete || showLoader || isStoringPayment}
           icon={
             <AppImage
               size={15}
@@ -905,14 +815,9 @@ const AddNewCardDetails = () => {
         </YStack>
       </BottomSheetModalWithView>
 
-      {/* Loader Screen Modal */}
-      <Modal visible={showLoader} animationType="fade" transparent={false}>
-        <LoaderScreen onComplete={handleLoaderComplete} duration={3000} />
-      </Modal>
-
       <CardLinkModal
         visible={showCardLinkModal}
-        expectedName="John Doe"
+        expectedName="Card Linked Successfully"
         onConfirm={handleCardLinkConfirm}
         onCancel={handleCardLinkCancel}
       />
