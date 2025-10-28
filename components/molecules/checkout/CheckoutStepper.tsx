@@ -125,12 +125,17 @@ export const CheckoutStepper = ({
 
           return (
             <React.Fragment key={index}>
-              <YStack
-                // onPress={() => onStepPress?.(index)}
-                // disabled={!onStepPress}
+              <OpTouch
+                onPress={() => {
+                  // Only allow clicking on completed steps (backward navigation)
+                  if (status === "completed" && onStepPress) {
+                    onStepPress(index);
+                  }
+                }}
+                disabled={status !== "completed"}
               >
                 {renderCircle(status)}
-              </YStack>
+              </OpTouch>
               <View
                 style={{
                   flex: 1,

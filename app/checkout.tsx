@@ -9,17 +9,14 @@ import { CheckoutSuccess } from "@/components/molecules/checkout/CheckoutSucess"
 import Confirmation from "@/components/molecules/checkout/Confirmation";
 import PaymentStepper from "@/components/molecules/checkout/Payment";
 import Shipping from "@/components/molecules/checkout/Shipping";
+import { useCompleteCheckout } from "@/api/generated/checkout/checkout";
 import React, { useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
 import { Animated, FlatList, PanResponder } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 
 import { getTokenValue, XStack, YStack } from "tamagui";
 
-type PhoneNumberForm = {
-  phone: string;
-};
 type CheckoutStep = "shipping" | "payment" | "confirmation" | "succesfull";
 
 const CheckoutScreen = () => {
@@ -29,7 +26,7 @@ const CheckoutScreen = () => {
   const [sessionId, setSessionId] = useState<string>(initialSessionId || "");
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
   const [isProcessing, setIsProcessing] = useState(false);
-  const form = useForm();
+  const [checkoutSummary, setCheckoutSummary] = useState<any>(null);
   const [open, setOpen] = useState(false);
   const shippingRef = useRef<any>(null);
   const paymentRef = useRef<any>(null);
@@ -105,6 +102,35 @@ const CheckoutScreen = () => {
 
   const { bottom: bottomSafeAreaInset } = useSafeAreaInsets();
 
+  // Complete checkout mutation
+  const { mutate: completeCheckout } = useCompleteCheckout({
+    mutation: {
+      onSuccess: (response) => {
+        const responseData = response.data as any;
+        const paymentStatus = responseData?.payment?.status;
+
+        if (paymentStatus === "succeeded") {
+          // Payment succeeded, navigate to success screen
+          setIsProcessing(false);
+          setCurrentStep("succesfull");
+        } else if (paymentStatus === "requires_action") {
+          // 3D Secure or other action required
+          setIsProcessing(false);
+          // TODO: Handle 3D Secure authentication flow with responseData?.payment?.clientSecret
+          // For now, just stop the loader - user will need to retry
+        } else if (paymentStatus === "processing") {
+          // Payment is processing - keep loader running or stop
+          setIsProcessing(false);
+        }
+      },
+      onError: (error: any) => {
+        // Silently handle error - just stop the loader
+        setIsProcessing(false);
+        // No alert modal - user can retry by clicking button again
+      },
+    },
+  });
+
   const handleStepPress = (stepIndex: number) => {
     const steps: CheckoutStep[] = [
       "shipping",
@@ -128,8 +154,13 @@ const CheckoutScreen = () => {
         paymentRef.current.handleContinue();
       }
     } else if (currentStep === "confirmation") {
-      setCurrentStep("succesfull");
-      setIsProcessing(false);
+      // Complete the order
+      console.log("[Checkout] Completing order with sessionId:", sessionId);
+      completeCheckout({
+        data: {
+          sessionId,
+        },
+      });
     }
   };
 
@@ -179,7 +210,7 @@ const CheckoutScreen = () => {
         return <PaymentStepper ref={paymentRef} sessionId={sessionId} onStepComplete={handlePaymentComplete} onError={() => setIsProcessing(false)} />;
 
       case "confirmation":
-        return <Confirmation />;
+        return <Confirmation sessionId={sessionId} onSummaryLoaded={setCheckoutSummary} />;
 
       case "succesfull":
         return <CheckoutSuccess />;
@@ -251,31 +282,35 @@ const CheckoutScreen = () => {
                     paddingVertical={"$sm"}
                     justifyContent="space-between"
                   >
-                    <TextSMSemiBold>Subtotal( Items)</TextSMSemiBold>
-                    <TextSMSemiBold>${"4,211"}</TextSMSemiBold>
+                    <TextSMSemiBold>Subtotal ({checkoutSummary?.items?.length || 0} Items)</TextSMSemiBold>
+                    <TextSMSemiBold>{checkoutSummary?.pricing?.currency || "$"}{checkoutSummary?.pricing?.subtotal?.toFixed(2) || "0.00"}</TextSMSemiBold>
                   </XStack>
-                  <XStack
-                    paddingVertical={"$sm"}
-                    justifyContent="space-between"
-                  >
-                    <TextSMRegular color="$secondary">Discount</TextSMRegular>
-                    <TextSMSemiBold color="$green">${"2323"}</TextSMSemiBold>
-                  </XStack>
-                  <XStack
-                    paddingVertical={"$sm"}
-                    justifyContent="space-between"
-                  >
-                    <TextSMRegular color="$secondary">
-                      Coupon Discount
-                    </TextSMRegular>
-                    <TextSMSemiBold color="$green">${"2323"}</TextSMSemiBold>
-                  </XStack>
+                  {(checkoutSummary?.pricing?.discountAmount || 0) > 0 && (
+                    <XStack
+                      paddingVertical={"$sm"}
+                      justifyContent="space-between"
+                    >
+                      <TextSMRegular color="$secondary">Discount</TextSMRegular>
+                      <TextSMSemiBold color="$green">-{checkoutSummary?.pricing?.currency || "$"}{checkoutSummary?.pricing?.discountAmount?.toFixed(2) || "0.00"}</TextSMSemiBold>
+                    </XStack>
+                  )}
+                  {(checkoutSummary?.pricing?.couponDiscount || 0) > 0 && (
+                    <XStack
+                      paddingVertical={"$sm"}
+                      justifyContent="space-between"
+                    >
+                      <TextSMRegular color="$secondary">
+                        Coupon Discount
+                      </TextSMRegular>
+                      <TextSMSemiBold color="$green">-{checkoutSummary?.pricing?.currency || "$"}{checkoutSummary?.pricing?.couponDiscount?.toFixed(2) || "0.00"}</TextSMSemiBold>
+                    </XStack>
+                  )}
                   <XStack
                     paddingVertical={"$sm"}
                     justifyContent="space-between"
                   >
                     <TextSMRegular color="$secondary">Taxes</TextSMRegular>
-                    <TextSMSemiBold color="$error">{"$23.00"}</TextSMSemiBold>
+                    <TextSMSemiBold color="$error">{checkoutSummary?.pricing?.currency || "$"}{checkoutSummary?.pricing?.tax?.toFixed(2) || "0.00"}</TextSMSemiBold>
                   </XStack>
                   <XStack
                     paddingVertical={"$sm"}
@@ -284,7 +319,7 @@ const CheckoutScreen = () => {
                     <TextSMRegular color="$secondary">
                       Delivery Fee
                     </TextSMRegular>
-                    <TextSMSemiBold color="$error">{"$8.00"}</TextSMSemiBold>
+                    <TextSMSemiBold color="$error">{checkoutSummary?.pricing?.currency || "$"}{checkoutSummary?.pricing?.shippingCost?.toFixed(2) || "0.00"}</TextSMSemiBold>
                   </XStack>
                   <Spacer size={"$md"} />
                 </YStack>
@@ -296,7 +331,7 @@ const CheckoutScreen = () => {
                   <XStack justifyContent="space-between">
                     <TextSMSemiBold>{"GrandTotal"}</TextSMSemiBold>
                     <XStack alignItems="center">
-                      <TextMDBold>{"$8413"}</TextMDBold>
+                      <TextMDBold>{checkoutSummary?.pricing?.currency || "$"}{checkoutSummary?.pricing?.grandTotal?.toFixed(2) || "0.00"}</TextMDBold>
                       <Spacer size={"$xs"} />
                       <AppImage
                         name="caretRight"

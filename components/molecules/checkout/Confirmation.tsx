@@ -1,22 +1,114 @@
+import {
+  useApplyPromoCode,
+  useGetCheckoutSummary,
+} from "@/api/generated/checkout/checkout";
 import { TextMDSemiBold, TextSMBold, TextXSRegular } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
-import { OpTouch } from "@/components/atoms/OpTouch";
+import { Loader } from "@/components/atoms/Loader";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
+import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import OrderListItems from "@/components/organisms/checkout/OrderListItems";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
-import React from "react";
+import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { StyleSheet } from "react-native";
 import { getTokenValue, XStack, YStack } from "tamagui";
 import { PrimaryButton } from "../buttons";
 import { SectionHeader } from "../SectionHeader";
 
-const Confirmation = () => {
+interface ConfirmationProps {
+  sessionId: string;
+  onSummaryLoaded?: (summary: any) => void;
+}
+
+const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
   const form = useForm();
+  const { showAlert, AlertComponent } = useCustomAlert();
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+
+  // Fetch checkout summary
+  const {
+    data: summaryResponse,
+    isLoading,
+    refetch,
+  } = useGetCheckoutSummary(sessionId, {
+    query: {
+      enabled: !!sessionId,
+    },
+  });
+
+  const summary = summaryResponse?.data;
+
+  // Notify parent when summary is loaded
+  React.useEffect(() => {
+    if (summary && onSummaryLoaded) {
+      onSummaryLoaded(summary);
+    }
+  }, [summary, onSummaryLoaded]);
+
+  // Apply promo code mutation
+  const { mutate: applyPromo } = useApplyPromoCode({
+    mutation: {
+      onSuccess: () => {
+        console.log("[Confirmation] Promo code applied successfully");
+        setIsApplyingPromo(false);
+        setPromoError(null); // Clear any previous errors
+        form.setValue("promocode", "");
+        // Refetch checkout summary to get updated pricing
+        refetch();
+        // No alert modal - green banner will show automatically via summary.promoCode
+      },
+      onError: (error: any) => {
+        // Don't log to console to avoid triggering global error toasts
+        setIsApplyingPromo(false);
+
+        // Extract error message from different possible paths
+        const errorMessage =
+          error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Invalid promo code. Please try again.";
+
+        // Set error to show in red banner instead of modal
+        setPromoError(errorMessage);
+      },
+    },
+  });
+
+  const handleApplyPromo = () => {
+    const promoCode = form.getValues("promocode");
+    if (!promoCode || promoCode.trim() === "") {
+      setPromoError("Please enter a promo code");
+      return;
+    }
+
+    setPromoError(null); // Clear any previous errors
+    setIsApplyingPromo(true);
+    applyPromo({
+      data: {
+        sessionId,
+        promoCode: promoCode.trim(),
+      },
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        paddingVertical="$2xl"
+      >
+        <Loader size="large" color="$primary" />
+      </YStack>
+    );
+  }
   return (
     <YStack>
       <Spacer size={"$xl"} />
@@ -26,23 +118,23 @@ const Confirmation = () => {
         image="list"
         onPressSeeAll={() => {}}
       />
-      <OrderListItems />
+      <OrderListItems items={summary?.items || []} />
       <Spacer size={"$xl"} />
       <SectionHeader
         title={t("checkout.sectionHeader.deliveryaddress")}
         tintColor={"darkgrey"}
         image="locationUnfilled"
-        seeAllText="Change"
-        color="primary"
-        onPressSeeAll={() => {}}
       />
       <Spacer size={"$reg"} />
-      <OpTouch style={[Styles.addressContainer, { ...SHADOW_STYLES }]}>
+      <YStack paddingHorizontal={"$md"}>
         <XStack
           backgroundColor={"$white"}
+          borderWidth={1}
+          borderColor={"$lightgrey"}
           borderRadius="$2xl"
           padding={"$reg"}
           justifyContent="space-between"
+          style={SHADOW_STYLES}
         >
           <XStack>
             <AppImage
@@ -53,10 +145,24 @@ const Confirmation = () => {
             />
             <Spacer size={"$reg"} />
             <YStack width={"80%"}>
-              <TextMDSemiBold>{"James Vermillion"}</TextMDSemiBold>
-              <Spacer size={"$sm"} />
+              {(summary?.shippingAddress?.firstName ||
+                summary?.shippingAddress?.lastName) && (
+                <>
+                  <TextMDSemiBold>
+                    {summary?.shippingAddress?.firstName || ""}{" "}
+                    {summary?.shippingAddress?.lastName || ""}
+                  </TextMDSemiBold>
+                  <Spacer size={"$sm"} />
+                </>
+              )}
               <ParagraphSM color="$secondary">
-                {"18752 January Avenue, North Manhattan, New York, NY, 10013"}
+                {summary?.shippingAddress?.address1 || ""}
+                {summary?.shippingAddress?.address2
+                  ? `, ${summary.shippingAddress.address2}`
+                  : ""}
+                {`, ${summary?.shippingAddress?.city || ""}, ${
+                  summary?.shippingAddress?.province || ""
+                }, ${summary?.shippingAddress?.zip || ""}`}
               </ParagraphSM>
               <Spacer size={"$sm"} />
               <XStack alignItems="center">
@@ -81,7 +187,7 @@ const Confirmation = () => {
             </YStack>
           </XStack>
         </XStack>
-      </OpTouch>
+      </YStack>
       <Spacer size={"$xl"} />
       <SectionHeader
         title={t("checkout.sectionHeader.promocode")}
@@ -99,35 +205,71 @@ const Confirmation = () => {
               width={"70%"}
               value={field.value}
               onChangeText={field.onChange}
-              placeholder={"FIRSTTIME50"}
+              placeholder={"ENTER PROMO CODE"}
 
               // secureTextEntry
               // error={fieldState.error?.message}
             />
           )}
         />
-        <PrimaryButton onPress={() => {}} width={"25%"} label="Apply" />
+        <PrimaryButton
+          onPress={handleApplyPromo}
+          width={"25%"}
+          label="Apply"
+          isLoading={isApplyingPromo}
+        />
       </XStack>
-      <Spacer size={"$reg"} />
-      <YStack paddingHorizontal={"$md"}>
-        <XStack
-          alignItems="center"
-          gap="$xs"
-          borderWidth={1}
-          borderColor="$green"
-          padding="$sm"
-          borderRadius="$2xl"
-          backgroundColor="#ECFDF5"
-        >
-          <AppImage
-            name="errorIcon"
-            width={16}
-            height={16}
-            tintColor={getTokenValue("$green")}
-          />
-          <TextSMBold>{"50% OFF First Time Applied."}</TextSMBold>
-        </XStack>
-      </YStack>
+      {promoError && (
+        <>
+          <Spacer size={"$reg"} />
+          <YStack paddingHorizontal={"$md"}>
+            <XStack
+              gap="$xs"
+              borderWidth={1}
+              borderColor="$error"
+              padding="$sm"
+              borderRadius="$2xl"
+              backgroundColor="#FFF1F2"
+            >
+              <YStack marginTop={"$xs"}>
+                <AppImage
+                  name="errorIcon"
+                  width={16}
+                  height={16}
+                  tintColor={getTokenValue("$error")}
+                />
+              </YStack>
+              <TextSMBold color="$error">{promoError}</TextSMBold>
+            </XStack>
+          </YStack>
+        </>
+      )}
+      {summary?.promoCode && (
+        <>
+          <Spacer size={"$reg"} />
+          <YStack paddingHorizontal={"$md"}>
+            <XStack
+              gap="$xs"
+              borderWidth={1}
+              borderColor="$green"
+              padding="$sm"
+              borderRadius="$2xl"
+              backgroundColor="#ECFDF5"
+            >
+              <YStack marginTop={"$xs"}>
+                <AppImage
+                  name="errorIcon"
+                  width={16}
+                  height={16}
+                  tintColor={getTokenValue("$green")}
+                />
+              </YStack>
+              <TextSMBold>{`Promo code "${summary.promoCode}" applied successfully!`}</TextSMBold>
+            </XStack>
+          </YStack>
+        </>
+      )}
+      <AlertComponent />
     </YStack>
   );
 };

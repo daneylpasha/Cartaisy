@@ -8,12 +8,23 @@ import { OpTouch } from "../atoms/OpTouch";
 
 type OrderItemProps = {
   title: string;
-  image?: keyof typeof Icons;
-  currentPrice: number;
-  originalPrice: number;
+  image?: keyof typeof Icons | string | null;
+  currentPrice?: number;
+  originalPrice?: number;
+  price?: number;
+  total?: number;
+  quantity?: number;
+  variantTitle?: string;
   onPress?: () => void;
 };
 const OrderCard = ({ item }: { item: OrderItemProps }) => {
+  // Handle both old and new data structures
+  const displayPrice = item.currentPrice ?? item.price ?? 0;
+  const displayOriginalPrice = item.originalPrice ?? item.total ?? 0;
+  const imageSource = typeof item.image === 'string' && item.image?.startsWith('http')
+    ? { uri: item.image }
+    : item.image;
+
   return (
     <OpTouch onPress={item.onPress}>
       <XStack paddingHorizontal={"$md"} paddingTop={"$lg"}>
@@ -27,8 +38,8 @@ const OrderCard = ({ item }: { item: OrderItemProps }) => {
           height={80}
         >
           <AppImage
-            resizeMode="contain"
-            name={item.image}
+            resizeMode="cover"
+            source={imageSource as any}
             width={80}
             height={80}
           />
@@ -36,14 +47,24 @@ const OrderCard = ({ item }: { item: OrderItemProps }) => {
         <Spacer size={"$md"} />
         <YStack flexShrink={1}>
           <TextSMMedium>{item.title}</TextSMMedium>
+          {item.variantTitle && (
+            <>
+              <Spacer size={"$xs"} />
+              <TextXSRegular color="$secondary">{item.variantTitle}</TextXSRegular>
+            </>
+          )}
           <Spacer size={"$sm"} />
           {/* Price Row */}
           <XStack alignItems="center">
-            <TextLGBold>${item.currentPrice}</TextLGBold>
-            <Spacer size={"$sm"} />
-            <TextXSRegular textDecorationLine="line-through" color="$secondary">
-              ${item.originalPrice}
-            </TextXSRegular>
+            <TextLGBold>${displayPrice.toFixed(2)}</TextLGBold>
+            {displayOriginalPrice > displayPrice && (
+              <>
+                <Spacer size={"$sm"} />
+                <TextXSRegular textDecorationLine="line-through" color="$secondary">
+                  ${displayOriginalPrice.toFixed(2)}
+                </TextXSRegular>
+              </>
+            )}
           </XStack>
         </YStack>
       </XStack>
