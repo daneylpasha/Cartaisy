@@ -3,237 +3,294 @@ import {
   TextLGBold,
   TextMDSemiBold,
   TextSMRegular,
+  TextSMSemiBold,
+  TextXSRegular,
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
+import { Divider } from "@/components/atoms/Divider";
+import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { router } from "expo-router";
 import React from "react";
-import { FlatList } from "react-native-gesture-handler";
+import { ScrollView } from "react-native";
 import { getTokenValue, Spacer, XStack, YStack } from "tamagui";
 import { PrimaryButton, SecondaryButton } from "../buttons";
 
-import Icons from "@/assets/Icons";
-import { t } from "@/translations";
-import {
-  GRID_COLUMN_GAP,
-  GRID_SIDE_PADDING,
-  ProductCard,
-} from "../ProductCard";
-import { SectionHeader } from "../SectionHeader";
-type IconName = keyof typeof Icons;
+// Order details interface
+interface CompleteOrderDetails {
+  orderNumber: string;
+  email: string;
+  phone: string;
+  shippingAddress: {
+    address1: string;
+    address2?: string;
+    city: string;
+    province: string;
+    country: string;
+    zip: string;
+  };
+  payment: {
+    cardBrand: string;
+    last4: string;
+  };
+  shipping: {
+    method: string;
+  };
+  dates: {
+    estimatedDelivery?: string | null;
+  };
+  pricing: {
+    totalPrice: number;
+    currency: string;
+  };
+  discount: {
+    amount: number;
+  };
+  products: any[];
+}
 
-type Product = {
-  id: string;
-  price: number;
-  image: IconName[];
-  title: string;
-  currentPrice: number;
-  originalPrice: number;
-  discountPercent: number;
-  progressValue: number;
-  showProgressBar: boolean;
-  ratingValue: number;
-  totalReviewCount: number;
-  wishlist: boolean;
-  discountBadge: boolean;
-};
-const products: Product[] = [
-  {
-    id: "1",
-    price: 100,
-    image: ["product1"],
-    title: "Bose QuietComfort Bluetooth Headphones - Chilled Lilac",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "2",
-    price: 100,
-    image: ["product2"],
-    title: "Product2",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "3",
-    price: 100,
-    image: ["product3"],
-    title: "Product3",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "4",
-    price: 100,
-    image: ["product4"],
-    title: "Product4",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 5,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-  {
-    id: "5",
-    price: 100,
-    image: ["product5"],
-    title: "Product5",
-    currentPrice: 100,
-    originalPrice: 100,
-    discountPercent: 10,
-    progressValue: 50,
-    showProgressBar: true,
-    ratingValue: 0,
-    totalReviewCount: 10,
-    wishlist: true,
-    discountBadge: true,
-  },
-];
-export const CheckoutSuccess = () => {
-  const imageData = ["product1", "productForyou2", "productForyou1"];
-  return (
-    <YStack alignItems="center">
-      <Spacer size={"$lg"} />
+interface CheckoutSuccessProps {
+  orderDetails?: CompleteOrderDetails | null;
+}
+
+export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
+  orderDetails,
+}) => {
+  if (!orderDetails) {
+    return (
       <YStack
-        width={48}
-        height={48}
-        borderRadius="$full"
-        backgroundColor="$green"
-        alignItems="center"
+        flex={1}
         justifyContent="center"
+        alignItems="center"
+        paddingVertical="$2xl"
       >
-        <AppImage
-          name="check"
-          width={19}
-          height={14}
-          tintColor={getTokenValue("$white")}
-        />
+        <Loader size="large" color="$primary" />
       </YStack>
-      <Spacer size={"$xl"} />
-      {/* Product Images */}
-      <XStack gap="$sm" alignItems="center">
-        {imageData.map((item, index) => (
-          <YStack
-            key={`success-img-${item}-${index}`}
-            borderRadius="$md"
-            overflow="hidden"
-            borderWidth={1}
-            borderColor={"$lightgrey"}
-            backgroundColor="$background"
-            padding="$xs"
-          >
-            <AppImage name={item as any} width={56} height={56} />
-          </YStack>
-        ))}
-      </XStack>
-      <Spacer size={"$md-lg"} />
-      {/* Success Message */}
-      <TextLGBold textAlign="center">Checkout Successful.</TextLGBold>
-      <Spacer size={"$sm"} />
-      <ParagraphMD color="$secondary" textAlign="center">
-        {"You just saved $25.00 compared to other e-commerce apps"}
-      </ParagraphMD>
-      <Spacer size={"$md-lg"} />
-      {/* Order Details */}
-      <XStack alignItems="center">
-        <TextSMRegular color="$secondary">{"$13.25"}</TextSMRegular>
-        <Spacer size={"$sm"} />
+    );
+  }
+
+  const totalSavings = orderDetails.discount?.amount || 0;
+  const productImages =
+    orderDetails.products?.slice(0, 3).map((p: any) => p.image) || [];
+
+  return (
+    <ScrollView showsVerticalScrollIndicator={false}>
+      <YStack alignItems="center" paddingHorizontal="$md">
+        <Spacer size={"$lg"} />
+        {/* Success Icon */}
         <YStack
-          width={4}
-          height={4}
+          width={48}
+          height={48}
           borderRadius="$full"
-          backgroundColor="$lightgrey"
-        />
-        <Spacer size={"$sm"} />
-        <TextSMRegular color="$secondary">
-          {"Order #1157lg5748411"}
-        </TextSMRegular>
-      </XStack>
-      <Spacer size={"$xl"} />
-      {/* Action Buttons */}
-      <YStack width="100%" paddingHorizontal={"$md"}>
-        <PrimaryButton
-          label="See My Orders"
-          onPress={() => router.push("/orders")}
-        />
-        <Spacer size={"$reg"} />
-        <SecondaryButton
-          label="See Order Status"
-          onPress={() => router.push("/ordersDetails")}
-        />
-      </YStack>
-
-      <Spacer size="$lg" />
-
-      {/* Help Option */}
-      <OpTouch onPress={() => {}}>
-        <XStack alignItems="center" gap="$xs">
+          backgroundColor="$green"
+          alignItems="center"
+          justifyContent="center"
+        >
           <AppImage
-            name="warningIcon"
-            width={16}
-            height={16}
-            tintColor={getTokenValue("$primary")}
+            name="check"
+            width={19}
+            height={14}
+            tintColor={getTokenValue("$white")}
           />
-          <TextMDSemiBold color="$primary">
-            {"I need help with this"}
-          </TextMDSemiBold>
-        </XStack>
-      </OpTouch>
-      <YStack>
+        </YStack>
         <Spacer size={"$xl"} />
-        <SectionHeader
-          title={t("home.sectionHeader.youMightAlsoLike")}
-          image={"bulb"}
-          tintColor={"darkgrey"}
-          seeAllText="View All"
-          color="primary"
-          onPressSeeAll={() => {}}
-        />
 
-        <Spacer size={"$reg"} />
-        <FlatList
-          data={products}
-          renderItem={({ item }) => (
-            <ProductCard
-              product={item as any}
-              context="grid"
-              showProgressBar={false}
+        {/* Product Images */}
+        {productImages.length > 0 && (
+          <>
+            <XStack gap="$sm" alignItems="center">
+              {productImages.map((image: any, index: number) => (
+                <YStack
+                  key={`success-img-${index}`}
+                  borderRadius="$md"
+                  overflow="hidden"
+                  borderWidth={1}
+                  borderColor={"$lightgrey"}
+                  width={64}
+                  height={64}
+                >
+                  {typeof image === "string" && image.startsWith("http") ? (
+                    <AppImage
+                      resizeMode="cover"
+                      source={{ uri: image }}
+                      width={64}
+                      height={64}
+                    />
+                  ) : (
+                    <AppImage name={image as any} width={56} height={56} />
+                  )}
+                </YStack>
+              ))}
+            </XStack>
+            <Spacer size={"$md-lg"} />
+          </>
+        )}
+
+        {/* Success Message */}
+        <TextLGBold textAlign="center">Order Placed Successfully!</TextLGBold>
+        <Spacer size={"$sm"} />
+        {totalSavings > 0 && (
+          <ParagraphMD color="$secondary" textAlign="center">
+            {`You saved ${orderDetails.pricing.currency}${totalSavings.toFixed(
+              2
+            )} on this order`}
+          </ParagraphMD>
+        )}
+        <Spacer size={"$md-lg"} />
+
+        {/* Order Summary */}
+        <XStack alignItems="center">
+          <TextSMSemiBold color="$primary">
+            {orderDetails.pricing.currency}
+            {orderDetails.pricing.totalPrice.toFixed(2)}
+          </TextSMSemiBold>
+          <Spacer size={"$sm"} />
+          <YStack
+            width={4}
+            height={4}
+            borderRadius="$full"
+            backgroundColor="$lightgrey"
+          />
+          <Spacer size={"$sm"} />
+          <TextSMRegular color="$secondary">
+            Order #{orderDetails.orderNumber}
+          </TextSMRegular>
+        </XStack>
+        <Spacer size={"$xl"} />
+
+        {/* Order Details Card */}
+        <YStack
+          width="100%"
+          backgroundColor="$surface"
+          borderRadius="$md"
+          borderWidth={1}
+          borderColor="$border"
+          padding="$md"
+        >
+          <TextMDSemiBold>Order Details</TextMDSemiBold>
+          <Spacer size={"$md"} />
+
+          {/* Email & Phone */}
+          <XStack alignItems="center" gap="$xs">
+            <AppImage
+              name="emailIcon"
+              width={16}
+              height={16}
+              tintColor={getTokenValue("$icon")}
             />
-          )}
-          keyExtractor={(item) => item.id}
-          showsHorizontalScrollIndicator={false}
-          horizontal
-          contentContainerStyle={{
-            paddingHorizontal: GRID_SIDE_PADDING,
-            gap: GRID_COLUMN_GAP,
-          }}
-        />
+            <TextSMRegular color="$secondary">
+              {orderDetails.email}
+            </TextSMRegular>
+          </XStack>
+          <Spacer size={"$sm"} />
+          <XStack alignItems="center" gap="$xs">
+            <AppImage
+              name="phoneLogo"
+              width={16}
+              height={16}
+              tintColor={getTokenValue("$icon")}
+            />
+            <TextSMRegular color="$secondary">
+              {orderDetails.phone}
+            </TextSMRegular>
+          </XStack>
+
+          <Spacer size={"$md"} />
+          <Divider />
+          <Spacer size={"$md"} />
+
+          {/* Shipping Address */}
+          <TextSMSemiBold>Delivery Address</TextSMSemiBold>
+          <Spacer size={"$sm"} />
+          <TextSMRegular color="$secondary">
+            {orderDetails.shippingAddress.address1}
+            {orderDetails.shippingAddress.address2
+              ? `, ${orderDetails.shippingAddress.address2}`
+              : ""}
+          </TextSMRegular>
+          <TextSMRegular color="$secondary">
+            {orderDetails.shippingAddress.city},{" "}
+            {orderDetails.shippingAddress.province}{" "}
+            {orderDetails.shippingAddress.zip}
+          </TextSMRegular>
+          <TextSMRegular color="$secondary">
+            {orderDetails.shippingAddress.country}
+          </TextSMRegular>
+
+          <Spacer size={"$md"} />
+          <Divider />
+          <Spacer size={"$md"} />
+
+          {/* Payment Method */}
+          <TextSMSemiBold>Payment Method</TextSMSemiBold>
+          <Spacer size={"$sm"} />
+          <XStack alignItems="center" gap="$sm">
+            <AppImage
+              name="wallet"
+              width={20}
+              height={20}
+              tintColor={getTokenValue("$icon")}
+            />
+            <TextSMRegular color="$secondary">
+              {orderDetails.payment.cardBrand?.toUpperCase()} ••••{" "}
+              {orderDetails.payment.last4}
+            </TextSMRegular>
+          </XStack>
+
+          <Spacer size={"$md"} />
+          <Divider />
+          <Spacer size={"$md"} />
+
+          {/* Shipping Method */}
+          <TextSMSemiBold>Shipping Method</TextSMSemiBold>
+          <Spacer size={"$sm"} />
+          <TextSMRegular color="$secondary">
+            {orderDetails.shipping.method}
+          </TextSMRegular>
+          <TextXSRegular color="$secondary">
+            Estimated delivery:{" "}
+            {orderDetails.dates.estimatedDelivery
+              ? new Date(
+                  orderDetails.dates.estimatedDelivery
+                ).toLocaleDateString()
+              : "TBD"}
+          </TextXSRegular>
+        </YStack>
+
+        <Spacer size={"$xl"} />
+
+        {/* Action Buttons */}
+        <YStack width="100%">
+          <PrimaryButton
+            label="See My Orders"
+            onPress={() => router.push("/orders")}
+          />
+          <Spacer size={"$reg"} />
+          <SecondaryButton
+            label="Continue Shopping"
+            onPress={() => router.push("/(tabs)")}
+          />
+        </YStack>
+
+        <Spacer size="$lg" />
+
+        {/* Help Option */}
+        <OpTouch onPress={() => {}}>
+          <XStack alignItems="center" gap="$xs">
+            <AppImage
+              name="warningIcon"
+              width={16}
+              height={16}
+              tintColor={getTokenValue("$primary")}
+            />
+            <TextMDSemiBold color="$primary">
+              {"Need help with your order?"}
+            </TextMDSemiBold>
+          </XStack>
+        </OpTouch>
+
+        <Spacer size={"$xl"} />
       </YStack>
-    </YStack>
+    </ScrollView>
   );
 };

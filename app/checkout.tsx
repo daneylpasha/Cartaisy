@@ -10,6 +10,8 @@ import Confirmation from "@/components/molecules/checkout/Confirmation";
 import PaymentStepper from "@/components/molecules/checkout/Payment";
 import Shipping from "@/components/molecules/checkout/Shipping";
 import { useCompleteCheckout } from "@/api/generated/checkout/checkout";
+import { useClearCart } from "@/api/generated/cart/cart";
+import useCartStore from "@/store/useCartStore";
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, FlatList, PanResponder } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -23,10 +25,15 @@ const CheckoutScreen = () => {
   const params = useLocalSearchParams();
   const initialSessionId = params.sessionId as string;
 
+  // Cart store and clear mutation
+  const { cartId, clearCart: clearCartStore } = useCartStore();
+  const { mutate: clearCartAPI } = useClearCart();
+
   const [sessionId, setSessionId] = useState<string>(initialSessionId || "");
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
   const [isProcessing, setIsProcessing] = useState(false);
   const [checkoutSummary, setCheckoutSummary] = useState<any>(null);
+  const [orderDetails, setOrderDetails] = useState<any>(null);
   const [open, setOpen] = useState(false);
   const shippingRef = useRef<any>(null);
   const paymentRef = useRef<any>(null);
@@ -106,25 +113,69 @@ const CheckoutScreen = () => {
   const { mutate: completeCheckout } = useCompleteCheckout({
     mutation: {
       onSuccess: (response) => {
-        const responseData = response.data as any;
-        const paymentStatus = responseData?.payment?.status;
+        console.log('[Checkout] ✅ Order created successfully!');
+        console.log('[Checkout] Response:', response);
 
-        if (paymentStatus === "succeeded") {
-          // Payment succeeded, navigate to success screen
+        // Response structure: { success: true, data: { order: {...} }, message: "..." }
+        const orderData = (response.data as any)?.order;
+
+        if (response.success && orderData) {
+          console.log('[Checkout] Order data found, preparing navigation...');
+
+          // Transform API response to match CompleteOrderDetails interface
+          const transformedOrderDetails = {
+            orderNumber: orderData.orderNumber || 'N/A',
+            email: orderData.email || checkoutSummary?.shippingAddress?.email || '',
+            phone: orderData.phone || checkoutSummary?.shippingAddress?.phone || '',
+            shippingAddress: orderData.shippingAddress || checkoutSummary?.shippingAddress || {},
+            payment: {
+              cardBrand: orderData.payment?.method || 'card',
+              last4: orderData.payment?.last4 || checkoutSummary?.paymentMethod?.last4 || '****',
+            },
+            shipping: {
+              method: orderData.shipping?.method || checkoutSummary?.shippingMethod?.title || 'Standard',
+            },
+            dates: {
+              estimatedDelivery: orderData.dates?.estimatedDelivery || checkoutSummary?.shippingMethod?.estimatedDelivery || null,
+            },
+            pricing: {
+              totalPrice: orderData.pricing?.totalPrice || checkoutSummary?.pricing?.grandTotal || 0,
+              currency: orderData.pricing?.currency || checkoutSummary?.pricing?.currency || 'USD',
+            },
+            discount: {
+              amount: orderData.discount?.amount || (checkoutSummary?.pricing?.discountAmount || 0) + (checkoutSummary?.pricing?.couponDiscount || 0),
+            },
+            products: orderData.products || checkoutSummary?.items || [],
+          };
+
+          console.log('[Checkout] Transformed order details:', transformedOrderDetails);
+          console.log('[Checkout] Setting orderDetails state...');
+          setOrderDetails(transformedOrderDetails);
+
+          console.log('[Checkout] Stopping loader...');
           setIsProcessing(false);
+
+          console.log('[Checkout] Clearing cart...');
+
+          // Clear cart from local store
+          clearCartStore();
+          console.log('[Checkout] ✅ Cart cleared from local storage');
+
+          // Note: Backend cart will automatically expire with the session
+          // We don't need to explicitly clear it as it's tied to checkout session
+
+          console.log('[Checkout] Navigating to success screen...');
           setCurrentStep("succesfull");
-        } else if (paymentStatus === "requires_action") {
-          // 3D Secure or other action required
-          setIsProcessing(false);
-          // TODO: Handle 3D Secure authentication flow with responseData?.payment?.clientSecret
-          // For now, just stop the loader - user will need to retry
-        } else if (paymentStatus === "processing") {
-          // Payment is processing - keep loader running or stop
+
+          console.log('[Checkout] ✅ Navigation complete!');
+        } else {
+          console.log('[Checkout] ❌ Invalid response or missing order data');
           setIsProcessing(false);
         }
       },
       onError: (error: any) => {
         // Silently handle error - just stop the loader
+        console.log('[Checkout] ❌ Complete checkout error:', error);
         setIsProcessing(false);
         // No alert modal - user can retry by clicking button again
       },
@@ -213,7 +264,7 @@ const CheckoutScreen = () => {
         return <Confirmation sessionId={sessionId} onSummaryLoaded={setCheckoutSummary} />;
 
       case "succesfull":
-        return <CheckoutSuccess />;
+        return <CheckoutSuccess orderDetails={orderDetails} />;
 
       default:
         return null;
@@ -359,7 +410,7 @@ const CheckoutScreen = () => {
                       size={16}
                     />
                   }
-                  isLoading={false}
+                  isLoading={isProcessing}
                 />
               </YStack>
             </>
