@@ -20,15 +20,6 @@ axiosInstance.interceptors.request.use(
   async (config) => {
     const token = useAuthStore.getState().token;
 
-    console.log("[API Request] Full URL:", config.baseURL + config.url);
-    console.log("[API Request] Method:", config.method?.toUpperCase());
-    console.log("[API Request] Headers:", JSON.stringify(config.headers));
-    console.log(
-      "[API Request] Token (first 20 chars):",
-      token?.substring(0, 20)
-    );
-    console.log("[API Request] Timeout:", config.timeout);
-
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -44,26 +35,13 @@ axiosInstance.interceptors.request.use(
 // Response interceptor to handle auth errors
 axiosInstance.interceptors.response.use(
   (response) => {
-    console.log("[API Response SUCCESS] Time taken: Request completed");
+    console.log("API Response SUCCESS", response?.data);
     return response;
   },
   async (error: AxiosError) => {
-    console.log("[API Response ERROR] ==================");
-    console.log("[API Response ERROR] URL:", error.config?.url);
-    console.log("[API Response ERROR] Status:", error.response?.status);
-    console.log("[API Response ERROR] Code:", error.code);
-    console.log("[API Response ERROR] Message:", error.message);
     console.log("[API Response ERROR] Response Data:", error.response?.data);
-    console.log(
-      "[API Response ERROR] Is Timeout:",
-      error.code === "ECONNABORTED"
-    );
-    console.log("[API Response ERROR] ==================");
 
     if (error.response?.status === 401) {
-      console.log(
-        "[API Response ERROR] 401 Unauthorized - Clearing auth and user data"
-      );
       useAuthStore.getState().clearAuth();
       useUserStore.getState().clearUser();
     }

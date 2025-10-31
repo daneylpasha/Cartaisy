@@ -10,8 +10,8 @@ import { Spacer } from "../../atoms/Spacer";
 import AlertModal from "../AlertModal";
 type Props = {
   visible: boolean;
-  expectedName: string; // user ka full name, e.g. "John Doe"
-  onConfirm: () => void;
+  expectedName?: string; // user ka full name, e.g. "John Doe"
+  onConfirm: (reason: string) => void;
   onCancel: () => void;
   avatarUri?: string; // optional avatar
   loading?: boolean; // close button spinner state (agar aap add karna chahen)
@@ -31,6 +31,7 @@ export default function CancelOrderModal({
   visible,
   onConfirm,
   onCancel,
+  loading = false,
 }: Props) {
   const [selected, setSelected] = useState<number>(0);
 
@@ -154,9 +155,12 @@ export default function CancelOrderModal({
         <Spacer size={"$lg"} />
         <PrimaryButton
           label="Cancel this order"
-          isLoading={false}
+          isLoading={loading}
           background={"red"}
-          onPress={onConfirm}
+          onPress={() => {
+            const selectedReason = CancelData.find(item => item.id === selected);
+            onConfirm(selectedReason?.title || "");
+          }}
         />
         <Spacer size={"$reg"} />
         <SecondaryButton

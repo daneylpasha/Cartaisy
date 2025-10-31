@@ -15,11 +15,6 @@ export const AppInitializer = () => {
 
   useEffect(() => {
     if (favoritesData?.data?.productIds) {
-      console.log(
-        "🔥 [AppInitializer] Favorites loaded:",
-        favoritesData.data.productIds.length,
-        "products"
-      );
       setFavorites(favoritesData.data.productIds);
     }
   }, [favoritesData, setFavorites]);

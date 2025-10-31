@@ -193,10 +193,6 @@ const HomeScreen = () => {
   // Update selectedAddress when addresses refetch and default changes
   useEffect(() => {
     if (defaultAddressIndex !== -1 && selectedAddress !== defaultAddressIndex) {
-      console.log(
-        "[Homescreen] Setting selected address to default:",
-        defaultAddressIndex
-      );
       setSelectedAddress(defaultAddressIndex);
     }
   }, [defaultAddressIndex]);

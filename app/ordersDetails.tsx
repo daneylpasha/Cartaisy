@@ -1,3 +1,4 @@
+import { useOrderDetails, useCancelOrder } from "@/api/hooks/useOrders";
 import {
   TextMDBold,
   TextMDSemiBold,
@@ -9,6 +10,7 @@ import {
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
+import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
@@ -16,7 +18,7 @@ import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
 import OrderTimeline from "@/components/molecules/orders/OrderTrackingTimeline";
 import CancelOrderModal from "@/components/organisms/order-details/CancelOrderModal";
 import { SHADOW_STYLES } from "@/constants/styles";
-import { router } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, PanResponder, ScrollView } from "react-native";
@@ -24,6 +26,54 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
 const ordersDetails = () => {
+  const { orderId } = useLocalSearchParams();
+
+  // Fetch order details
+  const { data, isLoading, error } = useOrderDetails(orderId as string);
+  const order = data?.data?.order;
+
+  // Cancel order mutation
+  const { mutate: cancelOrderMutation, isPending: isCancelling } = useCancelOrder();
+
+  // Format currency helper
+  const formatCurrency = (amount: number = 0, currency: string = "USD") => {
+    const currencySymbol = currency === "USD" ? "$" : currency;
+    return `${currencySymbol}${amount.toFixed(2)}`;
+  };
+
+  // Calculate total quantity from line items
+  const totalQuantity =
+    order?.lineItems?.reduce((sum, item) => sum + (item.quantity || 0), 0) ||
+    order?.totalItems ||
+    0;
+
+  // Get display status with edge cases
+  const getDisplayStatus = () => {
+    if (!order) return { status: "In Progress", color: "$secondary" };
+
+    const mobileStatus = order.mobileStatus?.current?.toLowerCase();
+    const fulfillmentStatus = order.fulfillmentStatus?.toLowerCase();
+
+    // Completed: Green badge
+    if (mobileStatus === "delivered" || fulfillmentStatus === "fulfilled") {
+      return { status: "Completed", color: "$green" };
+    }
+    // Cancelled: Red badge
+    else if (mobileStatus === "cancelled" || fulfillmentStatus === "cancelled") {
+      return { status: "Cancelled", color: "$error" };
+    }
+    // In Progress: Default for placed/processing
+    else if (mobileStatus === "placed" || mobileStatus === "processing") {
+      return { status: "In Progress", color: "$secondary" };
+    }
+    // Default: In Progress
+    else {
+      return { status: "In Progress", color: "$secondary" };
+    }
+  };
+
+  const displayStatus = getDisplayStatus();
+
   const [open, setOpen] = useState(false);
   const [show, setShow] = useState(false);
   // Animation refs
@@ -95,14 +145,46 @@ const ordersDetails = () => {
     }
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        backgroundColor="$background"
+      >
+        <Loader size="large" color="$primary" />
+      </YStack>
+    );
+  }
+
+  // Error state
+  if (error || !order) {
+    return (
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        backgroundColor="$background"
+      >
+        <TextMDSemiBold color="$error">
+          Failed to load order details
+        </TextMDSemiBold>
+        <Spacer size="$sm" />
+        <TextSMRegular color="$secondary">Please try again later</TextSMRegular>
+      </YStack>
+    );
+  }
+
   return (
     <YStack flex={1} backgroundColor={"$background"}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <Spacer size={"$lg"} />
         <YStack justifyContent="center" alignItems="center">
           <YStack
-            width={64}
-            height={64}
+            width={80}
+            height={80}
             borderRadius={"$md"}
             borderWidth={1}
             borderColor={"$lightgrey"}
@@ -110,7 +192,16 @@ const ordersDetails = () => {
             alignItems="center"
             overflow="hidden"
           >
-            <AppImage name="product1" size={64} />
+            {order.lineItems?.[0]?.image ? (
+              <AppImage
+                source={{ uri: order.lineItems[0].image }}
+                width={80}
+                height={80}
+                resizeMode="cover"
+              />
+            ) : (
+              <AppImage name="product1" size={80} />
+            )}
           </YStack>
           <Spacer size={"$lg"} />
           <XStack
@@ -119,7 +210,7 @@ const ordersDetails = () => {
             paddingHorizontal={"$reg"}
             paddingVertical={"$xs"}
             borderRadius={"$3xl"}
-            backgroundColor={"$secondary"}
+            backgroundColor={displayStatus.color}
           >
             <AppImage
               tintColor={getTokenValue("$white")}
@@ -128,11 +219,13 @@ const ordersDetails = () => {
               height={16}
             />
             <Spacer size={"$sm"} />
-            <TextSMMedium color={"$white"}>{"In Progress"}</TextSMMedium>
+            <TextSMMedium color={"$white"}>
+              {displayStatus.status}
+            </TextSMMedium>
           </XStack>
           <Spacer size={"$lg"} />
           <XStack alignItems="center" justifyContent="center">
-            <TextSMRegular> {"Qty: 1"}</TextSMRegular>
+            <TextSMRegular> Qty: {totalQuantity}</TextSMRegular>
             <Spacer size={"$reg"} />
             <YStack
               width={4}
@@ -141,16 +234,35 @@ const ordersDetails = () => {
               borderRadius={"$full"}
             />
             <Spacer size={"$reg"} />
-            <TextSMRegular> {"Order #115574487"}</TextSMRegular>
+            <TextSMRegular>
+              {" "}
+              Order #{order.orderNumber?.slice(-6) || "N/A"}
+            </TextSMRegular>
           </XStack>
           <Spacer size={"$reg"} />
-          <TextXLBold textAlign="center">
-            {"Women's Faux Leather Skirt - High-Waisted and Flattering"}
+          <TextXLBold
+            textAlign="center"
+            numberOfLines={2}
+            paddingHorizontal="$md"
+          >
+            {order.lineItems?.[0]?.title || "Order Item"}
           </TextXLBold>
           <Spacer size={"$reg"} />
-          <TextSMRegular>{"Oder Mar 23, 2025"}</TextSMRegular>
+          <TextSMRegular>
+            Order{" "}
+            {new Date(order.placedAt || order.createdAt).toLocaleDateString(
+              "en-US",
+              {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }
+            )}
+          </TextSMRegular>
           <Spacer size={"$reg"} />
-          <TextSMRegular>{"Arriving March 25 - March 29"}</TextSMRegular>
+          <TextSMRegular>
+            {order.shipping?.method || "Standard Shipping"}
+          </TextSMRegular>
         </YStack>
         <Spacer size={"$xl"} />
         <YStack paddingHorizontal={"$md"}>
@@ -184,14 +296,18 @@ const ordersDetails = () => {
                   </YStack>
                   <Spacer size={"$reg"} />
                   <YStack>
-                    <TextMDBold>{"Standard Shipping"}</TextMDBold>
+                    <TextMDBold>
+                      {order.shipping?.method || "Standard Shipping"}
+                    </TextMDBold>
                     <Spacer size={"$xs"} />
-                    <TextSMRegular>
-                      {"Estimated Delivery: 5-7 days"}
-                    </TextSMRegular>
+                    <TextSMRegular>Estimated Delivery: 5-7 days</TextSMRegular>
                     <Spacer size={"$xs-sm"} />
                     <TextXSRegular color="$secondary">
-                      {"Cost: $5 or free for orders over $50"}
+                      Cost:{" "}
+                      {formatCurrency(
+                        order.shipping?.cost || order.shippingCost,
+                        order.currency
+                      )}
                     </TextXSRegular>
                   </YStack>
                 </XStack>
@@ -219,12 +335,16 @@ const ordersDetails = () => {
                 />
                 <Spacer size={"$reg"} />
                 <YStack width={"80%"}>
-                  <TextMDSemiBold>{"James Vermillion"}</TextMDSemiBold>
+                  <TextMDSemiBold>
+                    {order.shippingAddress?.firstName}{" "}
+                    {order.shippingAddress?.lastName}
+                  </TextMDSemiBold>
                   <Spacer size={"$sm"} />
                   <ParagraphSM color="$secondary">
-                    {
-                      "18752 January Avenue, North Manhattan, New York, NY, 10013"
-                    }
+                    {order.shippingAddress?.address1}
+                    {order.shippingAddress?.address2 &&
+                      `, ${order.shippingAddress?.address2}`}
+                    {`, ${order.shippingAddress?.city}, ${order.shippingAddress?.province}, ${order.shippingAddress?.zip}`}
                   </ParagraphSM>
                   <Spacer size={"$sm"} />
                   <XStack alignItems="center">
@@ -290,26 +410,30 @@ const ordersDetails = () => {
             <TextMDBold>{"Payment Summary"}</TextMDBold>
             <Spacer size={"$reg"} />
             <XStack paddingVertical={"$sm"} justifyContent="space-between">
-              <TextSMSemiBold>{"Subtotal ( Items )"}</TextSMSemiBold>
-              <TextSMSemiBold>${"4,211"}</TextSMSemiBold>
+              <TextSMSemiBold>Subtotal ({totalQuantity} Items)</TextSMSemiBold>
+              <TextSMSemiBold>
+                {formatCurrency(order.subtotalPrice, order.currency)}
+              </TextSMSemiBold>
+            </XStack>
+            {order.discount > 0 && (
+              <XStack paddingVertical={"$sm"} justifyContent="space-between">
+                <TextSMRegular color="$secondary">Discount</TextSMRegular>
+                <TextSMSemiBold color="$green">
+                  -{formatCurrency(order.discount, order.currency)}
+                </TextSMSemiBold>
+              </XStack>
+            )}
+            <XStack paddingVertical={"$sm"} justifyContent="space-between">
+              <TextSMRegular color="$secondary">Taxes</TextSMRegular>
+              <TextSMSemiBold color="$error">
+                {formatCurrency(order.totalTax, order.currency)}
+              </TextSMSemiBold>
             </XStack>
             <XStack paddingVertical={"$sm"} justifyContent="space-between">
-              <TextSMRegular color="$secondary">{"Discount"}</TextSMRegular>
-              <TextSMSemiBold color="$green">${"2323"}</TextSMSemiBold>
-            </XStack>
-            <XStack paddingVertical={"$sm"} justifyContent="space-between">
-              <TextSMRegular color="$secondary">
-                {"Coupon Discount"}
-              </TextSMRegular>
-              <TextSMSemiBold color="$green">${"2323"}</TextSMSemiBold>
-            </XStack>
-            <XStack paddingVertical={"$sm"} justifyContent="space-between">
-              <TextSMRegular color="$secondary">{"Taxes"}</TextSMRegular>
-              <TextSMSemiBold color="$error">{"$23.00"}</TextSMSemiBold>
-            </XStack>
-            <XStack paddingVertical={"$sm"} justifyContent="space-between">
-              <TextSMRegular color="$secondary">{"Delivery Fee"}</TextSMRegular>
-              <TextSMSemiBold color="$error">{"$8.00"}</TextSMSemiBold>
+              <TextSMRegular color="$secondary">Delivery Fee</TextSMRegular>
+              <TextSMSemiBold color="$error">
+                {formatCurrency(order.shippingCost, order.currency)}
+              </TextSMSemiBold>
             </XStack>
             <Spacer size={"$md"} />
           </Animated.View>
@@ -318,9 +442,11 @@ const ordersDetails = () => {
           <Spacer size={"$sm"} />
           <OpTouch onPress={toggleOrderSummary}>
             <XStack justifyContent="space-between">
-              <TextSMSemiBold>{"GrandTotal"}</TextSMSemiBold>
+              <TextSMSemiBold>Grand Total</TextSMSemiBold>
               <XStack alignItems="center">
-                <TextMDBold>{"$4101"}</TextMDBold>
+                <TextMDBold>
+                  {formatCurrency(order.totalPrice, order.currency)}
+                </TextMDBold>
                 <Spacer size={"$xs"} />
                 <AppImage
                   name="caretRight"
@@ -351,10 +477,21 @@ const ordersDetails = () => {
 
       <CancelOrderModal
         visible={show}
-        expectedName="John Doe"
-        onConfirm={() => {
-          router.push("/cancelOrder");
-          setShow(false);
+        loading={isCancelling}
+        onConfirm={(reason) => {
+          cancelOrderMutation(
+            { orderId: orderId as string, reason },
+            {
+              onSuccess: () => {
+                setShow(false);
+                // Order details will auto-refresh due to query invalidation
+              },
+              onError: (error) => {
+                console.error("[Cancel Order] Error:", error);
+                setShow(false);
+              },
+            }
+          );
         }}
         onCancel={() => setShow(false)}
       />

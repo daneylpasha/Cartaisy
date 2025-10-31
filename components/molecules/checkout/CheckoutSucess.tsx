@@ -12,7 +12,6 @@ import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { router } from "expo-router";
 import React from "react";
-import { ScrollView } from "react-native";
 import { getTokenValue, Spacer, XStack, YStack } from "tamagui";
 import { PrimaryButton, SecondaryButton } from "../buttons";
 
@@ -51,10 +50,12 @@ interface CompleteOrderDetails {
 
 interface CheckoutSuccessProps {
   orderDetails?: CompleteOrderDetails | null;
+  showButtons?: boolean;
 }
 
 export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
   orderDetails,
+  showButtons = true,
 }) => {
   if (!orderDetails) {
     return (
@@ -62,7 +63,7 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
         flex={1}
         justifyContent="center"
         alignItems="center"
-        paddingVertical="$2xl"
+        minHeight={600}
       >
         <Loader size="large" color="$primary" />
       </YStack>
@@ -74,9 +75,8 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
     orderDetails.products?.slice(0, 3).map((p: any) => p.image) || [];
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <YStack alignItems="center" paddingHorizontal="$md">
-        <Spacer size={"$lg"} />
+    <YStack alignItems="center" paddingHorizontal="$md">
+      <Spacer size={"$lg"} />
         {/* Success Icon */}
         <YStack
           width={48}
@@ -260,19 +260,27 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
         <Spacer size={"$xl"} />
 
         {/* Action Buttons */}
-        <YStack width="100%">
-          <PrimaryButton
-            label="See My Orders"
-            onPress={() => router.push("/orders")}
-          />
-          <Spacer size={"$reg"} />
-          <SecondaryButton
-            label="Continue Shopping"
-            onPress={() => router.push("/(tabs)")}
-          />
-        </YStack>
+        {showButtons && (
+          <>
+            <YStack width="100%">
+              <PrimaryButton
+                label="See My Orders"
+                onPress={() => {
+                  router.replace("/orders");
+                }}
+              />
+              <Spacer size={"$reg"} />
+              <SecondaryButton
+                label="Continue Shopping"
+                onPress={() => {
+                  router.replace("/(tabs)");
+                }}
+              />
+            </YStack>
 
-        <Spacer size="$lg" />
+            <Spacer size="$lg" />
+          </>
+        )}
 
         {/* Help Option */}
         <OpTouch onPress={() => {}}>
@@ -289,8 +297,7 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
           </XStack>
         </OpTouch>
 
-        <Spacer size={"$xl"} />
-      </YStack>
-    </ScrollView>
+      <Spacer size={"$xl"} />
+    </YStack>
   );
 };

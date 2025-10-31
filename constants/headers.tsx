@@ -135,13 +135,14 @@ export const HEADER_CONFIGS = {
     headerTitle: "Checkout",
     headerShown: true,
     headerTitleAlign: "center",
-    headerLeft: () => (
-      <OpTouch onPress={() => router.back()}>
-        <AppImage name={"arrowBack"} size={16} />
-      </OpTouch>
-    ),
+    // headerLeft: () => (
+    //   <OpTouch onPress={() => router.back()}>
+    //     <AppImage name={"arrowBack"} size={16} />
+    //   </OpTouch>
+    // ),
 
     headerShadowVisible: false,
+
     headerStyle: {
       backgroundColor: tokens.color.background,
     },

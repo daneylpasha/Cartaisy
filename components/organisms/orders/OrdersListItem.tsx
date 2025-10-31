@@ -1,64 +1,160 @@
-import Icons from "@/assets/Icons";
+import { useOrders } from "@/api/hooks/useOrders";
+import { TextMDSemiBold } from "@/components/atoms";
+import { Loader } from "@/components/atoms/Loader";
 import OrderCard from "@/components/molecules/orders/OrderCard";
 import { tokens } from "@/tamagui/token";
+import { router } from "expo-router";
 import React from "react";
-import { FlatList } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Spacer, YStack } from "tamagui";
+import { FlatList, RefreshControl } from "react-native";
+import { getTokenValue, Spacer, YStack } from "tamagui";
+
 const OrdersListItem = () => {
-  const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
-  const activeOrders = [
-    {
-      id: 1,
-      image: "product1" as keyof typeof Icons,
-      title: "Carvin Pumpkin Each Abbot Stoneware Cereal Bowl",
-      qty: 1,
-      shipping: "Regular Shipping",
-      total: 405.5,
-      progress: "In Progress",
-      companyName: "Zeero Corp Gadget",
-      date: "Nov 23, 2025",
-    },
-    {
-      id: 2,
-      image: "product2" as keyof typeof Icons,
-      title: "Carvin Pumpkin Each Abbot Stoneware Cereal Bowl",
-      qty: 2,
-      shipping: "Regular Shipping",
-      total: 405.5,
-      progress: "Completed",
-      companyName: "Bigsby Fashion",
-      date: "Nov 23, 2025",
-    },
-    {
-      id: 3,
-      image: "product3" as keyof typeof Icons,
-      title: "Carvin Pumpkin Each Abbot Stoneware Cereal Bowl",
-      qty: 1,
-      shipping: "Regular Shipping",
-      total: 405.5,
-      progress: "Pending",
-      companyName: "Blocks Accesories",
-      date: "Nov 23, 2025",
-    },
-    {
-      id: 4,
-      image: "product3" as keyof typeof Icons,
-      title: "Carvin Pumpkin Each Abbot Stoneware Cereal Bowl",
-      qty: 4,
-      shipping: "Regular Shipping",
-      total: 405.5,
-      progress: "In Progress",
-      companyName: "Zeero Corp Gadget",
-      date: "Nov 23, 2025",
-    },
-  ];
+  const { data, isLoading, error, refetch, isRefetching } = useOrders();
+
+  if (isLoading) {
+    return (
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        minHeight={600}
+      >
+        <Loader size="large" color="$primary" />
+      </YStack>
+    );
+  }
+
+  if (error) {
+    return (
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        minHeight={600}
+      >
+        <TextMDSemiBold color="$error">Failed to load orders</TextMDSemiBold>
+        <Spacer size="$sm" />
+        <TextMDSemiBold color="$primary" onPress={() => refetch()}>
+          Tap to retry
+        </TextMDSemiBold>
+      </YStack>
+    );
+  }
+
+  // Safely access nested data
+  const orders = data?.data?.orders || [];
+
+  if (orders.length === 0) {
+    return (
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        minHeight={600}
+      >
+        <TextMDSemiBold color="$secondary">No orders found</TextMDSemiBold>
+      </YStack>
+    );
+  }
+
   return (
     <YStack>
       <FlatList
-        data={activeOrders}
-        renderItem={({ item }) => <OrderCard item={item} />}
-        keyExtractor={(item) => item.id.toString()}
+        data={orders}
+        renderItem={({ item }) => {
+          // Map backend status to display status (3 states as per spec)
+          const getDisplayStatus = () => {
+            const mobileStatus = item.mobileStatus?.current?.toLowerCase();
+            const fulfillmentStatus = item.fulfillmentStatus?.toLowerCase();
+
+            // Completed: Green badge
+            if (
+              mobileStatus === "delivered" ||
+              fulfillmentStatus === "fulfilled"
+            ) {
+              return "Completed";
+            }
+            // Cancelled: Grey badge
+            else if (
+              mobileStatus === "cancelled" ||
+              fulfillmentStatus === "cancelled"
+            ) {
+              return "Cancelled";
+            }
+            // In Progress: Default for placed/processing (yellow/orange badge)
+            else if (
+              mobileStatus === "placed" ||
+              mobileStatus === "processing"
+            ) {
+              return "In Progress";
+            }
+            // Pending: Red badge for other states
+            else {
+              return "Pending";
+            }
+          };
+
+          // Format date
+          const formatDate = (dateString: string) => {
+            const date = new Date(dateString);
+            return date.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            });
+          };
+
+          // Slice order ID to show last 6 characters
+          const shortOrderId =
+            item.orderNumber?.slice(-6) ||
+            item.id?.toString().slice(-6) ||
+            "000000";
+
+          // Get first line item
+          const firstItem = item.lineItems?.[0];
+
+          const productImage = firstItem?.image;
+
+          // Calculate total quantity from all line items
+          const totalQuantity =
+            item.lineItems?.reduce(
+              (sum: number, lineItem: any) => sum + (lineItem.quantity || 0),
+              0
+            ) ||
+            item.totalItems ||
+            0;
+
+          // Company/Carrier name - default to Order # (carrier field not in API)
+          const companyName = `Order #${shortOrderId}`;
+
+          const orderStatus = getDisplayStatus();
+
+          return (
+            <OrderCard
+              item={{
+                id: item._id || item.id,
+                title: firstItem?.title || "Order Item",
+                image: productImage,
+                currentPrice: item.totalPrice || 0,
+                total: item.totalPrice || 0,
+                quantity: totalQuantity,
+                qty: totalQuantity,
+                variantTitle: `Order #${shortOrderId}`,
+                companyName: companyName,
+                date: formatDate(item.placedAt || item.createdAt),
+                progress: orderStatus,
+                shipping: item.shipping?.method || "Standard",
+                onPress: () => {
+                  router.push({
+                    pathname: "/ordersDetails",
+                    params: { orderId: item._id || item.id },
+                  });
+                },
+              }}
+            />
+          );
+        }}
+        keyExtractor={(item) => item._id || item.id}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <Spacer size={tokens.space.md} />}
         contentContainerStyle={{
@@ -67,6 +163,14 @@ const OrdersListItem = () => {
         }}
         scrollEnabled={false}
         nestedScrollEnabled={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={getTokenValue("$primary")}
+            colors={[getTokenValue("$primary")]}
+          />
+        }
       />
     </YStack>
   );

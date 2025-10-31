@@ -12,20 +12,40 @@ import { router } from "expo-router";
 
 type itemProps = {
   item: {
-    id: number;
-    image: keyof typeof Icons;
-    title: string;
-    qty: number;
-    shipping: string;
-    total: number;
-    progress: string;
-    date: string;
-    companyName: string;
+    id?: number | string;
+    image?: keyof typeof Icons | string | null;
+    title?: string;
+    qty?: number;
+    shipping?: string;
+    total?: number;
+    currentPrice?: number;
+    progress?: string;
+    date?: string;
+    companyName?: string;
+    quantity?: number;
+    variantTitle?: string;
+    onPress?: () => void;
   };
 };
 const OrderCard = ({ item }: itemProps) => {
+  // Handle custom onPress or default navigation
+  const handlePress = () => {
+    if (item.onPress) {
+      item.onPress();
+    } else {
+      router.push(`/ordersDetails`);
+    }
+  };
+
+  // Fallback values for missing data
+  const displayCompany = item.companyName || "Order";
+  const displayDate = item.date || new Date().toLocaleDateString();
+  const displayProgress = item.progress || "In Progress";
+  const displayQty = item.qty ?? item.quantity ?? 0;
+  const displayTotal = item.total ?? item.currentPrice ?? 0;
+
   return (
-    <OpTouch onPress={()=> router.push(`/ordersDetails`)} >
+    <OpTouch onPress={handlePress}>
       <YStack
         style={{ ...SHADOW_STYLES }}
         backgroundColor={"$white"}
@@ -51,7 +71,7 @@ const OrderCard = ({ item }: itemProps) => {
             </YStack>
             <Spacer size={"$xs-sm"} />
             <YStack>
-              <TextSMSemiBold>{item.companyName}</TextSMSemiBold>
+              <TextSMSemiBold>{displayCompany}</TextSMSemiBold>
               <Spacer size={"$xs"} />
               <XStack alignItems="center">
                 <AppImage
@@ -61,17 +81,19 @@ const OrderCard = ({ item }: itemProps) => {
                   height={14}
                 />
                 <Spacer size={"$xs"} />
-                <TextSMMedium color={"$secondary"}>{item.date}</TextSMMedium>
+                <TextSMMedium color={"$secondary"}>{displayDate}</TextSMMedium>
               </XStack>
             </YStack>
           </XStack>
           {/* <Spacer size={"$lg"} /> */}
           <XStack
             backgroundColor={
-              item.progress === "In Progress"
+              displayProgress === "In Progress"
                 ? "$background"
-                : item.progress === "Completed"
+                : displayProgress === "Completed"
                 ? "$green"
+                : displayProgress === "Cancelled"
+                ? "$error"
                 : "$error"
             }
             borderRadius={"$3xl"}
@@ -79,21 +101,23 @@ const OrderCard = ({ item }: itemProps) => {
             paddingVertical={"$xs"}
             alignItems="center"
           >
-            {item.progress === "In Progress" && (
+            {displayProgress === "In Progress" && (
               <AppImage name="hourGlass" width={8} height={9} />
             )}
 
             <Spacer size={"$xs"} />
             <TextSMMedium
               color={
-                item.progress === "In Progress"
+                displayProgress === "In Progress"
                   ? "$secondary"
-                  : item.progress === "Completed"
+                  : displayProgress === "Completed"
+                  ? "$white"
+                  : displayProgress === "Cancelled"
                   ? "$white"
                   : "$white" // Pending (default)
               }
             >
-              {item.progress}
+              {displayProgress}
             </TextSMMedium>
           </XStack>
           {/* <Spacer size={"$xs-sm"} /> */}
