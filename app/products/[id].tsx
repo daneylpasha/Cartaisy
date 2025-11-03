@@ -55,14 +55,10 @@ if (
 const ProductDetailsScreen = () => {
   const { id } = useLocalSearchParams<{
     id: string;
-    productData?: string;
-    collectionId?: string;
   }>();
 
-  console.log("📦 [PDP] Received ID from route:", id);
-
   const { top: TOP_INSET } = useSafeAreaInsets();
-  const { items, getTotalQuantity } = useCartStore();
+  const { getTotalQuantity } = useCartStore();
   const cartItemCount = getTotalQuantity();
   const {
     addToCart,
@@ -70,13 +66,8 @@ const ProductDetailsScreen = () => {
     error: addToCartError,
   } = useCartManager();
 
-  console.log(items, "items");
-
-  // Fetch product details from API
-  console.log("📦 [PDP] Calling API with ID:", id);
   const { data: productDetailData, isLoading: isLoadingProduct } =
     useGetProductDetail(id);
-  console.log("📦 [PDP] API Response:", productDetailData);
 
   // Use Zustand store for favorites
   const isFavoriteInStore = useFavoritesStore((state) => state.isFavorite(id));
@@ -93,26 +84,26 @@ const ProductDetailsScreen = () => {
 
     return {
       id: apiProduct.productId,
-      title: apiProduct.title,
-      description: apiProduct.description,
-      descriptionHtml: apiProduct.descriptionHtml,
-      images: apiProduct.images,
-      currentPrice: apiProduct.price,
+      title: apiProduct.title || "",
+      description: apiProduct.description || "",
+      descriptionHtml: apiProduct.descriptionHtml || "",
+      images: apiProduct.images || [],
+      currentPrice: apiProduct.price || 0,
       originalPrice: apiProduct.compareAtPrice,
-      currency: apiProduct.currency,
-      discountPercent: apiProduct.badges.discountPercentage,
-      ratingValue: apiProduct.rating,
-      totalReviewCount: apiProduct.reviewsCount,
-      soldThisMonth: apiProduct.soldThisMonth,
-      variants: apiProduct.variants,
-      vendor: apiProduct.vendor,
-      productType: apiProduct.productType,
-      tags: apiProduct.tags,
-      handle: apiProduct.handle,
-      availableForSale: apiProduct.availableForSale,
-      totalInventory: apiProduct.totalInventory,
-      inStock: apiProduct.inStock,
-      isBestSeller: apiProduct.badges.isBestSeller,
+      currency: apiProduct.currency || "USD",
+      discountPercent: apiProduct.badges?.discountPercentage || 0,
+      ratingValue: apiProduct.rating || 0,
+      totalReviewCount: apiProduct.reviewsCount || 0,
+      soldThisMonth: apiProduct.soldThisMonth || 0,
+      variants: apiProduct.variants || [],
+      vendor: apiProduct.vendor || "",
+      productType: apiProduct.productType || "",
+      tags: apiProduct.tags || [],
+      handle: apiProduct.handle || "",
+      availableForSale: apiProduct.availableForSale ?? true,
+      totalInventory: apiProduct.totalInventory || 0,
+      inStock: apiProduct.inStock ?? false,
+      isBestSeller: apiProduct.badges?.isBestSeller || false,
     };
   }, [productDetailData]);
 
@@ -126,7 +117,8 @@ const ProductDetailsScreen = () => {
     }
 
     return productDetailData.data.metafields.map((metafield: any) => {
-      const value = metafield.value?.toString() || "";
+      // Ensure value is always a string
+      const value = metafield.value != null ? String(metafield.value) : "";
 
       // Format the label: remove hyphens, capitalize each word
       const label = metafield.key
@@ -134,10 +126,13 @@ const ProductDetailsScreen = () => {
         .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
 
-      // If value is a GID reference, show "Contact support for details"
-      const displayValue = value.includes("gid://shopify")
-        ? "Contact support for details"
-        : value;
+      // If value is a GID reference or empty, show appropriate message
+      const displayValue =
+        !value || value.trim() === ""
+          ? "N/A"
+          : value.includes("gid://shopify")
+          ? "Contact support for details"
+          : value;
 
       return {
         label,
@@ -415,19 +410,22 @@ const ProductDetailsScreen = () => {
                   height={10}
                 />
                 <Spacer size={"$xs-sm"} />
-                <TextSMMedium color="$error">{`${product.discountPercent} % OFF`}</TextSMMedium>
+                <TextSMMedium color="$error">{`${Math.round(
+                  product.discountPercent
+                )}% OFF`}</TextSMMedium>
               </XStack>
             )}
           </XStack>
 
           <Spacer size={"$md"} />
-          <TextXLMedium color="$text">{product?.title}</TextXLMedium>
+          <TextXLMedium color="$text">{product?.title || ""}</TextXLMedium>
           <Spacer size={"$reg"} />
-          {product?.soldThisMonth && (
-            <TextSMRegular color="$secondary">
-              {`${product.soldThisMonth} sold this month`}
-            </TextSMRegular>
-          )}
+          {product?.soldThisMonth !== undefined &&
+            product.soldThisMonth >= 0 && (
+              <TextSMRegular color="$secondary">
+                {`${product.soldThisMonth} sold this month`}
+              </TextSMRegular>
+            )}
 
           <Spacer size={"$reg"} />
           <XStack justifyContent="space-between" alignItems="center">
@@ -519,6 +517,7 @@ const ProductDetailsScreen = () => {
 
           <Spacer size={"$reg"} />
           {product?.ratingValue !== undefined &&
+            product.ratingValue > 0 &&
             product?.totalReviewCount > 0 && (
               <XStack justifyContent="space-between">
                 <XStack alignItems="center">
@@ -529,7 +528,7 @@ const ProductDetailsScreen = () => {
                   </TextMDBold>
                   <Spacer size="$xs" />
                   <TextXSRegular color="$icon">
-                    ({product.totalReviewCount?.toLocaleString()})
+                    ({product.totalReviewCount.toLocaleString()})
                   </TextXSRegular>
                 </XStack>
               </XStack>
@@ -643,7 +642,7 @@ const ProductDetailsScreen = () => {
                           : "$text"
                       }
                     >
-                      {optionValue}
+                      {String(optionValue)}
                     </TextMDRegular>
                     <Spacer size={"$sm"} />
                   </XStack>
@@ -670,11 +669,11 @@ const ProductDetailsScreen = () => {
         <YStack paddingHorizontal="$md">
           <TextMDBold color="$text">{"Description"}</TextMDBold>
           <Spacer size={"$reg"} />
-          {product?.descriptionHtml ? (
+          {product?.descriptionHtml && product.descriptionHtml.trim() !== "" ? (
             <RenderHTML
               contentWidth={SCREEN_WIDTH - 32}
               source={{
-                html: product.descriptionHtml || "",
+                html: product.descriptionHtml,
               }}
               baseStyle={{
                 color: getTokenValue("$secondary"),

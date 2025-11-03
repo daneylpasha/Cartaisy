@@ -1,6 +1,5 @@
 import { useClearCart } from "@/api/generated/cart/cart";
 import { useCompleteCheckout } from "@/api/generated/checkout/checkout";
-import { useQueryClient } from "@tanstack/react-query";
 import { TextMDBold, TextSMRegular, TextSMSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
@@ -12,7 +11,8 @@ import Confirmation from "@/components/molecules/checkout/Confirmation";
 import PaymentStepper from "@/components/molecules/checkout/Payment";
 import Shipping from "@/components/molecules/checkout/Shipping";
 import useCartStore from "@/store/useCartStore";
-import { useLocalSearchParams, router } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, FlatList, PanResponder } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -171,32 +171,16 @@ const CheckoutScreen = () => {
             products: orderData.products || checkoutSummary?.items || [],
           };
 
-          console.log(
-            "[Checkout] Transformed order details:",
-            transformedOrderDetails
-          );
-
-          console.log("[Checkout] Stopping loader...");
           setIsProcessing(false);
-
-          console.log("[Checkout] Clearing cart...");
 
           // Clear cart from local store
           clearCartStore();
-          console.log("[Checkout] ✅ Cart cleared from local storage");
 
-          // Note: Backend cart will automatically expire with the session
-          // We don't need to explicitly clear it as it's tied to checkout session
-
-          // Invalidate orders query to refetch when user navigates to orders
-          console.log("[Checkout] Invalidating orders cache...");
-          queryClient.invalidateQueries({ queryKey: ['orders'] });
+          queryClient.invalidateQueries({ queryKey: ["orders"] });
           console.log("[Checkout] ✅ Orders cache invalidated");
 
-          console.log("[Checkout] Resetting to home screen...");
           router.replace("/(tabs)");
 
-          console.log("[Checkout] Opening success modal after navigation...");
           setTimeout(() => {
             router.push({
               pathname: "/order-success",

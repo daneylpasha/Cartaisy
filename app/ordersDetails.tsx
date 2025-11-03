@@ -1,4 +1,4 @@
-import { useOrderDetails, useCancelOrder } from "@/api/hooks/useOrders";
+import { useCancelOrder, useOrderDetails } from "@/api/hooks/useOrders";
 import {
   TextMDBold,
   TextMDSemiBold,
@@ -32,8 +32,8 @@ const ordersDetails = () => {
   const { data, isLoading, error } = useOrderDetails(orderId as string);
   const order = data?.data?.order;
 
-  // Cancel order mutation
-  const { mutate: cancelOrderMutation, isPending: isCancelling } = useCancelOrder();
+  const { mutate: cancelOrderMutation, isPending: isCancelling } =
+    useCancelOrder();
 
   // Format currency helper
   const formatCurrency = (amount: number = 0, currency: string = "USD") => {
@@ -59,7 +59,10 @@ const ordersDetails = () => {
       return { status: "Completed", color: "$green" };
     }
     // Cancelled: Red badge
-    else if (mobileStatus === "cancelled" || fulfillmentStatus === "cancelled") {
+    else if (
+      mobileStatus === "cancelled" ||
+      fulfillmentStatus === "cancelled"
+    ) {
       return { status: "Cancelled", color: "$error" };
     }
     // In Progress: Default for placed/processing
@@ -73,6 +76,18 @@ const ordersDetails = () => {
   };
 
   const displayStatus = getDisplayStatus();
+
+  // Extract mobileStatus for CTAs visibility check
+  const mobileStatus = order?.mobileStatus?.current?.toLowerCase();
+  const fulfillmentStatus = order?.fulfillmentStatus?.toLowerCase();
+
+  // Check if order can be cancelled (not already cancelled or delivered)
+  const canShowCTAs = !(
+    mobileStatus === "cancelled" ||
+    mobileStatus === "delivered" ||
+    fulfillmentStatus === "cancelled" ||
+    fulfillmentStatus === "fulfilled"
+  );
 
   const [open, setOpen] = useState(false);
   const [show, setShow] = useState(false);
@@ -219,9 +234,7 @@ const ordersDetails = () => {
               height={16}
             />
             <Spacer size={"$sm"} />
-            <TextSMMedium color={"$white"}>
-              {displayStatus.status}
-            </TextSMMedium>
+            <TextSMMedium color={"$white"}>{displayStatus.status}</TextSMMedium>
           </XStack>
           <Spacer size={"$lg"} />
           <XStack alignItems="center" justifyContent="center">
@@ -319,57 +332,55 @@ const ordersDetails = () => {
           <Spacer size={"$xl"} />
           <TextMDBold>{"Address Info"}</TextMDBold>
           <Spacer size={"$reg"} />
-          <OpTouch style={[{ ...SHADOW_STYLES }]}>
-            <XStack
-              backgroundColor={"$white"}
-              borderRadius="$2xl"
-              padding={"$reg"}
-              justifyContent="space-between"
-            >
-              <XStack>
-                <AppImage
-                  name="locationUnfilled"
-                  tintColor={getTokenValue("$primary")}
-                  width={16}
-                  height={20}
-                />
-                <Spacer size={"$reg"} />
-                <YStack width={"80%"}>
-                  <TextMDSemiBold>
-                    {order.shippingAddress?.firstName}{" "}
-                    {order.shippingAddress?.lastName}
-                  </TextMDSemiBold>
-                  <Spacer size={"$sm"} />
-                  <ParagraphSM color="$secondary">
-                    {order.shippingAddress?.address1}
-                    {order.shippingAddress?.address2 &&
-                      `, ${order.shippingAddress?.address2}`}
-                    {`, ${order.shippingAddress?.city}, ${order.shippingAddress?.province}, ${order.shippingAddress?.zip}`}
-                  </ParagraphSM>
-                  <Spacer size={"$sm"} />
-                  <XStack alignItems="center">
-                    <YStack
-                      justifyContent="center"
-                      alignItems="center"
-                      width={14}
-                      height={14}
-                      borderRadius="$full"
-                      backgroundColor="$green"
-                    >
-                      <AppImage
-                        name="check"
-                        tintColor={getTokenValue("$white")}
-                        width={7}
-                        height={7}
-                      />
-                    </YStack>
-                    <Spacer size={"$xs"} />
-                    <TextXSRegular>{"Shipping Available"}</TextXSRegular>
-                  </XStack>
-                </YStack>
-              </XStack>
+          <XStack
+            backgroundColor={"$white"}
+            borderRadius="$2xl"
+            padding={"$reg"}
+            justifyContent="space-between"
+          >
+            <XStack>
+              <AppImage
+                name="locationUnfilled"
+                tintColor={getTokenValue("$primary")}
+                width={16}
+                height={20}
+              />
+              <Spacer size={"$reg"} />
+              <YStack width={"80%"}>
+                <TextMDSemiBold>
+                  {order.shippingAddress?.firstName}{" "}
+                  {order.shippingAddress?.lastName}
+                </TextMDSemiBold>
+                <Spacer size={"$sm"} />
+                <ParagraphSM color="$secondary">
+                  {order.shippingAddress?.address1}
+                  {order.shippingAddress?.address2 &&
+                    `, ${order.shippingAddress?.address2}`}
+                  {`, ${order.shippingAddress?.city}, ${order.shippingAddress?.province}, ${order.shippingAddress?.zip}`}
+                </ParagraphSM>
+                <Spacer size={"$sm"} />
+                <XStack alignItems="center">
+                  <YStack
+                    justifyContent="center"
+                    alignItems="center"
+                    width={14}
+                    height={14}
+                    borderRadius="$full"
+                    backgroundColor="$green"
+                  >
+                    <AppImage
+                      name="check"
+                      tintColor={getTokenValue("$white")}
+                      width={7}
+                      height={7}
+                    />
+                  </YStack>
+                  <Spacer size={"$xs"} />
+                  <TextXSRegular>{"Shipping Available"}</TextXSRegular>
+                </XStack>
+              </YStack>
             </XStack>
-          </OpTouch>
+          </XStack>
         </YStack>
         <Spacer size={"$md"} />
       </ScrollView>
@@ -465,13 +476,20 @@ const ordersDetails = () => {
           </OpTouch>
           <Spacer size={"$md"} />
         </YStack>
-        <PrimaryButton
-          label={"I need help with this order"}
-          onPress={() => {}}
-          isLoading={false}
-        />
-        <Spacer size={"$reg"} />
-        <SecondaryButton onPress={() => setShow(true)} label={"Cancel Order"} />
+        {canShowCTAs && (
+          <>
+            <PrimaryButton
+              label={"I need help with this order"}
+              onPress={() => {}}
+              isLoading={false}
+            />
+            <Spacer size={"$reg"} />
+            <SecondaryButton
+              onPress={() => setShow(true)}
+              label={"Cancel Order"}
+            />
+          </>
+        )}
         <Spacer size={bottomSafeAreaInset} />
       </YStack>
 

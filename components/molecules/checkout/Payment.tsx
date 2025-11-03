@@ -97,6 +97,7 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
           message: "Please select a payment method",
           buttons: [{ text: "OK" }],
         });
+        onError?.(); // Stop loader in parent
         return;
       }
 

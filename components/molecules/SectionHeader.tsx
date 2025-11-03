@@ -44,11 +44,11 @@ export const SectionHeader = ({
           />
         )}
         <Spacer size={"$xs-sm"} />
-        <TextLGBold color={"$darkgrey"}>{title}</TextLGBold>
+        <TextLGBold color={"$darkgrey"}>{String(title)}</TextLGBold>
       </XStack>
       {showSeeAll && seeAllText && (
         <OpTouch onPress={onPressSeeAll}>
-          <TextMDMedium color={`$${color}`}>{seeAllText}</TextMDMedium>
+          <TextMDMedium color={`$${color}`}>{String(seeAllText)}</TextMDMedium>
         </OpTouch>
       )}
     </XStack>

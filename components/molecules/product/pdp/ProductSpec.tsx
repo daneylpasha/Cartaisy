@@ -17,10 +17,12 @@ const ProductSpec = ({ item, showLabel = true }: ProductSpecProps) => {
         renderItem={({ item }) => (
           <XStack paddingVertical={"$sm"}>
             <TextSMMedium width={108} color="$secondary">
-              {item.label}
+              {String(item.label)}
             </TextSMMedium>
             <Spacer size={"$lg"} />
-            <TextSMSemiBold flexShrink={1}>{item.value}</TextSMSemiBold>
+            <TextSMSemiBold flexShrink={1} color="$text">
+              {String(item.value)}
+            </TextSMSemiBold>
           </XStack>
         )}
         showsHorizontalScrollIndicator={false}

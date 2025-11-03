@@ -10,7 +10,6 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import OrderListItems from "@/components/organisms/checkout/OrderListItems";
-import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -32,7 +31,7 @@ const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
 
   // Debug: Log when component mounts/updates
   React.useEffect(() => {
-    console.log('[Confirmation] Component rendered with sessionId:', sessionId);
+    console.log("[Confirmation] Component rendered with sessionId:", sessionId);
   }, [sessionId]);
 
   // Fetch checkout summary
@@ -53,7 +52,7 @@ const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
 
   // Debug: Log API response
   React.useEffect(() => {
-    console.log('[Confirmation] API Response:', {
+    console.log("[Confirmation] API Response:", {
       success: summaryResponse?.success,
       hasData: !!summary,
       itemsCount: summary?.items?.length,
@@ -81,7 +80,12 @@ const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
       couponDiscount: summary.pricing?.couponDiscount || 0,
       tax: summary.pricing?.tax || 0,
       shippingCost: summary.pricing?.shippingCost || 0,
-      grandTotal: subtotal - (summary.pricing?.discountAmount || 0) - (summary.pricing?.couponDiscount || 0) + (summary.pricing?.tax || 0) + (summary.pricing?.shippingCost || 0),
+      grandTotal:
+        subtotal -
+        (summary.pricing?.discountAmount || 0) -
+        (summary.pricing?.couponDiscount || 0) +
+        (summary.pricing?.tax || 0) +
+        (summary.pricing?.shippingCost || 0),
     };
 
     return pricing;
@@ -186,7 +190,6 @@ const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
             borderRadius="$2xl"
             padding={"$reg"}
             justifyContent="space-between"
-            style={SHADOW_STYLES}
           >
             <XStack>
               <AppImage

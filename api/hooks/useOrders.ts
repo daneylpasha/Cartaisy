@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { axiosInstance } from '../apiClient';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { axiosInstance } from "../apiClient";
 
 // Order interface based on backend response
 export interface Order {
@@ -64,8 +64,11 @@ export interface OrdersResponse {
 }
 
 // Fetch orders
-export const fetchOrders = async (page = 1, limit = 20): Promise<OrdersResponse> => {
-  const response = await axiosInstance.get<OrdersResponse>('/customer/orders', {
+export const fetchOrders = async (
+  page = 1,
+  limit = 20
+): Promise<OrdersResponse> => {
+  const response = await axiosInstance.get<OrdersResponse>("/customer/orders", {
     params: { page, limit },
   });
   return response.data;
@@ -74,22 +77,27 @@ export const fetchOrders = async (page = 1, limit = 20): Promise<OrdersResponse>
 // React Query hook
 export const useOrders = (page = 1, limit = 20) => {
   return useQuery({
-    queryKey: ['orders', page, limit],
+    queryKey: ["orders", page, limit],
     queryFn: () => fetchOrders(page, limit),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
 // Fetch single order details
-export const fetchOrderDetails = async (orderId: string): Promise<{ success: boolean; data: { order: Order } }> => {
-  const response = await axiosInstance.get<{ success: boolean; data: { order: Order } }>(`/customer/orders/${orderId}`);
+export const fetchOrderDetails = async (
+  orderId: string
+): Promise<{ success: boolean; data: { order: Order } }> => {
+  const response = await axiosInstance.get<{
+    success: boolean;
+    data: { order: Order };
+  }>(`/customer/orders/${orderId}`);
   return response.data;
 };
 
 // React Query hook for order details
 export const useOrderDetails = (orderId: string) => {
   return useQuery({
-    queryKey: ['order', orderId],
+    queryKey: ["order", orderId],
     queryFn: () => fetchOrderDetails(orderId),
     enabled: !!orderId, // Only fetch if orderId exists
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -97,12 +105,19 @@ export const useOrderDetails = (orderId: string) => {
 };
 
 // Cancel order
-export const cancelOrder = async (orderId: string, reason?: string): Promise<{ success: boolean; message: string }> => {
-  const response = await axiosInstance.post<{ success: boolean; message: string }>(`/customer/orders/${orderId}/cancel`, {
+export const cancelOrder = async (
+  orderId: string,
+  reason?: string
+): Promise<{ success: boolean; message: string }> => {
+  const response = await axiosInstance.post<{
+    success: boolean;
+    message: string;
+  }>(`/customer/orders/${orderId}/cancel`, {
     reason,
   });
   return response.data;
 };
+// productData: JSON.stringify(product),
 
 // React Query mutation hook for cancel order
 export const useCancelOrder = () => {
@@ -113,9 +128,9 @@ export const useCancelOrder = () => {
       cancelOrder(orderId, reason),
     onSuccess: (_, variables) => {
       // Invalidate and refetch orders list
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
       // Invalidate specific order details
-      queryClient.invalidateQueries({ queryKey: ['order', variables.orderId] });
+      queryClient.invalidateQueries({ queryKey: ["order", variables.orderId] });
     },
   });
 };

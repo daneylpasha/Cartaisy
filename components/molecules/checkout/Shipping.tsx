@@ -29,6 +29,7 @@ import CountryPicker, {
   Country,
   CountryCode,
 } from "react-native-country-picker-modal";
+import { isValidPhoneNumber } from "libphonenumber-js";
 
 import { useGetAddresses } from "@/api/generated/addresses/addresses";
 import { useGetShippingRates, useSaveShipping } from "@/api/generated/checkout/checkout";
@@ -255,6 +256,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
           message: "Please select a shipping address",
           buttons: [{ text: "OK" }],
         });
+        onError?.(); // Stop loader in parent
         return;
       }
 
@@ -265,6 +267,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
           message: "Please select a shipping method",
           buttons: [{ text: "OK" }],
         });
+        onError?.(); // Stop loader in parent
         return;
       }
 
@@ -275,6 +278,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
           message: "Please enter your contact number",
           buttons: [{ text: "OK" }],
         });
+        onError?.(); // Stop loader in parent
         return;
       }
 
@@ -305,6 +309,13 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
       setShowCountryPicker(false);
     };
 
+    // Handle form validation errors
+    const onFormError = (errors: any) => {
+      console.log("[Shipping] Form validation failed:", errors);
+      // Stop loader in parent when form validation fails
+      onError?.();
+    };
+
     // Expose methods to parent component
     useImperativeHandle(ref, () => ({
       handleContinue: () => {
@@ -312,7 +323,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
           console.log("[Shipping] Already saving, please wait...");
           return;
         }
-        handleSubmit(onSubmit)();
+        handleSubmit(onSubmit, onFormError)();
       },
       isValid: () => {
         return !!(selectedAddressId && selectedShippingHandle);
@@ -503,11 +514,23 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
               name="phone"
               rules={{
                 required: "Phone number is required",
-                minLength: {
-                  value: 10,
-                  message: "Phone number too short",
+                validate: (value) => {
+                  if (!value) return "Phone number is required";
+
+                  try {
+                    // Create full phone number with country code
+                    const fullPhoneNumber = `+${selectedCountry.callingCode[0]}${value}`;
+
+                    // Validate using libphonenumber-js
+                    if (!isValidPhoneNumber(fullPhoneNumber)) {
+                      return "Invalid phone number for selected country";
+                    }
+
+                    return true;
+                  } catch (error) {
+                    return "Invalid phone number";
+                  }
                 },
-                // validate: validatePhoneNumber,
               }}
               render={({ field: { onChange, value } }) => (
                 <XStack alignItems="center">

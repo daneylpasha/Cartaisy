@@ -178,7 +178,6 @@ export const ProductCard = ({
         pathname: "/products/[id]",
         params: {
           id: product.productId,
-          productData: JSON.stringify(product),
         },
       });
     }
@@ -231,7 +230,7 @@ export const ProductCard = ({
         >
           <AppImage
             resizeMode="cover"
-            source={product?.images?.[0] || ""}
+            source={product.images?.[0] || ""}
             width="100%"
             height={imageHeight}
           />
@@ -307,39 +306,35 @@ export const ProductCard = ({
           </TextMDSemiBold>
           <Spacer size="$sm-reg" />
 
-          {product.rating !== undefined ? (
-            <XStack alignItems="center">
-              <RatingStar rating={product.rating} />
-              <Spacer size="$sm-reg" />
-              <TextMDBold color="$secondary">
-                {product.rating?.toFixed(1)}
-              </TextMDBold>
-              <Spacer size="$xs" />
-              <TextXSRegular color="$icon">
-                ({product.reviewsCount?.toLocaleString()})
-              </TextXSRegular>
-            </XStack>
-          ) : null}
+          <XStack alignItems="center">
+            <RatingStar rating={product.rating || 0} />
+            <Spacer size="$sm-reg" />
+            <TextMDBold color="$secondary">
+              {(product.rating || 0).toFixed(1)}
+            </TextMDBold>
+            <Spacer size="$xs" />
+            <TextXSRegular color="$icon">
+              ({(product.reviewsCount || 0).toLocaleString()})
+            </TextXSRegular>
+          </XStack>
 
-          {<Spacer size="$sm-reg" />}
+          <Spacer size="$sm-reg" />
 
-          {product.price !== undefined ? (
-            <XStack alignItems="center">
-              <TextMDBold>${(product.price || 0).toFixed(2)}</TextMDBold>
-              <Spacer size="$xs" />
-              {product.compareAtPrice &&
-              product.price !== product.compareAtPrice ? (
-                <TextSMRegular color="$icon" textDecorationLine="line-through">
-                  ${(product.compareAtPrice || 0).toFixed(2)}
-                </TextSMRegular>
-              ) : null}
-            </XStack>
-          ) : null}
+          <XStack alignItems="center">
+            <TextMDBold>${product.price.toFixed(2)}</TextMDBold>
+            <Spacer size="$xs" />
+            {product.compareAtPrice &&
+            product.price !== product.compareAtPrice ? (
+              <TextSMRegular color="$icon" textDecorationLine="line-through">
+                ${product.compareAtPrice.toFixed(2)}
+              </TextSMRegular>
+            ) : null}
+          </XStack>
         </YStack>
 
         {showProgressBar &&
-        product.availableQuantity &&
-        product.totalQuantity ? (
+        product.availableQuantity > 0 &&
+        product.totalQuantity > 0 ? (
           <XStack alignItems="center" gap="$sm">
             <YStack
               borderRadius="$full"
