@@ -3,6 +3,7 @@ import {
   useRemoveFavorite,
 } from "@/api/generated/favorites/favorites";
 import { useGetProductDetail } from "@/api/generated/products/products";
+import { useGetProductRecommendations } from "@/api/generated/recommendations/recommendations";
 import { useCartManager } from "@/api/hooks/useCartManager";
 import {
   HeadingXSBold,
@@ -26,6 +27,7 @@ import ProductSpec from "@/components/molecules/product/pdp/ProductSpec";
 import {
   GRID_COLUMN_GAP,
   GRID_SIDE_PADDING,
+  ProductCard,
 } from "@/components/molecules/ProductCard";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import AddToCartSuccessModal from "@/components/organisms/AddToCartSuccessModal";
@@ -68,6 +70,20 @@ const ProductDetailsScreen = () => {
 
   const { data: productDetailData, isLoading: isLoadingProduct } =
     useGetProductDetail(id);
+
+  // Extract productId from product data (this is the Shopify Product ID)
+  const shopifyProductId = productDetailData?.data?.productId;
+
+  // Fetch recommendations using Shopify Product ID
+  const { data: recommendationsData } = useGetProductRecommendations(
+    shopifyProductId || "",
+    { limit: 6 },
+    {
+      query: {
+        enabled: !!shopifyProductId,
+      },
+    }
+  );
 
   // Use Zustand store for favorites
   const isFavoriteInStore = useFavoritesStore((state) => state.isFavorite(id));
@@ -706,6 +722,68 @@ const ProductDetailsScreen = () => {
                 />
                 <Spacer size={"$reg"} />
                 <ProductSpec item={productSpecsFromMetafields} />
+              </YStack>
+            ),
+          },
+        ]
+      : []),
+    // Recommendations section
+    ...(recommendationsData?.data?.recommendedProducts &&
+    recommendationsData.data.recommendedProducts.length > 0
+      ? [
+          {
+            id: "recommendations",
+            type: "recommendations",
+            content: (
+              <YStack>
+                <SectionHeader
+                  title={t("home.sectionHeader.youMightAlsoLike")}
+                  image={"bulb"}
+                  tintColor={"darkgrey"}
+                />
+                <Spacer size={"$xl"} />
+                <FlatList
+                  data={recommendationsData.data.recommendedProducts}
+                  keyExtractor={(product, index) =>
+                    `recommended-${product._id}-${index}`
+                  }
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{
+                    paddingHorizontal: GRID_SIDE_PADDING,
+                    gap: GRID_COLUMN_GAP,
+                  }}
+                  renderItem={({ item: product }) => {
+                    const productId = product.shopifyProductId || product._id;
+                    return (
+                      <ProductCard
+                        product={
+                          {
+                            productId: productId,
+                            title: product.title,
+                            handle: product.handle,
+                            vendor: product.vendor,
+                            price: product.price,
+                            compareAtPrice: product.compareAtPrice,
+                            currency: "USD",
+                            images: product.images?.map((img) => img.url) || [],
+                            rating: 0,
+                            reviewsCount: 0,
+                            tags: product.tags || [],
+                            inStock: true,
+                            availableQuantity: 0,
+                            totalQuantity: 0,
+                          } as any
+                        }
+                        context="grid"
+                        showFavoriteIcon={true}
+                        isFavorite={useFavoritesStore
+                          .getState()
+                          .isFavorite(productId)}
+                      />
+                    );
+                  }}
+                />
               </YStack>
             ),
           },

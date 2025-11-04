@@ -12,14 +12,18 @@ import { t } from "@/translations";
 import { FlatList, PanResponder, Platform } from "react-native";
 
 import { useInitializeCheckout } from "@/api/generated/checkout/checkout";
+import { useGetCartRecommendations } from "@/api/generated/recommendations/recommendations";
 import { useCartManager } from "@/api/hooks/useCartManager";
 import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import CartLineItem from "@/components/molecules/cart/CartLineItem";
+import { ProductCard } from "@/components/molecules/ProductCard";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import ErrorModal from "@/components/organisms/ErrorModal";
 import useCartStore from "@/store/useCartStore";
+import useFavoritesStore from "@/store/useFavoritesStore";
+import { tokens } from "@/tamagui/token";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated } from "react-native";
@@ -36,6 +40,7 @@ const CartScreen = () => {
   }>({ visible: false, title: "", message: "" });
 
   const { items, getTotalPrice, getTotalQuantity, cartId } = useCartStore();
+  const isFavorite = useFavoritesStore((state) => state.isFavorite);
   const {
     updateQuantity: updateCartQuantity,
     removeItem: removeCartItem,
@@ -48,6 +53,50 @@ const CartScreen = () => {
 
   // Initialize checkout mutation
   const { mutate: initializeCheckoutMutation } = useInitializeCheckout();
+
+  // Fetch cart recommendations
+  const {
+    mutate: fetchRecommendations,
+    data: recommendationsData,
+  } = useGetCartRecommendations();
+
+  // Keep previous recommendations during refetch
+  const [previousRecommendations, setPreviousRecommendations] = useState<any[]>(
+    []
+  );
+
+  // Update previous recommendations when new data arrives
+  useEffect(() => {
+    if (
+      recommendationsData?.data?.recommendedProducts &&
+      recommendationsData.data.recommendedProducts.length > 0
+    ) {
+      setPreviousRecommendations(recommendationsData.data.recommendedProducts);
+    }
+  }, [recommendationsData]);
+
+  // Extract shopify product IDs from cart items
+  const shopifyProductIds = React.useMemo(() => {
+    return items
+      .map((item) => {
+        const id = item.productId?.split("/").pop();
+        return id || "";
+      })
+      .filter((id) => id !== "");
+  }, [items]);
+
+  // Fetch recommendations when cart items change
+  useEffect(() => {
+    if (shopifyProductIds.length > 0) {
+      console.log("[Cart] Fetching recommendations for:", shopifyProductIds);
+      fetchRecommendations({
+        data: {
+          cartItems: shopifyProductIds,
+        },
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shopifyProductIds.length]); // Only refetch when cart items count changes
   // Animation refs
   const animatedHeight = useRef(new Animated.Value(0)).current;
   const animatedOpacity = useRef(new Animated.Value(0)).current;
@@ -318,41 +367,71 @@ const CartScreen = () => {
   );
 
   // Render recommendations section
-  const renderRecommendations = () => (
-    <YStack>
-      <Spacer size={"$xl"} />
-      <SectionHeader
-        title={t("home.sectionHeader.youMightAlsoLike")}
-        image={"bulb"}
-        tintColor={"darkgrey"}
-        seeAllText="View All"
-        color="primary"
-        onPressSeeAll={() => {}}
-      />
+  const renderRecommendations = () => {
+    // Don't show if cart is empty
+    if (items.length === 0) {
+      return null;
+    }
 
-      <Spacer size={"$reg"} />
-      {/* <FlatList
-        data={products}
-        renderItem={({ item }) => (
-          console.log(item, "item in rec"),
-          (
+    // Use current recommendations if available, otherwise show previous ones
+    const currentRecommendations =
+      recommendationsData?.data?.recommendedProducts || [];
+    const displayRecommendations =
+      currentRecommendations.length > 0
+        ? currentRecommendations
+        : previousRecommendations;
+
+    // Don't show if no recommendations available at all
+    if (displayRecommendations.length === 0) {
+      console.log("[Cart] No recommendations available");
+      return null;
+    }
+
+    return (
+      <YStack>
+        <Spacer size={"$xl"} />
+        <SectionHeader
+          title={t("home.sectionHeader.youMightAlsoLike")}
+          image={"bulb"}
+          tintColor={"darkgrey"}
+        />
+        <Spacer size={"$xl"} />
+        <FlatList
+          data={displayRecommendations}
+          keyExtractor={(product, index) =>
+            `recommended-${product._id}-${index}`
+          }
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingHorizontal: tokens.space.md,
+            gap: tokens.space.md,
+          }}
+          renderItem={({ item: product }) => (
             <ProductCard
-              product={item as any}
+              product={
+                {
+                  productId: product.shopifyProductId || product._id,
+                  title: product.title,
+                  handle: product.handle,
+                  vendor: product.vendor,
+                  price: product.price,
+                  compareAtPrice: product.compareAtPrice,
+                  images: product.images?.map((img: any) => img.url) || [],
+                  rating: 0,
+                  reviewCount: 0,
+                  tags: product.tags || [],
+                } as any
+              }
               context="grid"
-              showProgressBar={false}
+              showFavoriteIcon={true}
+              isFavorite={isFavorite(product.shopifyProductId || product._id)}
             />
-          )
-        )}
-        keyExtractor={(item) => item.id}
-        showsHorizontalScrollIndicator={false}
-        horizontal
-        contentContainerStyle={{
-          paddingHorizontal: GRID_SIDE_PADDING,
-          gap: GRID_COLUMN_GAP,
-        }}
-      /> */}
-    </YStack>
-  );
+          )}
+        />
+      </YStack>
+    );
+  };
 
   // Calculate cart totals
   const subtotal = getTotalPrice(); // Current discounted prices

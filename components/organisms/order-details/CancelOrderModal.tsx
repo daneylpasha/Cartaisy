@@ -54,12 +54,12 @@ export default function CancelOrderModal({
     {
       id: 4,
       image: "trendingIconDown" as keyof typeof Icons,
-      title: "Item price is too high",
+      title: "Found cheaper alternative",
     },
     {
       id: 5,
       image: "locationIconUnfilled" as keyof typeof Icons,
-      title: "Item price is too high",
+      title: "Need to change address",
     },
   ];
 
@@ -158,7 +158,9 @@ export default function CancelOrderModal({
           isLoading={loading}
           background={"red"}
           onPress={() => {
-            const selectedReason = CancelData.find(item => item.id === selected);
+            const selectedReason = CancelData.find(
+              (item) => item.id === selected
+            );
             onConfirm(selectedReason?.title || "");
           }}
         />
