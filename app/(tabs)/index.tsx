@@ -36,6 +36,7 @@ import {
 import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
 import { AddressCard } from "@/components/molecules/AddressCard";
 import { CollectionsGrid } from "@/components/molecules/home/CollectionsGrid";
+import AlertModal from "@/components/organisms/AlertModal";
 import { BottomSheetModalWithFlatList } from "@/components/organisms/bottomSheet";
 import useUserStore from "@/store/useUserStore";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -63,7 +64,8 @@ const HomeScreen = () => {
   } = useGetAddresses();
 
   // Fetch default address on mount
-  const { data: defaultAddressResponse } = useGetDefaultAddress();
+  const { data: defaultAddressResponse, refetch: refetchDefaultAddress } =
+    useGetDefaultAddress();
 
   // Update user store when default address is fetched
   React.useEffect(() => {
@@ -93,7 +95,8 @@ const HomeScreen = () => {
   useFocusEffect(
     useCallback(() => {
       refetchAddresses();
-    }, [refetchAddresses])
+      refetchDefaultAddress();
+    }, [refetchAddresses, refetchDefaultAddress])
   );
 
   // Map API addresses to AddressCard format
@@ -135,6 +138,12 @@ const HomeScreen = () => {
   console.log("HomeScreen Data:", homescreenData);
 
   const handleAddNewAddress = () => {
+    // Check if user already has 5 addresses
+    if (addressData.length >= 5) {
+      setShowAddressLimitModal(true);
+      return;
+    }
+
     setOpen(false);
     Animated.timing(rotateAnim, {
       toValue: 0,
@@ -189,6 +198,7 @@ const HomeScreen = () => {
 
   const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [showAddressLimitModal, setShowAddressLimitModal] = useState(false);
 
   // Update selectedAddress when addresses refetch and default changes
   useEffect(() => {
@@ -298,6 +308,7 @@ const HomeScreen = () => {
         onAddressPress={() => {
           // Refetch addresses when opening bottomsheet
           refetchAddresses();
+          refetchDefaultAddress();
           bottomSheetModalRef.current?.present();
           setOpen(true);
           Animated.timing(rotateAnim, {
@@ -394,7 +405,7 @@ const HomeScreen = () => {
             <Spacer size={"$md"} />
           </YStack>
         }
-        snapPoints={["60%", "90%"]}
+        snapPoints={["90%"]}
         enableDynamicSizing={false}
         showFooter={!isEditMode}
         showBackdrop={true}
@@ -407,26 +418,54 @@ const HomeScreen = () => {
           paddingBottom: getTokenValue("$reg"),
         }}
         style={{ flex: 1 }}
-        ListFooterComponent={
-          <YStack paddingTop="$md" paddingHorizontal="$md">
-            <OpTouch>
-              <XStack alignItems="center" justifyContent="center">
-                <AppImage
-                  tintColor={getTokenValue("$primary")}
-                  name="locationUnfilled"
-                  width={15}
-                  height={15}
-                />
-                <Spacer size="$sm" />
-                <TextSMSemiBold color="$primary">
-                  {"Use my current location"}
-                </TextSMSemiBold>
-              </XStack>
-            </OpTouch>
-            <Spacer size={120 + BOTTOM_INSET} />
-          </YStack>
-        }
+        // ListFooterComponent={
+        //   <YStack paddingTop="$md" paddingHorizontal="$md">
+        //     <OpTouch>
+        //       <XStack alignItems="center" justifyContent="center">
+        //         <AppImage
+        //           tintColor={getTokenValue("$primary")}
+        //           name="locationUnfilled"
+        //           width={15}
+        //           height={15}
+        //         />
+        //         <Spacer size="$sm" />
+        //         <TextSMSemiBold color="$primary">
+        //           {"Use my current location"}
+        //         </TextSMSemiBold>
+        //       </XStack>
+        //     </OpTouch>
+        //     <Spacer size={120 + BOTTOM_INSET} />
+        //   </YStack>
+        // }
       />
+      <AlertModal
+        visible={showAddressLimitModal}
+        onCancel={() => setShowAddressLimitModal(false)}
+      >
+        <YStack
+          backgroundColor="$background"
+          padding="$lg"
+          borderRadius="$lg"
+          width="85%"
+          gap="$md"
+        >
+          <TextLGBold color="$text">Address Limit Reached</TextLGBold>
+          <ParagraphMD color="$secondary">
+            You can only add up to 5 addresses. Please delete an existing
+            address to add a new one.
+          </ParagraphMD>
+          <OpTouch onPress={() => setShowAddressLimitModal(false)}>
+            <YStack
+              backgroundColor="$primary"
+              padding="$sm"
+              borderRadius="$md"
+              alignItems="center"
+            >
+              <TextSMSemiBold color="$white">OK</TextSMSemiBold>
+            </YStack>
+          </OpTouch>
+        </YStack>
+      </AlertModal>
     </>
   );
 };

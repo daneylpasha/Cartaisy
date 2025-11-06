@@ -21,6 +21,7 @@ interface BaseBottomSheetModalProps extends Omit<BottomSheetModalProps, "ref"> {
   onSecondaryPress?: () => void;
   primaryButtonLabel?: string;
   secondaryButtonLabel?: string;
+  secondaryButtonDisabled?: boolean;
   showFooter?: boolean;
   showBackdrop?: boolean;
   enableDynamicSizing?: boolean;
@@ -43,6 +44,7 @@ export const BaseBottomSheetModal = forwardRef<
       iconPosition,
       primaryButtonLabel = "Apply",
       secondaryButtonLabel = "Add New Address",
+      secondaryButtonDisabled = false,
       showFooter = true,
       showBackdrop = true,
       enableDynamicSizing = false,

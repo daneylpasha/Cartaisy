@@ -7,9 +7,10 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { StripeProvider } from "@stripe/stripe-react-native";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
+
 import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -21,30 +22,73 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
+async function registerForPushNotificationsAsync() {
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  let finalStatus = existingStatus;
+  if (existingStatus !== "granted") {
+    const { status } = await Notifications.requestPermissionsAsync();
+    finalStatus = status;
+  }
 
+  if (finalStatus !== "granted") {
+    alert("Permission not granted!");
+    return;
+  }
+
+  const tokenData = await Notifications.getExpoPushTokenAsync();
+  console.log("Expo Push Token:", tokenData.data);
+  return tokenData.data;
+}
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [expoPushToken, setExpoPushToken] = useState("");
 
   useEffect(() => {
-    // Register for push notifications
+    registerForPushNotificationsAsync().then((token) => {
+      if (token) {
+        setExpoPushToken(token);
+      }
+    });
+
     const subscription = Notifications.addNotificationReceivedListener(
       (notification) => {
-        console.log("Notification received:", notification);
+        console.log("📩 Notification Received:", notification);
       }
     );
 
-    const responseSubscription =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log("Notification response:", response);
-      });
+    const responseSub = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        console.log("👉 User interacted:", response);
+      }
+    );
 
     return () => {
       subscription.remove();
-      responseSubscription.remove();
+      responseSub.remove();
     };
   }, []);
+  // useEffect(() => {
+  //   // Register for push notifications
+  //   const subscription = Notifications.addNotificationReceivedListener(
+  //     (notification) => {
+  //       console.log("Notification received:", notification);
+  //     }
+  //   );
+
+  //   const responseSubscription =
+  //     Notifications.addNotificationResponseReceivedListener((response) => {
+  //       console.log("Notification response:", response);
+  //     });
+
+  //   return () => {
+  //     subscription.remove();
+  //     responseSubscription.remove();
+  //   };
+  // }, []);
 
   const [loaded] = useFonts({
     "Figtree-Regular": require("../assets/fonts/Figtree-Regular.ttf"),
@@ -128,10 +172,7 @@ export default function RootLayout() {
                     name="order-success"
                     options={{ presentation: "modal", headerShown: false }}
                   />
-                  <Stack.Screen
-                    name="orders"
-                    options={HEADER_CONFIGS.orders}
-                  />
+                  <Stack.Screen name="orders" options={HEADER_CONFIGS.orders} />
                   <Stack.Screen
                     name="ordersDetails"
                     options={HEADER_CONFIGS.ordersDetails}

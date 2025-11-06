@@ -14,7 +14,7 @@ const ProductsLayout = () => {
           headerShown: true,
           headerTitle: () => (
             <CustomHeaderTitle
-              title={(route.params as any)?.categoryName || "Products"}
+              title={(route.params as any)?.categoryName.slice(0, 15) + `...`}
             />
           ),
           headerTitleAlign: "center",

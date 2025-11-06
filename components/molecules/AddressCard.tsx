@@ -40,11 +40,15 @@ export const AddressCard = ({
     >
       <XStack
         borderWidth={"$xxxs"}
-        borderColor={selectedAddress === item.id && !isEditMode ? "$primary" : "$lightgrey"}
+        borderColor={
+          selectedAddress === item.id && !isEditMode ? "$primary" : "$lightgrey"
+        }
         borderRadius="$2xl"
         padding={"$reg"}
         backgroundColor={
-          selectedAddress === item.id && !isEditMode ? "$primarylight" : defaultBg
+          selectedAddress === item.id && !isEditMode
+            ? "$primarylight"
+            : defaultBg
         }
         justifyContent="space-between"
       >

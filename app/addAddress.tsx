@@ -12,12 +12,14 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
 import { TextMDSemiBold } from "@/components/atoms/texts/TextMDSemiBold";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
+import { SecondaryButton } from "@/components/molecules/buttons/SecondaryButton";
 import { fonts } from "@/tamagui/fonts";
 
 import {
   BaseBottomSheetRef,
   BottomSheetModalWithView,
 } from "@/components/molecules/bottom-sheets";
+import AlertModal from "@/components/organisms/AlertModal";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
 import { router, useLocalSearchParams } from "expo-router";
@@ -31,7 +33,7 @@ import CountryPicker, {
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
-import { useAddAddress, getGetAddressesQueryKey, useGetAddresses, useSetDefaultAddress, useUpdateAddress } from "@/api/generated/addresses/addresses";
+import { useAddAddress, getGetAddressesQueryKey, useGetAddresses, useSetDefaultAddress, useUpdateAddress, useDeleteAddress } from "@/api/generated/addresses/addresses";
 import { AddAddressBody, UpdateAddressBody, IAddress } from "@/api/generated/cartaisyAPI.schemas";
 import { useQueryClient } from "@tanstack/react-query";
 import useUserStore from "@/store/useUserStore";
@@ -67,6 +69,7 @@ const AddAddress = () => {
   const { data: addressesResponse } = useGetAddresses();
   const { setDefaultAddress } = useUserStore();
   const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [showLastAddressWarning, setShowLastAddressWarning] = useState(false);
   const desc = useWatch({ control: form.control, name: "description" });
   const descLen = (desc ?? "").length;
 
@@ -131,7 +134,24 @@ const AddAddress = () => {
     },
   });
 
-  const isPending = isAddPending || isUpdatePending;
+  // Delete address mutation
+  const { mutate: deleteAddress, isPending: isDeletePending } = useDeleteAddress({
+    mutation: {
+      onSuccess: (response) => {
+        console.log("[AddAddress] Address deleted successfully:", response);
+
+        // Invalidate addresses query to refetch updated list
+        queryClient.invalidateQueries({ queryKey: getGetAddressesQueryKey() });
+        router.back();
+      },
+      onError: (error) => {
+        console.error("[AddAddress] Failed to delete address:", error);
+        // You can show a toast/alert here
+      },
+    },
+  });
+
+  const isPending = isAddPending || isUpdatePending || isDeletePending;
 
   const onSubmit = (data: any) => {
     console.log("[AddAddress] Form submitted with data:", data);
@@ -176,6 +196,36 @@ const AddAddress = () => {
       addAddress({ data: addressData });
     }
   };
+
+  const handleDelete = () => {
+    if (!isEditMode || editIndex === null) return;
+
+    const addresses = addressesResponse?.data?.addresses || [];
+
+    // Check if this is the last address
+    if (addresses.length === 1) {
+      setShowLastAddressWarning(true);
+      return;
+    }
+
+    const addressToDelete = addresses[editIndex];
+
+    // If deleting the default address, set the next one as default
+    if (addressToDelete?.isDefault && addresses.length > 1) {
+      // Find the next address index (prefer the one below, otherwise above)
+      const nextIndex = editIndex < addresses.length - 1 ? editIndex + 1 : editIndex - 1;
+
+      console.log("[AddAddress] Deleting default address, setting next address as default:", nextIndex);
+
+      // First set the new default, then delete
+      setDefaultAddressAPI({ index: nextIndex });
+    }
+
+    // Delete the address
+    console.log("[AddAddress] Deleting address at index:", editIndex);
+    deleteAddress({ index: editIndex });
+  };
+
   const [selectedCountry, setSelectedCountry] = useState<Country>({
     callingCode: ["44"],
     cca2: "GB",
@@ -585,8 +635,21 @@ const AddAddress = () => {
           }}
           width={"100%"}
           iconPosition="left"
-          isLoading={isPending}
+          isLoading={isPending && !isDeletePending}
         />
+        {isEditMode && (
+          <>
+            <Spacer size={"$md"} />
+            <SecondaryButton
+              label="Delete Address"
+              onPress={handleDelete}
+              width={"100%"}
+              borderColor="$error"
+              color="$error"
+              isLoading={isDeletePending}
+            />
+          </>
+        )}
       </YStack>
       {/* paddingBottom={} */}
       <Spacer size={bottomSafeAreaInset} />
@@ -638,6 +701,34 @@ const AddAddress = () => {
           </YStack>
         </YStack>
       </BottomSheetModalWithView>
+
+      <AlertModal
+        visible={showLastAddressWarning}
+        onCancel={() => setShowLastAddressWarning(false)}
+      >
+        <YStack
+          backgroundColor="$background"
+          padding="$lg"
+          borderRadius="$lg"
+          width="85%"
+          gap="$md"
+        >
+          <HeadingSMBold color="$text">Cannot Delete Address</HeadingSMBold>
+          <ParagraphMD color="$secondary">
+            You must have at least one delivery address on your account. Add a new address before deleting this one.
+          </ParagraphMD>
+          <OpTouch onPress={() => setShowLastAddressWarning(false)}>
+            <YStack
+              backgroundColor="$primary"
+              padding="$sm"
+              borderRadius="$md"
+              alignItems="center"
+            >
+              <TextSMSemiBold color="$white">Got it</TextSMSemiBold>
+            </YStack>
+          </OpTouch>
+        </YStack>
+      </AlertModal>
     </YStack>
   );
 };

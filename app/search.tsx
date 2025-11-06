@@ -35,6 +35,7 @@ import React, { useCallback, useState } from "react";
 import {
   Dimensions,
   FlatList,
+  KeyboardAvoidingView,
   LayoutAnimation,
   Platform,
   RefreshControl,
@@ -850,14 +851,6 @@ const Search = () => {
         const trendingCollections =
           initialSearchData?.data?.trendingCollections || [];
 
-        console.log("🎯 Rendering default content:");
-        console.log("  - Trending Products Count:", trendingProducts.length);
-        console.log(
-          "  - Trending Collections Count:",
-          trendingCollections.length
-        );
-        console.log("  - Trending Collections Data:", trendingCollections);
-
         return (
           <YStack flex={1}>
             <Spacer size={"$reg"} />
@@ -949,7 +942,10 @@ const Search = () => {
   };
 
   return (
-    <>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
       <YStack height={topInset} backgroundColor="$primary" />
       <YStack paddingHorizontal={"$md"} height={60} backgroundColor="$primary">
         <XStack
@@ -1010,6 +1006,7 @@ const Search = () => {
         renderItem={renderFlatListItem}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
           paddingBottom: bottomInset,
         }}
@@ -1025,7 +1022,7 @@ const Search = () => {
           ) : undefined
         }
       />
-    </>
+    </KeyboardAvoidingView>
   );
 };
 

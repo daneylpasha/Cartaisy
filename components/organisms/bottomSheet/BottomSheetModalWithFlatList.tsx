@@ -1,8 +1,8 @@
+import Icons from "@/assets/Icons";
 import { BottomSheetFlatList, BottomSheetModal } from "@gorhom/bottom-sheet";
 import React, { forwardRef } from "react";
 import { ListRenderItem, ViewStyle } from "react-native";
 import { BaseBottomSheetModal } from "./BottomSheetModal";
-import Icons from "@/assets/Icons";
 
 interface BottomSheetModalWithFlatListProps<T = any> {
   // Required props
@@ -16,7 +16,7 @@ interface BottomSheetModalWithFlatListProps<T = any> {
   contentContainerStyle?: ViewStyle;
   showsVerticalScrollIndicator?: boolean;
   style?: ViewStyle;
-  icon?:keyof typeof Icons;
+  icon?: keyof typeof Icons;
   iconPosition?: "left" | "right";
   // BottomSheet props
   snapPoints?: (string | number)[];
@@ -29,6 +29,7 @@ interface BottomSheetModalWithFlatListProps<T = any> {
   onSecondaryPress?: () => void;
   primaryButtonLabel?: string;
   secondaryButtonLabel?: string;
+  secondaryButtonDisabled?: boolean;
   showFooter?: boolean;
 }
 
@@ -62,6 +63,7 @@ export const BottomSheetModalWithFlatList = forwardRef<
       onSecondaryPress,
       primaryButtonLabel,
       secondaryButtonLabel,
+      secondaryButtonDisabled,
       showFooter = false,
     },
     ref
@@ -76,6 +78,7 @@ export const BottomSheetModalWithFlatList = forwardRef<
         iconPosition={iconPosition}
         primaryButtonLabel={primaryButtonLabel}
         secondaryButtonLabel={secondaryButtonLabel}
+        secondaryButtonDisabled={secondaryButtonDisabled}
         showFooter={showFooter}
         showBackdrop={showBackdrop}
         enableDynamicSizing={enableDynamicSizing}

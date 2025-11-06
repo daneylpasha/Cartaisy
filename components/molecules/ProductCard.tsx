@@ -19,11 +19,9 @@ import {
   TextMDSemiBold,
   TextSMMedium,
   TextSMRegular,
-  TextXSRegular,
 } from "../atoms";
 import { AppImage } from "../atoms/AppImage";
 import { Spacer } from "../atoms/Spacer";
-import { RatingStar } from "../organisms/home/RatingStar";
 
 // Enable LayoutAnimation for Android
 if (
@@ -67,7 +65,9 @@ export const ProductCard = ({
 
   // Use Zustand store for favorites
   const addFavoriteToStore = useFavoritesStore((state) => state.addFavorite);
-  const removeFavoriteFromStore = useFavoritesStore((state) => state.removeFavorite);
+  const removeFavoriteFromStore = useFavoritesStore(
+    (state) => state.removeFavorite
+  );
 
   // Query client for invalidation
   const queryClient = useQueryClient();
@@ -128,7 +128,9 @@ export const ProductCard = ({
         // Stop blinking animation on success
         stopBlinking();
         // Invalidate detailed favorites query to refetch wishlist
-        queryClient.invalidateQueries({ queryKey: ['/customer/favorites/detailed'] });
+        queryClient.invalidateQueries({
+          queryKey: ["/customer/favorites/detailed"],
+        });
         // Zustand already updated in onMutate
       },
       onError: (error) => {
@@ -155,7 +157,9 @@ export const ProductCard = ({
         // Stop blinking animation on success
         stopBlinking();
         // Invalidate detailed favorites query to refetch wishlist
-        queryClient.invalidateQueries({ queryKey: ['/customer/favorites/detailed'] });
+        queryClient.invalidateQueries({
+          queryKey: ["/customer/favorites/detailed"],
+        });
         // Zustand already updated in onMutate
       },
       onError: (error) => {
@@ -306,7 +310,7 @@ export const ProductCard = ({
           </TextMDSemiBold>
           <Spacer size="$sm-reg" />
 
-          <XStack alignItems="center">
+          {/* <XStack alignItems="center">
             <RatingStar rating={product.rating || 0} />
             <Spacer size="$sm-reg" />
             <TextMDBold color="$secondary">
@@ -318,7 +322,8 @@ export const ProductCard = ({
             </TextXSRegular>
           </XStack>
 
-          <Spacer size="$sm-reg" />
+
+          */}
 
           <XStack alignItems="center">
             <TextMDBold>${product.price.toFixed(2)}</TextMDBold>
@@ -331,8 +336,8 @@ export const ProductCard = ({
             ) : null}
           </XStack>
         </YStack>
-
-        {showProgressBar &&
+        <Spacer size="$sm-reg" />
+        {/* {showProgressBar &&
         product.availableQuantity > 0 &&
         product.totalQuantity > 0 ? (
           <XStack alignItems="center" gap="$sm">
@@ -367,7 +372,7 @@ export const ProductCard = ({
               % Claimed
             </TextSMRegular>
           </XStack>
-        ) : null}
+        ) : null} */}
       </YStack>
     </OpTouch>
   );
