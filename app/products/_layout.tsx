@@ -10,11 +10,17 @@ const ProductsLayout = () => {
     <Stack>
       <Stack.Screen
         name="index"
-        options={({ route }) => ({
+        options={({ route }) => {
+          // Use collectionTitle from API if available, otherwise fallback to categoryName or "Products"
+          const collectionTitle = (route.params as any)?.collectionTitle;
+          const categoryName = (route.params as any)?.categoryName || "Products";
+          const titleToShow = collectionTitle || categoryName;
+
+          return {
           headerShown: true,
           headerTitle: () => (
             <CustomHeaderTitle
-              title={(route.params as any)?.categoryName.slice(0, 15) + `...`}
+              title={titleToShow}
             />
           ),
           headerTitleAlign: "center",
@@ -28,11 +34,12 @@ const ProductsLayout = () => {
             backgroundColor: tokens.color.background,
           },
           headerTintColor: tokens.color.background,
-        })}
+        };
+        }}
       />
       <Stack.Screen
         name="[id]"
-        options={({ route }) => ({
+        options={() => ({
           headerShown: false,
         })}
       />

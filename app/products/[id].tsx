@@ -40,7 +40,13 @@ import { t } from "@/translations";
 import { getColorHex } from "@/utils/colorHelper";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
-import { Animated, FlatList, Platform, UIManager } from "react-native";
+import {
+  Animated,
+  FlatList,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+} from "react-native";
 import ImageViewing from "react-native-image-viewing";
 import RenderHTML from "react-native-render-html";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -123,6 +129,32 @@ const ProductDetailsScreen = () => {
     };
   }, [productDetailData]);
 
+  // Extract brand name from metafields
+  const brandName = useMemo(() => {
+    if (
+      !productDetailData?.data?.metafields ||
+      productDetailData.data.metafields.length === 0
+    ) {
+      return undefined;
+    }
+
+    // Try to find brand metafield with different possible keys
+    const brandMetafield = productDetailData.data.metafields.find((metafield: any) => {
+      const key = metafield.key?.toLowerCase() || '';
+      return key.includes('brand') || key === 'manufacturer' || key === 'vendor';
+    });
+
+    if (brandMetafield && brandMetafield.value) {
+      const value = String(brandMetafield.value);
+      // Don't use if it's a GID reference
+      if (!value.includes("gid://shopify")) {
+        return value;
+      }
+    }
+
+    return undefined;
+  }, [productDetailData?.data?.metafields]);
+
   // Transform metafields to the format expected by ProductSpec
   const productSpecsFromMetafields = useMemo(() => {
     if (
@@ -173,6 +205,17 @@ const ProductDetailsScreen = () => {
 
   // Favorite state from Zustand store
   const [isFavorited, setIsFavorited] = useState(isFavoriteInStore);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showToggle, setShowToggle] = useState(false);
+  const [descriptionHeight, setDescriptionHeight] = useState(0);
+
+  const COLLAPSED_HEIGHT = 80; // Maximum height when collapsed
+
+  const toggle = () => {
+    // animation کے ساتھ expand/collapse
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setIsExpanded((v) => !v);
+  };
 
   // Sync with Zustand store when it changes
   React.useEffect(() => {
@@ -437,7 +480,7 @@ const ProductDetailsScreen = () => {
           <TextXLMedium color="$text">{product?.title || ""}</TextXLMedium>
           <Spacer size={"$reg"} />
           {product?.soldThisMonth !== undefined &&
-            product.soldThisMonth >= 0 && (
+            product.soldThisMonth > 0 && (
               <TextSMRegular color="$secondary">
                 {`${product.soldThisMonth} sold this month`}
               </TextSMRegular>
@@ -447,7 +490,7 @@ const ProductDetailsScreen = () => {
           <XStack justifyContent="space-between" alignItems="center">
             <YStack>
               <XStack alignItems="center">
-                <HeadingXSBold color="$text">{`$${(
+                <HeadingXSBold color="$text">{`US$${(
                   (product?.currentPrice || 0) * count
                 ).toFixed(2)}`}</HeadingXSBold>
                 <Spacer size="$xs" />
@@ -456,7 +499,7 @@ const ProductDetailsScreen = () => {
                     color="$icon"
                     textDecorationLine="line-through"
                   >
-                    ${product?.originalPrice.toFixed(2)}
+                    US${product?.originalPrice.toFixed(2)}
                   </TextSMRegular>
                 )}
               </XStack>
@@ -686,21 +729,77 @@ const ProductDetailsScreen = () => {
           <TextMDBold color="$text">{"Description"}</TextMDBold>
           <Spacer size={"$reg"} />
           {product?.descriptionHtml && product.descriptionHtml.trim() !== "" ? (
-            <RenderHTML
-              contentWidth={SCREEN_WIDTH - 32}
-              source={{
-                html: product.descriptionHtml,
-              }}
-              baseStyle={{
-                color: getTokenValue("$secondary"),
-                fontSize: 14,
-                lineHeight: 20,
-              }}
-            />
+            <>
+              {/* Hidden full-height version to measure actual content height */}
+              <YStack
+                position="absolute"
+                opacity={0}
+                pointerEvents="none"
+                width={SCREEN_WIDTH - 32}
+                onLayout={(event) => {
+                  const { height } = event.nativeEvent.layout;
+                  if (height > 0 && descriptionHeight === 0) {
+                    setDescriptionHeight(height);
+                    // Show toggle if content is taller than collapsed height
+                    if (height > COLLAPSED_HEIGHT) {
+                      setShowToggle(true);
+                    }
+                  }
+                }}
+              >
+                <RenderHTML
+                  contentWidth={SCREEN_WIDTH - 32}
+                  source={{
+                    html: product.descriptionHtml,
+                  }}
+                  baseStyle={{
+                    color: getTokenValue("$secondary"),
+                    fontSize: 14,
+                    lineHeight: 20,
+                  }}
+                />
+              </YStack>
+
+              {/* Visible version with height control */}
+              <YStack
+                overflow="hidden"
+                maxHeight={isExpanded ? undefined : COLLAPSED_HEIGHT}
+              >
+                <RenderHTML
+                  contentWidth={SCREEN_WIDTH - 32}
+                  source={{
+                    html: product.descriptionHtml,
+                  }}
+                  baseStyle={{
+                    color: getTokenValue("$secondary"),
+                    fontSize: 14,
+                    lineHeight: 20,
+                  }}
+                />
+              </YStack>
+            </>
           ) : (
             <ParagraphSM color="$secondary">
               No description available
             </ParagraphSM>
+          )}
+
+          {showToggle && (
+            <>
+              <Spacer size={"$sm"} />
+              <OpTouch onPress={toggle} activeOpacity={0.7}>
+                <XStack alignItems="center" gap="$xs">
+                  <TextSMRegular color="$primary">
+                    {isExpanded ? "See less" : "See more"}
+                  </TextSMRegular>
+                  <AppImage
+                    name={isExpanded ? "arrowUp" : "arrowDown"}
+                    size={12}
+                    tintColor={getTokenValue("$primary")}
+                  />
+                </XStack>
+              </OpTouch>
+            </>
           )}
         </YStack>
       ),
@@ -867,7 +966,14 @@ const ProductDetailsScreen = () => {
       quantity: count,
       quantityAvailable: variantToAdd.quantityAvailable,
       selectedOptions: variantToAdd.selectedOptions || [],
+      brandName: brandName, // Add brand name from metafields
     };
+
+    console.log("[PDP] Cart item being added:", {
+      title: cartItem.title,
+      brandName: cartItem.brandName,
+      hasBrandName: !!cartItem.brandName
+    });
 
     try {
       // Add to cart via API with validation and recovery

@@ -32,9 +32,14 @@ export const HomeHeader = ({
 
   // Format default address for display
   const displayAddress = defaultAddress
-    ? [defaultAddress.address1, defaultAddress.city, defaultAddress.province, defaultAddress.zip]
+    ? [
+        defaultAddress.address1,
+        defaultAddress.city,
+        defaultAddress.province,
+        defaultAddress.zip,
+      ]
         .filter(Boolean)
-        .join(', ')
+        .join(", ")
     : "Add delivery address";
 
   return (
@@ -85,7 +90,13 @@ export const HomeHeader = ({
       <Spacer size={"$md"} />
 
       {/* Search Bar */}
-      <YStack backgroundColor="$white" borderRadius="$md" padding={"$sm-reg"}>
+      <YStack
+        backgroundColor="$white"
+        borderRadius="$md"
+        paddingVertical={"$sm"}
+        paddingHorizontal={"$reg"}
+        // padding={"$sm-reg"}
+      >
         <OpTouch
           activeOpacity={0.9}
           onPress={() => router.push("/search")}
@@ -94,8 +105,8 @@ export const HomeHeader = ({
           <XStack alignItems="center" gap={"$md"}>
             <AppImage
               name="searchIcon"
-              width={20}
-              height={20}
+              width={18}
+              height={18}
               tintColor="$secondary"
             />
 

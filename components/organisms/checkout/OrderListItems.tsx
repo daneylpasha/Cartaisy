@@ -1,8 +1,8 @@
+import { CheckoutSummaryResponseDataItemsItem } from "@/api/generated/cartaisyAPI.schemas";
 import OrderCard from "@/components/molecules/OrderCard";
 import React from "react";
 import { FlatList } from "react-native-gesture-handler";
 import { YStack } from "tamagui";
-import { CheckoutSummaryResponseDataItemsItem } from "@/api/generated/cartaisyAPI.schemas";
 
 interface OrderListItemsProps {
   items?: CheckoutSummaryResponseDataItemsItem[];

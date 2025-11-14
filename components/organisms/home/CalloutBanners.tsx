@@ -6,11 +6,12 @@ import { SecondaryButton } from "@/components/molecules/buttons";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { t } from "@/translations";
 
+import { router } from "expo-router";
 import React, { useState } from "react";
 import { FlatList } from "react-native";
 import { XStack, YStack } from "tamagui";
 
-import type { CalloutBannerItem } from '@/api/generated/cartaisyAPI.schemas';
+import type { CalloutBannerItem } from "@/api/generated/cartaisyAPI.schemas";
 
 // Note: CalloutBannerItem still uses subTitle and buttonText (not changed in backend)
 type CalloutData = CalloutBannerItem;
@@ -19,7 +20,9 @@ type CalloutBannersProps = {
   calloutBanners?: CalloutData[];
 };
 
-export const CalloutBanners = ({ calloutBanners: banners }: CalloutBannersProps) => {
+export const CalloutBanners = ({
+  calloutBanners: banners,
+}: CalloutBannersProps) => {
   const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
 
   const totalBanners = banners?.length || 0;
@@ -31,6 +34,30 @@ export const CalloutBanners = ({ calloutBanners: banners }: CalloutBannersProps)
   const handleViewableItemsChanged = ({ viewableItems }: any) => {
     if (viewableItems.length > 0) {
       setActiveCarouselIndex(viewableItems[0].index || 0);
+    }
+  };
+
+  const handleBannerPress = (banner: CalloutData) => {
+    if (!banner?.action) return;
+
+    const { action } = banner;
+
+    // Handle collection type - navigate to PLP
+    if (action.type === "collection" && action.collectionId) {
+      router.push({
+        pathname: "/products",
+        params: {
+          collectionId: action.collectionId.toString(),
+          categoryName: banner?.title,
+        },
+      });
+      return;
+    }
+
+    // Handle navigation type - navigate to specific screen
+    if (action.type === "navigation" && action.navigateTo) {
+      console.log("Navigate to:", action.navigateTo);
+      return;
     }
   };
 
@@ -77,11 +104,7 @@ export const CalloutBanners = ({ calloutBanners: banners }: CalloutBannersProps)
                   width={180}
                   borderColor="$lightgrey"
                   color="$secondary"
-                  onPress={() => {
-                    if (banner?.action?.navigateTo) {
-                      console.log("Navigate to:", banner?.action.navigateTo);
-                    }
-                  }}
+                  onPress={() => handleBannerPress(banner)}
                   label={
                     banner?.buttonText || t("home.freeShippingCard.buttonText")
                   }
@@ -99,7 +122,7 @@ export const CalloutBanners = ({ calloutBanners: banners }: CalloutBannersProps)
           gap="$reg"
           paddingTop="$md"
         >
-          {banners?.map((banner: CalloutData, dotIndex: number) => (
+          {banners?.map((_banner: CalloutData, dotIndex: number) => (
             <YStack
               key={`callout-dot-${dotIndex}`}
               borderRadius="$full"

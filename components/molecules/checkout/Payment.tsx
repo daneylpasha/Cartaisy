@@ -1,5 +1,5 @@
-import { useListPaymentMethods } from "@/api/generated/payment-methods/payment-methods";
 import { useSaveStep2 } from "@/api/generated/checkout/checkout";
+import { useListPaymentMethods } from "@/api/generated/payment-methods/payment-methods";
 import Icons from "@/assets/Icons";
 import { TextSMMedium, TextSMSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
@@ -35,271 +35,277 @@ export interface PaymentStepperRef {
 
 const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
   ({ sessionId, onStepComplete, onError }, ref) => {
-  const [selectedPayment, setSelectedPayment] = useState<string>("");
-  const { showAlert, AlertComponent } = useCustomAlert();
+    const [selectedPayment, setSelectedPayment] = useState<string>("");
+    const { showAlert, AlertComponent } = useCustomAlert();
 
-  const {
-    data: paymentMethodsResponse,
-    isLoading,
-    refetch,
-  } = useListPaymentMethods();
+    const {
+      data: paymentMethodsResponse,
+      isLoading,
+      refetch,
+    } = useListPaymentMethods();
 
-  const { mutate: savePaymentStep, isPending: isSavingPayment } = useSaveStep2({
-    mutation: {
-      onSuccess: () => {
-        console.log("[Payment] Payment method saved successfully");
-        // Navigate to next step on success
-        onStepComplete();
-      },
-      onError: (error: any) => {
-        console.error("[Payment] Failed to save payment method:", error);
-        // Call onError callback to stop loader
-        onError?.();
-        // Show error alert
-        showAlert({
-          type: "error",
-          title: "Error",
-          message: error?.response?.data?.error || "Failed to save payment selection. Please try again.",
-          buttons: [{ text: "OK" }],
-        });
-      },
-    },
-  });
-
-  useFocusEffect(
-    React.useCallback(() => {
-      console.log("[PaymentStepper] Screen focused, refetching cards...");
-      refetch();
-    }, [refetch])
-  );
-  const paymentMethods = paymentMethodsResponse?.data?.paymentMethods || [];
-
-  // Auto-select default payment method on mount
-  React.useEffect(() => {
-    if (paymentMethods.length > 0 && !selectedPayment) {
-      const defaultCard = paymentMethods.find((pm) => pm.isDefault);
-      if (defaultCard) {
-        setSelectedPayment(defaultCard.id);
-      } else {
-        setSelectedPayment(paymentMethods[0].id);
-      }
-    }
-  }, [paymentMethods, selectedPayment]);
-
-  // Expose handleContinue method and loading state to parent via ref
-  useImperativeHandle(ref, () => ({
-    handleContinue: () => {
-      // Validate payment method selection
-      if (!selectedPayment) {
-        showAlert({
-          type: "warning",
-          title: "Validation Error",
-          message: "Please select a payment method",
-          buttons: [{ text: "OK" }],
-        });
-        onError?.(); // Stop loader in parent
-        return;
-      }
-
-      // Save payment method
-      console.log("[Payment] Saving payment method:", selectedPayment);
-      savePaymentStep({
-        data: {
-          sessionId: sessionId,
-          paymentMethodId: selectedPayment,
+    const { mutate: savePaymentStep, isPending: isSavingPayment } =
+      useSaveStep2({
+        mutation: {
+          onSuccess: () => {
+            console.log("[Payment] Payment method saved successfully");
+            // Navigate to next step on success
+            onStepComplete();
+          },
+          onError: (error: any) => {
+            console.error("[Payment] Failed to save payment method:", error);
+            // Call onError callback to stop loader
+            onError?.();
+            // Show error alert
+            showAlert({
+              type: "error",
+              title: "Error",
+              message:
+                error?.response?.data?.error ||
+                "Failed to save payment selection. Please try again.",
+              buttons: [{ text: "OK" }],
+            });
+          },
         },
       });
-    },
-    isLoading: isSavingPayment,
-  }));
 
-  // const paymentMethods = [
-  //   {
-  //     id: 1,
-  //     type: "VISA",
+    useFocusEffect(
+      React.useCallback(() => {
+        console.log("[PaymentStepper] Screen focused, refetching cards...");
+        refetch();
+      }, [refetch])
+    );
+    const paymentMethods = paymentMethodsResponse?.data?.paymentMethods || [];
 
-  //     cardNumber: 8812,
-  //     amount: 380.17,
-  //   },
-  //   {
-  //     id: 2,
-  //     type: "Pay",
-  //     image: "googleIcon" as const,
-  //     cardNumber: 1558,
-  //     amount: 220.55,
-  //   },
-  //   {
-  //     id: 3,
-  //     type: "Pay",
-  //     image: "apple" as const,
-  //     cardNumber: 1418,
-  //     amount: 88.52,
-  //   },
-  // ];
-  const getCardIcon = (brand: string) => {
-    const brandLower = brand?.toLowerCase();
-    switch (brandLower) {
-      case "visa":
-        return "visa";
-      case "mastercard":
-        return "paymentIcon";
-      case "amex":
-      case "american express":
-      case "discover":
-      default:
-        return "paymentcard"; // Generic fallback for all other cards
-    }
-  };
+    // Auto-select default payment method on mount
+    React.useEffect(() => {
+      if (paymentMethods.length > 0 && !selectedPayment) {
+        const defaultCard = paymentMethods.find((pm) => pm.isDefault);
+        if (defaultCard) {
+          setSelectedPayment(defaultCard.id);
+        } else {
+          setSelectedPayment(paymentMethods[0].id);
+        }
+      }
+    }, [paymentMethods, selectedPayment]);
 
-  const renderItem = ({ item }: { item: any }) => {
-    const cardBrand = item.card?.brand || "card";
-    const last4 = item.card?.last4 || "••••";
-    const cardIcon = getCardIcon(cardBrand);
+    // Expose handleContinue method and loading state to parent via ref
+    useImperativeHandle(ref, () => ({
+      handleContinue: () => {
+        // Validate payment method selection
+        if (!selectedPayment) {
+          showAlert({
+            type: "warning",
+            title: "Validation Error",
+            message: "Please select a payment method",
+            buttons: [{ text: "OK" }],
+          });
+          onError?.(); // Stop loader in parent
+          return;
+        }
 
-    return (
-      <OpTouch key={item.id} onPress={() => setSelectedPayment(item.id)}>
-        <XStack
-          alignItems="center"
-          justifyContent="space-between"
-          paddingVertical={"$xxs"}
-        >
-          <XStack alignItems="center">
-            <XStack
-              width={46}
-              height={32}
-              borderWidth={0.5}
-              borderColor={"$grey"}
-              borderRadius={"$sm"}
-              alignItems="center"
-              justifyContent="center"
-              backgroundColor="$white"
-            >
-              <AppImage
-                name={cardIcon as any}
-                width={32}
-                height={20}
-                resizeMode="contain"
-              />
-            </XStack>
-            <Spacer size={"$reg"} />
-            <TextSMMedium color="$secondary">
-              {`Ending in ••${last4}`}
-            </TextSMMedium>
-          </XStack>
-          <XStack alignItems="center" gap="$sm">
-            {item.isDefault && (
-              <YStack
-                backgroundColor="$green"
-                paddingHorizontal="$xs"
-                paddingVertical={2}
-                borderRadius="$sm"
+        // Save payment method
+        console.log("[Payment] Saving payment method:", selectedPayment);
+        savePaymentStep({
+          data: {
+            sessionId: sessionId,
+            paymentMethodId: selectedPayment,
+          },
+        });
+      },
+      isLoading: isSavingPayment,
+    }));
+
+    // const paymentMethods = [
+    //   {
+    //     id: 1,
+    //     type: "VISA",
+
+    //     cardNumber: 8812,
+    //     amount: 380.17,
+    //   },
+    //   {
+    //     id: 2,
+    //     type: "Pay",
+    //     image: "googleIcon" as const,
+    //     cardNumber: 1558,
+    //     amount: 220.55,
+    //   },
+    //   {
+    //     id: 3,
+    //     type: "Pay",
+    //     image: "apple" as const,
+    //     cardNumber: 1418,
+    //     amount: 88.52,
+    //   },
+    // ];
+    const getCardIcon = (brand: string) => {
+      const brandLower = brand?.toLowerCase();
+      switch (brandLower) {
+        case "visa":
+          return "visa";
+        case "mastercard":
+          return "paymentIcon";
+        case "amex":
+        case "american express":
+        case "discover":
+        default:
+          return "paymentcard"; // Generic fallback for all other cards
+      }
+    };
+
+    const renderItem = ({ item }: { item: any }) => {
+      const cardBrand = item.card?.brand || "card";
+      const last4 = item.card?.last4 || "••••";
+      const cardIcon = getCardIcon(cardBrand);
+
+      return (
+        <OpTouch key={item.id} onPress={() => setSelectedPayment(item.id)}>
+          <XStack
+            alignItems="center"
+            justifyContent="space-between"
+            paddingVertical={"$xxs"}
+            borderColor={"$primary"}
+            backgroundColor={
+              selectedPayment === item.id ? "$primarylight" : "$white"
+            }
+            borderWidth={selectedPayment === item.id ? 1 : 0}
+            padding={"$reg"}
+            borderRadius={"$md"}
+          >
+            <XStack alignItems="center">
+              <XStack
+                width={46}
+                height={32}
+                borderWidth={0.5}
+                borderColor={"$grey"}
+                borderRadius={"$sm"}
+                alignItems="center"
+                justifyContent="center"
+                backgroundColor="$white"
               >
-                <TextSMSemiBold fontSize={10} color="$white">
-                  DEFAULT
-                </TextSMSemiBold>
-              </YStack>
-            )}
+                <AppImage
+                  name={cardIcon as any}
+                  width={32}
+                  height={20}
+                  resizeMode="contain"
+                />
+              </XStack>
+              <Spacer size={"$reg"} />
+              <TextSMMedium color="$secondary">
+                {`Ending in ••${last4}`}
+              </TextSMMedium>
+            </XStack>
+            <XStack alignItems="center" gap="$sm">
+              {item.isDefault && (
+                <YStack
+                  backgroundColor="$primary"
+                  paddingHorizontal="$sm"
+                  paddingVertical={4}
+                  borderRadius="$md"
+                >
+                  <TextSMSemiBold
+                    fontSize={10}
+                    color="$white"
+                    letterSpacing={0.5}
+                  >
+                    DEFAULT
+                  </TextSMSemiBold>
+                </YStack>
+              )}
 
-            <YStack
-              width={20}
-              height={20}
-              borderWidth={1}
-              borderColor={
-                selectedPayment === item.id
-                  ? getTokenValue("$primary")
-                  : getTokenValue("$lightgrey")
-              }
-              borderRadius={"$full"}
-              backgroundColor={
-                selectedPayment === item.id ? "$primarylight" : "$white"
-              }
-              justifyContent="center"
-              alignItems="center"
-            >
               <YStack
-                width={8}
-                height={8}
-                borderRadius={"$full"}
+                width={22}
+                height={22}
+                borderWidth={2}
                 borderColor={
                   selectedPayment === item.id
                     ? getTokenValue("$primary")
                     : getTokenValue("$lightgrey")
                 }
-                backgroundColor={
-                  selectedPayment === item.id
-                    ? getTokenValue("$primary")
-                    : "transparent"
-                }
-              />
-            </YStack>
-          </XStack>
-        </XStack>
-      </OpTouch>
-    );
-  };
-  return (
-    <YStack>
-      <Spacer size={"$xl"} />
-      <SectionHeader
-        title={t("checkout.sectionHeader.paymentMethod")}
-        tintColor={"darkgrey"}
-        image="paymentcard"
-        seeAllText=""
-        color="primary"
-        onPressSeeAll={() => {}}
-      />
-      <Spacer size={"$reg"} />
-      <YStack paddingHorizontal={"$md"}>
-        <YStack
-          backgroundColor={"$white"}
-          borderWidth={1}
-          borderColor={"$lightgrey"}
-          borderRadius={"$2xl"}
-          padding="$reg"
-        >
-          {isLoading ? (
-            <YStack paddingVertical="$lg" alignItems="center">
-              <Loader size="small" color="$primary" />
-            </YStack>
-          ) : paymentMethods.length === 0 ? (
-            <YStack paddingVertical="$md" alignItems="center">
-              <TextSMMedium color="$secondary">
-                No payment methods added
-              </TextSMMedium>
-            </YStack>
-          ) : (
-            <>
-              <FlatList
-                data={paymentMethods}
-                keyExtractor={(item) => item.id.toString()}
-                showsVerticalScrollIndicator={false}
-                renderItem={renderItem}
-                ItemSeparatorComponent={() => <Spacer size={"$md"} />}
-              />
-              <Spacer size={"$md"} />
-              <Divider />
-            </>
-          )}
-          <Spacer size={"$md"} />
-          <OpTouch onPress={() => router.push("/addNewCardDetails")}>
-            <XStack alignItems="center" justifyContent="center">
-              <AppImage
-                tintColor={getTokenValue("$primary")}
-                name="addIcon"
-                width={15}
-                height={15}
-              />
-              <Spacer size={"$sm"} />
-              <TextSMSemiBold color="$primary">
-                {"Add Payment Method"}
-              </TextSMSemiBold>
+                borderRadius={"$full"}
+                backgroundColor="$white"
+                justifyContent="center"
+                alignItems="center"
+              >
+                {selectedPayment === item.id && (
+                  <YStack
+                    width={8}
+                    height={8}
+                    borderRadius={"$full"}
+                    backgroundColor="$primary"
+                  />
+                )}
+              </YStack>
             </XStack>
-          </OpTouch>
+          </XStack>
+        </OpTouch>
+      );
+    };
+    return (
+      <YStack>
+        <Spacer size={"$xl"} />
+        <SectionHeader
+          title={t("checkout.sectionHeader.paymentMethod")}
+          tintColor={"darkgrey"}
+          image="paymentcard"
+          seeAllText=""
+          color="primary"
+          onPressSeeAll={() => {}}
+        />
+        <Spacer size={"$reg"} />
+        <YStack paddingHorizontal={"$md"}>
+          <YStack
+            backgroundColor={"$white"}
+            borderWidth={1}
+            borderColor={"$lightgrey"}
+            borderRadius={"$2xl"}
+            padding="$reg"
+          >
+            {isLoading ? (
+              <YStack paddingVertical="$lg" alignItems="center">
+                <Loader size="small" color="$primary" />
+              </YStack>
+            ) : paymentMethods.length === 0 ? (
+              <YStack paddingVertical="$md" alignItems="center">
+                <TextSMMedium color="$secondary">
+                  No payment methods added
+                </TextSMMedium>
+              </YStack>
+            ) : (
+              <>
+                <FlatList
+                  data={paymentMethods}
+                  keyExtractor={(item) => item.id.toString()}
+                  showsVerticalScrollIndicator={false}
+                  renderItem={renderItem}
+                  ItemSeparatorComponent={() => <Spacer size={"$md"} />}
+                />
+                <Spacer size={"$md"} />
+                <Divider />
+              </>
+            )}
+            <Spacer size={"$md"} />
+            <OpTouch onPress={() => router.push("/addNewCardDetails")}>
+              <XStack alignItems="center" justifyContent="center">
+                <AppImage
+                  tintColor={getTokenValue("$primary")}
+                  name="addIcon"
+                  width={15}
+                  height={15}
+                />
+                <Spacer size={"$sm"} />
+                <TextSMSemiBold color="$primary">
+                  {"Add Payment Method"}
+                </TextSMSemiBold>
+              </XStack>
+            </OpTouch>
+          </YStack>
         </YStack>
+        <AlertComponent />
       </YStack>
-      <AlertComponent />
-    </YStack>
-  );
-});
+    );
+  }
+);
 
 export default PaymentStepper;

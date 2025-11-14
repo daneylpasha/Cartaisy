@@ -225,7 +225,7 @@ export const ProductCard = ({
     <OpTouch onPress={handlePress}>
       <YStack width={cardWidth}>
         <YStack
-          borderRadius={tokens.space.md}
+          borderRadius={tokens.radius.md}
           position="relative"
           overflow="hidden"
           borderWidth={1}

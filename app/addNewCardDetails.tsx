@@ -1,3 +1,4 @@
+import { useAddPaymentMethod } from "@/api/generated/payment-methods/payment-methods";
 import {
   HeadingSMBold,
   LabelMD,
@@ -17,19 +18,17 @@ import {
   BottomSheetModalWithView,
 } from "@/components/molecules/bottom-sheets";
 import { PrimaryButton } from "@/components/molecules/buttons";
-import { LoaderScreen } from "@/components/organisms/LoaderScreen";
 import CardLinkModal from "@/components/organisms/paymentmethod/CardLinkModal";
 import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
+import { CardField, useStripe } from "@stripe/stripe-react-native";
+import { router } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Modal, ScrollView } from "react-native";
+import { ScrollView } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { getTokenValue, XStack, YStack } from "tamagui";
-import { CardField, useStripe } from '@stripe/stripe-react-native';
-import { useAddPaymentMethod } from "@/api/generated/payment-methods/payment-methods";
-import { router } from "expo-router";
 const toISO = (d: Date) => {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -55,31 +54,37 @@ const AddNewCardDetails = () => {
   const [cardComplete, setCardComplete] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
   const [showCardLinkModal, setShowCardLinkModal] = useState(false);
-  const [tempDateSelection, setTempDateSelection] = useState<string | null>(null);
+  const [tempDateSelection, setTempDateSelection] = useState<string | null>(
+    null
+  );
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const todayISO = useMemo(() => toISO(new Date()), []);
 
   // Add payment method mutation
-  const { mutate: addPaymentMethod, isPending: isStoringPayment } = useAddPaymentMethod({
-    mutation: {
-      onSuccess: (response) => {
-        console.log("[AddCard] Payment method stored successfully:", response);
-        setShowLoader(false);
-        setShowCardLinkModal(true);
+  const { mutate: addPaymentMethod, isPending: isStoringPayment } =
+    useAddPaymentMethod({
+      mutation: {
+        onSuccess: (response) => {
+          console.log(
+            "[AddCard] Payment method stored successfully:",
+            response
+          );
+          setShowLoader(false);
+          setShowCardLinkModal(true);
+        },
+        onError: (error: any) => {
+          console.error("[AddCard] Failed to store payment method:", error);
+          setShowLoader(false);
+          alert(error.message || "Failed to save card. Please try again.");
+        },
       },
-      onError: (error: any) => {
-        console.error("[AddCard] Failed to store payment method:", error);
-        setShowLoader(false);
-        alert(error.message || 'Failed to save card. Please try again.');
-      },
-    },
-  });
+    });
 
   const onSubmit = async (data: any) => {
     if (!cardComplete) {
-      alert('Please complete card details');
+      alert("Please complete card details");
       return;
     }
 
@@ -88,27 +93,27 @@ const AddNewCardDetails = () => {
     try {
       // Step 1: Create payment method with Stripe SDK
       const { paymentMethod, error } = await createPaymentMethod({
-        paymentMethodType: 'Card',
+        paymentMethodType: "Card",
         billingDetails: {
           address: {
             line1: data.streetAddress,
             line2: data.apartmentnumber,
             state: data.province,
             postalCode: data.postalcode,
-            country: 'US', // You can make this dynamic
+            country: "US", // You can make this dynamic
           },
         },
       });
 
       if (error) {
-        console.error('[AddCard] Stripe error:', error);
+        console.error("[AddCard] Stripe error:", error);
         setShowLoader(false);
-        alert(error.message || 'Card validation failed');
+        alert(error.message || "Card validation failed");
         return;
       }
 
       // Step 2: Send payment method ID to backend
-      console.log('[AddCard] Payment method created:', paymentMethod.id);
+      console.log("[AddCard] Payment method created:", paymentMethod.id);
       addPaymentMethod({
         data: {
           paymentMethodId: paymentMethod.id,
@@ -116,9 +121,9 @@ const AddNewCardDetails = () => {
         },
       });
     } catch (err) {
-      console.error('[AddCard] Error:', err);
+      console.error("[AddCard] Error:", err);
       setShowLoader(false);
-      alert('Failed to add card. Please try again.');
+      alert("Failed to add card. Please try again.");
     }
   };
 
@@ -218,34 +223,38 @@ const AddNewCardDetails = () => {
               <YStack
                 borderWidth={1}
                 borderColor="$lightgrey"
-                borderRadius="$2xl"
+                borderRadius="$full"
                 backgroundColor="$white"
-                paddingVertical="$md"
-                paddingHorizontal="$md"
+                overflow="hidden"
+                // paddingVertical="$md"
+                // paddingHorizontal="$md"
               >
                 <CardField
                   postalCodeEnabled={false}
                   placeholders={{
-                    number: '4242 4242 4242 4242',
+                    number: "4242 4242 4242 4242",
                   }}
                   cardStyle={{
-                    backgroundColor: '#FFFFFF',
-                    textColor: '#000000',
-                    placeholderColor: '#999999',
+                    backgroundColor: "#FFFFFF",
+                    textColor: "#000000",
+                    placeholderColor: "#999999",
                     borderWidth: 0,
                     borderRadius: 12,
                   }}
                   style={{
-                    width: '100%',
+                    width: "100%",
                     height: 50,
                   }}
                   onCardChange={(details) => {
-                    console.log('[CardField] Card details changed:', details.complete);
+                    console.log(
+                      "[CardField] Card details changed:",
+                      details.complete
+                    );
                     setCardComplete(details.complete);
                   }}
                 />
               </YStack>
-              <Spacer size={"$lg"} />
+              <Spacer size={"$reg"} />
               <TextMDBold>{t("addnewcarddetails.bilingaddress")}</TextMDBold>
 
               <Spacer size={"$reg"} />

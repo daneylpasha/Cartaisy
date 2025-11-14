@@ -177,7 +177,7 @@ const HomeScreen = () => {
             editIndex: index.toString(),
           },
         });
-      }, 400);
+      }, 200);
     }
   };
 

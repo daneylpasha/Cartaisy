@@ -2,6 +2,7 @@ import { CollectionDisplay } from "@/api/generated/cartaisyAPI.schemas";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import { tokens } from "@/tamagui/token";
+import { router } from "expo-router";
 import React from "react";
 import { FlatList } from "react-native";
 import { Spacer, YStack } from "tamagui";
@@ -23,7 +24,16 @@ const ProductsHorizontalScroller = ({
     return null;
   }
 
-  const { products, title } = targetCollection.collection;
+  const { products, id, title } = targetCollection.collection;
+  const handleViewAll = () => {
+    router.push({
+      pathname: "/products",
+      params: {
+        collectionId: id,
+        collectionTitle: title
+      },
+    });
+  };
   return (
     <YStack>
       <SectionHeader
@@ -32,12 +42,14 @@ const ProductsHorizontalScroller = ({
         image="dealIcon"
         seeAllText="View All"
         color="primary"
-        onPressSeeAll={() => {}}
+        onPressSeeAll={handleViewAll}
       />
       <Spacer size={"$xl"} />
       <FlatList
         data={products}
-        keyExtractor={(product, index) => `product-${product.productId}-${index}`}
+        keyExtractor={(product, index) =>
+          `product-${product.productId}-${index}`
+        }
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{

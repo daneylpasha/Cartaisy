@@ -1,4 +1,4 @@
-import { TextLGBold, TextSMSemiBold } from "@/components/atoms";
+import { TextMDBold, TextSMSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
@@ -99,7 +99,9 @@ export function WishlistCard({ item, onPress }: Props) {
           </YStack>
           <Spacer size={"$reg"} />
           <YStack flex={1}>
-            <TextLGBold numberOfLines={2}>{item.title}</TextLGBold>
+            <TextMDBold numberOfLines={2}>
+              {item.title.slice(0, 50) + "..."}
+            </TextMDBold>
             <Spacer size={"$xs-sm"} />
             <XStack alignItems="center">
               <TextMDRegular color="$secondary">

@@ -55,10 +55,8 @@ const CartScreen = () => {
   const { mutate: initializeCheckoutMutation } = useInitializeCheckout();
 
   // Fetch cart recommendations
-  const {
-    mutate: fetchRecommendations,
-    data: recommendationsData,
-  } = useGetCartRecommendations();
+  const { mutate: fetchRecommendations, data: recommendationsData } =
+    useGetCartRecommendations();
 
   // Keep previous recommendations during refetch
   const [previousRecommendations, setPreviousRecommendations] = useState<any[]>(
@@ -189,6 +187,17 @@ const CartScreen = () => {
 
   // Render cart item
   const renderCartItem = ({ item }: { item: any }) => {
+    let brandName = undefined;
+    if (item.metafields && Array.isArray(item.metafields)) {
+      const brandMetafield = item.metafields.find((m: any) =>
+        m.key?.toLowerCase().includes("brand")
+      );
+      if (brandMetafield) {
+        brandName = brandMetafield.value;
+        console.log("[Cart] Brand extracted from metafields:", brandName);
+      }
+    }
+
     // Parse variant options for display
     const options =
       item.selectedOptions?.map((opt: any) => ({
@@ -203,18 +212,15 @@ const CartScreen = () => {
           title={`${item.title}${
             item.variantTitle ? ` - ${item.variantTitle}` : ""
           }`}
-          currentPrice={item.price * item.quantity}
-          originalPrice={
-            item.compareAtPrice
-              ? item.compareAtPrice * item.quantity
-              : undefined
-          }
+          currentPrice={item.price}
+          originalPrice={item.compareAtPrice ? item.compareAtPrice : undefined}
           options={options}
           inStockCount={item.quantityAvailable}
           quantity={item.quantity}
           maxQuantity={item.quantityAvailable}
           isUpdating={updatingItemId === item.lineItemId}
           isRemoving={removingItemId === item.lineItemId}
+          brandName={brandName}
           onPressItem={() => {
             // Navigate to PDP
             console.log("Cart item pressed:", {
@@ -233,11 +239,6 @@ const CartScreen = () => {
             }
           }}
           onIncrease={async () => {
-            // Check if can increase
-            console.log("[Cart] Increase clicked for item:", {
-              lineItemId: item.lineItemId,
-              title: item.title,
-            });
             if (!item.lineItemId) {
               console.error("[Cart] No lineItemId found for item:", item);
               setErrorModal({
@@ -502,7 +503,7 @@ const CartScreen = () => {
                     color="$secondary"
                     textDecorationLine="line-through"
                   >
-                    {`$${originalTotal.toFixed(2)}`}
+                    {`US$${originalTotal.toFixed(2)}`}
                   </TextSMRegular>
                 </XStack>
               )}
@@ -510,7 +511,7 @@ const CartScreen = () => {
                 <XStack paddingVertical={"$sm"} justifyContent="space-between">
                   <TextSMRegular color="$secondary">You save</TextSMRegular>
                   <TextSMSemiBold color="$green">
-                    {`- $${savings.toFixed(2)}`}
+                    {`- US$${savings.toFixed(2)}`}
                   </TextSMSemiBold>
                 </XStack>
               )}
@@ -520,7 +521,7 @@ const CartScreen = () => {
                     items.length === 1 ? "Item" : "Items"
                   })`}
                 </TextSMSemiBold>
-                <TextSMSemiBold>{`$${subtotal.toFixed(2)}`}</TextSMSemiBold>
+                <TextSMSemiBold>{`US$${subtotal.toFixed(2)}`}</TextSMSemiBold>
               </XStack>
               <XStack paddingVertical={"$sm"} justifyContent="space-between">
                 <TextSMRegular color="$secondary">Taxes</TextSMRegular>
@@ -536,7 +537,7 @@ const CartScreen = () => {
               <XStack justifyContent="space-between">
                 <TextSMSemiBold>Grand Total</TextSMSemiBold>
                 <XStack alignItems="center">
-                  <TextMDBold>{`$${grandTotal.toFixed(2)}`}</TextMDBold>
+                  <TextMDBold>{`US$${grandTotal.toFixed(2)}`}</TextMDBold>
                   <Spacer size={"$xs"} />
                   <AppImage
                     name="caretRight"

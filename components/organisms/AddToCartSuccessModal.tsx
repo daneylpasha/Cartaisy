@@ -1,7 +1,7 @@
 import { AppImage } from "@/components/atoms/AppImage";
 import { Spacer } from "@/components/atoms/Spacer";
 import { HeadingXSBold, TextSMRegular } from "@/components/atoms/texts";
-import { PrimaryButton } from "@/components/molecules/buttons";
+import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
 import React from "react";
 import { getTokenValue, YStack } from "tamagui";
 import AlertModal from "./AlertModal";
@@ -65,10 +65,9 @@ const AddToCartSuccessModal = ({
           onPress={onViewCart}
         />
         <Spacer size={"$reg"} />
-        <PrimaryButton
+        <SecondaryButton
           label="Continue Shopping"
           isLoading={false}
-          background="lightgrey"
           onPress={onContinueShopping}
         />
       </YStack>

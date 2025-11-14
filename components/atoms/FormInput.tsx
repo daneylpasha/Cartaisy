@@ -1,6 +1,6 @@
 import colors from "@/assets/colors";
 import { tokens } from "@/tamagui/token";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { StyleSheet, TextInput } from "react-native";
 import { Button, Input, XStack, YStack } from "tamagui";
 import { AppImage } from "./AppImage";
@@ -19,6 +19,7 @@ interface FormInputProps {
   error?: string;
   borderWidth?: number;
   paddingHorizontal?: number;
+  paddingVertical?: number;
   keyboardType?: "default" | "numeric" | "email-address" | "phone-pad";
   numberOfLines?: number;
   onFocus?: () => void;
@@ -41,6 +42,7 @@ export const FormInput = ({
   numberOfLines,
   multiline = false,
   icon,
+  paddingVertical,
   rightElement,
   width = "100%",
   error,
@@ -89,7 +91,6 @@ export const FormInput = ({
             value={value || ""}
             borderWidth={0}
             onChangeText={(text) => {
-              console.log("[FormInput] onChange called with:", text);
               onChangeText(text);
             }}
             style={[Styles.input, { backgroundColor: "white" }]}

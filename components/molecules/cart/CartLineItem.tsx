@@ -4,6 +4,7 @@ import {
   Loader,
   TextLGBold,
   TextMDBold,
+  TextSMBold,
   TextSMMedium,
   TextSMRegular,
 } from "@/components/atoms";
@@ -35,6 +36,7 @@ export type CartLineItemProps = {
   maxQuantity?: number;
   isUpdating?: boolean; // Loading state for quantity updates
   isRemoving?: boolean; // Loading state for remove action
+  brandName?: string; // Brand name from metafields
 };
 
 export default function CartLineItem(props: CartLineItemProps) {
@@ -56,6 +58,7 @@ export default function CartLineItem(props: CartLineItemProps) {
     maxQuantity,
     isUpdating = false,
     isRemoving = false,
+    brandName,
   } = props;
 
   // Check if image is URL or icon name
@@ -92,17 +95,19 @@ export default function CartLineItem(props: CartLineItemProps) {
         <Spacer size={"$md"} />
         <YStack flexShrink={1}>
           <OpTouch onPress={onPressItem} disabled={!onPressItem}>
-            <TextSMMedium numberOfLines={2}>{title}</TextSMMedium>
+            <TextSMMedium numberOfLines={1}>{title}</TextSMMedium>
+            <Spacer size={"$sm"} />
+            {brandName && <TextSMBold color={"$icon"}>{brandName}</TextSMBold>}
           </OpTouch>
           <Spacer size={"$sm"} />
           {/* Price Row */}
           <XStack alignItems="center">
-            <TextLGBold>${currentPrice.toFixed(2)}</TextLGBold>
+            <TextLGBold>US${currentPrice.toFixed(2)}</TextLGBold>
             {originalPrice && originalPrice !== currentPrice ? (
               <>
                 <Spacer size="$xs" />
                 <TextSMRegular color="$icon" textDecorationLine="line-through">
-                  ${originalPrice.toFixed(2)}
+                  US${originalPrice.toFixed(2)}
                 </TextSMRegular>
               </>
             ) : null}

@@ -1,7 +1,7 @@
 import Icons from "@/assets/Icons";
 import React from "react";
 import { getTokenValue, Spacer, XStack, YStack } from "tamagui";
-import { TextMDBold, TextSMRegular, TextXSRegular } from "../atoms";
+import { TextMDBold, TextXSRegular } from "../atoms";
 import { AppImage } from "../atoms/AppImage";
 import { OpTouch } from "../atoms/OpTouch";
 
@@ -43,20 +43,20 @@ const DeliveryOptionCard = ({
             <XStack alignItems="center">
               <YStack
                 backgroundColor={selectedDelivery === item.id ? "" : "$white"}
-                borderRadius={"$full"}
+                borderRadius={"$md"}
                 width={48}
                 height={48}
                 justifyContent="center"
                 alignItems="center"
                 marginTop={-10}
+                overflow="hidden"
               >
                 <AppImage name={item.image} width={43} height={43} />
               </YStack>
               <Spacer size={"$reg"} />
               <YStack>
                 <TextMDBold>{item.title}</TextMDBold>
-                <Spacer size={"$xs"} />
-                <TextSMRegular>{item.estimateddays}</TextSMRegular>
+
                 <Spacer size={"$xs-sm"} />
                 <TextXSRegular color="$secondary">{item.cost}</TextXSRegular>
               </YStack>

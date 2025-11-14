@@ -2,7 +2,6 @@ import {
   useApplyPromoCode,
   useGetCheckoutSummary,
 } from "@/api/generated/checkout/checkout";
-import { useGetCartRecommendations } from "@/api/generated/recommendations/recommendations";
 import { TextMDSemiBold, TextSMBold, TextXSRegular } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
@@ -11,13 +10,10 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import OrderListItems from "@/components/organisms/checkout/OrderListItems";
-import { ProductCard } from "@/components/molecules/ProductCard";
-import useFavoritesStore from "@/store/useFavoritesStore";
-import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { FlatList, Keyboard, TouchableWithoutFeedback } from "react-native";
+import { Keyboard, TouchableWithoutFeedback } from "react-native";
 import { getTokenValue, XStack, YStack } from "tamagui";
 import { PrimaryButton } from "../buttons";
 import { SectionHeader } from "../SectionHeader";

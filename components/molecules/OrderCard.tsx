@@ -21,9 +21,10 @@ const OrderCard = ({ item }: { item: OrderItemProps }) => {
   // Handle both old and new data structures
   const displayPrice = item.currentPrice ?? item.price ?? 0;
   const displayOriginalPrice = item.originalPrice ?? item.total ?? 0;
-  const imageSource = typeof item.image === 'string' && item.image?.startsWith('http')
-    ? { uri: item.image }
-    : item.image;
+  const imageSource =
+    typeof item.image === "string" && item.image?.startsWith("http")
+      ? { uri: item.image }
+      : item.image;
 
   return (
     <OpTouch onPress={item.onPress}>
@@ -50,18 +51,23 @@ const OrderCard = ({ item }: { item: OrderItemProps }) => {
           {item.variantTitle && (
             <>
               <Spacer size={"$xs"} />
-              <TextXSRegular color="$secondary">{item.variantTitle}</TextXSRegular>
+              <TextXSRegular color="$secondary">
+                {item.variantTitle}
+              </TextXSRegular>
             </>
           )}
           <Spacer size={"$sm"} />
           {/* Price Row */}
           <XStack alignItems="center">
-            <TextLGBold>${displayPrice.toFixed(2)}</TextLGBold>
+            <TextLGBold>US${displayPrice.toFixed(2)}</TextLGBold>
             {displayOriginalPrice > displayPrice && (
               <>
                 <Spacer size={"$sm"} />
-                <TextXSRegular textDecorationLine="line-through" color="$secondary">
-                  ${displayOriginalPrice.toFixed(2)}
+                <TextXSRegular
+                  textDecorationLine="line-through"
+                  color="$secondary"
+                >
+                  US${displayOriginalPrice.toFixed(2)}
                 </TextXSRegular>
               </>
             )}

@@ -51,7 +51,7 @@ export const SearchInput = ({
   };
 
   const searchIcon = (
-    <AppImage name="searchIcon" width={20} height={20} tintColor="$secondary" />
+    <AppImage name="searchIcon" width={18} height={18} tintColor="$secondary" />
   );
 
   const cancelButton = isFocused ? (
@@ -75,7 +75,7 @@ export const SearchInput = ({
       onBlur={handleBlur}
       onSubmitEditing={onSubmitEditing}
       borderRadius={tokens.radius.md}
-      padding={tokens.space.sm}
+      paddingVertical={tokens.space["xs-sm"]}
       inputRef={inputRef}
     />
   );

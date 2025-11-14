@@ -1337,6 +1337,12 @@ export interface CartLineItem {
   compareAtPrice: number | null;
   quantity: number;
   quantityAvailable: number;
+  metafields?: Array<{
+    key: string;
+    value: string;
+    namespace?: string;
+    type?: string;
+  }>;
 }
 
 /**

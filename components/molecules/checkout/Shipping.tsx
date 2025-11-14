@@ -12,9 +12,11 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { TextSMSemiBold } from "@/components/atoms/texts/TextSMSemiBold";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 
+import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
 import { router, useLocalSearchParams } from "expo-router";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import React, {
   forwardRef,
   useEffect,
@@ -24,15 +26,16 @@ import React, {
 } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { StyleSheet, TextInput } from "react-native";
-import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import CountryPicker, {
   Country,
   CountryCode,
 } from "react-native-country-picker-modal";
-import { isValidPhoneNumber } from "libphonenumber-js";
 
 import { useGetAddresses } from "@/api/generated/addresses/addresses";
-import { useGetShippingRates, useSaveShipping } from "@/api/generated/checkout/checkout";
+import {
+  useGetShippingRates,
+  useSaveShipping,
+} from "@/api/generated/checkout/checkout";
 import { BottomSheetModalWithFlatList } from "@/components/organisms/bottomSheet";
 import { fonts } from "@/tamagui/fonts";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -85,27 +88,30 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
       });
 
     // Save shipping mutation
-    const { mutate: saveShippingInfo, isPending: isSavingShipping } = useSaveShipping({
-      mutation: {
-        onSuccess: (response) => {
-          console.log("[Shipping] Saved successfully:", response);
-          const newSessionId = response.data?.sessionId || sessionId;
-          // Call parent callback to move to next step with sessionId
-          onStepComplete?.(newSessionId);
+    const { mutate: saveShippingInfo, isPending: isSavingShipping } =
+      useSaveShipping({
+        mutation: {
+          onSuccess: (response) => {
+            console.log("[Shipping] Saved successfully:", response);
+            const newSessionId = response.data?.sessionId || sessionId;
+            // Call parent callback to move to next step with sessionId
+            onStepComplete?.(newSessionId);
+          },
+          onError: (error: any) => {
+            console.error("[Shipping] Save error:", error);
+            // Call onError callback to stop loader
+            onError?.();
+            showAlert({
+              type: "error",
+              title: "Error",
+              message:
+                error?.response?.data?.error ||
+                "Failed to save shipping information",
+              buttons: [{ text: "OK" }],
+            });
+          },
         },
-        onError: (error: any) => {
-          console.error("[Shipping] Save error:", error);
-          // Call onError callback to stop loader
-          onError?.();
-          showAlert({
-            type: "error",
-            title: "Error",
-            message: error?.response?.data?.error || "Failed to save shipping information",
-            buttons: [{ text: "OK" }],
-          });
-        },
-      },
-    });
+      });
 
     // Log shipping rates when data changes
     useEffect(() => {
@@ -178,7 +184,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
       handle: string;
       title: string;
       estimateddays: string;
-      image: "upsIcon";
+      image: "deliveryBox";
       cost: string;
       price: number;
     };
@@ -190,8 +196,11 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
       id: index + 1,
       handle: rate.handle,
       title: rate.title,
-      estimateddays: rate.estimatedDelivery || rate.description || "Estimated delivery: Not available",
-      image: "upsIcon" as const,
+      estimateddays:
+        rate.estimatedDelivery ||
+        rate.description ||
+        "Estimated delivery: Not available",
+      image: "deliveryBox" as const,
       cost: `Cost: $${rate.price.toFixed(2)}`,
       price: rate.price,
     }));
@@ -284,14 +293,6 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
 
       const fullPhoneNumber = `+${selectedCountry.callingCode[0]}${data.phone}`;
 
-      console.log("[Shipping] Submitting shipping info:", {
-        sessionId,
-        shippingAddressId: selectedAddressId,
-        contactNumber: fullPhoneNumber,
-        shippingRateHandle: selectedShippingHandle,
-        deliveryInstructions: data.deliveryinstructions,
-      });
-
       // Save shipping info
       saveShippingInfo({
         data: {
@@ -329,26 +330,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
         return !!(selectedAddressId && selectedShippingHandle);
       },
     }));
-    // const addressData = [
-    //   {
-    //     id: 1,
-    //     name: "Lily Vermillion",
-    //     address: "18752 January Avenue, North Manhattan, New York, NY, 10013",
-    //     shipping: "Shipping Available",
-    //   },
-    //   {
-    //     id: 2,
-    //     name: "JMarcus Gray",
-    //     address: "456 Main St, Anytown, USA",
-    //     shipping: "Shipping Available",
-    //   },
-    //   {
-    //     id: 3,
-    //     name: "John Doe",
-    //     address: "123 Main St, Anytown, USA",
-    //     shipping: "Shipping Available",
-    //   },
-    // ];
+
     return (
       <YStack>
         <SectionHeader
@@ -624,15 +606,12 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
                     alignItems="center"
                     marginTop={-10}
                   >
-                    <AppImage name="upsIcon" width={43} height={43} />
+                    <AppImage name="deliveryBox" width={43} height={43} />
                   </YStack>
                   <Spacer size={"$reg"} />
                   <YStack>
                     <TextMDBold>{selectedDeliveryOption.title}</TextMDBold>
-                    <Spacer size={"$xs"} />
-                    <TextSMRegular>
-                      {selectedDeliveryOption.estimateddays}
-                    </TextSMRegular>
+
                     <Spacer size={"$xs-sm"} />
                     <TextXSRegular color="$secondary">
                       {selectedDeliveryOption.cost}
@@ -736,7 +715,7 @@ const Styles = StyleSheet.create({
     fontSize: fonts.figtree.size[5],
     lineHeight: fonts.figtree.lineHeight[2],
     fontFamily: "Figtree-Regular",
-    height: 172,
+    height: 80,
     width: "100%",
   },
 });

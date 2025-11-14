@@ -16,6 +16,13 @@ export interface CartItem {
   quantity: number;
   quantityAvailable: number;
   selectedOptions: Array<{ name: string; value: string }>;
+  brandName?: string; // Brand name from product metafields
+  metafields?: Array<{
+    key: string;
+    value: string;
+    namespace?: string;
+    type?: string;
+  }>;
 }
 
 interface CartState {
@@ -55,11 +62,16 @@ const useCartStore = create<CartState>()(
           );
 
           if (existingItem) {
-            // Update quantity if item already exists
+            // Update quantity and merge new data (like brandName) if item already exists
             return {
               items: state.items.map((i) =>
                 i.variantId === item.variantId
-                  ? { ...i, quantity: i.quantity + item.quantity }
+                  ? {
+                      ...i,
+                      ...item, // Merge all new item data
+                      quantity: i.quantity + item.quantity, // But keep accumulated quantity
+                      lineItemId: i.lineItemId, // Preserve line item ID
+                    }
                   : i
               ),
             };
@@ -98,11 +110,19 @@ const useCartStore = create<CartState>()(
           items: [],
         }),
 
-      syncWithApiResponse: (cartData) =>
+      syncWithApiResponse: (cartData) => {
+        console.log('[Store] syncWithApiResponse called with:', {
+          itemsCount: cartData.items.length,
+          firstItem: cartData.items[0],
+          hasMetafields: !!cartData.items[0]?.metafields,
+          metafields: cartData.items[0]?.metafields,
+        });
+
         set({
           cartId: cartData.cartId,
           items: cartData.items,
-        }),
+        });
+      },
 
       getItem: (variantId) => {
         return get().items.find((item) => item.variantId === variantId);

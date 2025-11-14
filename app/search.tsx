@@ -12,12 +12,12 @@ import type {
   Product,
 } from "@/api/generated/cartaisyAPI.schemas";
 import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
+import { TextMDSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextXSRegular } from "@/components/atoms/texts/TextXSRegular";
-import { CollectionCard } from "@/components/molecules/CollectionCard";
 import {
   GRID_COLUMN_GAP,
   ProductCard,
@@ -30,6 +30,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import useCartStore from "@/store/useCartStore";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
+import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
@@ -39,7 +40,9 @@ import {
   LayoutAnimation,
   Platform,
   RefreshControl,
+  StyleSheet,
   UIManager,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
@@ -367,7 +370,6 @@ const Search = () => {
     });
     setSearchQuery("");
     setIsInputFocused(false);
-    router.back(); // Navigate back when cancel is pressed
   };
 
   // Handle pull-to-refresh
@@ -912,20 +914,63 @@ const Search = () => {
                     keyExtractor={(item, index) =>
                       `trending-collection-${item.id}-${index}`
                     }
-                    horizontal={false}
-                    numColumns={2}
                     showsVerticalScrollIndicator={false}
-                    columnWrapperStyle={{
-                      columnGap: GRID_COLUMN_GAP,
-                    }}
                     renderItem={({ item }) => (
-                      <CollectionCard
-                        item={{
-                          collectionId: item.id,
-                          title: item.title,
-                          image: item.image || "",
-                        }}
-                      />
+                      <OpTouch
+                        onPress={() =>
+                          router.push({
+                            pathname: "/products",
+                            params: {
+                              collectionId: item.id,
+                              categoryName: item.title,
+                            },
+                          })
+                        }
+                      >
+                        <YStack position="relative">
+                          <Spacer size={"$md"} />
+                          <TextMDSemiBold
+                            fontSize={16}
+                            position="absolute"
+                            bottom={50}
+                            left={"38%"}
+                            // justifyContent="center"
+                            // textAlign="center"
+                            zIndex={100}
+                            color={"$white"}
+                          >
+                            {item.title.toLocaleUpperCase()}
+                          </TextMDSemiBold>
+                          <Spacer size={"$md"} />
+                          {item.image ? (
+                            <View style={styles.imageContainer}>
+                              <AppImage
+                                resizeMode="cover"
+                                source={item.image}
+                                height={130}
+                              />
+                              <BlurView
+                                intensity={20}
+                                tint="dark"
+                                style={styles.blurOverlay}
+                              />
+                            </View>
+                          ) : (
+                            <View style={styles.imageContainer}>
+                              <AppImage
+                                height={130}
+                                resizeMode="cover"
+                                name={"featuredPromotion1"}
+                              />
+                              <BlurView
+                                intensity={20}
+                                tint="dark"
+                                style={styles.blurOverlay}
+                              />
+                            </View>
+                          )}
+                        </YStack>
+                      </OpTouch>
                     )}
                   />
                 </YStack>
@@ -1027,3 +1072,20 @@ const Search = () => {
 };
 
 export default Search;
+const styles = StyleSheet.create({
+  blurView: {
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  imageContainer: {
+    position: "relative",
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  blurOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 20,
+  },
+});

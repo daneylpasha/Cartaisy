@@ -85,21 +85,31 @@ export const useCartManager = (): UseCartManagerReturn => {
   /**
    * Convert API CartLineItem to Zustand CartItem format
    */
-  const convertApiItemToCartItem = (apiItem: CartLineItem): CartItem => ({
-    lineItemId: apiItem.id, // Store the line item ID for future updates/deletes
-    productId: apiItem.productId,
-    variantId: apiItem.merchandiseId, // API uses merchandiseId as variantId
-    merchandiseId: apiItem.merchandiseId,
-    title: apiItem.title,
-    variantTitle: apiItem.variantTitle,
-    image: apiItem.image,
-    price: apiItem.price,
-    compareAtPrice: apiItem.compareAtPrice,
-    currency: 'USD', // Default, should come from API
-    quantity: apiItem.quantity,
-    quantityAvailable: apiItem.quantityAvailable,
-    selectedOptions: [], // API doesn't return this, would need to store separately
-  });
+  const convertApiItemToCartItem = (apiItem: CartLineItem): CartItem => {
+    console.log('[useCartManager] Converting API item:', {
+      title: apiItem.title,
+      hasMetafields: !!apiItem.metafields,
+      metafields: apiItem.metafields,
+      fullApiItem: apiItem,
+    });
+
+    return {
+      lineItemId: apiItem.id,
+      productId: apiItem.productId,
+      variantId: apiItem.merchandiseId,
+      merchandiseId: apiItem.merchandiseId,
+      title: apiItem.title,
+      variantTitle: apiItem.variantTitle,
+      image: apiItem.image,
+      price: apiItem.price,
+      compareAtPrice: apiItem.compareAtPrice,
+      currency: 'USD',
+      quantity: apiItem.quantity,
+      quantityAvailable: apiItem.quantityAvailable,
+      selectedOptions: [],
+      metafields: apiItem.metafields, // Include metafields from API response
+    };
+  };
 
   /**
    * Main function to add item to cart with validation and recovery

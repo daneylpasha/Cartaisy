@@ -151,6 +151,7 @@ const Icons = {
   moneyIcon: require("./images/money.png"),
   cancelOrderFrame: orderCancel,
   palette: require("./images/palette.png"),
+  deliveryBox: require("./images/deliverybox.png"),
 };
 
 export default Icons;

@@ -14,7 +14,7 @@ import useCartStore from "@/store/useCartStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, FlatList, PanResponder } from "react-native";
+import { Animated, FlatList, KeyboardAvoidingView, PanResponder, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getTokenValue, XStack, YStack } from "tamagui";
@@ -309,25 +309,30 @@ const CheckoutScreen = () => {
   };
 
   return (
-    <YStack backgroundColor="$background" flex={1}>
-      <CheckoutStepper
-        steps={[
-          { label: "Shipping", status: getStepStatus(0) },
-          { label: "Payment", status: getStepStatus(1) },
-          { label: "Confirmation", status: getStepStatus(2) },
-        ]}
-        currentStep={getCurrentStepIndex()}
-        onStepPress={handleStepPress}
-      />
-      <FlatList
-        data={getSections()}
-        keyExtractor={(item) => item.id}
-        renderItem={renderSection}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: getTokenValue("$md"),
-        }}
-      />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
+      <YStack backgroundColor="$background" flex={1}>
+        <CheckoutStepper
+          steps={[
+            { label: "Shipping", status: getStepStatus(0) },
+            { label: "Payment", status: getStepStatus(1) },
+            { label: "Confirmation", status: getStepStatus(2) },
+          ]}
+          currentStep={getCurrentStepIndex()}
+          onStepPress={handleStepPress}
+        />
+        <FlatList
+          data={getSections()}
+          keyExtractor={(item) => item.id}
+          renderItem={renderSection}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: getTokenValue("$md"),
+          }}
+        />
       <>
         {currentStep === "confirmation" && (
           <>
@@ -368,8 +373,7 @@ const CheckoutScreen = () => {
                     Subtotal ({checkoutSummary?.items?.length || 0} Items)
                   </TextSMSemiBold>
                   <TextSMSemiBold>
-                    {checkoutSummary?.pricing?.currency || "$"}
-                    {checkoutSummary?.pricing?.subtotal?.toFixed(2) || "0.00"}
+                    US${checkoutSummary?.pricing?.subtotal?.toFixed(2)}
                   </TextSMSemiBold>
                 </XStack>
                 {(checkoutSummary?.pricing?.discountAmount || 0) > 0 && (
@@ -379,7 +383,7 @@ const CheckoutScreen = () => {
                   >
                     <TextSMRegular color="$secondary">Discount</TextSMRegular>
                     <TextSMSemiBold color="$green">
-                      -{checkoutSummary?.pricing?.currency || "$"}
+                      US$
                       {checkoutSummary?.pricing?.discountAmount?.toFixed(2) ||
                         "0.00"}
                     </TextSMSemiBold>
@@ -391,10 +395,10 @@ const CheckoutScreen = () => {
                     justifyContent="space-between"
                   >
                     <TextSMRegular color="$secondary">
-                      Coupon Discount
+                      {"Coupon Discount"}
                     </TextSMRegular>
                     <TextSMSemiBold color="$green">
-                      -{checkoutSummary?.pricing?.currency || "$"}
+                      US$
                       {checkoutSummary?.pricing?.couponDiscount?.toFixed(2) ||
                         "0.00"}
                     </TextSMSemiBold>
@@ -402,15 +406,17 @@ const CheckoutScreen = () => {
                 )}
                 <XStack paddingVertical={"$sm"} justifyContent="space-between">
                   <TextSMRegular color="$secondary">Taxes</TextSMRegular>
-                  <TextSMSemiBold color="$error">
-                    {checkoutSummary?.pricing?.currency || "$"}
-                    {checkoutSummary?.pricing?.tax?.toFixed(2) || "0.00"}
+                  <TextSMSemiBold>
+                    {/* {checkoutSummary?.pricing?.currency || "$"} */}
+                    US${checkoutSummary?.pricing?.tax?.toFixed(2) || "0.00"}
                   </TextSMSemiBold>
                 </XStack>
                 <XStack paddingVertical={"$sm"} justifyContent="space-between">
-                  <TextSMRegular color="$secondary">Delivery Fee</TextSMRegular>
-                  <TextSMSemiBold color="$error">
-                    {checkoutSummary?.pricing?.currency || "$"}
+                  <TextSMRegular color="$secondary">
+                    {"Delivery Fee"}
+                  </TextSMRegular>
+                  <TextSMSemiBold>
+                    US$
                     {checkoutSummary?.pricing?.shippingCost?.toFixed(2) ||
                       "0.00"}
                   </TextSMSemiBold>
@@ -426,7 +432,7 @@ const CheckoutScreen = () => {
                   <TextSMSemiBold>{"GrandTotal"}</TextSMSemiBold>
                   <XStack alignItems="center">
                     <TextMDBold>
-                      {checkoutSummary?.pricing?.currency || "$"}
+                      US$
                       {checkoutSummary?.pricing?.grandTotal?.toFixed(2) ||
                         "0.00"}
                     </TextMDBold>
@@ -474,6 +480,7 @@ const CheckoutScreen = () => {
       </>
       <Spacer size={bottomSafeAreaInset} />
     </YStack>
+    </KeyboardAvoidingView>
   );
 };
 export default CheckoutScreen;

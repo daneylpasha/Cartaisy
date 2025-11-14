@@ -135,7 +135,7 @@ export default function ProductCarousel({
 
             {/* Overlay buttons - positioned above image but with pointerEvents="box-none" */}
             <XStack style={styles.blurviewcontainer} pointerEvents="box-none">
-              <OpTouch
+              {/* <OpTouch
                 style={{ zIndex: 100 }}
                 onPress={() => {
                   // Handle share button press
@@ -149,7 +149,7 @@ export default function ProductCarousel({
                     height={18}
                   />
                 </BlurView>
-              </OpTouch>
+              </OpTouch> */}
               <Spacer size={"$reg"} />
               <OpTouch
                 style={{ zIndex: 100 }}
