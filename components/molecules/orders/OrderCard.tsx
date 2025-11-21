@@ -5,10 +5,10 @@ import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { SHADOW_STYLES } from "@/constants/styles";
+import { router } from "expo-router";
 import React from "react";
 import { getTokenValue, XStack, YStack } from "tamagui";
 import { ActiveCard } from "../profile/ActiveCard";
-import { router } from "expo-router";
 
 type itemProps = {
   item: {
@@ -49,7 +49,7 @@ const OrderCard = ({ item }: itemProps) => {
       <YStack
         style={{ ...SHADOW_STYLES }}
         backgroundColor={"$white"}
-        borderRadius={"$2xl"}
+        borderRadius={"$md"}
       >
         <XStack
           padding={"$md"}
@@ -67,7 +67,7 @@ const OrderCard = ({ item }: itemProps) => {
               alignItems="center"
               borderRadius={"$full"}
             >
-              <AppImage name="upsIcon" size={26} />
+              <AppImage name="deliveryBox" size={26} />
             </YStack>
             <Spacer size={"$xs-sm"} />
             <YStack>
@@ -96,7 +96,7 @@ const OrderCard = ({ item }: itemProps) => {
                 ? "$error"
                 : "$error"
             }
-            borderRadius={"$3xl"}
+            borderRadius={"$md"}
             paddingHorizontal={"$sm"}
             paddingVertical={"$xs"}
             alignItems="center"
@@ -120,11 +120,9 @@ const OrderCard = ({ item }: itemProps) => {
               {displayProgress}
             </TextSMMedium>
           </XStack>
-          {/* <Spacer size={"$xs-sm"} /> */}
         </XStack>
-        <Spacer size={"$reg"} />
+
         <Divider />
-        <Spacer size={"$reg"} />
         <ActiveCard background="white" item={item} />
       </YStack>
     </OpTouch>

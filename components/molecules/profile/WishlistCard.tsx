@@ -73,7 +73,7 @@ export function WishlistCard({ item, onPress }: Props) {
         onPress={onPress}
         height={128}
         backgroundColor={"$white"}
-        borderRadius={"$2xl"}
+        borderRadius={"$md"}
         padding={"$reg"}
         position="relative"
         style={{ ...SHADOW_STYLES }}
@@ -83,7 +83,7 @@ export function WishlistCard({ item, onPress }: Props) {
           <YStack
             width={64}
             height={64}
-            borderRadius={"$sm"}
+            borderRadius={"$md"}
             overflow="hidden"
             borderWidth={"$xxxs"}
             borderColor={"$lightgrey"}

@@ -3,25 +3,25 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
-import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import { ActiveOrders } from "@/components/molecules/profile/ActiveOrders";
+import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { ActiveListItem } from "@/components/organisms/profile/ActiveListItems";
 import { DangerZoneListItem } from "@/components/organisms/profile/DangerZoneListItems";
 import { GeneralListItems } from "@/components/organisms/profile/GeneralListItems";
 
+import { useGetProfile } from "@/api/generated/authentication/authentication";
 import { PaymentListItem } from "@/components/organisms/profile/PaymentListItems";
 import { SecurityListItem } from "@/components/organisms/profile/SecurityListItems";
 import { WishlistCarousel } from "@/components/organisms/profile/WishListCarousel";
 import { SHADOW_STYLES } from "@/constants/styles";
-import { t } from "@/translations";
 import useFavoritesStore from "@/store/useFavoritesStore";
-import { useGetProfile } from "@/api/generated/authentication/authentication";
-import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect } from "react";
-import { FlatList, Platform } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { t } from "@/translations";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
+import { router } from "expo-router";
+import React from "react";
+import { FlatList, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { XStack, YStack } from "tamagui";
 
@@ -56,19 +56,26 @@ const ProfileScreen = () => {
   );
 
   // Extract user info using updated schema fields
-  const userName = (user as any)?.fullName || user?.email?.split('@')[0] || "Guest User";
+  const userName =
+    (user as any)?.fullName || user?.email?.split("@")[0] || "Guest User";
 
   // Use defaultAddress field directly from API
   const defaultAddr = (user as any)?.defaultAddress;
   const location = defaultAddr
-    ? `${defaultAddr.city || ''}, ${defaultAddr.province || ''} ${defaultAddr.zip || ''}`.trim()
+    ? `${defaultAddr.city || ""}, ${defaultAddr.province || ""} ${
+        defaultAddr.zip || ""
+      }`.trim()
     : "No address added";
 
-  const userSince = user?.createdAt ? new Date(user.createdAt).getFullYear().toString() : "2024";
+  const userSince = user?.createdAt
+    ? new Date(user.createdAt).getFullYear().toString()
+    : "2024";
   const totalPurchases = user?.totalOrdersCount || 0;
 
   // Check if wishlist has items
-  const favoriteProductIds = useFavoritesStore((state) => state.favoriteProductIds);
+  const favoriteProductIds = useFavoritesStore(
+    (state) => state.favoriteProductIds
+  );
   const hasWishlistItems = favoriteProductIds.size > 0;
   const profileData = [
     {
@@ -80,9 +87,7 @@ const ProfileScreen = () => {
           <YStack justifyContent="center" alignItems="center">
             <TextXLBold>{userName}</TextXLBold>
             <Spacer size="$md" />
-            <TextMDRegular color="$secondary">
-              {location}
-            </TextMDRegular>
+            <TextMDRegular color="$secondary">{location}</TextMDRegular>
             <Spacer size="$lg" />
           </YStack>
           <XStack justifyContent="center" alignItems="center">
@@ -136,7 +141,7 @@ const ProfileScreen = () => {
             <YStack
               padding={"$reg"}
               backgroundColor="$white"
-              borderRadius={"$2xl"}
+              borderRadius={"$md"}
               style={{
                 ...SHADOW_STYLES,
               }}
@@ -251,25 +256,25 @@ const ProfileScreen = () => {
       <AlertComponent />
       <ScreenContainer backgroundColor="background">
         <FlatList
-        data={profileData}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        ListFooterComponent={() => (
-          <YStack alignItems="center" justifyContent="center">
-            <AppImage name="bag" width={23} height={26} />
-            <Spacer size={"$sm"} />
-            <TextSMSemiBold>{`${t(
-              "common.companyName"
-            )} v3.1.8 bugfix9`}</TextSMSemiBold>
-            <Spacer size={"$sm"} />
-            <TextSMRegular color="$secondary">{`All rights reserved, 2028©`}</TextSMRegular>
-            {/* <Spacer size={"$md"} /> */}
-          </YStack>
-        )}
-      />
-      <Spacer size={Platform.OS === 'ios' ? BOTTOM_INSET + 20 : 0} />
-    </ScreenContainer>
+          data={profileData}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          ListFooterComponent={() => (
+            <YStack alignItems="center" justifyContent="center">
+              <AppImage name="bagSvg" width={23} height={26} />
+              <Spacer size={"$sm"} />
+              <TextSMSemiBold>{`${t(
+                "common.companyName"
+              )} v3.1.8 bugfix9`}</TextSMSemiBold>
+              <Spacer size={"$sm"} />
+              <TextSMRegular color="$secondary">{`All rights reserved, 2028©`}</TextSMRegular>
+              {/* <Spacer size={"$md"} /> */}
+            </YStack>
+          )}
+        />
+        <Spacer size={Platform.OS === "ios" ? BOTTOM_INSET + 20 : 0} />
+      </ScreenContainer>
     </>
   );
 };

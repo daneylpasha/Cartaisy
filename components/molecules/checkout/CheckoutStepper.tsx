@@ -5,6 +5,7 @@ import { XStack, YStack, getTokenValue } from "tamagui";
 import { TextSMSemiBold } from "@/components/atoms";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { tokens } from "@/tamagui/token";
+import { getPrimaryLight } from "@/utils/colorUtils";
 
 export type StepStatus = "completed" | "active" | "pending";
 
@@ -59,9 +60,8 @@ export const CheckoutStepper = ({
       return (
         <YStack
           borderWidth={6}
-          borderColor={"$primarylight"}
+          borderColor={getPrimaryLight(tokens.color.primary)}
           borderRadius={"$full"}
-          
         >
           <YStack
             width={24}

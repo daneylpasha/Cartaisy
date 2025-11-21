@@ -15,7 +15,6 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
-import OrderTimeline from "@/components/molecules/orders/OrderTrackingTimeline";
 import CancelOrderModal from "@/components/organisms/order-details/CancelOrderModal";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { useLocalSearchParams } from "expo-router";
@@ -224,7 +223,7 @@ const ordersDetails = () => {
             alignItems="center"
             paddingHorizontal={"$reg"}
             paddingVertical={"$xs"}
-            borderRadius={"$3xl"}
+            borderRadius={"$md"}
             backgroundColor={displayStatus.color}
           >
             <AppImage
@@ -257,6 +256,7 @@ const ordersDetails = () => {
             textAlign="center"
             numberOfLines={2}
             paddingHorizontal="$md"
+            color={"$secondary"}
           >
             {order.lineItems?.[0]?.title || "Order Item"}
           </TextXLBold>
@@ -279,9 +279,9 @@ const ordersDetails = () => {
         </YStack>
         <Spacer size={"$xl"} />
         <YStack paddingHorizontal={"$md"}>
-          <TextMDBold>{"Timeline"}</TextMDBold>
-          <Spacer size={"$lg"} />
-          <OrderTimeline />
+          {/* <TextMDBold>{"Timeline"}</TextMDBold> */}
+          {/* <Spacer size={"$lg"} /> */}
+          {/* <OrderTimeline /> */}
           <Spacer size={"$lg"} />
           <TextMDBold>{"Shipping Info"}</TextMDBold>
           <Spacer size={"$reg"} />
@@ -291,7 +291,7 @@ const ordersDetails = () => {
                 ...SHADOW_STYLES,
               }}
               backgroundColor="$white"
-              borderRadius="$2xl"
+              borderRadius="$md"
               padding="$reg"
             >
               <XStack>
@@ -305,7 +305,7 @@ const ordersDetails = () => {
                     alignItems="center"
                     marginTop={-10}
                   >
-                    <AppImage name="upsIcon" width={43} height={43} />
+                    <AppImage name="deliveryBox" width={43} height={43} />
                   </YStack>
                   <Spacer size={"$reg"} />
                   <YStack>
@@ -313,7 +313,7 @@ const ordersDetails = () => {
                       {order.shipping?.method || "Standard Shipping"}
                     </TextMDBold>
                     <Spacer size={"$xs"} />
-                    <TextSMRegular>Estimated Delivery: 5-7 days</TextSMRegular>
+
                     <Spacer size={"$xs-sm"} />
                     <TextXSRegular color="$secondary">
                       Cost:{" "}
@@ -334,7 +334,7 @@ const ordersDetails = () => {
           <Spacer size={"$reg"} />
           <XStack
             backgroundColor={"$white"}
-            borderRadius="$2xl"
+            borderRadius="$md"
             padding={"$reg"}
             justifyContent="space-between"
           >
@@ -422,29 +422,23 @@ const ordersDetails = () => {
             <Spacer size={"$reg"} />
             <XStack paddingVertical={"$sm"} justifyContent="space-between">
               <TextSMSemiBold>Subtotal ({totalQuantity} Items)</TextSMSemiBold>
-              <TextSMSemiBold>
-                {formatCurrency(order.subtotalPrice, order.currency)}
-              </TextSMSemiBold>
+              <TextSMSemiBold>US${order.subtotalPrice}</TextSMSemiBold>
             </XStack>
             {order.discount > 0 && (
               <XStack paddingVertical={"$sm"} justifyContent="space-between">
                 <TextSMRegular color="$secondary">Discount</TextSMRegular>
                 <TextSMSemiBold color="$green">
-                  -{formatCurrency(order.discount, order.currency)}
+                  US$-{order.discount}
                 </TextSMSemiBold>
               </XStack>
             )}
             <XStack paddingVertical={"$sm"} justifyContent="space-between">
               <TextSMRegular color="$secondary">Taxes</TextSMRegular>
-              <TextSMSemiBold color="$error">
-                {formatCurrency(order.totalTax, order.currency)}
-              </TextSMSemiBold>
+              <TextSMSemiBold>US${order.totalTax}</TextSMSemiBold>
             </XStack>
             <XStack paddingVertical={"$sm"} justifyContent="space-between">
               <TextSMRegular color="$secondary">Delivery Fee</TextSMRegular>
-              <TextSMSemiBold color="$error">
-                {formatCurrency(order.shippingCost, order.currency)}
-              </TextSMSemiBold>
+              <TextSMSemiBold>US${order.shippingCost}</TextSMSemiBold>
             </XStack>
             <Spacer size={"$md"} />
           </Animated.View>
@@ -455,9 +449,7 @@ const ordersDetails = () => {
             <XStack justifyContent="space-between">
               <TextSMSemiBold>Grand Total</TextSMSemiBold>
               <XStack alignItems="center">
-                <TextMDBold>
-                  {formatCurrency(order.totalPrice, order.currency)}
-                </TextMDBold>
+                <TextMDBold>US${order.totalPrice}</TextMDBold>
                 <Spacer size={"$xs"} />
                 <AppImage
                   name="caretRight"

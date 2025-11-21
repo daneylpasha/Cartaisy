@@ -4,12 +4,14 @@ import React, { useState } from "react";
 
 interface SearchBarProps {
   onSearch?: (query: string) => void;
+
   width?: string;
   onFocus?: () => void;
   onBlur?: () => void;
   value?: string; // Add value prop for controlled component
   onCancel?: () => void; // Add onCancel prop
   onSubmit?: (query: string) => void; // Add onSubmit prop for tracking
+  oncleartext?: () => void;
 }
 
 export const SearchBar = ({
@@ -24,7 +26,8 @@ export const SearchBar = ({
   const [internalSearchQuery, setInternalSearchQuery] = useState("");
 
   // Use external value if provided, otherwise use internal state
-  const searchQuery = externalValue !== undefined ? externalValue : internalSearchQuery;
+  const searchQuery =
+    externalValue !== undefined ? externalValue : internalSearchQuery;
 
   const handleSearch = (text: string) => {
     setInternalSearchQuery(text);

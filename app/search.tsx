@@ -15,6 +15,8 @@ import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
 import { TextMDSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Loader } from "@/components/atoms/Loader";
+import { LinearGradient } from "expo-linear-gradient";
+
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextXSRegular } from "@/components/atoms/texts/TextXSRegular";
@@ -350,7 +352,6 @@ const Search = () => {
 
   // Handle cancel button press
   const handleCancel = () => {
-    console.log("🚫 Cancel button pressed - should navigate back");
     LayoutAnimation.configureNext({
       duration: 200,
       create: {
@@ -899,16 +900,16 @@ const Search = () => {
 
             {/* Trending Collections Section */}
             {trendingCollections.length > 0 && (
-              <YStack paddingVertical={"$md"}>
+              <YStack>
                 <SectionHeader
                   title="Trending Collections"
                   tintColor={"darkgrey"}
                   image="trendingIcon"
                   color="primary"
                 />
-                <Spacer size={"$sm"} />
+
                 <YStack paddingHorizontal="$md">
-                  <Spacer size={"$sm"} />
+                  {/* <Spacer size={"$sm"} /> */}
                   <FlatList
                     data={trendingCollections}
                     keyExtractor={(item, index) =>
@@ -929,19 +930,6 @@ const Search = () => {
                       >
                         <YStack position="relative">
                           <Spacer size={"$md"} />
-                          <TextMDSemiBold
-                            fontSize={16}
-                            position="absolute"
-                            bottom={50}
-                            left={"38%"}
-                            // justifyContent="center"
-                            // textAlign="center"
-                            zIndex={100}
-                            color={"$white"}
-                          >
-                            {item.title.toLocaleUpperCase()}
-                          </TextMDSemiBold>
-                          <Spacer size={"$md"} />
                           {item.image ? (
                             <View style={styles.imageContainer}>
                               <AppImage
@@ -954,6 +942,28 @@ const Search = () => {
                                 tint="dark"
                                 style={styles.blurOverlay}
                               />
+                              <LinearGradient
+                                colors={[
+                                  "rgba(0,0,0,0)",
+                                  "rgba(0,0,0,0.4)",
+                                  "rgba(0,0,0,0.65)",
+                                  "rgba(0,0,0,0.4)",
+                                  "rgba(0,0,0,0)",
+                                ]}
+                                start={{ x: 0, y: 0.5 }}
+                                end={{ x: 1, y: 0.5 }}
+                                style={styles.gradientOverlay}
+                              />
+                              <TextMDSemiBold
+                                fontSize={16}
+                                position="absolute"
+                                bottom={50}
+                                alignSelf="center"
+                                zIndex={100}
+                                color={"$white"}
+                              >
+                                {item.title.toLocaleUpperCase()}
+                              </TextMDSemiBold>
                             </View>
                           ) : (
                             <View style={styles.imageContainer}>
@@ -967,6 +977,28 @@ const Search = () => {
                                 tint="dark"
                                 style={styles.blurOverlay}
                               />
+                              <LinearGradient
+                                colors={[
+                                  "rgba(0,0,0,0)",
+                                  "rgba(0,0,0,0.4)",
+                                  "rgba(0,0,0,0.65)",
+                                  "rgba(0,0,0,0.4)",
+                                  "rgba(0,0,0,0)",
+                                ]}
+                                start={{ x: 0, y: 0.5 }}
+                                end={{ x: 1, y: 0.5 }}
+                                style={styles.gradientOverlay}
+                              />
+                              <TextMDSemiBold
+                                fontSize={16}
+                                position="absolute"
+                                bottom={50}
+                                alignSelf="center"
+                                zIndex={100}
+                                color={"$white"}
+                              >
+                                {item.title.toLocaleUpperCase()}
+                              </TextMDSemiBold>
                             </View>
                           )}
                         </YStack>
@@ -1085,6 +1117,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   blurOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 20,
+  },
+  gradientOverlay: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 20,
   },

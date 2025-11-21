@@ -139,10 +139,14 @@ const ProductDetailsScreen = () => {
     }
 
     // Try to find brand metafield with different possible keys
-    const brandMetafield = productDetailData.data.metafields.find((metafield: any) => {
-      const key = metafield.key?.toLowerCase() || '';
-      return key.includes('brand') || key === 'manufacturer' || key === 'vendor';
-    });
+    const brandMetafield = productDetailData.data.metafields.find(
+      (metafield: any) => {
+        const key = metafield.key?.toLowerCase() || "";
+        return (
+          key.includes("brand") || key === "manufacturer" || key === "vendor"
+        );
+      }
+    );
 
     if (brandMetafield && brandMetafield.value) {
       const value = String(brandMetafield.value);
@@ -477,7 +481,9 @@ const ProductDetailsScreen = () => {
           </XStack>
 
           <Spacer size={"$md"} />
-          <TextXLMedium color="$text">{product?.title || ""}</TextXLMedium>
+          <TextXLMedium color={"$secondary"}>
+            {product?.title || ""}
+          </TextXLMedium>
           <Spacer size={"$reg"} />
           {product?.soldThisMonth !== undefined &&
             product.soldThisMonth > 0 && (
@@ -522,7 +528,7 @@ const ProductDetailsScreen = () => {
               borderColor="$grey"
               paddingHorizontal={"$xs-sm"}
               paddingVertical={"$xs"}
-              borderRadius={"$full"}
+              borderRadius={"$md"}
               justifyContent="space-between"
             >
               <OpTouch
@@ -663,7 +669,7 @@ const ProductDetailsScreen = () => {
                         ? "$primary"
                         : "$grey"
                     }
-                    borderRadius={"$full"}
+                    borderRadius={"$md"}
                     paddingVertical={"$sm"}
                     paddingHorizontal={"$reg"}
                     alignItems="center"
@@ -972,7 +978,7 @@ const ProductDetailsScreen = () => {
     console.log("[PDP] Cart item being added:", {
       title: cartItem.title,
       brandName: cartItem.brandName,
-      hasBrandName: !!cartItem.brandName
+      hasBrandName: !!cartItem.brandName,
     });
 
     try {
@@ -1090,9 +1096,9 @@ const ProductDetailsScreen = () => {
               label="Add to Cart "
               isLoading={isAddingToCart}
             />
-
             <Spacer size={"$sm"} />
             <PrimaryButton label="Buy Now" onPress={handleBuyNow} />
+            <Spacer size={"$sm"} />
           </YStack>
         </>
       )}

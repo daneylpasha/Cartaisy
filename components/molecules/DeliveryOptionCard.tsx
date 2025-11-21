@@ -36,14 +36,14 @@ const DeliveryOptionCard = ({
           }
           borderWidth={1}
           borderColor={selectedDelivery === item.id ? "$primary" : "$white"}
-          borderRadius="$2xl"
+          borderRadius="$md"
           padding="$reg"
         >
           <XStack alignItems="center" justifyContent="space-between">
             <XStack alignItems="center">
               <YStack
                 backgroundColor={selectedDelivery === item.id ? "" : "$white"}
-                borderRadius={"$md"}
+                borderRadius={"$full"}
                 width={48}
                 height={48}
                 justifyContent="center"

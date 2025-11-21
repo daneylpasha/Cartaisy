@@ -86,7 +86,7 @@ export default function ProductCarousel({
           backgroundColor="rgba(0, 0, 0, 0.6)"
           paddingHorizontal={"$reg"}
           paddingVertical={"$xs-sm"}
-          borderRadius={"$full"}
+          borderRadius={"$md"}
         >
           <TextSMMedium color="$white">
             {total ? `${index + 1}/${total}` : "0/0"}

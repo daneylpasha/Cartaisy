@@ -462,6 +462,7 @@ const PlpScreen = () => {
             }}
             isLoading={false}
           />
+
           {/* Show Reset Filters button only when filters are applied */}
           {(pendingFilters.sort !== "" ||
             pendingFilters.categories.length > 0 ||
@@ -504,6 +505,7 @@ const PlpScreen = () => {
               </OpTouch>
             </>
           )}
+          <Spacer size={"$md"} />
           <Spacer size={"$md"} />
         </YStack>
       </BottomSheetModal>

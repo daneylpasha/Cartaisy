@@ -2,9 +2,9 @@ import { tokens } from "@/tamagui/token";
 import React from "react";
 import { DimensionValue } from "react-native";
 import { XStack } from "tamagui";
+import { Loader } from "../../atoms/Loader";
 import { OpTouch } from "../../atoms/OpTouch";
 import { TextMDSemiBold } from "../../atoms/texts";
-import { Loader } from "../../atoms/Loader";
 
 type PrimaryButtonProps = {
   onPress: () => void;
@@ -35,7 +35,7 @@ export const PrimaryButton = ({
       justifyContent="center"
       alignItems="center"
       backgroundColor={background}
-      borderRadius={"full"}
+      borderRadius={"md"}
       paddingVertical={paddingVertical}
       onPress={onPress}
       disabled={isLoading || disabled}

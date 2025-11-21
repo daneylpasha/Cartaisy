@@ -31,7 +31,7 @@ export const ActiveCard = ({
       : item.image;
 
   return (
-    <YStack padding={"$reg"} backgroundColor={background} borderRadius={"$2xl"}>
+    <YStack padding={"$reg"} backgroundColor={background} borderRadius={"$md"}>
       <XStack>
         <YStack
           width={48}
@@ -55,7 +55,7 @@ export const ActiveCard = ({
         </YStack>
         <Spacer size="$reg" />
         <YStack width={245}>
-          <TextMDBold numberOfLines={2}>
+          <TextMDBold color={"$secondary"} numberOfLines={2}>
             {item.title || "Order Item"}
           </TextMDBold>
           <Spacer size="$xs-sm" />
@@ -99,7 +99,7 @@ export const ActiveCard = ({
               paddingHorizontal={"$reg"}
               paddingVertical={"$sm"}
               backgroundColor="$primary"
-              borderRadius={"$full"}
+              borderRadius={"$md"}
             >
               <AppImage name="QrCode" width={11} height={11} />
               <Spacer size="$sm" />

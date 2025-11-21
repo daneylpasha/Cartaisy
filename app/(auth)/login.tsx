@@ -14,6 +14,8 @@ import {
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { SecondaryButton } from "@/components/molecules/buttons/SecondaryButton";
 import { SHADOW_STYLES } from "@/constants/styles";
+import useAuthStore from "@/store/useAuthStore";
+import useUserStore from "@/store/useUserStore";
 import { t } from "@/translations";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -21,8 +23,6 @@ import { Controller, useForm } from "react-hook-form";
 import { Alert } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { getTokenValue, XStack, YStack } from "tamagui";
-import useAuthStore from "@/store/useAuthStore";
-import useUserStore from "@/store/useUserStore";
 type LoginForm = {
   email: string;
   password: string;
@@ -33,10 +33,7 @@ const Login = () => {
   const { setToken } = useAuthStore();
   const { setUser } = useUserStore();
 
-  const {
-    mutateAsync: loginUser,
-    isPending: isLoggingIn,
-  } = useLogin({
+  const { mutateAsync: loginUser, isPending: isLoggingIn } = useLogin({
     onSuccess: (data) => {
       if (data?.data?.token) {
         setToken(data.data.token, data.data.refreshToken);
@@ -98,7 +95,7 @@ const Login = () => {
           >
             <AppImage
               tintColor={"$primary"}
-              name={"bag"}
+              name={"bagSvg"}
               width={47}
               height={53}
             />

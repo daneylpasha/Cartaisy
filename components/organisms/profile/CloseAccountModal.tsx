@@ -1,15 +1,15 @@
 import { AppImage } from "@/components/atoms/AppImage";
-import { OpTouch } from "@/components/atoms/OpTouch";
 import { t } from "@/translations";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { getTokenValue, XStack, YStack } from "tamagui";
+import { getTokenValue, YStack } from "tamagui";
 
-import { HeadingXSBold, ParagraphMD, TextMDSemiBold } from "../../atoms";
+import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
+import { tokens } from "@/tamagui/token";
+import { HeadingXSBold, ParagraphMD } from "../../atoms";
 import { FormInput } from "../../atoms/FormInput";
 import { Spacer } from "../../atoms/Spacer";
 import AlertModal from "../AlertModal";
-import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
 type Props = {
   visible: boolean;
   expectedName: string; // user ka full name, e.g. "John Doe"
@@ -41,7 +41,7 @@ export default function CloseAccountModal({
         position="absolute"
         left={16}
         right={16}
-        borderRadius={"$3xl"}
+        borderRadius={tokens.radius.md}
         top={"30%"}
         backgroundColor={"$white"}
         paddingHorizontal={"$md"}

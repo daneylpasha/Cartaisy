@@ -21,7 +21,7 @@ export default function TabLayout() {
               position: "absolute",
               backgroundColor: getTokenValue("$background"),
             },
-            android:{
+            android: {
               backgroundColor: getTokenValue("$background"),
             },
             default: {},
@@ -40,7 +40,7 @@ export default function TabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <AppImage
                 tintColor={focused ? color : getTokenValue("$icon")}
-                name="homeIcon"
+                name="homeTab"
                 width={21}
                 height={19}
               />
@@ -92,7 +92,7 @@ export default function TabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <AppImage
                 tintColor={focused ? color : getTokenValue("$icon")}
-                name="wishlistIcon"
+                name="wishlistTab"
                 width={21}
                 height={19}
               />
@@ -111,9 +111,9 @@ export default function TabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <AppImage
                 tintColor={focused ? color : getTokenValue("$icon")}
-                name="userFill"
-                width={21}
-                height={19}
+                name="profileTab"
+                width={22}
+                height={22}
               />
             ),
           }}

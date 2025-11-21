@@ -79,6 +79,7 @@ export const FormInput = ({
         borderColor={error ? "red" : "$border"}
         borderRadius={borderRadius}
         padding={padding}
+        paddingVertical={paddingVertical}
         paddingHorizontal={paddingHorizontal}
         alignItems="center"
         backgroundColor={backgroundColor}

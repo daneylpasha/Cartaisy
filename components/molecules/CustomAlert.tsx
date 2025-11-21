@@ -1,11 +1,11 @@
+import { SHADOW_STYLES } from "@/constants/styles";
 import React from "react";
 import { Pressable } from "react-native";
-import { YStack, XStack } from "tamagui";
-import AlertModal from "../organisms/AlertModal";
+import { XStack, YStack } from "tamagui";
 import { TextMDBold, TextSMRegular, TextXLBold } from "../atoms";
 import { AppImage } from "../atoms/AppImage";
 import { Spacer } from "../atoms/Spacer";
-import { SHADOW_STYLES } from "@/constants/styles";
+import AlertModal from "../organisms/AlertModal";
 
 interface CustomAlertButton {
   text: string;
@@ -36,25 +36,25 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
         return {
           name: "check",
           bgColor: "#10B981", // Green
-          iconSize: 48
+          iconSize: 48,
         };
       case "error":
         return {
           name: "error",
           bgColor: "#EF4444", // Red
-          iconSize: 48
+          iconSize: 48,
         };
       case "warning":
         return {
           name: "warning-alert",
           bgColor: "#F59E0B", // Orange
-          iconSize: 48
+          iconSize: 48,
         };
       default:
         return {
           name: "info",
           bgColor: "#3B82F6", // Blue
-          iconSize: 48
+          iconSize: 48,
         };
     }
   };
@@ -75,7 +75,7 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
       <Pressable onPress={(e) => e.stopPropagation()}>
         <YStack
           backgroundColor="$white"
-          borderRadius="$3xl"
+          borderRadius="$md"
           padding="$xl"
           width={320}
           alignItems="center"
@@ -113,7 +113,11 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
           {/* Message */}
           {message && (
             <>
-              <TextSMRegular textAlign="center" color="$secondary" lineHeight={20}>
+              <TextSMRegular
+                textAlign="center"
+                color="$secondary"
+                lineHeight={20}
+              >
                 {message}
               </TextSMRegular>
               <Spacer size="$xl" />
@@ -133,9 +137,7 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
                 alignItems="center"
                 justifyContent="center"
               >
-                <TextMDBold color="$white">
-                  {buttons[0].text}
-                </TextMDBold>
+                <TextMDBold color="$white">{buttons[0].text}</TextMDBold>
               </YStack>
             </Pressable>
           ) : (
@@ -165,9 +167,7 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
                       borderWidth={isCancel ? 1 : 0}
                       borderColor={isCancel ? "$lightgrey" : undefined}
                     >
-                      <TextMDBold
-                        color={isCancel ? "$primary" : "$white"}
-                      >
+                      <TextMDBold color={isCancel ? "$primary" : "$white"}>
                         {button.text}
                       </TextMDBold>
                     </YStack>

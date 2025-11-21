@@ -1,4 +1,5 @@
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
+import { tokens } from "@/tamagui/token";
 import React from "react";
 import { Spacer, YStack } from "tamagui";
 import { HeadingXSBold } from "../../atoms/texts";
@@ -23,7 +24,7 @@ const SignoutAccountModal = ({
         position="absolute"
         left={16}
         right={16}
-        borderRadius={"$3xl"}
+        borderRadius={tokens.radius.md}
         top={"30%"}
         backgroundColor={"$white"}
         paddingHorizontal={"$md"}

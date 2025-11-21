@@ -9,6 +9,7 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
 import useCartStore from "@/store/useCartStore";
 import useUserStore from "@/store/useUserStore";
+import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
 import { router } from "expo-router";
 import React from "react";
@@ -92,7 +93,7 @@ export const HomeHeader = ({
       {/* Search Bar */}
       <YStack
         backgroundColor="$white"
-        borderRadius="$md"
+        borderRadius={tokens.radius.md}
         paddingVertical={"$sm"}
         paddingHorizontal={"$reg"}
         // padding={"$sm-reg"}
@@ -126,7 +127,7 @@ export const HomeHeader = ({
         <XStack justifyContent="space-between" alignItems="center" gap="$sm">
           <XStack alignItems="center" gap={"$xs"} flex={1} flexShrink={1}>
             <AppImage
-              tintColor={getTokenValue("$primarylight")}
+              tintColor={getTokenValue("$white")}
               name="locationIcon"
               width={13}
               height={17}

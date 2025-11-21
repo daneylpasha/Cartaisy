@@ -7,10 +7,11 @@ import { TextLGBold } from "@/components/atoms/texts/TextLGBold";
 import { TextXSRegular } from "@/components/atoms/texts/TextXSRegular";
 import { SecondaryButton } from "@/components/molecules/buttons";
 import { SCREEN_WIDTH, SHADOW_STYLES } from "@/constants/styles";
+import { tokens } from "@/tamagui/token";
+import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import { FlatList } from "react-native";
 import { XStack, YStack } from "tamagui";
-import { router } from "expo-router";
 
 type FeaturedPromotionsCarouselProps = {
   carousels?: CarouselItem[];
@@ -109,7 +110,10 @@ export const FeaturedPromotionsCarousel = ({
                 source={banner.imageUrl}
                 width={"100%"}
                 height={199}
-                style={{ borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
+                style={{
+                  borderTopLeftRadius: tokens.radius.md,
+                  borderTopRightRadius: tokens.radius.md,
+                }}
               />
               <YStack
                 padding="$md"

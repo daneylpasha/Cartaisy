@@ -1197,6 +1197,26 @@ export interface ApplyPromoRequest {
   promoCode: string;
 }
 
+export type RemovePromoResponseData = {
+  pricing: PricingBreakdown;
+};
+
+/**
+ * Response for promo code removal
+ */
+export interface RemovePromoResponse {
+  success: boolean;
+  data: RemovePromoResponseData;
+  message: string;
+}
+
+/**
+ * Request to remove promo code
+ */
+export interface RemovePromoRequest {
+  sessionId: string;
+}
+
 export type CheckoutSummaryResponseDataPaymentMethod = {
   last4?: string;
   type: string;
@@ -1337,12 +1357,7 @@ export interface CartLineItem {
   compareAtPrice: number | null;
   quantity: number;
   quantityAvailable: number;
-  metafields?: Array<{
-    key: string;
-    value: string;
-    namespace?: string;
-    type?: string;
-  }>;
+  metafields: ProductMetafield[];
 }
 
 /**

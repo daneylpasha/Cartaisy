@@ -34,7 +34,7 @@ const OrderCard = ({ item }: { item: OrderItemProps }) => {
           borderWidth={1}
           borderColor="$lightgrey"
           backgroundColor="$white"
-          borderRadius={tokens.space.sm}
+          borderRadius={tokens.radius.md}
           width={80}
           height={80}
         >
@@ -48,7 +48,7 @@ const OrderCard = ({ item }: { item: OrderItemProps }) => {
         <Spacer size={"$md"} />
         <YStack flexShrink={1}>
           <TextSMMedium>{item.title}</TextSMMedium>
-          {item.variantTitle && (
+          {item.variantTitle !== "Default Title" && (
             <>
               <Spacer size={"$xs"} />
               <TextXSRegular color="$secondary">

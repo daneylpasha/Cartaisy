@@ -78,7 +78,7 @@ export default function CartLineItem(props: CartLineItemProps) {
             borderWidth={1}
             borderColor="$lightgrey"
             backgroundColor="$white"
-            borderRadius={tokens.space.md}
+            borderRadius={tokens.radius.md}
             width={80}
             height={80}
           >
@@ -95,11 +95,13 @@ export default function CartLineItem(props: CartLineItemProps) {
         <Spacer size={"$md"} />
         <YStack flexShrink={1}>
           <OpTouch onPress={onPressItem} disabled={!onPressItem}>
-            <TextSMMedium numberOfLines={1}>{title}</TextSMMedium>
-            <Spacer size={"$sm"} />
+            <TextSMMedium numberOfLines={1} color={"$secondary"}>
+              {title}
+            </TextSMMedium>
+
             {brandName && <TextSMBold color={"$icon"}>{brandName}</TextSMBold>}
           </OpTouch>
-          <Spacer size={"$sm"} />
+          <Spacer size={"$xs"} />
           {/* Price Row */}
           <XStack alignItems="center">
             <TextLGBold>US${currentPrice.toFixed(2)}</TextLGBold>
@@ -138,7 +140,7 @@ export default function CartLineItem(props: CartLineItemProps) {
               alignItems="center"
               borderWidth={1}
               borderColor="$lightgrey"
-              borderRadius={"$full"}
+              borderRadius={"$md"}
               width={90}
               justifyContent="center"
               paddingHorizontal={"$reg"}

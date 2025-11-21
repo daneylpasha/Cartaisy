@@ -29,12 +29,12 @@ export const CollectionCard = ({ item }: CategoryCardListProps) => {
           pathname: "/products",
           params: {
             collectionId: item.collectionId,
-            categoryName: item.title
+            categoryName: item.title,
           },
         })
       }
     >
-      <YStack borderRadius={"$2xl"}>
+      <YStack borderRadius={"$md"}>
         <AppImage
           resizeMode="cover"
           style={Styles.ImageStyle}
@@ -48,7 +48,7 @@ export const CollectionCard = ({ item }: CategoryCardListProps) => {
 };
 const Styles = StyleSheet.create({
   ImageStyle: {
-    borderRadius: tokens.radius["2xl"],
+    borderRadius: tokens.radius["md"],
     borderWidth: 1,
     borderColor: tokens.color.grey,
     height: GRID_CARD_WIDTH,

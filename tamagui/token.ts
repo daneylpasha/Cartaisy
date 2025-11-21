@@ -1,11 +1,14 @@
 import { StyleSheet } from "react-native";
+import { getPrimaryLight } from "../utils/colorUtils";
+
+const PRIMARY_COLOR = "#A82A50";
 
 export const tokens = {
   color: {
     white: "#FFFFFF",
     black: "#000000",
-    primary: "#7C3AED",
-    primarylight: "#ede9feff",
+    primary: PRIMARY_COLOR,
+    primarylight: getPrimaryLight(PRIMARY_COLOR),
     secondary: "rgba(75, 85, 99, 1)",
     background: "#F8FAFC",
     grey: "#E2E8F0",

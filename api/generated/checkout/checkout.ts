@@ -34,6 +34,8 @@ import type {
   GetShippingRatesResponse,
   InitCheckoutRequest,
   InitCheckoutResponse,
+  RemovePromoRequest,
+  RemovePromoResponse,
   SaveShippingRequest,
   SaveShippingResponse,
   SaveStep2Request,
@@ -384,6 +386,68 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
 
       const mutationOptions = getApplyPromoCodeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Remove promo code
+
+Removes the applied promo code from the checkout session
+ */
+export const removePromoCode = (
+    removePromoRequest: RemovePromoRequest,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<RemovePromoResponse>(
+      {url: `/checkout/remove-promo`, method: 'DELETE',
+      headers: {'Content-Type': 'application/json', },
+      data: removePromoRequest
+    },
+      options);
+    }
+  
+
+
+export const getRemovePromoCodeMutationOptions = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removePromoCode>>, TError,{data: RemovePromoRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof removePromoCode>>, TError,{data: RemovePromoRequest}, TContext> => {
+
+const mutationKey = ['removePromoCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removePromoCode>>, {data: RemovePromoRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  removePromoCode(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemovePromoCodeMutationResult = NonNullable<Awaited<ReturnType<typeof removePromoCode>>>
+    export type RemovePromoCodeMutationBody = RemovePromoRequest
+    export type RemovePromoCodeMutationError = void | void | void | void
+
+    export const useRemovePromoCode = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removePromoCode>>, TError,{data: RemovePromoRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof removePromoCode>>,
+        TError,
+        {data: RemovePromoRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getRemovePromoCodeMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

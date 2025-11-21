@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   image: {
     width: itemWidth,
     height: 50,
-    borderRadius: 12,
+    borderRadius: tokens.radius.md,
     overflow: "hidden",
   },
   blurview: {

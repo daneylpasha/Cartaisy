@@ -38,6 +38,7 @@ import {
 } from "@/api/generated/checkout/checkout";
 import { BottomSheetModalWithFlatList } from "@/components/organisms/bottomSheet";
 import { fonts } from "@/tamagui/fonts";
+import { tokens } from "@/tamagui/token";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
@@ -168,15 +169,6 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
 
     const form = useForm();
     const bottomSheetRef = useRef<BottomSheetModal>(null);
-
-    // Address card item type
-    type AddressDataItem = {
-      id: number;
-      name: string;
-      address: string;
-      shipping: string;
-      isDefault: boolean;
-    };
 
     // Convert shipping rates to delivery data format
     type DeliveryDataItem = {
@@ -356,7 +348,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
             backgroundColor={"$white"}
             borderWidth={1}
             borderColor={"$lightgrey"}
-            borderRadius={"$3xl"}
+            borderRadius={"$md"}
             overflow="hidden"
           >
             {addressData.length === 0 ? (
@@ -402,7 +394,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
           <OpTouch onPress={() => router.push("/addAddress")}>
             <YStack
               backgroundColor="$white"
-              borderRadius="$3xl"
+              borderRadius="$md"
               borderWidth={1}
               borderColor="$lightgrey"
               borderStyle="dashed"
@@ -438,7 +430,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
               ...SHADOW_STYLES,
             }}
             backgroundColor="$white"
-            borderRadius="$2xl"
+            borderRadius="$md"
             padding="$reg"
           >
             <Controller
@@ -592,7 +584,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
             <YStack
               style={{ ...SHADOW_STYLES }}
               backgroundColor="$white"
-              borderRadius="$2xl"
+              borderRadius={tokens.radius.md}
               padding="$reg"
             >
               <XStack>

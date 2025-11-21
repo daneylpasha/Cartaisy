@@ -12,6 +12,7 @@ import { FlatList } from "react-native";
 import { XStack, YStack } from "tamagui";
 
 import type { CalloutBannerItem } from "@/api/generated/cartaisyAPI.schemas";
+import { tokens } from "@/tamagui/token";
 
 // Note: CalloutBannerItem still uses subTitle and buttonText (not changed in backend)
 type CalloutData = CalloutBannerItem;
@@ -85,7 +86,7 @@ export const CalloutBanners = ({
               padding="$reg"
               width={SCREEN_WIDTH - 32}
               backgroundColor={"$white"}
-              borderRadius={"$2xl"}
+              borderRadius={tokens.radius.md}
             >
               <AppImage source={banner?.imageUrl} width={37} height={26} />
               <Spacer size={"$md"} />

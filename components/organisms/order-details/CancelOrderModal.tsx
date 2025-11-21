@@ -67,7 +67,7 @@ export default function CancelOrderModal({
     return (
       <XStack
         backgroundColor={selected === item.id ? "$primarylight" : "$background"}
-        borderRadius={"$2xl"}
+        borderRadius={"$md"}
         borderColor={selected === item.id ? "$primary" : "$white"}
         borderWidth={"$xxxs"}
         justifyContent="space-between"
@@ -116,8 +116,8 @@ export default function CancelOrderModal({
         position="absolute"
         left={16}
         right={16}
-        borderRadius={"$3xl"}
-        top={Platform.OS === "ios" ? "20%" : "10%"}
+        borderRadius={"$md"}
+        top={Platform.OS === "ios" ? "15s%" : "10%"}
         backgroundColor={"$white"}
         paddingHorizontal={"$md"}
         paddingVertical={"$reg"}

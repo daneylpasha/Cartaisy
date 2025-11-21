@@ -162,7 +162,6 @@ const AddNewCardDetails = () => {
             </ParagraphMD>
           </YStack>
 
-          <Spacer size="$xl" />
           <YStack paddingHorizontal={"$md"}>
             <Spacer size="$reg" />
 
@@ -179,7 +178,12 @@ const AddNewCardDetails = () => {
                   top={30}
                   right={40}
                 >
-                  <AppImage name="bag" width={24} height={24} />
+                  <AppImage
+                    name="bagSvg"
+                    width={24}
+                    height={24}
+                    tintColor={"$primary"}
+                  />
                   <AppImage name="waveIcon" width={24} height={24} />
                 </XStack>
                 <YStack position="absolute" width={"80%"} bottom={20} left={40}>
@@ -237,13 +241,16 @@ const AddNewCardDetails = () => {
                   cardStyle={{
                     backgroundColor: "#FFFFFF",
                     textColor: "#000000",
-                    placeholderColor: "#999999",
+                    placeholderColor: tokens.color.textgrey,
+                    cursorColor: tokens.color.primary,
                     borderWidth: 0,
                     borderRadius: 12,
+                    fontSize: 16,
+                    fontFamily: "figtree",
                   }}
                   style={{
                     width: "100%",
-                    height: 50,
+                    height: 48,
                   }}
                   onCardChange={(details) => {
                     console.log(
@@ -254,7 +261,7 @@ const AddNewCardDetails = () => {
                   }}
                 />
               </YStack>
-              <Spacer size={"$reg"} />
+              <Spacer size={"$md"} />
               <TextMDBold>{t("addnewcarddetails.bilingaddress")}</TextMDBold>
 
               <Spacer size={"$reg"} />

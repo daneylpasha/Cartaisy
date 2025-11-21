@@ -253,7 +253,7 @@ export const ProductCard = ({
             >
               <AppImage
                 name="discount"
-                tintColor="$black"
+                tintColor="$white"
                 width={14}
                 height={14}
               />
@@ -305,7 +305,7 @@ export const ProductCard = ({
         </YStack>
 
         <YStack paddingVertical="$reg">
-          <TextMDSemiBold numberOfLines={2}>
+          <TextMDSemiBold color={"$secondary"} numberOfLines={2}>
             {String(product.title || "")}
           </TextMDSemiBold>
           <Spacer size="$sm-reg" />
@@ -326,12 +326,12 @@ export const ProductCard = ({
           */}
 
           <XStack alignItems="center">
-            <TextMDBold>${product.price.toFixed(2)}</TextMDBold>
+            <TextMDBold>US${product.price.toFixed(2)}</TextMDBold>
             <Spacer size="$xs" />
             {product.compareAtPrice &&
             product.price !== product.compareAtPrice ? (
               <TextSMRegular color="$icon" textDecorationLine="line-through">
-                ${product.compareAtPrice.toFixed(2)}
+                US${product.compareAtPrice.toFixed(2)}
               </TextSMRegular>
             ) : null}
           </XStack>

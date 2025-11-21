@@ -230,7 +230,7 @@ const PaymentMethod = () => {
                   borderWidth={card.isDefault ? 1 : 0}
                   borderColor={card.isDefault ? "$primary" : "$white"}
                   padding="$md"
-                  borderRadius="$2xl"
+                  borderRadius="$md"
                   marginBottom="$sm"
                 >
                   <XStack justifyContent="space-between" alignItems="center">

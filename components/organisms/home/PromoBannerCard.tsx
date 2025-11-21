@@ -34,8 +34,8 @@ export const PromoBannerCard = ({
     <XStack width={SCREEN_WIDTH} paddingHorizontal={"$md"}>
       <XStack
         flex={1}
-        borderTopLeftRadius={"$2xl"}
-        borderBottomLeftRadius={"$2xl"}
+        borderTopLeftRadius={tokens.radius.md}
+        borderBottomLeftRadius={tokens.radius.md}
         justifyContent="space-between"
         backgroundColor={"$white"}
         height={170}
@@ -146,7 +146,7 @@ export const PromoBannerCard = ({
 
 const Styles = StyleSheet.create({
   ImageStyle: {
-    borderTopRightRadius: tokens.radius["2xl"],
-    borderBottomRightRadius: tokens.radius["2xl"],
+    borderTopRightRadius: tokens.radius["md"],
+    borderBottomRightRadius: tokens.radius["md"],
   },
 });

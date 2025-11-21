@@ -2,9 +2,9 @@ import { tokens } from "@/tamagui/token";
 import React from "react";
 import { DimensionValue } from "react-native";
 import { XStack } from "tamagui";
+import { Loader } from "../../atoms/Loader";
 import { OpTouch, OpTouchProps } from "../../atoms/OpTouch";
 import { TextMDSemiBold } from "../../atoms/texts";
-import { Loader } from "../../atoms/Loader";
 
 type ColorToken = keyof typeof tokens.color;
 type ColorTokenWithPrefix = ColorToken | `$${ColorToken}`;
@@ -43,7 +43,7 @@ export const SecondaryButton = ({
       alignItems="center"
       backgroundColor={"white"}
       borderWidth={1}
-      borderRadius={"full"}
+      borderRadius={"md"}
       paddingHorizontal={"md"}
       paddingVertical={"reg"}
       disabled={isLoading}

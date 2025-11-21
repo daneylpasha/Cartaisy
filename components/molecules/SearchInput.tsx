@@ -6,6 +6,7 @@ import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
 import React, { useRef, useState } from "react";
 import { TextInput } from "react-native";
+import { getTokenValue } from "tamagui";
 
 interface SearchInputProps {
   value: string;
@@ -17,6 +18,8 @@ interface SearchInputProps {
   onBlur?: () => void;
   onSubmitEditing?: () => void;
   onCancel?: () => void; // Add onCancel callback
+
+  oncleartext?: () => void;
 }
 
 export const SearchInput = ({
@@ -43,24 +46,46 @@ export const SearchInput = ({
     onBlur?.();
   };
 
-  const handleCancel = () => {
-    console.log("🚫 SearchInput: Cancel button clicked");
-    setIsFocused(false); // Immediately update focus state
-    inputRef.current?.blur(); // Blur the input to dismiss keyboard
-    onCancel?.();
-  };
-
   const searchIcon = (
     <AppImage name="searchIcon" width={18} height={18} tintColor="$secondary" />
   );
 
-  const cancelButton = isFocused ? (
-    <OpTouch onPress={handleCancel}>
-      <TextSMRegular color="$primary" fontSize={14}>
-        Cancel
-      </TextSMRegular>
-    </OpTouch>
-  ) : null;
+  let rightElement = null;
+
+  if (isFocused && value.length > 0) {
+    rightElement = (
+      <OpTouch
+        onPress={() => {
+          onChangeText(""); // clear text
+          inputRef.current?.focus(); // stay focused
+        }}
+      >
+        <AppImage
+          name="closeIcon"
+          size={12}
+          tintColor={getTokenValue("$primary")}
+        />
+      </OpTouch>
+    );
+  }
+
+  // Show Cancel
+  else if (isFocused && value.length === 0) {
+    rightElement = (
+      <OpTouch
+        onPress={() => {
+          onChangeText("");
+          setIsFocused(false);
+          inputRef.current?.blur();
+          onCancel?.();
+        }}
+      >
+        <TextSMRegular color="$primary" fontSize={14}>
+          Cancel
+        </TextSMRegular>
+      </OpTouch>
+    );
+  }
 
   return (
     <FormInput
@@ -68,7 +93,7 @@ export const SearchInput = ({
       onChangeText={onChangeText}
       placeholder={placeholder || `Search ${t("common.companyName")}`}
       icon={searchIcon}
-      rightElement={cancelButton}
+      rightElement={rightElement}
       width={width}
       paddingHorizontal={tokens.space.md}
       onFocus={handleFocus}

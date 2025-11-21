@@ -1,3 +1,4 @@
+import bagSvg from "./images/bagSvg";
 import debitCardFrame from "./images/debit-card-frame.svg";
 import emailSent from "./images/email-sent.svg";
 import lock from "./images/lock.svg";
@@ -17,9 +18,14 @@ const Icons = {
   onboardingFrame7: require("./images/onboarding-frame-7.png"),
   bagWhite: require("./images/bag-white.png"),
   bag: require("./images/bag.png"),
+  bagSvg: bagSvg,
   lock: lock,
   // resetPasswordFrame: require("./images/reset-password-frame.png"),
   loginIcon: require("./images/login-icon.png"),
+  homeTab: require("./images/home.png"),
+  wishlistTab: require("./images/wishlistnew.png"),
+  profileTab: require("./images/userTab.png"),
+  houseTab: require("./images/house.png"),
   leftSlide: require("./images/left-slide.png"),
   rightSlide: require("./images/right-slide.png"),
   eyeOn: require("./images/eye-on.png"),

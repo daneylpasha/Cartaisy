@@ -27,7 +27,6 @@ export const FilterBottomSheetContent = ({
   onFilterChange,
   facets,
 }: FilterBottomSheetContentProps) => {
-
   const sortOptions = [
     { id: "CREATED", title: "Latest" },
     { id: "DISCOUNT", title: "Highest discounts" },
@@ -37,11 +36,12 @@ export const FilterBottomSheetContent = ({
   ];
 
   // Use facets from API or fallback to empty
-  const categories = facets?.categories?.map(cat => ({
-    id: cat.value,
-    title: cat.label || cat.value,
-    count: cat.count,
-  })) || [];
+  const categories =
+    facets?.categories?.map((cat) => ({
+      id: cat.value,
+      title: cat.label || cat.value,
+      count: cat.count,
+    })) || [];
 
   // Color mapping for hex values
   const colorHexMap: Record<string, string> = {
@@ -61,18 +61,20 @@ export const FilterBottomSheetContent = ({
     navy: "#000080",
   };
 
-  const colors = facets?.colors?.map(color => ({
-    id: color.value, // Keep original case for API compatibility
-    title: color.label || color.value,
-    color: colorHexMap[color.value.toLowerCase()] || "#000000",
-    count: color.count,
-  })) || [];
+  const colors =
+    facets?.colors?.map((color) => ({
+      id: color.value, // Keep original case for API compatibility
+      title: color.label || color.value,
+      color: colorHexMap[color.value.toLowerCase()] || "#000000",
+      count: color.count,
+    })) || [];
 
-  const vendors = facets?.vendors?.map(vendor => ({
-    id: vendor.value,
-    title: vendor.label || vendor.value,
-    count: vendor.count,
-  })) || [];
+  const vendors =
+    facets?.vendors?.map((vendor) => ({
+      id: vendor.value,
+      title: vendor.label || vendor.value,
+      count: vendor.count,
+    })) || [];
 
   const toggleSort = (sortId: string) => {
     onFilterChange({
@@ -137,69 +139,75 @@ export const FilterBottomSheetContent = ({
         {/* Sort Section */}
         <YStack paddingVertical="$md">
           <TextLGBold marginBottom="$md">{t("sortfilter.headOne")}</TextLGBold>
-          {sortOptions.map((option) => (
-            <OpTouch key={option.id} onPress={() => toggleSort(option.id)}>
-              <XStack
-                alignItems="center"
-                marginBottom="$md"
-                paddingVertical="$xs"
-              >
-                {renderCheckbox(filterState.sort === option.id)}
-                <Spacer size="$md" />
-                <TextMDSemiBold color="$secondary" fontSize={14}>
-                  {option.title}
-                </TextMDSemiBold>
-              </XStack>
-            </OpTouch>
-          ))}
+          <XStack flexWrap="wrap">
+            {sortOptions.map((option) => (
+              <OpTouch key={option.id} onPress={() => toggleSort(option.id)}>
+                <XStack
+                  alignItems="center"
+                  marginBottom="$md"
+                  paddingVertical="$xs"
+                  width={130}
+                >
+                  {renderCheckbox(filterState.sort === option.id)}
+                  <Spacer size="$md" />
+                  <TextMDSemiBold color="$secondary" fontSize={14}>
+                    {option.title}
+                  </TextMDSemiBold>
+                </XStack>
+              </OpTouch>
+            ))}
+          </XStack>
         </YStack>
 
         <Spacer size="$lg" />
 
         {/* Category Section */}
-        <YStack>
-          <TextLGBold marginBottom="$md">{t("sortfilter.headtwo")}</TextLGBold>
-          {Array.from(
-            { length: Math.ceil(categories.length / 2) },
-            (_, rowIndex) => (
-              <XStack
-                key={rowIndex}
-                justifyContent="space-between"
-                marginBottom="$md"
-              >
-                {categories
-                  .slice(rowIndex * 2, rowIndex * 2 + 2)
-                  .map((category) => (
-                    <OpTouch
-                      key={category.id}
-                      onPress={() => toggleCategory(category.id)}
-                      flex={1}
-                    >
-                      <XStack
-                        alignItems="center"
-                        marginRight="$md"
-                        paddingVertical="$xs"
+        {categories.length < 0 && (
+          <YStack>
+            <TextLGBold marginBottom="$md">
+              {t("sortfilter.headtwo")}
+            </TextLGBold>
+            {Array.from(
+              { length: Math.ceil(categories.length / 2) },
+              (_, rowIndex) => (
+                <XStack
+                  key={rowIndex}
+                  justifyContent="space-between"
+                  marginBottom="$md"
+                >
+                  {categories
+                    .slice(rowIndex * 2, rowIndex * 2 + 2)
+                    .map((category) => (
+                      <OpTouch
+                        key={category.id}
+                        onPress={() => toggleCategory(category.id)}
+                        flex={1}
                       >
-                        {renderCheckbox(
-                          filterState.categories.includes(category.id)
-                        )}
-                        <Spacer size="$md" />
-                        <TextMDSemiBold
-                          color="$secondary"
-                          fontSize={14}
-                          flex={1}
+                        <XStack
+                          alignItems="center"
+                          marginRight="$md"
+                          paddingVertical="$xs"
                         >
-                          {category.title} ({category.count})
-                        </TextMDSemiBold>
-                      </XStack>
-                    </OpTouch>
-                  ))}
-              </XStack>
-            )
-          )}
-        </YStack>
-
-        <Spacer size="$lg" />
+                          {renderCheckbox(
+                            filterState.categories.includes(category.id)
+                          )}
+                          <Spacer size="$md" />
+                          <TextMDSemiBold
+                            color="$secondary"
+                            fontSize={14}
+                            flex={1}
+                          >
+                            {category.title} ({category.count})
+                          </TextMDSemiBold>
+                        </XStack>
+                      </OpTouch>
+                    ))}
+                </XStack>
+              )
+            )}
+            <Spacer size="$lg" />
+          </YStack>
+        )}
 
         {/* Price Section */}
         <YStack>
@@ -338,7 +346,11 @@ export const FilterBottomSheetContent = ({
                           )}
                         </YStack>
                         <Spacer size="$md" />
-                        <TextMDSemiBold color="$secondary" fontSize={14} flex={1}>
+                        <TextMDSemiBold
+                          color="$secondary"
+                          fontSize={14}
+                          flex={1}
+                        >
                           {color.title} ({color.count})
                         </TextMDSemiBold>
                       </XStack>

@@ -1,3 +1,4 @@
+import { customInstance } from "@/api/apiClient";
 import {
   useApplyPromoCode,
   useGetCheckoutSummary,
@@ -6,6 +7,7 @@ import { TextMDSemiBold, TextSMBold, TextXSRegular } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { Loader } from "@/components/atoms/Loader";
+import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
@@ -28,6 +30,7 @@ const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
   const { showAlert, AlertComponent } = useCustomAlert();
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   const [promoError, setPromoError] = useState<string | null>(null);
+  const [isRemovingPromo, setIsRemovingPromo] = useState(false);
 
   // Debug: Log when component mounts/updates
   React.useEffect(() => {
@@ -132,6 +135,40 @@ const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
     },
   });
 
+  // Remove promo code handler
+  const handleRemovePromoCode = async () => {
+    try {
+      setIsRemovingPromo(true);
+      setPromoError(null);
+
+      // Direct API call using customInstance
+      await customInstance({
+        url: `/checkout/remove-promo`,
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        data: { sessionId },
+      });
+
+      console.log("[Confirmation] Promo code removed successfully");
+      setIsRemovingPromo(false);
+      // Clear the input field
+      form.setValue("promocode", "");
+      // Refetch checkout summary to get updated pricing
+      refetch();
+    } catch (error: any) {
+      console.error("[Confirmation] Failed to remove promo code:", error);
+      setIsRemovingPromo(false);
+      showAlert({
+        type: "error",
+        title: "Error",
+        message:
+          error?.response?.data?.error ||
+          "Failed to remove promo code. Please try again.",
+        buttons: [{ text: "OK" }],
+      });
+    }
+  };
+
   const handleApplyPromo = () => {
     // Dismiss keyboard when Apply is pressed
     Keyboard.dismiss();
@@ -187,17 +224,19 @@ const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
             backgroundColor={"$white"}
             borderWidth={1}
             borderColor={"$lightgrey"}
-            borderRadius="$2xl"
+            borderRadius="$md"
             padding={"$reg"}
             justifyContent="space-between"
           >
             <XStack>
-              <AppImage
-                name="locationUnfilled"
-                tintColor={getTokenValue("$primary")}
-                width={16}
-                height={20}
-              />
+              <YStack marginTop={5}>
+                <AppImage
+                  name="locationUnfilled"
+                  tintColor={getTokenValue("$primary")}
+                  width={16}
+                  height={20}
+                />
+              </YStack>
               <Spacer size={"$reg"} />
               <YStack width={"80%"}>
                 {(summary?.shippingAddress?.firstName ||
@@ -250,81 +289,132 @@ const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
           image="offerIcon"
         />
         <Spacer size={"$reg"} />
-        <XStack
-          justifyContent="space-between"
-          paddingHorizontal={"$md"}
-          gap="$sm"
-        >
-          <Controller
-            name="promocode"
-            control={form.control}
-            rules={{}}
-            render={({ field, fieldState }) => (
-              <YStack flex={1}>
-                <FormInput
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  placeholder={"ENTER PROMO CODE"}
-                  onSubmitEditing={handleApplyPromo}
-                />
+
+        {summary?.promoCode ? (
+          // Show success banner with remove option
+          <YStack paddingHorizontal={"$md"}>
+            <XStack
+              justifyContent="space-between"
+              alignItems="center"
+              gap="$md"
+              borderWidth={1}
+              borderColor="$green"
+              padding="$reg"
+              paddingVertical="$sm"
+              borderRadius="$md"
+              backgroundColor="#ECFDF5"
+            >
+              <XStack flex={1} gap="$sm">
+                <YStack
+                  width={18}
+                  height={18}
+                  borderRadius="$full"
+                  backgroundColor="$green"
+                  justifyContent="center"
+                  alignItems="center"
+                  flexShrink={0}
+                  marginTop={5}
+                >
+                  <AppImage
+                    name="check"
+                    width={8}
+                    height={8}
+                    tintColor={getTokenValue("$white")}
+                  />
+                </YStack>
+                <TextSMBold
+                  flex={1}
+                  color="$darkgrey"
+                >{`Promo code "${summary.promoCode}" applied successfully!`}</TextSMBold>
+              </XStack>
+              <YStack opacity={isRemovingPromo ? 0.5 : 1} flexShrink={0}>
+                <OpTouch
+                  onPress={handleRemovePromoCode}
+                  disabled={isRemovingPromo}
+                >
+                  {isRemovingPromo ? (
+                    <Loader size="small" color="$primary" />
+                  ) : (
+                    <AppImage
+                      name="closeIcon"
+                      width={12}
+                      height={12}
+                      tintColor={getTokenValue("$darkgrey")}
+                    />
+                  )}
+                </OpTouch>
               </YStack>
+            </XStack>
+          </YStack>
+        ) : (
+          // Show input field and apply button
+          <>
+            <XStack
+              justifyContent="space-between"
+              paddingHorizontal={"$md"}
+              gap="$sm"
+            >
+              <Controller
+                name="promocode"
+                control={form.control}
+                rules={{}}
+                render={({ field, fieldState }) => (
+                  <YStack flex={1}>
+                    <FormInput
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      placeholder={"Enter Promo Code"}
+                      onSubmitEditing={handleApplyPromo}
+                    />
+                  </YStack>
+                )}
+              />
+              <PrimaryButton
+                onPress={handleApplyPromo}
+                width={"25%"}
+                label="Apply"
+                isLoading={isApplyingPromo}
+              />
+            </XStack>
+            {promoError && (
+              <>
+                <Spacer size={"$reg"} />
+                <YStack paddingHorizontal={"$md"}>
+                  <XStack
+                    gap="$sm"
+                    borderWidth={1}
+                    borderColor="$error"
+                    padding="$reg"
+                    paddingVertical="$sm"
+                    borderRadius="$md"
+                    backgroundColor="#FFF1F2"
+
+                    // alignItems="center"
+                  >
+                    <YStack
+                      width={18}
+                      height={18}
+                      borderRadius="$full"
+                      backgroundColor="$error"
+                      justifyContent="center"
+                      alignItems="center"
+                      flexShrink={0}
+                      marginTop={5}
+                    >
+                      <AppImage
+                        name="errorIcon"
+                        width={10}
+                        height={10}
+                        tintColor={getTokenValue("$white")}
+                      />
+                    </YStack>
+                    <TextSMBold flex={1} color="$darkgrey">
+                      {promoError}
+                    </TextSMBold>
+                  </XStack>
+                </YStack>
+              </>
             )}
-          />
-          <PrimaryButton
-            onPress={handleApplyPromo}
-            width={"25%"}
-            label="Apply"
-            isLoading={isApplyingPromo}
-          />
-        </XStack>
-        {promoError && (
-          <>
-            <Spacer size={"$reg"} />
-            <YStack paddingHorizontal={"$md"}>
-              <XStack
-                gap="$xs"
-                borderWidth={1}
-                borderColor="$error"
-                padding="$sm"
-                borderRadius="$2xl"
-                backgroundColor="#FFF1F2"
-              >
-                <YStack marginTop={"$xs"}>
-                  <AppImage
-                    name="errorIcon"
-                    width={16}
-                    height={16}
-                    tintColor={getTokenValue("$error")}
-                  />
-                </YStack>
-                <TextSMBold color="$error">{promoError}</TextSMBold>
-              </XStack>
-            </YStack>
-          </>
-        )}
-        {summary?.promoCode && (
-          <>
-            <Spacer size={"$reg"} />
-            <YStack paddingHorizontal={"$md"}>
-              <XStack
-                gap="$xs"
-                borderWidth={1}
-                borderColor="$green"
-                padding="$sm"
-                borderRadius="$2xl"
-                backgroundColor="#ECFDF5"
-              >
-                <YStack marginTop={"$xs"}>
-                  <AppImage
-                    name="errorIcon"
-                    width={16}
-                    height={16}
-                    tintColor={getTokenValue("$green")}
-                  />
-                </YStack>
-                <TextSMBold>{`Promo code "${summary.promoCode}" applied successfully!`}</TextSMBold>
-              </XStack>
-            </YStack>
           </>
         )}
         <AlertComponent />

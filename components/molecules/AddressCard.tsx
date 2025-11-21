@@ -43,7 +43,7 @@ export const AddressCard = ({
         borderColor={
           selectedAddress === item.id && !isEditMode ? "$primary" : "$lightgrey"
         }
-        borderRadius="$2xl"
+        borderRadius="$md"
         padding={"$reg"}
         backgroundColor={
           selectedAddress === item.id && !isEditMode

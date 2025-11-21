@@ -25,6 +25,36 @@ const StyledImage = styled(Image, {
   resizeMode: "contain",
 });
 
+const resolveTokenColor = (
+  value?: keyof typeof tokens.color | string
+): string | undefined => {
+  if (!value) return undefined;
+
+  if (
+    typeof value === "string" &&
+    value in tokens.color &&
+    typeof tokens.color[value as keyof typeof tokens.color] === "string"
+  ) {
+    return tokens.color[value as keyof typeof tokens.color] as string;
+  }
+
+  if (
+    typeof value === "string" &&
+    value.startsWith("$") &&
+    value.length > 1
+  ) {
+    const key = value.slice(1);
+    if (
+      key in tokens.color &&
+      typeof tokens.color[key as keyof typeof tokens.color] === "string"
+    ) {
+      return tokens.color[key as keyof typeof tokens.color] as string;
+    }
+  }
+
+  return typeof value === "string" ? value : undefined;
+};
+
 export const AppImage: React.FC<AppImageProps> = ({
   name,
   source,
@@ -67,10 +97,7 @@ export const AppImage: React.FC<AppImageProps> = ({
   const finalWidth = size || width;
   const finalHeight = size || height;
 
-  const finalTintColor =
-    tintColor && tokens.color[tintColor as keyof typeof tokens.color]
-      ? tokens.color[tintColor as keyof typeof tokens.color]
-      : tintColor;
+  const finalTintColor = resolveTokenColor(tintColor);
 
   let finalSource;
   let isSvgComponent = false;

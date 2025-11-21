@@ -259,7 +259,7 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
             backgroundColor={"$white"}
             borderWidth={1}
             borderColor={"$lightgrey"}
-            borderRadius={"$2xl"}
+            borderRadius={"$md"}
             padding="$reg"
           >
             {isLoading ? (
