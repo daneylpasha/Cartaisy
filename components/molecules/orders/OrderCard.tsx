@@ -1,5 +1,9 @@
-import Icons from "@/assets/Icons";
-import { TextSMMedium, TextSMSemiBold } from "@/components/atoms";
+import {
+  TextLGBold,
+  TextMDSemiBold,
+  TextSMRegular,
+  TextSMSemiBold,
+} from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
@@ -8,124 +12,154 @@ import { SHADOW_STYLES } from "@/constants/styles";
 import { router } from "expo-router";
 import React from "react";
 import { getTokenValue, XStack, YStack } from "tamagui";
-import { ActiveCard } from "../profile/ActiveCard";
 
-type itemProps = {
+type OrderCardProps = {
   item: {
-    id?: number | string;
-    image?: keyof typeof Icons | string | null;
-    title?: string;
-    qty?: number;
-    shipping?: string;
-    total?: number;
-    currentPrice?: number;
-    progress?: string;
+    id?: string | number;
+    orderNumber?: string;
     date?: string;
-    companyName?: string;
-    quantity?: number;
-    variantTitle?: string;
+    status?: string;
+    itemCount?: number;
+    shipping?: string;
+    totalPrice?: number;
     onPress?: () => void;
   };
 };
-const OrderCard = ({ item }: itemProps) => {
-  // Handle custom onPress or default navigation
+
+const OrderCard = ({ item }: OrderCardProps) => {
   const handlePress = () => {
     if (item.onPress) {
       item.onPress();
     } else {
-      router.push(`/ordersDetails`);
+      router.push("/ordersDetails");
     }
   };
 
-  // Fallback values for missing data
-  const displayCompany = item.companyName || "Order";
+  // Fallback values
+  const orderNumber = item.orderNumber || `Order #${item.id}`;
   const displayDate = item.date || new Date().toLocaleDateString();
-  const displayProgress = item.progress || "In Progress";
-  const displayQty = item.qty ?? item.quantity ?? 0;
-  const displayTotal = item.total ?? item.currentPrice ?? 0;
+  const displayStatus = item.status || "In Progress";
+  const itemCount = item.itemCount || 0;
+  const displayShipping = item.shipping || "Standard";
+  const displayTotal = item.totalPrice || 0;
+
+  // Status styling
+  const getStatusColor = () => {
+    switch (displayStatus) {
+      case "Completed":
+        return "$green";
+      case "Cancelled":
+        return "$error";
+      case "In Progress":
+        return "$background";
+      default:
+        return "$error";
+    }
+  };
+
+  const getStatusTextColor = () => {
+    return displayStatus === "In Progress" ? "$secondary" : "$white";
+  };
 
   return (
-    <OpTouch onPress={handlePress}>
-      <YStack
-        style={{ ...SHADOW_STYLES }}
-        backgroundColor={"$white"}
-        borderRadius={"$md"}
-      >
-        <XStack
-          padding={"$md"}
-          justifyContent="space-between"
-          alignItems="center"
+    <YStack>
+      <OpTouch onPress={handlePress}>
+        <YStack
+          style={{ ...SHADOW_STYLES }}
+          backgroundColor={"$white"}
+          borderRadius={"$lg"}
+          overflow="hidden"
         >
-          <XStack>
-            <YStack
-              width={40}
-              height={40}
-              backgroundColor={"$white"}
-              borderWidth={1}
-              borderColor={"$lightgrey"}
-              justifyContent="center"
-              alignItems="center"
-              borderRadius={"$full"}
-            >
-              <AppImage name="deliveryBox" size={26} />
-            </YStack>
-            <Spacer size={"$xs-sm"} />
-            <YStack>
-              <TextSMSemiBold>{displayCompany}</TextSMSemiBold>
+          {/* Header Section */}
+          <XStack
+            padding={"$lg"}
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <YStack flex={1}>
+              <TextMDSemiBold>{orderNumber}</TextMDSemiBold>
               <Spacer size={"$xs"} />
               <XStack alignItems="center">
                 <AppImage
-                  tintColor={getTokenValue("$secondary")}
                   name="calendar"
                   width={14}
                   height={14}
+                  tintColor={getTokenValue("$secondary")}
                 />
                 <Spacer size={"$xs"} />
-                <TextSMMedium color={"$secondary"}>{displayDate}</TextSMMedium>
+                <TextSMRegular color={"$secondary"}>{displayDate}</TextSMRegular>
               </XStack>
             </YStack>
-          </XStack>
-          {/* <Spacer size={"$lg"} /> */}
-          <XStack
-            backgroundColor={
-              displayProgress === "In Progress"
-                ? "$background"
-                : displayProgress === "Completed"
-                ? "$green"
-                : displayProgress === "Cancelled"
-                ? "$error"
-                : "$error"
-            }
-            borderRadius={"$md"}
-            paddingHorizontal={"$sm"}
-            paddingVertical={"$xs"}
-            alignItems="center"
-          >
-            {displayProgress === "In Progress" && (
-              <AppImage name="hourGlass" width={8} height={9} />
-            )}
-
-            <Spacer size={"$xs"} />
-            <TextSMMedium
-              color={
-                displayProgress === "In Progress"
-                  ? "$secondary"
-                  : displayProgress === "Completed"
-                  ? "$white"
-                  : displayProgress === "Cancelled"
-                  ? "$white"
-                  : "$white" // Pending (default)
-              }
+            <Spacer size={"$md"} />
+            <XStack
+              backgroundColor={getStatusColor()}
+              borderRadius={"$md"}
+              paddingHorizontal={"$sm"}
+              paddingVertical={"$xs"}
+              alignItems="center"
+              justifyContent="center"
             >
-              {displayProgress}
-            </TextSMMedium>
+              {displayStatus === "In Progress" && (
+                <>
+                  <AppImage name="hourGlass" width={8} height={9} />
+                  <Spacer size={"$xs"} />
+                </>
+              )}
+              <TextSMSemiBold color={getStatusTextColor()}>
+                {displayStatus}
+              </TextSMSemiBold>
+            </XStack>
           </XStack>
-        </XStack>
 
-        <Divider />
-        <ActiveCard background="white" item={item} />
-      </YStack>
-    </OpTouch>
+          <Divider />
+
+          {/* Order Details Section */}
+          <YStack padding={"$lg"}>
+            <XStack justifyContent="space-between">
+              <YStack flex={1}>
+                <TextSMRegular color="$secondary">
+                  {`${itemCount} ${itemCount === 1 ? "item" : "items"}`}
+                </TextSMRegular>
+                <Spacer size={"$xs"} />
+                <TextSMRegular color="$secondary">
+                  {displayShipping} Shipping
+                </TextSMRegular>
+              </YStack>
+              <YStack alignItems="flex-end">
+                <TextSMRegular color="$secondary">Total</TextSMRegular>
+                <Spacer size={"$xs"} />
+                <TextLGBold>${displayTotal.toFixed(2)}</TextLGBold>
+              </YStack>
+            </XStack>
+
+            {/* Track Button - Only for In Progress */}
+            {displayStatus === "In Progress" && (
+              <>
+                <Spacer size={"$md"} />
+                <OpTouch
+                  onPress={() => {
+                    console.log("[Track] Tracking order:", item.id);
+                  }}
+                >
+                  <XStack
+                    alignItems="center"
+                    justifyContent="center"
+                    paddingHorizontal={"$reg"}
+                    paddingVertical={"$sm"}
+                    backgroundColor="$primary"
+                    borderRadius={"$md"}
+                  >
+                    <AppImage name="QrCode" width={11} height={11} />
+                    <Spacer size={"$sm"} />
+                    <TextSMSemiBold color="$white">Track</TextSMSemiBold>
+                  </XStack>
+                </OpTouch>
+              </>
+            )}
+          </YStack>
+        </YStack>
+      </OpTouch>
+    </YStack>
   );
 };
 

@@ -32,7 +32,7 @@ const ProductsGridScroller = ({
           router.push({
             pathname: "/products",
             params: {
-              title: targetCollection?.collection.title,
+              categoryName: targetCollection?.collection.title,
               collectionId: targetCollection?.collection.id || "",
             },
           });

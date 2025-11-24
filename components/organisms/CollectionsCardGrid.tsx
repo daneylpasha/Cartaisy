@@ -29,9 +29,9 @@ const CollectionsCardGrid = ({
         title={targetShowcase.title}
         tintColor={"darkgrey"}
         image="computer"
-        seeAllText="View All"
-        color="primary"
-        onPressSeeAll={() => {}}
+        // seeAllText="View All"
+        // color="primary"
+        // onPressSeeAll={() => {}}
       />
       <YStack paddingHorizontal="$md">
         <Spacer size={"$reg"} />

@@ -80,7 +80,26 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
           width={320}
           alignItems="center"
           style={SHADOW_STYLES}
+          position="relative"
         >
+          {/* Close Icon */}
+          <Pressable
+            onPress={onClose}
+            style={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              zIndex: 10,
+            }}
+          >
+            <AppImage
+              name="closeIcon"
+              width={20}
+              height={20}
+              tintColor="#666"
+            />
+          </Pressable>
+
           {/* Icon Circle */}
           <YStack
             width={80}

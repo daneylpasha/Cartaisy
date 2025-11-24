@@ -31,9 +31,9 @@ const BrandsCollections = ({
         title={targetShowcase.title}
         tintColor={"darkgrey"}
         image="emptyStar"
-        seeAllText="View All"
-        color="primary"
-        onPressSeeAll={() => {}}
+        // seeAllText="View All"
+        // color="primary"
+        // onPressSeeAll={() => {}}
       />
       <Spacer size={"$md"} />
       <FlatList

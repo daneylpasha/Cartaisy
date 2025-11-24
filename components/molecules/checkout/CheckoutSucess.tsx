@@ -133,25 +133,24 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
           {`You saved US$${totalSavings.toFixed(2)} on this order`}
         </ParagraphMD>
       )}
-      <Spacer size={"$md-lg"} />
-
+      <Spacer size={"$sm"} />
       {/* Order Summary */}
-      <XStack alignItems="center">
-        <TextSMSemiBold color="$primary">
-          US${orderDetails.pricing.totalPrice.toFixed(2)}
-        </TextSMSemiBold>
-        <Spacer size={"$sm"} />
+      <YStack alignItems="center">
         <YStack
           width={4}
           height={4}
           borderRadius="$full"
           backgroundColor="$lightgrey"
         />
-        <Spacer size={"$sm"} />
+
         <TextSMRegular color="$secondary">
           Order #{orderDetails.orderNumber}
         </TextSMRegular>
-      </XStack>
+      </YStack>
+      <Spacer size={"$sm"} />
+      <TextMDSemiBold color="$primary">
+        US${orderDetails.pricing.totalPrice.toFixed(2)}
+      </TextMDSemiBold>
       <Spacer size={"$xl"} />
 
       {/* Order Details Card */}

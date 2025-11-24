@@ -111,6 +111,7 @@ export default function TabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <AppImage
                 tintColor={focused ? color : getTokenValue("$icon")}
+                // name="profileTab"
                 name="profileTab"
                 width={22}
                 height={22}

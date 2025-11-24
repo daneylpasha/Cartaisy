@@ -4,6 +4,7 @@ import { FlatList } from "react-native";
 import { Spacer, YStack } from "tamagui";
 
 import { CollectionDisplay } from "@/api/generated/cartaisyAPI.schemas";
+import { router } from "expo-router";
 import { ProductCard } from "../../molecules/ProductCard";
 import { SectionHeader } from "../../molecules/SectionHeader";
 
@@ -32,7 +33,15 @@ const SalesHorizontalScroller = ({
         image="flash"
         seeAllText="View All"
         color="primary"
-        onPressSeeAll={() => null}
+        onPressSeeAll={() => {
+          router.push({
+            pathname: "/products",
+            params: {
+              categoryName: title,
+              collectionId: targetCollection?.collection.id || "",
+            },
+          });
+        }}
       />
       <Spacer size={"$reg"} />
       <FlatList

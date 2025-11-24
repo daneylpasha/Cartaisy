@@ -64,7 +64,6 @@ export interface ShippingRef {
 const Shipping = forwardRef<ShippingRef, ShippingProps>(
   ({ sessionId, onStepComplete, onError }, ref) => {
     const params = useLocalSearchParams();
-    console.log("[Shipping] Component rendered with params:", params);
 
     const { showAlert, AlertComponent } = useCustomAlert();
     const [selectedAddress, setSelectedAddress] = useState<number>(0);
@@ -99,7 +98,6 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
             onStepComplete?.(newSessionId);
           },
           onError: (error: any) => {
-            console.error("[Shipping] Save error:", error);
             // Call onError callback to stop loader
             onError?.();
             showAlert({
@@ -107,7 +105,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
               title: "Error",
               message:
                 error?.response?.data?.error ||
-                "Failed to save shipping information",
+                "Failed to save payment selection. Please try again.",
               buttons: [{ text: "OK" }],
             });
           },
@@ -169,6 +167,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
 
     const form = useForm();
     const bottomSheetRef = useRef<BottomSheetModal>(null);
+    const phoneInputRef = useRef<any>(null);
 
     // Convert shipping rates to delivery data format
     type DeliveryDataItem = {
@@ -550,6 +549,13 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
                       paddingHorizontal={0}
                       value={value}
                       keyboardType="numeric"
+                      inputRef={phoneInputRef}
+                      onFocus={() => {
+                        // Scroll to phone input when focused
+                        setTimeout(() => {
+                          phoneInputRef.current?.scrollResponderScrollNativeHandleToKeyboard?.();
+                        }, 100);
+                      }}
                       onChangeText={(text) => {
                         // Only allow numbers
                         const numericText = text.replace(/[^0-9]/g, "");

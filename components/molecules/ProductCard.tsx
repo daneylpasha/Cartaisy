@@ -60,6 +60,11 @@ export const ProductCard = ({
   showProgressBar = false,
   onPress,
 }: ProductCardProps) => {
+  // Return null if product doesn't have required fields
+  if (!product?.productId || !product?.title || product?.price === undefined) {
+    return null;
+  }
+
   const imageHeight = context === "grid" ? 163.5 : 240;
   const cardWidth = context === "grid" ? GRID_CARD_WIDTH : INLINE_CARD_WIDTH;
 
@@ -239,7 +244,9 @@ export const ProductCard = ({
             height={imageHeight}
           />
 
-          {product.compareAtPrice && product.price < product.compareAtPrice ? (
+          {product.compareAtPrice &&
+          product.price &&
+          product.price < product.compareAtPrice ? (
             <XStack
               position="absolute"
               top={12}
@@ -306,7 +313,7 @@ export const ProductCard = ({
 
         <YStack paddingVertical="$reg">
           <TextMDSemiBold color={"$secondary"} numberOfLines={2}>
-            {String(product.title || "")}
+            {product.title ? String(product.title) : "Product"}
           </TextMDSemiBold>
           <Spacer size="$sm-reg" />
 
@@ -326,12 +333,17 @@ export const ProductCard = ({
           */}
 
           <XStack alignItems="center">
-            <TextMDBold>US${product.price.toFixed(2)}</TextMDBold>
+            <TextMDBold>
+              US${product.price ? Number(product.price).toFixed(2) : "0.00"}
+            </TextMDBold>
             <Spacer size="$xs" />
             {product.compareAtPrice &&
+            product.price &&
             product.price !== product.compareAtPrice ? (
               <TextSMRegular color="$icon" textDecorationLine="line-through">
-                US${product.compareAtPrice.toFixed(2)}
+                US${product.compareAtPrice
+                  ? Number(product.compareAtPrice).toFixed(2)
+                  : "0.00"}
               </TextSMRegular>
             ) : null}
           </XStack>

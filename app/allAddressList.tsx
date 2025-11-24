@@ -323,14 +323,14 @@ const SelectAddressScreen = () => {
             <OpTouch onPress={() => router.push("/addAddress")}>
               <YStack
                 backgroundColor="$white"
-                paddingVertical="$md"
-                borderRadius="$full"
+                paddingVertical="$reg"
+                borderRadius="$md"
                 alignItems="center"
                 justifyContent="center"
                 borderWidth={1}
                 borderColor="$primary"
               >
-                <TextMDBold color="$primary">Add New Address</TextMDBold>
+                <TextMDBold color="$primary">{"Add New Address"}</TextMDBold>
               </YStack>
             </OpTouch>
 

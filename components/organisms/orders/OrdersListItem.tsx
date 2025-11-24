@@ -1,5 +1,6 @@
 import { useOrders } from "@/api/hooks/useOrders";
 import { TextMDSemiBold } from "@/components/atoms";
+import { Divider } from "@/components/atoms/Divider";
 import { Loader } from "@/components/atoms/Loader";
 import OrderCard from "@/components/molecules/orders/OrderCard";
 import { tokens } from "@/tamagui/token";
@@ -110,11 +111,6 @@ const OrdersListItem = () => {
             item.id?.toString().slice(-6) ||
             "000000";
 
-          // Get first line item
-          const firstItem = item.lineItems?.[0];
-
-          const productImage = firstItem?.image;
-
           // Calculate total quantity from all line items
           const totalQuantity =
             item.lineItems?.reduce(
@@ -133,17 +129,12 @@ const OrdersListItem = () => {
             <OrderCard
               item={{
                 id: item._id || item.id,
-                title: firstItem?.title || "Order Item",
-                image: productImage,
-                currentPrice: item.totalPrice || 0,
-                total: item.totalPrice || 0,
-                quantity: totalQuantity,
-                qty: totalQuantity,
-                variantTitle: `Order #${shortOrderId}`,
-                companyName: companyName,
+                orderNumber: companyName,
                 date: formatDate(item.placedAt || item.createdAt),
-                progress: orderStatus,
+                status: orderStatus,
+                itemCount: totalQuantity,
                 shipping: item.shipping?.method || "Standard",
+                totalPrice: item.totalPrice || 0,
                 onPress: () => {
                   router.push({
                     pathname: "/ordersDetails",
@@ -156,8 +147,13 @@ const OrdersListItem = () => {
         }}
         keyExtractor={(item) => item._id || item.id}
         showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={() => <Spacer size={tokens.space.md} />}
+        ItemSeparatorComponent={() => (
+          <YStack paddingVertical={tokens.space.md}>
+            <Divider />
+          </YStack>
+        )}
         contentContainerStyle={{
+          paddingTop: 16,
           paddingBottom: 20,
           paddingHorizontal: 16,
         }}

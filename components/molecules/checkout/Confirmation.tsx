@@ -128,7 +128,14 @@ const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
           error?.response?.data?.message ||
           error?.message ||
           "Invalid promo code. Please try again.";
-
+        showAlert({
+          type: "error",
+          title: "Error",
+          message:
+            error?.response?.data?.error ||
+            "Failed to save payment selection. Please try again.",
+          buttons: [{ text: "OK" }],
+        });
         // Set error to show in red banner instead of modal
         setPromoError(errorMessage);
       },
@@ -158,14 +165,6 @@ const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
     } catch (error: any) {
       console.error("[Confirmation] Failed to remove promo code:", error);
       setIsRemovingPromo(false);
-      showAlert({
-        type: "error",
-        title: "Error",
-        message:
-          error?.response?.data?.error ||
-          "Failed to remove promo code. Please try again.",
-        buttons: [{ text: "OK" }],
-      });
     }
   };
 

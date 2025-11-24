@@ -24,20 +24,19 @@ const ProductsHorizontalScroller = ({
     return null;
   }
 
-  const { products, id, title } = targetCollection.collection;
   const handleViewAll = () => {
     router.push({
       pathname: "/products",
       params: {
-        collectionId: id,
-        collectionTitle: title
+        categoryName: targetCollection?.collection.title,
+        collectionId: targetCollection?.collection.id || "",
       },
     });
   };
   return (
     <YStack>
       <SectionHeader
-        title={title}
+        title={targetCollection?.collection.title || ""}
         tintColor={"darkgrey"}
         image="dealIcon"
         seeAllText="View All"
@@ -46,7 +45,7 @@ const ProductsHorizontalScroller = ({
       />
       <Spacer size={"$xl"} />
       <FlatList
-        data={products}
+        data={targetCollection?.collection.products}
         keyExtractor={(product, index) =>
           `product-${product.productId}-${index}`
         }

@@ -201,11 +201,8 @@ const CheckoutScreen = () => {
           setIsProcessing(false);
         }
       },
-      onError: (error: any) => {
-        // Silently handle error - just stop the loader
-        console.log("[Checkout] ❌ Complete checkout error:", error);
+      onError: () => {
         setIsProcessing(false);
-        // No alert modal - user can retry by clicking button again
       },
     },
   });
@@ -318,7 +315,7 @@ const CheckoutScreen = () => {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 80}
     >
       <YStack backgroundColor="$background" flex={1}>
         <CheckoutStepper
@@ -335,8 +332,10 @@ const CheckoutScreen = () => {
           keyExtractor={(item) => item.id}
           renderItem={renderSection}
           showsVerticalScrollIndicator={false}
+          scrollEnabled={true}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
-            paddingBottom: getTokenValue("$md"),
+            paddingBottom: getTokenValue("$2xl"),
           }}
         />
         <>

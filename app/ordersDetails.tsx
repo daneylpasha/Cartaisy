@@ -15,6 +15,7 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
+import OrderLineItem from "@/components/molecules/orders/OrderLineItem";
 import CancelOrderModal from "@/components/organisms/order-details/CancelOrderModal";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { useLocalSearchParams } from "expo-router";
@@ -195,88 +196,67 @@ const ordersDetails = () => {
     <YStack flex={1} backgroundColor={"$background"}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <Spacer size={"$lg"} />
-        <YStack justifyContent="center" alignItems="center">
-          <YStack
-            width={80}
-            height={80}
-            borderRadius={"$md"}
-            borderWidth={1}
-            borderColor={"$lightgrey"}
-            justifyContent="center"
-            alignItems="center"
-            overflow="hidden"
-          >
-            {order.lineItems?.[0]?.image ? (
+
+        {/* Order Header Section */}
+        <YStack paddingHorizontal={"$md"}>
+          <XStack justifyContent="space-between" alignItems="center">
+            <YStack>
+              <TextXLBold>
+                Order #{order.orderNumber?.slice(-6) || "N/A"}
+              </TextXLBold>
+              <Spacer size={"$xs"} />
+              <TextSMRegular color="$secondary">
+                {new Date(order.placedAt || order.createdAt).toLocaleDateString(
+                  "en-US",
+                  {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  }
+                )}
+              </TextSMRegular>
+            </YStack>
+            <XStack
+              paddingHorizontal={"$reg"}
+              paddingVertical={"$xs"}
+              borderRadius={"$md"}
+              backgroundColor={displayStatus.color}
+              alignItems="center"
+            >
               <AppImage
-                source={{ uri: order.lineItems[0].image }}
-                width={80}
-                height={80}
-                resizeMode="cover"
+                tintColor={getTokenValue("$white")}
+                name="hourGlass"
+                width={14}
+                height={14}
               />
-            ) : (
-              <AppImage name="product1" size={80} />
-            )}
-          </YStack>
-          <Spacer size={"$lg"} />
-          <XStack
-            justifyContent="center"
-            alignItems="center"
-            paddingHorizontal={"$reg"}
-            paddingVertical={"$xs"}
-            borderRadius={"$md"}
-            backgroundColor={displayStatus.color}
-          >
-            <AppImage
-              tintColor={getTokenValue("$white")}
-              name="hourGlass"
-              width={16}
-              height={16}
-            />
-            <Spacer size={"$sm"} />
-            <TextSMMedium color={"$white"}>{displayStatus.status}</TextSMMedium>
+              <Spacer size={"$xs"} />
+              <TextSMMedium color={"$white"}>{displayStatus.status}</TextSMMedium>
+            </XStack>
           </XStack>
-          <Spacer size={"$lg"} />
-          <XStack alignItems="center" justifyContent="center">
-            <TextSMRegular> Qty: {totalQuantity}</TextSMRegular>
-            <Spacer size={"$reg"} />
-            <YStack
-              width={4}
-              height={4}
-              backgroundColor={"$lightgrey"}
-              borderRadius={"$full"}
-            />
-            <Spacer size={"$reg"} />
-            <TextSMRegular>
-              {" "}
-              Order #{order.orderNumber?.slice(-6) || "N/A"}
-            </TextSMRegular>
-          </XStack>
-          <Spacer size={"$reg"} />
-          <TextXLBold
-            textAlign="center"
-            numberOfLines={2}
-            paddingHorizontal="$md"
-            color={"$secondary"}
-          >
-            {order.lineItems?.[0]?.title || "Order Item"}
-          </TextXLBold>
-          <Spacer size={"$reg"} />
-          <TextSMRegular>
-            Order{" "}
-            {new Date(order.placedAt || order.createdAt).toLocaleDateString(
-              "en-US",
-              {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              }
-            )}
-          </TextSMRegular>
-          <Spacer size={"$reg"} />
-          <TextSMRegular>
-            {order.shipping?.method || "Standard Shipping"}
-          </TextSMRegular>
         </YStack>
+
+        <Spacer size={"$lg"} />
+
+        {/* Products Section */}
+        <YStack paddingHorizontal={"$md"}>
+          <TextMDBold>Products ({order.lineItems?.length || 0})</TextMDBold>
+          <Spacer size={"$reg"} />
+          <YStack
+            style={{ ...SHADOW_STYLES }}
+            backgroundColor="$white"
+            borderRadius="$md"
+            padding="$md"
+          >
+            {order.lineItems?.map((item, index) => (
+              <OrderLineItem
+                key={item.productId || index}
+                item={item}
+                isLast={index === order.lineItems!.length - 1}
+              />
+            ))}
+          </YStack>
+        </YStack>
+
         <Spacer size={"$xl"} />
         <YStack paddingHorizontal={"$md"}>
           {/* <TextMDBold>{"Timeline"}</TextMDBold> */}

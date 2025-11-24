@@ -52,19 +52,9 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
             // Navigate to next step on success
             onStepComplete();
           },
-          onError: (error: any) => {
-            console.error("[Payment] Failed to save payment method:", error);
+          onError: () => {
             // Call onError callback to stop loader
             onError?.();
-            // Show error alert
-            showAlert({
-              type: "error",
-              title: "Error",
-              message:
-                error?.response?.data?.error ||
-                "Failed to save payment selection. Please try again.",
-              buttons: [{ text: "OK" }],
-            });
           },
         },
       });

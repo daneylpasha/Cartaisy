@@ -496,27 +496,29 @@ const ProductDetailsScreen = () => {
           <XStack justifyContent="space-between" alignItems="center">
             <YStack>
               <XStack alignItems="center">
-                <HeadingXSBold color="$text">{`US$${(
-                  (product?.currentPrice || 0) * count
-                ).toFixed(2)}`}</HeadingXSBold>
+                <HeadingXSBold color="$text">
+                  {`US$${(
+                    (product?.currentPrice ? Number(product.currentPrice) : 0) * count
+                  ).toFixed(2)}`}
+                </HeadingXSBold>
                 <Spacer size="$xs" />
-                {product?.originalPrice && (
+                {product?.originalPrice && product.originalPrice > 0 && (
                   <TextSMRegular
                     color="$icon"
                     textDecorationLine="line-through"
                   >
-                    US${product?.originalPrice.toFixed(2)}
+                    US${Number(product.originalPrice).toFixed(2)}
                   </TextSMRegular>
                 )}
               </XStack>
               <TextSMMedium
                 color={
-                  product?.inStock && product?.totalInventory > 0
+                  product?.inStock && product?.totalInventory && product?.totalInventory > 0
                     ? "$green"
                     : "$error"
                 }
               >
-                {product?.inStock && product?.totalInventory > 0
+                {product?.inStock && product?.totalInventory && product?.totalInventory > 0
                   ? `In-Stock (${product.totalInventory})`
                   : "Out of Stock"}
               </TextSMMedium>
@@ -753,17 +755,19 @@ const ProductDetailsScreen = () => {
                   }
                 }}
               >
-                <RenderHTML
-                  contentWidth={SCREEN_WIDTH - 32}
-                  source={{
-                    html: product.descriptionHtml,
-                  }}
-                  baseStyle={{
-                    color: getTokenValue("$secondary"),
-                    fontSize: 14,
-                    lineHeight: 20,
-                  }}
-                />
+                {product.descriptionHtml && product.descriptionHtml.trim() ? (
+                  <RenderHTML
+                    contentWidth={SCREEN_WIDTH - 32}
+                    source={{
+                      html: `<div>${product.descriptionHtml}</div>`,
+                    }}
+                    baseStyle={{
+                      color: getTokenValue("$secondary"),
+                      fontSize: 14,
+                      lineHeight: 20,
+                    }}
+                  />
+                ) : null}
               </YStack>
 
               {/* Visible version with height control */}
@@ -771,17 +775,19 @@ const ProductDetailsScreen = () => {
                 overflow="hidden"
                 maxHeight={isExpanded ? undefined : COLLAPSED_HEIGHT}
               >
-                <RenderHTML
-                  contentWidth={SCREEN_WIDTH - 32}
-                  source={{
-                    html: product.descriptionHtml,
-                  }}
-                  baseStyle={{
-                    color: getTokenValue("$secondary"),
-                    fontSize: 14,
-                    lineHeight: 20,
-                  }}
-                />
+                {product.descriptionHtml && product.descriptionHtml.trim() ? (
+                  <RenderHTML
+                    contentWidth={SCREEN_WIDTH - 32}
+                    source={{
+                      html: `<div>${product.descriptionHtml}</div>`,
+                    }}
+                    baseStyle={{
+                      color: getTokenValue("$secondary"),
+                      fontSize: 14,
+                      lineHeight: 20,
+                    }}
+                  />
+                ) : null}
               </YStack>
             </>
           ) : (
@@ -1093,7 +1099,7 @@ const ProductDetailsScreen = () => {
               }
               iconPosition="left"
               onPress={handleAddToCart}
-              label="Add to Cart "
+              label="Add to Cart"
               isLoading={isAddingToCart}
             />
             <Spacer size={"$sm"} />
