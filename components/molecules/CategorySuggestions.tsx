@@ -1,6 +1,7 @@
 import { CategoryCollectionGridItem } from "@/api/generated/cartaisyAPI.schemas";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
+import { extractNumericId } from "@/utils/extractNumericId";
 import { router } from "expo-router";
 import React from "react";
 import { FlatList, ImageBackground, StyleSheet } from "react-native";
@@ -76,7 +77,7 @@ export const CategorySuggestions = ({
                 router.push({
                   pathname: "/products",
                   params: {
-                    collectionId: categoryCollection.collectionId,
+                    collectionId: extractNumericId(categoryCollection.collectionId),
                     categoryName: categoryCollection.title,
                   },
                 });

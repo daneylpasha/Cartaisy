@@ -6,11 +6,15 @@ import Axios, { AxiosError, AxiosRequestConfig } from "axios";
 const API_BASE_URL =
   "https://cartaisy-backend-production.up.railway.app/api/v1";
 
+// Store ID for multi-tenancy (from environment variable)
+const STORE_ID = process.env.EXPO_PUBLIC_STORE_ID || "";
+
 // Create axios instance
 export const axiosInstance = Axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
+    "X-Store-ID": STORE_ID,
   },
   timeout: 30000, // 30 second timeout to prevent hanging forever
 });

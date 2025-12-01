@@ -13,6 +13,7 @@ import { XStack, YStack } from "tamagui";
 
 import type { CalloutBannerItem } from "@/api/generated/cartaisyAPI.schemas";
 import { tokens } from "@/tamagui/token";
+import { extractNumericId } from "@/utils/extractNumericId";
 
 // Note: CalloutBannerItem still uses subTitle and buttonText (not changed in backend)
 type CalloutData = CalloutBannerItem;
@@ -48,7 +49,7 @@ export const CalloutBanners = ({
       router.push({
         pathname: "/products",
         params: {
-          collectionId: action.collectionId.toString(),
+          collectionId: extractNumericId(action.collectionId.toString()),
           categoryName: banner?.title,
         },
       });

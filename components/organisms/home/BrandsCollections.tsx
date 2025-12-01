@@ -5,6 +5,7 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { TextSMMedium } from "@/components/atoms/texts";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { tokens } from "@/tamagui/token";
+import { extractNumericId } from "@/utils/extractNumericId";
 import { router } from "expo-router";
 import React from "react";
 import { FlatList } from "react-native";
@@ -53,7 +54,7 @@ const BrandsCollections = ({
               router.push({
                 pathname: "/products",
                 params: {
-                  collectionId: brand.collectionId,
+                  collectionId: extractNumericId(brand.collectionId),
                   categoryName: brand.title,
                 },
               });

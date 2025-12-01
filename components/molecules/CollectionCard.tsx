@@ -4,6 +4,7 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { GRID_CARD_WIDTH } from "@/components/molecules/ProductCard";
 import { tokens } from "@/tamagui/token";
+import { extractNumericId } from "@/utils/extractNumericId";
 import { router } from "expo-router";
 import { StyleSheet } from "react-native";
 import { YStack } from "tamagui";
@@ -28,7 +29,7 @@ export const CollectionCard = ({ item }: CategoryCardListProps) => {
         router.push({
           pathname: "/products",
           params: {
-            collectionId: item.collectionId,
+            collectionId: extractNumericId(item.collectionId),
             categoryName: item.title,
           },
         })

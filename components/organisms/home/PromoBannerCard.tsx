@@ -5,6 +5,7 @@ import { PrimaryButton } from "@/components/molecules/buttons";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
+import { extractNumericId } from "@/utils/extractNumericId";
 import { router } from "expo-router";
 import { useState } from "react";
 import { FlatList, StyleSheet } from "react-native";
@@ -71,7 +72,7 @@ export const PromoBannerCard = ({
                 router.push({
                   pathname: "/products",
                   params: {
-                    collectionId: banner.collectionId,
+                    collectionId: extractNumericId(banner.collectionId),
                     categoryName: banner.title,
                   },
                 });

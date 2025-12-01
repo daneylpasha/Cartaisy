@@ -8,6 +8,7 @@ import { TextXSRegular } from "@/components/atoms/texts/TextXSRegular";
 import { SecondaryButton } from "@/components/molecules/buttons";
 import { SCREEN_WIDTH, SHADOW_STYLES } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
+import { extractNumericId } from "@/utils/extractNumericId";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import { FlatList } from "react-native";
@@ -98,7 +99,7 @@ export const FeaturedPromotionsCarousel = ({
                   router.push({
                     pathname: "/products",
                     params: {
-                      collectionId: banner.collectionId,
+                      collectionId: extractNumericId(banner.collectionId),
                       categoryName: banner.title,
                     },
                   });
@@ -152,7 +153,7 @@ export const FeaturedPromotionsCarousel = ({
                       router.push({
                         pathname: "/products",
                         params: {
-                          collectionId: banner.collectionId,
+                          collectionId: extractNumericId(banner.collectionId),
                           categoryName: banner.title,
                         },
                       });

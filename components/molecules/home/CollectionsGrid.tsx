@@ -4,9 +4,10 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { TextSMMedium } from "@/components/atoms/texts";
 import { SCREEN_WIDTH, SHADOW_STYLES } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
+import { extractNumericId } from "@/utils/extractNumericId";
+import { router } from "expo-router";
 import { FlatList } from "react-native";
 import { Spacer, YStack } from "tamagui";
-import { router } from "expo-router";
 
 type CollectionsGridProps = {
   itemData?: CategoryGridItem[];
@@ -46,7 +47,7 @@ export const CollectionsGrid = ({
               router.push({
                 pathname: "/products",
                 params: {
-                  collectionId: category.collectionId,
+                  collectionId: extractNumericId(category.collectionId),
                   categoryName: category.title,
                 },
               });

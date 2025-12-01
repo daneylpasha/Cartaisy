@@ -13,6 +13,7 @@ import {
   ProductCollectionSortKey,
 } from "@/api/generated/cartaisyAPI.schemas";
 import { useGetCollectionProducts } from "@/api/generated/collections/collections";
+import { extractNumericId } from "@/utils/extractNumericId";
 import { HeadingXSBold, Loader, TextMDSemiBold } from "@/components/atoms";
 import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
@@ -31,16 +32,6 @@ import { getTokenValue, Text, XStack, YStack } from "tamagui";
 
 const sidePadding = tokens.space.md;
 const columnGap = tokens.space.md;
-
-const extractNumericId = (gid: string): string => {
-  // If it's already numeric, return as is
-  if (!gid.includes("gid://")) {
-    return gid;
-  }
-
-  const parts = gid.split("/");
-  return parts[parts.length - 1];
-};
 
 const mapCollectionProductToProduct = (
   collectionProduct: CollectionProduct
@@ -176,10 +167,11 @@ const PlpScreen = () => {
 
   const filtersParam = buildFiltersParam();
 
-  // Fetch collection products
+  // Fetch collection products - extract numeric ID from GID format
+  const numericCollectionId = extractNumericId(collectionId as string);
   const { data, error, isFetching, isLoading, refetch } =
     useGetCollectionProducts(
-      collectionId as string,
+      numericCollectionId,
       {
         limit: 20,
         cursor,

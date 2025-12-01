@@ -2,6 +2,7 @@ import { CollectionDisplay } from "@/api/generated/cartaisyAPI.schemas";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import { tokens } from "@/tamagui/token";
+import { extractNumericId } from "@/utils/extractNumericId";
 import { router } from "expo-router";
 import React from "react";
 import { FlatList } from "react-native";
@@ -29,7 +30,7 @@ const ProductsHorizontalScroller = ({
       pathname: "/products",
       params: {
         categoryName: targetCollection?.collection.title,
-        collectionId: targetCollection?.collection.id || "",
+        collectionId: extractNumericId(targetCollection?.collection.id),
       },
     });
   };
