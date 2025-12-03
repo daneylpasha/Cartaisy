@@ -1,5 +1,4 @@
 import useAuthStore from "@/store/useAuthStore";
-import useUserStore from "@/store/useUserStore";
 import Axios, { AxiosError, AxiosRequestConfig } from "axios";
 
 // Backend URL
@@ -24,8 +23,14 @@ axiosInstance.interceptors.request.use(
   async (config) => {
     const token = useAuthStore.getState().token;
 
+    console.log("[API Request]:", config.url);
+    console.log("[API Request] Token exists:", !!token);
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("[API Request] Authorization header set");
+    } else {
+      console.log("[API Request] WARNING: No token available!");
     }
 
     return config;
@@ -43,11 +48,16 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
+    console.log("[API Response ERROR] URL:", error.config?.url);
+    console.log("[API Response ERROR] HTTP Status:", error.response?.status);
     console.log("[API Response ERROR] Response Data:", error.response?.data);
 
+    // Don't auto-clear auth on 401 errors
+    // Token will only be cleared on explicit signout by user
     if (error.response?.status === 401) {
-      useAuthStore.getState().clearAuth();
-      useUserStore.getState().clearUser();
+      console.log(
+        "[API Response ERROR] 401 received - NOT clearing auth (only signout clears token)"
+      );
     }
     return Promise.reject(error);
   }

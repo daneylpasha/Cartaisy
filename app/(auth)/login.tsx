@@ -30,19 +30,27 @@ type LoginForm = {
 
 const Login = () => {
   const [isChecked, setIsChecked] = useState(false);
-  const { setToken } = useAuthStore();
+  const { setToken, setProfileComplete } = useAuthStore();
   const { setUser } = useUserStore();
 
   const { mutateAsync: loginUser, isPending: isLoggingIn } = useLogin({
     onSuccess: (data) => {
+      console.log('[Login] API Response:', JSON.stringify(data, null, 2));
+      console.log('[Login] Token from response:', data?.data?.token ? 'EXISTS' : 'NULL');
+
       if (data?.data?.token) {
+        console.log('[Login] Calling setToken...');
         setToken(data.data.token, data.data.refreshToken);
+      } else {
+        console.log('[Login] WARNING: No token in response!');
       }
 
       if (data?.data?.user) {
         setUser(data.data.user);
       }
 
+      // Existing users logging in have completed their profile
+      setProfileComplete(true);
       router.replace("/(tabs)");
     },
     onError: (error) => {

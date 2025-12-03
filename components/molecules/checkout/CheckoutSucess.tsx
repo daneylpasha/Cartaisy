@@ -165,29 +165,44 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
         <TextMDSemiBold>Order Details</TextMDSemiBold>
         <Spacer size={"$md"} />
 
-        {/* Email & Phone */}
-        <XStack alignItems="center" gap="$xs">
-          <AppImage
-            name="emailIcon"
-            width={16}
-            height={16}
-            tintColor={getTokenValue("$icon")}
-          />
-          <TextSMRegular color="$secondary">{orderDetails.email}</TextSMRegular>
-        </XStack>
-        <Spacer size={"$sm"} />
-        <XStack alignItems="center" gap="$xs">
-          <AppImage
-            name="phoneLogo"
-            width={16}
-            height={16}
-            tintColor={getTokenValue("$icon")}
-          />
-          <TextSMRegular color="$secondary">{orderDetails.phone}</TextSMRegular>
-        </XStack>
+        {/* Email & Phone - Only show if values exist */}
+        {orderDetails.email ? (
+          <XStack alignItems="center" gap="$xs">
+            <AppImage
+              name="emailIcon"
+              width={16}
+              height={16}
+              tintColor={getTokenValue("$icon")}
+            />
+            <TextSMRegular color="$secondary">
+              {orderDetails.email}
+            </TextSMRegular>
+          </XStack>
+        ) : null}
+        {orderDetails.email && orderDetails.phone ? (
+          <Spacer size={"$sm"} />
+        ) : null}
+        {orderDetails.phone ? (
+          <XStack alignItems="center" gap="$xs">
+            <AppImage
+              name="phoneLogo"
+              width={16}
+              height={16}
+              tintColor={getTokenValue("$icon")}
+            />
+            <TextSMRegular color="$secondary">
+              {orderDetails.phone}
+            </TextSMRegular>
+          </XStack>
+        ) : null}
 
-        <Spacer size={"$md"} />
-        <Divider />
+        {/* Only show divider if email or phone exists */}
+        {(orderDetails.email || orderDetails.phone) && (
+          <>
+            <Spacer size={"$md"} />
+            <Divider />
+          </>
+        )}
         <Spacer size={"$md"} />
 
         {/* Shipping Address */}

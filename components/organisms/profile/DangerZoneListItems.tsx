@@ -42,6 +42,19 @@ export const DangerZoneListItem = () => {
       },
     },
   });
+
+  // Logout function (no API endpoint, just clear local state)
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const handleLogout = () => {
+    setIsLoggingOut(true);
+    console.log("[SignOut] Logging out...");
+    clearAuth();
+    clearUser();
+    queryClient.clear();
+    setSignout(false);
+    setIsLoggingOut(false);
+    router.replace("/(auth)/login");
+  };
   const DATA = [
     {
       id: 1,
@@ -89,13 +102,10 @@ export const DangerZoneListItem = () => {
       <SignoutAccountModal
         visible={signout}
         expectedName="John Doe"
+        loading={isLoggingOut}
         onConfirm={() => {
-          console.log("[SignOut] Clearing auth and user data...");
-          clearAuth();
-          clearUser();
-          setSignout(false);
-          console.log("[SignOut] Redirecting to login...");
-          router.replace("/(auth)/login");
+          console.log("[SignOut] Logging out...");
+          handleLogout();
         }}
         onCancel={() => setSignout(false)}
       />

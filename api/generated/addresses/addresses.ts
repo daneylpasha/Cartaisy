@@ -52,7 +52,7 @@ export const getAddresses = (
       
       
       return customInstance<GetAddresses200>(
-      {url: `/addresses`, method: 'GET', signal
+      {url: `/customer/addresses`, method: 'GET', signal
     },
       options);
     }
@@ -62,7 +62,7 @@ export const getAddresses = (
 
 export const getGetAddressesQueryKey = () => {
     return [
-    `/addresses`
+    `/customer/addresses`
     ] as const;
     }
 
@@ -140,7 +140,7 @@ export const addAddress = (
       
       
       return customInstance<AddAddress200>(
-      {url: `/addresses`, method: 'POST',
+      {url: `/customer/addresses`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: addAddressBody, signal
     },
@@ -192,27 +192,26 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Update an existing address by index
+ * Update an existing address by addressId
  */
 export const updateAddress = (
-    index: number,
+    addressId: string,
     updateAddressBody: UpdateAddressBody,
  options?: SecondParameter<typeof customInstance>,) => {
-      
-      
+
+
       return customInstance<UpdateAddress200>(
-      {url: `/addresses/${index}`, method: 'PUT',
+      {url: `/customer/addresses/${addressId}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateAddressBody
     },
       options);
     }
-  
 
 
 export const getUpdateAddressMutationOptions = <TError = void | void | void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAddress>>, TError,{index: number;data: UpdateAddressBody}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateAddress>>, TError,{index: number;data: UpdateAddressBody}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAddress>>, TError,{addressId: string;data: UpdateAddressBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAddress>>, TError,{addressId: string;data: UpdateAddressBody}, TContext> => {
 
 const mutationKey = ['updateAddress'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -221,16 +220,16 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }, request: undefined};
 
-      
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAddress>>, {index: number;data: UpdateAddressBody}> = (props) => {
-          const {index,data} = props ?? {};
 
-          return  updateAddress(index,data,requestOptions)
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAddress>>, {addressId: string;data: UpdateAddressBody}> = (props) => {
+          const {addressId,data} = props ?? {};
+
+          return  updateAddress(addressId,data,requestOptions)
         }
 
-        
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -240,11 +239,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateAddressMutationError = void | void | void | void
 
     export const useUpdateAddress = <TError = void | void | void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAddress>>, TError,{index: number;data: UpdateAddressBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAddress>>, TError,{addressId: string;data: UpdateAddressBody}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateAddress>>,
         TError,
-        {index: number;data: UpdateAddressBody},
+        {addressId: string;data: UpdateAddressBody},
         TContext
       > => {
 
@@ -253,15 +252,15 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Delete an address by index
+ * Delete an address by addressId
  */
 export const deleteAddress = (
-    index: number,
+    addressId: string,
  options?: SecondParameter<typeof customInstance>,) => {
-      
-      
+
+
       return customInstance<DeleteAddress200>(
-      {url: `/addresses/${index}`, method: 'DELETE'
+      {url: `/customer/addresses/${addressId}`, method: 'DELETE'
     },
       options);
     }
@@ -269,8 +268,8 @@ export const deleteAddress = (
 
 
 export const getDeleteAddressMutationOptions = <TError = void | void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAddress>>, TError,{index: number}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteAddress>>, TError,{index: number}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAddress>>, TError,{addressId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAddress>>, TError,{addressId: string}, TContext> => {
 
 const mutationKey = ['deleteAddress'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -279,30 +278,30 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }, request: undefined};
 
-      
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAddress>>, {index: number}> = (props) => {
-          const {index} = props ?? {};
 
-          return  deleteAddress(index,requestOptions)
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAddress>>, {addressId: string}> = (props) => {
+          const {addressId} = props ?? {};
+
+          return  deleteAddress(addressId,requestOptions)
         }
 
-        
+
 
 
   return  { mutationFn, ...mutationOptions }}
 
     export type DeleteAddressMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAddress>>>
-    
+
     export type DeleteAddressMutationError = void | void | void
 
     export const useDeleteAddress = <TError = void | void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAddress>>, TError,{index: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAddress>>, TError,{addressId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteAddress>>,
         TError,
-        {index: number},
+        {addressId: string},
         TContext
       > => {
 
@@ -311,15 +310,15 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Set an address as default by index
+ * Set an address as default by addressId
  */
 export const setDefaultAddress = (
-    index: number,
+    addressId: string,
  options?: SecondParameter<typeof customInstance>,) => {
-      
-      
+
+
       return customInstance<SetDefaultAddress200>(
-      {url: `/addresses/${index}/default`, method: 'PUT'
+      {url: `/customer/addresses/${addressId}/default`, method: 'PATCH'
     },
       options);
     }
@@ -327,8 +326,8 @@ export const setDefaultAddress = (
 
 
 export const getSetDefaultAddressMutationOptions = <TError = void | void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDefaultAddress>>, TError,{index: number}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof setDefaultAddress>>, TError,{index: number}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDefaultAddress>>, TError,{addressId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof setDefaultAddress>>, TError,{addressId: string}, TContext> => {
 
 const mutationKey = ['setDefaultAddress'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -337,30 +336,30 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }, request: undefined};
 
-      
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setDefaultAddress>>, {index: number}> = (props) => {
-          const {index} = props ?? {};
 
-          return  setDefaultAddress(index,requestOptions)
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setDefaultAddress>>, {addressId: string}> = (props) => {
+          const {addressId} = props ?? {};
+
+          return  setDefaultAddress(addressId,requestOptions)
         }
 
-        
+
 
 
   return  { mutationFn, ...mutationOptions }}
 
     export type SetDefaultAddressMutationResult = NonNullable<Awaited<ReturnType<typeof setDefaultAddress>>>
-    
+
     export type SetDefaultAddressMutationError = void | void | void
 
     export const useSetDefaultAddress = <TError = void | void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDefaultAddress>>, TError,{index: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDefaultAddress>>, TError,{addressId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof setDefaultAddress>>,
         TError,
-        {index: number},
+        {addressId: string},
         TContext
       > => {
 
@@ -378,7 +377,7 @@ export const getDefaultAddress = (
       
       
       return customInstance<GetDefaultAddress200>(
-      {url: `/addresses/default`, method: 'GET', signal
+      {url: `/customer/addresses/default`, method: 'GET', signal
     },
       options);
     }
@@ -388,7 +387,7 @@ export const getDefaultAddress = (
 
 export const getGetDefaultAddressQueryKey = () => {
     return [
-    `/addresses/default`
+    `/customer/addresses/default`
     ] as const;
     }
 

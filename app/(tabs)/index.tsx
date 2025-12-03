@@ -1,8 +1,17 @@
+import {
+  useGetAddresses,
+  useSetDefaultAddress,
+} from "@/api/generated/addresses/addresses";
+import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
 import { ParagraphMD, TextLGBold, TextSMSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
+import { AddressCard } from "@/components/molecules/AddressCard";
 import { CategorySuggestions } from "@/components/molecules/CategorySuggestions";
+import { CollectionsGrid } from "@/components/molecules/home/CollectionsGrid";
+import AlertModal from "@/components/organisms/AlertModal";
+import { BottomSheetModalWithFlatList } from "@/components/organisms/bottomSheet";
 import CollectionsCardGrid from "@/components/organisms/CollectionsCardGrid";
 import {
   CalloutBanners,
@@ -15,6 +24,8 @@ import { PromoBannerCard } from "@/components/organisms/home/PromoBannerCard";
 import ProductsHorizontalScroller from "@/components/organisms/productHorizontalScroller/ProductsHorizontalScroller";
 import ProductsGridScroller from "@/components/organisms/ProductsGridScroller/ProductsGridScroller";
 import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller/SalesHorizontalScroller";
+import useUserStore from "@/store/useUserStore";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -26,20 +37,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
-//
-
-import {
-  useGetAddresses,
-  useGetDefaultAddress,
-  useSetDefaultAddress,
-} from "@/api/generated/addresses/addresses";
-import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
-import { AddressCard } from "@/components/molecules/AddressCard";
-import { CollectionsGrid } from "@/components/molecules/home/CollectionsGrid";
-import AlertModal from "@/components/organisms/AlertModal";
-import { BottomSheetModalWithFlatList } from "@/components/organisms/bottomSheet";
-import useUserStore from "@/store/useUserStore";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 const HomeScreen = () => {
   const { top: TOP_INSET, bottom: BOTTOM_INSET } = useSafeAreaInsets();
@@ -63,25 +60,26 @@ const HomeScreen = () => {
     refetch: refetchAddresses,
   } = useGetAddresses();
 
-  // Fetch default address on mount
-  const { data: defaultAddressResponse, refetch: refetchDefaultAddress } =
-    useGetDefaultAddress();
+  // Backend returns data as array directly, not { addresses: [...] }
+  const rawAddresses = Array.isArray(addressesResponse?.data)
+    ? addressesResponse.data
+    : (addressesResponse?.data?.addresses || []);
 
-  // Update user store when default address is fetched
+  // Update user store when addresses are fetched - find the default one
   React.useEffect(() => {
-    if (defaultAddressResponse?.data?.address) {
-      setDefaultAddress(defaultAddressResponse.data.address);
+    const defaultAddr = rawAddresses.find((addr: any) => addr.isDefault);
+    if (defaultAddr) {
+      setDefaultAddress(defaultAddr);
     }
-  }, [defaultAddressResponse, setDefaultAddress]);
+  }, [addressesResponse, setDefaultAddress]);
 
   // Set default address mutation
   const { mutate: setDefaultAddressMutation, isPending: isSettingDefault } =
     useSetDefaultAddress({
       mutation: {
-        onSuccess: (response, variables) => {
-          // Find the address that was set as default
-          const addresses = addressesResponse?.data?.addresses || [];
-          const defaultAddress = addresses[variables.index];
+        onSuccess: (_response, variables) => {
+          // Find the address that was set as default by addressId
+          const defaultAddress = rawAddresses.find((addr: any) => addr._id === variables.addressId);
           if (defaultAddress) {
             setDefaultAddress(defaultAddress);
           }
@@ -95,29 +93,27 @@ const HomeScreen = () => {
   useFocusEffect(
     useCallback(() => {
       refetchAddresses();
-      refetchDefaultAddress();
-    }, [refetchAddresses, refetchDefaultAddress])
+    }, [refetchAddresses])
   );
 
   // Map API addresses to AddressCard format
-  const addressData = (addressesResponse?.data?.addresses || []).map(
-    (addr, index) => ({
-      id: index,
-      name: addr.label || userName,
-      address: [
-        addr.address1,
-        addr.address2,
-        addr.city,
-        addr.province,
-        addr.country,
-        addr.zip,
-      ]
-        .filter(Boolean)
-        .join(", "),
-      shipping: "Shipping Available",
-      isDefault: addr.isDefault || false,
-    })
-  );
+  const addressData = rawAddresses.map((addr: any, index: number) => ({
+    id: index,
+    addressId: addr._id || String(index), // Use MongoDB _id
+    name: addr.label || userName,
+    address: [
+      addr.address1,
+      addr.address2,
+      addr.city,
+      addr.province,
+      addr.country,
+      addr.zip,
+    ]
+      .filter(Boolean)
+      .join(", "),
+    shipping: "Shipping Available",
+    isDefault: addr.isDefault || false,
+  }));
 
   // Find the default address index
   const defaultAddressIndex = addressData.findIndex((addr) => addr.isDefault);
@@ -155,7 +151,7 @@ const HomeScreen = () => {
   };
 
   const handleEditAddress = (index: number) => {
-    const addressToEdit = addressesResponse?.data?.addresses?.[index];
+    const addressToEdit = rawAddresses[index];
     if (addressToEdit) {
       // First close the bottom sheet
       bottomSheetModalRef.current?.close();
@@ -174,7 +170,7 @@ const HomeScreen = () => {
           pathname: "/addAddress",
           params: {
             editData: JSON.stringify(addressToEdit),
-            editIndex: index.toString(),
+            editAddressId: addressToEdit._id || String(index),
           },
         });
       }, 200);
@@ -183,8 +179,12 @@ const HomeScreen = () => {
 
   const handleApply = () => {
     if (selectedAddress !== null) {
-      // Call API to set default address
-      setDefaultAddressMutation({ index: selectedAddress });
+      // Call API to set default address using MongoDB _id
+      const selectedAddr = rawAddresses[selectedAddress];
+      const addressId = selectedAddr?._id;
+      if (addressId) {
+        setDefaultAddressMutation({ addressId });
+      }
     }
     setOpen(false);
     setIsEditMode(false); // Reset edit mode
@@ -308,7 +308,6 @@ const HomeScreen = () => {
         onAddressPress={() => {
           // Refetch addresses when opening bottomsheet
           refetchAddresses();
-          refetchDefaultAddress();
           bottomSheetModalRef.current?.present();
           setOpen(true);
           Animated.timing(rotateAnim, {
@@ -391,17 +390,43 @@ const HomeScreen = () => {
                 : "Select a delivery location to see product availability and delivery options."}
             </ParagraphMD>
             <Spacer size={"$md"} />
-            <XStack alignItems="center" justifyContent="flex-end">
-              <OpTouch
-                onPress={() => {
-                  setIsEditMode(!isEditMode);
-                }}
+            {addressData.length > 0 ? (
+              <XStack alignItems="center" justifyContent="flex-end">
+                <OpTouch
+                  onPress={() => {
+                    setIsEditMode(!isEditMode);
+                  }}
+                >
+                  <TextSMSemiBold color="$primary">
+                    {isEditMode ? "Done" : "Edit"}
+                  </TextSMSemiBold>
+                </OpTouch>
+              </XStack>
+            ) : (
+              <YStack
+                alignItems="center"
+                justifyContent="center"
+                paddingVertical="$xl"
               >
-                <TextSMSemiBold color="$primary">
-                  {isEditMode ? "Done" : "Edit"}
-                </TextSMSemiBold>
-              </OpTouch>
-            </XStack>
+                <AppImage
+                  name="locationUnfilled"
+                  width={48}
+                  height={48}
+                  tintColor={getTokenValue("$lightgrey")}
+                />
+                <Spacer size={"$lg"} />
+                <TextLGBold color="$secondary">Address Not Found</TextLGBold>
+                <Spacer size={"$sm"} />
+                <ParagraphMD
+                  color="$textgrey"
+                  textAlign="center"
+                  paddingHorizontal="$lg"
+                >
+                  You haven't added any delivery address yet. Add your first
+                  address to continue.
+                </ParagraphMD>
+              </YStack>
+            )}
             <Spacer size={"$md"} />
           </YStack>
         }
@@ -409,7 +434,7 @@ const HomeScreen = () => {
         enableDynamicSizing={false}
         showFooter={!isEditMode}
         showBackdrop={true}
-        onPrimaryPress={handleApply}
+        onPrimaryPress={addressData.length > 0 ? handleApply : undefined}
         onSecondaryPress={handleAddNewAddress}
         primaryButtonLabel="Apply"
         secondaryButtonLabel="Add New Address"

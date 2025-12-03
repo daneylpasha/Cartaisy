@@ -1,25 +1,39 @@
 import { AppImage } from "@/components/atoms/AppImage";
 import useAuthStore from "@/store/useAuthStore";
 import { router } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { YStack } from "tamagui";
 
 const SPLASH_DURATION = 3000;
 
 const Splash = () => {
-  const token = useAuthStore((state) => state.token);
+  const hasNavigated = useRef(false);
 
   useEffect(() => {
+    // Only navigate once on initial mount
+    if (hasNavigated.current) return;
+
     const timer = setTimeout(() => {
-      if (token) {
+      if (hasNavigated.current) return;
+      hasNavigated.current = true;
+
+      // Get current state at navigation time (not stale closure values)
+      const { token, isProfileComplete } = useAuthStore.getState();
+
+      if (token && isProfileComplete) {
+        // User is logged in and profile is complete
         router.replace("/(tabs)");
+      } else if (token && !isProfileComplete) {
+        // User is logged in but profile is incomplete - continue signup flow
+        router.replace("/fullName");
       } else {
-        router.push("/onboardingSlides");
+        // User is not logged in
+        router.replace("/onboardingSlides");
       }
     }, SPLASH_DURATION);
 
     return () => clearTimeout(timer);
-  }, [token]);
+  }, []); // Empty dependency - only run once on mount
 
   return (
     <YStack

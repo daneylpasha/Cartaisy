@@ -11,6 +11,7 @@ import { DangerZoneListItem } from "@/components/organisms/profile/DangerZoneLis
 import { GeneralListItems } from "@/components/organisms/profile/GeneralListItems";
 
 import { useGetProfile } from "@/api/generated/authentication/authentication";
+import { useGetAddresses } from "@/api/generated/addresses/addresses";
 import { PaymentListItem } from "@/components/organisms/profile/PaymentListItems";
 import { SecurityListItem } from "@/components/organisms/profile/SecurityListItems";
 import { WishlistCarousel } from "@/components/organisms/profile/WishListCarousel";
@@ -32,6 +33,9 @@ const ProfileScreen = () => {
   // Get user profile data
   const { data: profileApiData, isLoading: isLoadingProfile } = useGetProfile();
   const user = profileApiData?.data?.user;
+
+  // Get addresses to find default address
+  const { data: addressesData } = useGetAddresses();
 
   // Check for success message from profile update
   useFocusEffect(
@@ -59,8 +63,28 @@ const ProfileScreen = () => {
   const userName =
     (user as any)?.fullName || user?.email?.split("@")[0] || "Guest User";
 
-  // Use defaultAddress field directly from API
-  const defaultAddr = (user as any)?.defaultAddress;
+  // Use defaultAddress from profile, or find the default address from addresses list
+  const defaultAddr = React.useMemo(() => {
+    // First check if profile has defaultAddress
+    const profileDefault = (user as any)?.defaultAddress;
+    if (profileDefault && Object.keys(profileDefault).length > 0) {
+      return profileDefault;
+    }
+
+    // Fallback: find address with isDefault: true from addresses list
+    // Backend returns array directly or in .addresses property
+    const addresses = Array.isArray(addressesData?.data)
+      ? addressesData.data
+      : (addressesData?.data?.addresses || []);
+    const defaultFromList = addresses.find((addr: any) => addr.isDefault === true);
+    if (defaultFromList) {
+      return defaultFromList;
+    }
+
+    // If no default found, use the first address
+    return addresses.length > 0 ? addresses[0] : null;
+  }, [user, addressesData]);
+
   const location = defaultAddr
     ? `${defaultAddr.city || ""}, ${defaultAddr.province || ""} ${
         defaultAddr.zip || ""

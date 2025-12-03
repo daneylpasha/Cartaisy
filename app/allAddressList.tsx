@@ -23,7 +23,7 @@ import { getTokenValue, XStack, YStack } from "tamagui";
 
 type AddressDataItem = {
   id: number;
-  addressId?: string; // Real API address ID
+  addressId: string; // Real API address ID
   name: string;
   address: string;
   shipping: string;
@@ -45,7 +45,7 @@ const SelectAddressScreen = () => {
     useGetAddresses();
 
   // Mutation to set default address
-  const { mutate: setDefaultAddress, isPending: isSettingDefault } =
+  const { mutate: setDefaultAddressMutation, isPending: isSettingDefault } =
     useSetDefaultAddress({
       mutation: {
         onSuccess: () => {
@@ -69,11 +69,14 @@ const SelectAddressScreen = () => {
   );
   console.log(
     "[AllAddressList] RAW API RESPONSE:",
-    JSON.stringify(addressesResponse?.data.addresses, null, 2)
+    JSON.stringify(addressesResponse?.data, null, 2)
   );
 
   // Store raw addresses to get real IDs
-  const rawAddresses = addressesResponse?.data?.addresses || [];
+  // Backend returns data as array directly, not { addresses: [...] }
+  const rawAddresses = Array.isArray(addressesResponse?.data)
+    ? addressesResponse.data
+    : (addressesResponse?.data?.addresses || []);
 
   const addressData: AddressDataItem[] = rawAddresses.map((addr, index) => {
     console.log(
@@ -82,7 +85,7 @@ const SelectAddressScreen = () => {
     );
     return {
       id: index,
-      addressId: String(index), // Use array index as the address identifier
+      addressId: addr._id || String(index), // Use MongoDB _id for API operations
       name: addr.label || "Address",
       address: [
         addr.address1,
@@ -118,21 +121,25 @@ const SelectAddressScreen = () => {
     }
   }, [currentSelectedId, addressData.length, rawAddresses]);
 
-  const handleAddressSelect = (addressId: number) => {
-    setSelectedAddress(addressId);
+  const handleAddressSelect = (addressIndex: number) => {
+    setSelectedAddress(addressIndex);
 
     // Check if we're coming from profile (not from checkout or personalInfo form)
     const returnTo = params.returnTo as string;
     const sessionId = params.sessionId as string;
     const isFromProfile = !returnTo && !sessionId;
 
-    // If from profile, automatically set as default address using array index
+    // If from profile, automatically set as default address using MongoDB _id
     if (isFromProfile) {
-      console.log(
-        "[AllAddressList] Setting default address from profile, index:",
-        addressId
-      );
-      setDefaultAddress({ index: addressId });
+      const selectedAddr = rawAddresses[addressIndex];
+      const addressId = selectedAddr?._id;
+      if (addressId) {
+        console.log(
+          "[AllAddressList] Setting default address from profile, addressId:",
+          addressId
+        );
+        setDefaultAddressMutation({ addressId });
+      }
     }
   };
 
@@ -290,7 +297,7 @@ const SelectAddressScreen = () => {
                             pathname: "/addAddress",
                             params: {
                               editData: JSON.stringify(fullAddress),
-                              editIndex: item.id.toString(),
+                              editAddressId: item.addressId,
                             },
                           });
                         }

@@ -40,9 +40,9 @@ const Fullname = () => {
     if (token) {
       setIsLoading(true);
       try {
-        // API expects field and value structure
+        // API expects 'name' field (not fullName)
         const completeProfileData = {
-          fullName: data.fullname.trim(),
+          name: data.fullname.trim(),
         };
 
         const response = await authApi.completeProfile(
@@ -64,7 +64,7 @@ const Fullname = () => {
           console.log(
             "Profile updated successfully with fullName - Navigating to phoneNumber"
           );
-          router.push("/phoneNumber");
+          router.replace("/phoneNumber");
         } else {
           console.error("Failed to update profile:", response.message);
         }

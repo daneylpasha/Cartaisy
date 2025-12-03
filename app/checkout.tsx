@@ -132,9 +132,15 @@ const CheckoutScreen = () => {
           const transformedOrderDetails = {
             orderNumber: orderData.orderNumber || "N/A",
             email:
-              orderData.email || checkoutSummary?.shippingAddress?.email || "",
+              orderData.email ||
+              checkoutSummary?.email ||
+              checkoutSummary?.shippingAddress?.email ||
+              "",
             phone:
-              orderData.phone || checkoutSummary?.shippingAddress?.phone || "",
+              orderData.phone ||
+              checkoutSummary?.contactNumber ||
+              checkoutSummary?.shippingAddress?.phone ||
+              "",
             shippingAddress:
               orderData.shippingAddress ||
               checkoutSummary?.shippingAddress ||

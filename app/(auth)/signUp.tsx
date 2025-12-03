@@ -48,7 +48,8 @@ const SignUp = () => {
         setUser(data.data.user);
       }
 
-      router.push("/fullName");
+      // Use replace to prevent double navigation from splash screen
+      router.replace("/fullName");
     },
     onError: (error) => {
       console.log("❌ Sign Up Failed! Full Error:", error);

@@ -33,8 +33,19 @@ import CountryPicker, {
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
-import { useAddAddress, getGetAddressesQueryKey, useGetAddresses, useSetDefaultAddress, useUpdateAddress, useDeleteAddress } from "@/api/generated/addresses/addresses";
-import { AddAddressBody, UpdateAddressBody, IAddress } from "@/api/generated/cartaisyAPI.schemas";
+import {
+  useAddAddress,
+  getGetAddressesQueryKey,
+  useGetAddresses,
+  useSetDefaultAddress,
+  useUpdateAddress,
+  useDeleteAddress,
+} from "@/api/generated/addresses/addresses";
+import type {
+  IAddress,
+  AddAddressBody,
+  UpdateAddressBody
+} from "@/api/generated/cartaisyAPI.schemas";
 import { useQueryClient } from "@tanstack/react-query";
 import useUserStore from "@/store/useUserStore";
 
@@ -44,10 +55,13 @@ const AddAddress = () => {
     return params.editData ? JSON.parse(params.editData as string) as IAddress : null;
   }, [params.editData]);
 
-  const editIndex = params.editIndex ? Number(params.editIndex) : null;
-  const isEditMode = !!editData && editIndex !== null;
+  const editAddressId = params.editAddressId as string | undefined;
+  const isEditMode = !!editData && !!editAddressId;
 
-  console.log("[AddAddress] Edit mode:", isEditMode, "Edit data:", editData);
+  console.log("[AddAddress] Edit mode:", isEditMode);
+  console.log("[AddAddress] Edit data:", editData);
+  console.log("[AddAddress] Edit addressId from params:", editAddressId);
+  console.log("[AddAddress] All params:", params);
 
   const defaultValues = useMemo(() => ({
     addressName: editData?.label || "",
@@ -88,19 +102,18 @@ const AddAddress = () => {
   });
 
   // Add address mutation
-  const { mutate: addAddress, isPending: isAddPending } = useAddAddress({
+  const { mutate: addAddressMutation, isPending: isAddPending } = useAddAddress({
     mutation: {
       onSuccess: (response) => {
         console.log("[AddAddress] Address added successfully:", response);
 
-        const addedIndex = response?.data?.index;
         const existingAddresses = addressesResponse?.data?.addresses || [];
         const isFirstAddress = existingAddresses.length === 0;
 
         // If this is the first address, set it as default via API
-        if (isFirstAddress && addedIndex !== undefined) {
+        if (isFirstAddress && response?.data?.address?._id) {
           console.log("[AddAddress] This is the first address, setting as default...");
-          setDefaultAddressAPI({ index: addedIndex });
+          setDefaultAddressAPI({ addressId: response.data.address._id });
         } else if (response?.data?.address?.isDefault) {
           // If the API already marked it as default, update the store
           setDefaultAddress(response.data.address);
@@ -118,7 +131,7 @@ const AddAddress = () => {
   });
 
   // Update address mutation
-  const { mutate: updateAddress, isPending: isUpdatePending } = useUpdateAddress({
+  const { mutate: updateAddressMutation, isPending: isUpdatePending } = useUpdateAddress({
     mutation: {
       onSuccess: (response) => {
         console.log("[AddAddress] Address updated successfully:", response);
@@ -135,7 +148,7 @@ const AddAddress = () => {
   });
 
   // Delete address mutation
-  const { mutate: deleteAddress, isPending: isDeletePending } = useDeleteAddress({
+  const { mutate: deleteAddressMutation, isPending: isDeletePending } = useDeleteAddress({
     mutation: {
       onSuccess: (response) => {
         console.log("[AddAddress] Address deleted successfully:", response);
@@ -144,8 +157,11 @@ const AddAddress = () => {
         queryClient.invalidateQueries({ queryKey: getGetAddressesQueryKey() });
         router.back();
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error("[AddAddress] Failed to delete address:", error);
+        console.error("[AddAddress] Delete error response:", error?.response?.data);
+        console.error("[AddAddress] Delete error status:", error?.response?.status);
+        console.error("[AddAddress] Delete request URL:", error?.config?.url);
         // You can show a toast/alert here
       },
     },
@@ -156,7 +172,7 @@ const AddAddress = () => {
   const onSubmit = (data: any) => {
     console.log("[AddAddress] Form submitted with data:", data);
 
-    if (isEditMode) {
+    if (isEditMode && editAddressId) {
       // Update existing address
       const updateData: UpdateAddressBody = {
         label: data.addressName,
@@ -172,10 +188,12 @@ const AddAddress = () => {
       };
 
       console.log("[AddAddress] Updating address with data:", updateData);
-      updateAddress({ index: editIndex!, data: updateData });
+      updateAddressMutation({ addressId: editAddressId, data: updateData });
     } else {
-      // Add new address
-      const existingAddresses = addressesResponse?.data?.addresses || [];
+      // Add new address - backend returns data as array directly
+      const existingAddresses = Array.isArray(addressesResponse?.data)
+        ? addressesResponse.data
+        : (addressesResponse?.data?.addresses || []);
       const isFirstAddress = existingAddresses.length === 0;
 
       const addressData: AddAddressBody = {
@@ -193,14 +211,21 @@ const AddAddress = () => {
       };
 
       console.log("[AddAddress] Adding new address with data:", addressData);
-      addAddress({ data: addressData });
+      addAddressMutation({ data: addressData });
     }
   };
 
   const handleDelete = () => {
-    if (!isEditMode || editIndex === null) return;
+    console.log("[AddAddress] handleDelete called - editAddressId:", editAddressId, "isEditMode:", isEditMode);
+    if (!isEditMode || !editAddressId) {
+      console.log("[AddAddress] handleDelete returning early - missing editAddressId or not in edit mode");
+      return;
+    }
 
-    const addresses = addressesResponse?.data?.addresses || [];
+    // Backend returns data as array directly, not { addresses: [...] }
+    const addresses = Array.isArray(addressesResponse?.data)
+      ? addressesResponse.data
+      : (addressesResponse?.data?.addresses || []);
 
     // Check if this is the last address
     if (addresses.length === 1) {
@@ -208,22 +233,28 @@ const AddAddress = () => {
       return;
     }
 
-    const addressToDelete = addresses[editIndex];
+    // Find the address being deleted by _id
+    const addressIndex = addresses.findIndex((addr: any) => addr._id === editAddressId);
+    const addressToDelete = addresses[addressIndex];
 
     // If deleting the default address, set the next one as default
     if (addressToDelete?.isDefault && addresses.length > 1) {
-      // Find the next address index (prefer the one below, otherwise above)
-      const nextIndex = editIndex < addresses.length - 1 ? editIndex + 1 : editIndex - 1;
+      // Find the next address (prefer the one after, otherwise before)
+      const nextIndex = addressIndex < addresses.length - 1 ? addressIndex + 1 : addressIndex - 1;
+      const nextAddress = addresses[nextIndex];
 
-      console.log("[AddAddress] Deleting default address, setting next address as default:", nextIndex);
-
-      // First set the new default, then delete
-      setDefaultAddressAPI({ index: nextIndex });
+      if (nextAddress?._id) {
+        console.log("[AddAddress] Deleting default address, setting next address as default:", nextAddress._id);
+        // First set the new default, then delete
+        setDefaultAddressAPI({ addressId: nextAddress._id });
+      }
     }
 
-    // Delete the address
-    console.log("[AddAddress] Deleting address at index:", editIndex);
-    deleteAddress({ index: editIndex });
+    // Delete the address using MongoDB _id
+    console.log("[AddAddress] Deleting address with id:", editAddressId);
+    console.log("[AddAddress] editAddressId type:", typeof editAddressId);
+    console.log("[AddAddress] Expected DELETE URL: /customer/addresses/" + editAddressId);
+    deleteAddressMutation({ addressId: editAddressId });
   };
 
   const [selectedCountry, setSelectedCountry] = useState<Country>({

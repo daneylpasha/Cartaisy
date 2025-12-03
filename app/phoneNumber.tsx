@@ -30,7 +30,7 @@ type PhoneNumberForm = {
 };
 
 const PhoneNumber = () => {
-  const { token } = useAuthStore();
+  const { token, setProfileComplete } = useAuthStore();
   const { updateUser, setProfileData, updateProfileData } = useUserStore();
   const [selectedCountry, setSelectedCountry] = useState<Country>({
     callingCode: ["44"],
@@ -73,8 +73,9 @@ const PhoneNumber = () => {
       setIsLoading(true);
 
       try {
+        // API expects 'phone' field (not phoneNumber)
         const completeProfileData = {
-          phoneNumber: phoneData.fullPhoneNumber,
+          phone: phoneData.fullPhoneNumber,
         };
         const response = await authApi.completeProfile(
           completeProfileData,
@@ -90,8 +91,10 @@ const PhoneNumber = () => {
             updateUser(response.data.user);
           }
           setProfileData({});
+          // Mark profile as complete so splash screen navigates to home
+          setProfileComplete(true);
           console.log("Profile completed successfully ");
-          router.push("/notification");
+          router.replace("/notification");
         } else {
           console.error("Failed to complete profile:", response.message);
           console.error("API returned success = false, not navigating");

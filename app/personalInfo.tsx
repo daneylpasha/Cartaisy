@@ -31,8 +31,8 @@ import CountryPicker, {
 } from "react-native-country-picker-modal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
-import { useGetProfile, useUpdateProfile } from "@/api/generated/authentication/authentication";
-import { useGetAddresses } from "@/api/generated/addresses/addresses";
+import { useGetProfile, useUpdateProfile, getGetProfileQueryKey } from "@/api/generated/authentication/authentication";
+import { useGetAddresses, getGetAddressesQueryKey } from "@/api/generated/addresses/addresses";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 
@@ -134,9 +134,12 @@ const PersonalInfo = () => {
   useEffect(() => {
     if (pendingAddressId) {
       console.log("Pending address ID:", pendingAddressId);
-      console.log("Available addresses:", addressesData?.data?.addresses);
-      if (addressesData?.data?.addresses) {
-        const found = addressesData.data.addresses.find((addr: any) => addr.id === pendingAddressId);
+      const addresses = Array.isArray(addressesData?.data)
+        ? addressesData.data
+        : (addressesData?.data?.addresses || []);
+      console.log("Available addresses:", addresses);
+      if (addresses.length > 0) {
+        const found = addresses.find((addr: any) => addr.id === pendingAddressId);
         console.log("Found selected address:", found);
       }
     }
@@ -147,9 +150,8 @@ const PersonalInfo = () => {
     mutation: {
       onSuccess: () => {
         // Invalidate all related queries
-        queryClient.invalidateQueries({ queryKey: ['/auth/profile'] });
-        queryClient.invalidateQueries({ queryKey: ['/addresses'] }); // Invalidate addresses list
-        queryClient.invalidateQueries({ queryKey: ['/addresses/default'] }); // Invalidate default address
+        queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetAddressesQueryKey() }); // Invalidate addresses list
         console.log("[PersonalInfo] Invalidated all address-related caches");
         // Don't show alert here - will show on profile screen after navigation
       },
@@ -236,14 +238,22 @@ const PersonalInfo = () => {
     console.log("[PersonalInfo] Saving profile with data:", formData);
     console.log("[PersonalInfo] Pending address ID:", pendingAddressId);
 
-    // Prepare the update data
+    // Prepare the update data - only include fields with values
     const updateData: any = {
       name: formData.fullname,
       phone: formData.phone,
-      gender: formData.gender || "",
-      dateOfBirth: formData.dob || "",
       country: selectedCountry.cca2 || "",
     };
+
+    // Only include gender if set (backend rejects empty string)
+    if (formData.gender) {
+      updateData.gender = formData.gender;
+    }
+
+    // Only include dateOfBirth if set (backend rejects empty string)
+    if (formData.dob) {
+      updateData.dateOfBirth = formData.dob;
+    }
 
     // If there's a pending address, include it in the profile update
     // The backend expects addressIndex (the index of address in the addresses array)
@@ -470,6 +480,7 @@ const PersonalInfo = () => {
                 >
                   <FormInput
                     value={display}
+                    onChangeText={() => {}}
                     editable={false}
                     placeholder={"DD / MM / YYYY"}
                     width={"90%"}
@@ -676,21 +687,56 @@ const PersonalInfo = () => {
                     if (pendingAddressText) {
                       return pendingAddressText;
                     }
-                    // Otherwise show default address
-                    const defaultAddr = (user as any)?.defaultAddress;
-                    if (defaultAddr) {
-                      // Format address same way as address list screen
+
+                    // First check profile's defaultAddress
+                    const profileDefault = (user as any)?.defaultAddress;
+                    if (profileDefault && Object.keys(profileDefault).length > 0) {
                       return [
-                        defaultAddr.address1,
-                        defaultAddr.address2,
-                        defaultAddr.city,
-                        defaultAddr.province,
-                        defaultAddr.country,
-                        defaultAddr.zip,
+                        profileDefault.address1,
+                        profileDefault.address2,
+                        profileDefault.city,
+                        profileDefault.province,
+                        profileDefault.country,
+                        profileDefault.zip,
                       ]
                         .filter(Boolean)
                         .join(", ");
                     }
+
+                    // Fallback: find address with isDefault: true from addresses list
+                    // Backend returns array directly or in .addresses property
+                    const addresses = Array.isArray(addressesData?.data)
+                      ? addressesData.data
+                      : (addressesData?.data?.addresses || []);
+                    const defaultFromList = addresses.find((addr: any) => addr.isDefault === true);
+                    if (defaultFromList) {
+                      return [
+                        defaultFromList.address1,
+                        defaultFromList.address2,
+                        defaultFromList.city,
+                        defaultFromList.province,
+                        defaultFromList.country,
+                        defaultFromList.zip,
+                      ]
+                        .filter(Boolean)
+                        .join(", ");
+                    }
+
+                    // If no default found, use the first address
+                    if (addresses.length > 0) {
+                      const firstAddr = addresses[0];
+                      return [
+                        firstAddr.address1,
+                        firstAddr.address2,
+                        firstAddr.city,
+                        firstAddr.province,
+                        firstAddr.country,
+                        firstAddr.zip,
+                      ]
+                        .filter(Boolean)
+                        .join(", ");
+                    }
+
                     return "No address added. Tap to add an address.";
                   })()}
                 </ParagraphMD>

@@ -60,7 +60,7 @@ export const register = (
       
       
       return customInstance<RegisterResponse>(
-      {url: `/auth/register`, method: 'POST',
+      {url: `/customer/auth/register`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: registerRequest, signal
     },
@@ -125,7 +125,7 @@ export const login = (
       
       
       return customInstance<LoginResponse>(
-      {url: `/auth/login`, method: 'POST',
+      {url: `/customer/auth/login`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: loginRequest, signal
     },
@@ -190,7 +190,7 @@ export const forgotPassword = (
       
       
       return customInstance<ForgotPasswordResponse>(
-      {url: `/auth/forgot-password`, method: 'POST',
+      {url: `/customer/auth/forgot-password`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: forgotPasswordRequest, signal
     },
@@ -255,7 +255,7 @@ export const resetPassword = (
       
       
       return customInstance<ResetPasswordResponse>(
-      {url: `/auth/reset-password`, method: 'POST',
+      {url: `/customer/auth/reset-password`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: resetPasswordRequest, signal
     },
@@ -320,7 +320,7 @@ export const getProfile = (
       
       
       return customInstance<GetProfileResponse>(
-      {url: `/auth/profile`, method: 'GET', signal
+      {url: `/customer/auth/profile`, method: 'GET', signal
     },
       options);
     }
@@ -330,7 +330,7 @@ export const getProfile = (
 
 export const getGetProfileQueryKey = () => {
     return [
-    `/auth/profile`
+    `/customer/auth/profile`
     ] as const;
     }
 
@@ -411,7 +411,7 @@ export const updateProfile = (
       
       
       return customInstance<UpdateProfileResponse>(
-      {url: `/auth/profile`, method: 'PATCH',
+      {url: `/customer/auth/profile`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateProfileRequest
     },
@@ -476,7 +476,7 @@ export const changePassword = (
       
       
       return customInstance<ChangePasswordResponse>(
-      {url: `/auth/change-password`, method: 'POST',
+      {url: `/customer/auth/change-password`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: changePasswordRequest, signal
     },
@@ -540,7 +540,7 @@ export const deleteAccount = (
       
       
       return customInstance<DeleteAccountResponse>(
-      {url: `/auth/account`, method: 'DELETE',
+      {url: `/customer/auth/account`, method: 'DELETE',
       headers: {'Content-Type': 'application/json', },
       data: deleteAccountRequest
     },

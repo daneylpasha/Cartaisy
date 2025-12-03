@@ -63,7 +63,7 @@ const Notification = () => {
         {
           text: "Cancel",
           style: "cancel",
-          onPress: () => router.push("/(tabs)"),
+          onPress: () => router.replace("/(tabs)"),
         },
         {
           text: "Open Settings",
@@ -73,7 +73,7 @@ const Notification = () => {
             } else {
               Linking.openSettings();
             }
-            router.push("/(tabs)");
+            router.replace("/(tabs)");
           },
         },
       ]
@@ -100,17 +100,17 @@ const Notification = () => {
         // Permission granted - hit the API
         await updatePushNotificationStatus(true);
         // Navigate to tabs after permission granted
-        router.push("/(tabs)");
+        router.replace("/(tabs)");
       } else if (status === "denied") {
         // Permission denied - show alert to open settings
         openSettings();
       } else {
         // Permission undetermined or other status
-        router.push("/(tabs)");
+        router.replace("/(tabs)");
       }
     } catch (error) {
       console.error("Error requesting notification permission:", error);
-      router.push("/(tabs)");
+      router.replace("/(tabs)");
     } finally {
       setIsLoading(false);
     }
@@ -176,7 +176,7 @@ const Notification = () => {
           isLoading={isLoading}
         />
         <Spacer size={"$lg"} />
-        <OpTouch onPress={() => router.push("/(tabs)")}>
+        <OpTouch onPress={() => router.replace("/(tabs)")}>
           <TextMDSemiBold textAlign="center" color={"$primary"}>
             {t("common.nopeMaybeLater")}
           </TextMDSemiBold>

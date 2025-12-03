@@ -122,8 +122,13 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
       }
     }, [shippingRatesResponse]);
 
-    const addressData = (addressesResponse?.data?.addresses || []).map(
-      (addr, index) => ({
+    // Backend returns data as array directly, not { addresses: [...] }
+    const rawAddresses = Array.isArray(addressesResponse?.data)
+      ? addressesResponse.data
+      : (addressesResponse?.data?.addresses || []);
+
+    const addressData = rawAddresses.map(
+      (addr: any, index: number) => ({
         id: index, // Using index as ID since IAddress doesn't have id field
         name: addr.label || "Address",
         address: [
