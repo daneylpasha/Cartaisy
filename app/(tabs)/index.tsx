@@ -27,7 +27,7 @@ import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScrol
 import useUserStore from "@/store/useUserStore";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
@@ -37,6 +37,43 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
+
+// Layout type from API to data key mapping
+type LayoutType =
+  | "carousel"
+  | "promo_banners"
+  | "callout_banners"
+  | "category_grid"
+  | "collection_displays"
+  | "collection_showcases"
+  | "category_collection_grid";
+
+type LayoutItem = {
+  type: LayoutType;
+  position: number;
+  isVisible: boolean;
+};
+
+const typeToDataKey: Record<LayoutType, string> = {
+  carousel: "carousel",
+  promo_banners: "promoBanners",
+  callout_banners: "calloutBanners",
+  category_grid: "categoryGrid",
+  collection_displays: "collectionDisplays",
+  collection_showcases: "collectionShowcases",
+  category_collection_grid: "categoryCollectionGrid",
+};
+
+// Type for collection display items from API
+type CollectionDisplayItem = {
+  type: "large_row" | "small_grid" | "medium_row";
+  order: number;
+  collection: {
+    id: string;
+    title: string;
+    products: any[];
+  };
+};
 
 const HomeScreen = () => {
   const { top: TOP_INSET, bottom: BOTTOM_INSET } = useSafeAreaInsets();
@@ -207,88 +244,121 @@ const HomeScreen = () => {
     }
   }, [defaultAddressIndex]);
 
-  const sections = [
-    {
-      id: "featuredPromotionsCarousel",
-      content: (
-        <FeaturedPromotionsCarousel carousels={homescreenData?.carousel} />
-      ),
-    },
-    {
-      id: "collections",
-      content: <CollectionsGrid itemData={homescreenData?.categoryGrid} />,
-    },
+  // Render component based on layout type
+  const renderComponentForType = (type: LayoutType): React.ReactNode => {
+    switch (type) {
+      case "carousel":
+        return <FeaturedPromotionsCarousel carousels={homescreenData?.carousel} />;
+      case "promo_banners":
+        return <PromoBannerCard promoBanners={homescreenData?.promoBanners} />;
+      case "callout_banners":
+        return <CalloutBanners calloutBanners={homescreenData?.calloutBanners} />;
+      case "category_grid":
+        return <CollectionsGrid itemData={homescreenData?.categoryGrid} />;
+      case "collection_displays":
+        // Render collections in the order they appear in the API response (sorted by order field)
+        return (
+          <>
+            {(homescreenData?.collectionDisplays as CollectionDisplayItem[] | undefined)?.map(
+              (collection: CollectionDisplayItem, index: number) => {
+                if (collection.type === "large_row") {
+                  return (
+                    <ProductsHorizontalScroller
+                      key={`collection-${collection.order ?? index}`}
+                      collections={[collection]}
+                    />
+                  );
+                }
+                if (collection.type === "small_grid") {
+                  return (
+                    <ProductsGridScroller
+                      key={`collection-${collection.order ?? index}`}
+                      collection={[collection]}
+                    />
+                  );
+                }
+                if (collection.type === "medium_row") {
+                  return (
+                    <SalesHorizontalScroller
+                      key={`collection-${collection.order ?? index}`}
+                      collection={[collection]}
+                    />
+                  );
+                }
+                return null;
+              }
+            )}
+          </>
+        );
+      case "collection_showcases":
+        return (
+          <>
+            <CollectionsCardGrid collectionShowcases={homescreenData?.collectionShowcases} />
+            <BrandsCollections brandsCollections={homescreenData?.collectionShowcases} />
+          </>
+        );
+      case "category_collection_grid":
+        return <CategorySuggestions categoryCollectionGrid={homescreenData?.categoryCollectionGrid} />;
+      default:
+        return null;
+    }
+  };
 
-    {
-      id: "calloutBanners",
-      content: (
-        <CalloutBanners calloutBanners={homescreenData?.calloutBanners} />
-      ),
-    },
-    {
-      id: "productsHorizontalScroller",
-      content: (
-        <ProductsHorizontalScroller
-          collections={homescreenData?.collectionDisplays}
-        />
-      ),
-    },
-    {
-      id: "categories",
-      content: (
-        <CategorySuggestions
-          categoryCollectionGrid={homescreenData?.categoryCollectionGrid}
-        />
-      ),
-    },
+  // Check if data exists and has items for a given layout type
+  const hasDataForType = (type: LayoutType): boolean => {
+    const dataKey = typeToDataKey[type];
+    const data = homescreenData?.[dataKey as keyof typeof homescreenData];
+    return Array.isArray(data) && data.length > 0;
+  };
 
-    {
-      id: "productsGridScroller",
-      content: (
-        <ProductsGridScroller collection={homescreenData?.collectionDisplays} />
-      ),
-    },
-    {
-      id: "promoBanner",
-      content: <PromoBannerCard promoBanners={homescreenData?.promoBanners} />,
-    },
-    {
-      id: "collectionsCardGrid",
-      content: (
-        <CollectionsCardGrid
-          collectionShowcases={homescreenData?.collectionShowcases}
-        />
-      ),
-    },
-    {
-      id: "brands",
-      content: (
-        <BrandsCollections
-          brandsCollections={homescreenData?.collectionShowcases}
-        />
-      ),
-    },
-    {
-      id: "SalesHorizontalScroller",
-      content: (
-        <SalesHorizontalScroller
-          collection={homescreenData?.collectionDisplays}
-        />
-      ),
-    },
-  ];
+  // Build sections dynamically from layout array
+  const sections = useMemo(() => {
+    const layout = homescreenData?.layout as LayoutItem[] | undefined;
+
+    // If no layout from API, use default order (fallback)
+    if (!layout || layout.length === 0) {
+      const defaultLayout: LayoutItem[] = [
+        { type: "carousel", position: 0, isVisible: true },
+        { type: "category_grid", position: 1, isVisible: true },
+        { type: "callout_banners", position: 2, isVisible: true },
+        { type: "collection_displays", position: 3, isVisible: true },
+        { type: "category_collection_grid", position: 4, isVisible: true },
+        { type: "promo_banners", position: 5, isVisible: true },
+        { type: "collection_showcases", position: 6, isVisible: true },
+      ];
+
+      return defaultLayout
+        .filter((item) => item.isVisible && hasDataForType(item.type))
+        .map((item) => ({
+          id: item.type,
+          content: renderComponentForType(item.type),
+        }));
+    }
+
+    // Filter visible sections with data (layout is already sorted by position)
+    return layout
+      .filter((item) => item.isVisible && hasDataForType(item.type))
+      .map((item) => ({
+        id: `${item.type}_${item.position}`,
+        content: renderComponentForType(item.type),
+      }));
+  }, [homescreenData]);
 
   const renderItem = ({
     item,
+    index,
   }: {
     item: { id: string; content: React.ReactNode };
+    index: number;
   }) => {
-    const spacerSize = item.id === "featuredPromotions" ? "$xs" : "$xl";
+    // First item needs top spacing to separate from header
+    const isFirstItem = index === 0;
 
     return (
       <YStack>
+        {isFirstItem && <Spacer size="$md" />}
         {item.content}
-        <Spacer size={spacerSize} />
+        <Spacer size="$lg" />
       </YStack>
     );
   };

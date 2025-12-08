@@ -41,13 +41,18 @@ const GRID_CARD_WIDTH =
     GRID_COLUMN_GAP * (GRID_NUM_COLUMNS - 1)) /
   GRID_NUM_COLUMNS;
 
-const INLINE_CARD_WIDTH = 240;
+const INLINE_CARD_WIDTH = 200;
+
+// Sales card width - shows ~2.5 cards with left padding
+// Formula: (screenWidth - leftPadding) / 2.5 - gap adjustment
+const SALES_CARD_WIDTH =
+  (SCREEN_WIDTH - GRID_SIDE_PADDING) / 2.5 - GRID_COLUMN_GAP / 2;
 
 type ProductCardProps = {
   product: Product;
   isFavorite?: boolean;
   showFavoriteIcon?: boolean;
-  context: "grid" | "in-line";
+  context: "grid" | "in-line" | "sales";
   showProgressBar?: boolean;
   onPress?: () => void;
 };
@@ -65,8 +70,14 @@ export const ProductCard = ({
     return null;
   }
 
-  const imageHeight = context === "grid" ? 163.5 : 240;
-  const cardWidth = context === "grid" ? GRID_CARD_WIDTH : INLINE_CARD_WIDTH;
+  const imageHeight =
+    context === "grid" ? 163.5 : context === "sales" ? 140 : 200;
+  const cardWidth =
+    context === "grid"
+      ? GRID_CARD_WIDTH
+      : context === "sales"
+      ? SALES_CARD_WIDTH
+      : INLINE_CARD_WIDTH;
 
   // Use Zustand store for favorites
   const addFavoriteToStore = useFavoritesStore((state) => state.addFavorite);
@@ -341,7 +352,8 @@ export const ProductCard = ({
             product.price &&
             product.price !== product.compareAtPrice ? (
               <TextSMRegular color="$icon" textDecorationLine="line-through">
-                US${product.compareAtPrice
+                US$
+                {product.compareAtPrice
                   ? Number(product.compareAtPrice).toFixed(2)
                   : "0.00"}
               </TextSMRegular>
@@ -389,7 +401,12 @@ export const ProductCard = ({
     </OpTouch>
   );
 };
-export { GRID_CARD_WIDTH, GRID_COLUMN_GAP, GRID_SIDE_PADDING };
+export {
+  GRID_CARD_WIDTH,
+  GRID_COLUMN_GAP,
+  GRID_SIDE_PADDING,
+  SALES_CARD_WIDTH,
+};
 
 const styles = StyleSheet.create({
   blurView: {

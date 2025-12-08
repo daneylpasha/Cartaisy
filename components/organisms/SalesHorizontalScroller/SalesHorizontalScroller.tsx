@@ -57,7 +57,7 @@ const SalesHorizontalScroller = ({
         renderItem={({ item: product }) => (
           <ProductCard
             product={product}
-            context="grid"
+            context="sales"
             showProgressBar={true}
           />
         )}
