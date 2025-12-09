@@ -16,7 +16,9 @@ const numColumns = 2;
 const ProductsGridScroller = ({
   collection: collections,
 }: ProductsGridScrollerProps) => {
+  // Subscribe to both isFavorite function AND favoriteProductIds to trigger re-render when favorites change
   const isFavorite = useFavoritesStore((state) => state.isFavorite);
+  const favoriteProductIds = useFavoritesStore((state) => state.favoriteProductIds);
   const targetCollection = collections?.find(
     (collectionItem) => collectionItem.type === "small_grid"
   );
@@ -49,6 +51,7 @@ const ProductsGridScroller = ({
           horizontal={false}
           numColumns={numColumns}
           showsHorizontalScrollIndicator={false}
+          extraData={favoriteProductIds}
           columnWrapperStyle={{
             columnGap: GRID_COLUMN_GAP,
           }}

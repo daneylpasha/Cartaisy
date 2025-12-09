@@ -12,6 +12,7 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
+import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useAuthStore from "@/store/useAuthStore";
 import { t } from "@/translations";
 import * as Notifications from "expo-notifications";
@@ -23,6 +24,20 @@ const Notification = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasDeniedBefore, setHasDeniedBefore] = useState(false);
   const { token } = useAuthStore();
+  const { pendingReturnPath, clearPendingReturnPath } = useAuthGuard();
+
+  // Helper function to navigate after signup completion
+  const navigateAfterSignup = () => {
+    if (pendingReturnPath) {
+      clearPendingReturnPath();
+      // Navigate back through the signup flow stack to the original screen
+      // The signup flow is: original screen -> signUp -> fullName -> phoneNumber -> notification
+      // We need to go back 4 screens to reach the original screen
+      router.dismiss(4);
+    } else {
+      router.replace("/(tabs)");
+    }
+  };
 
   useEffect(() => {
     checkIfUserDeniedBefore();
@@ -63,7 +78,7 @@ const Notification = () => {
         {
           text: "Cancel",
           style: "cancel",
-          onPress: () => router.replace("/(tabs)"),
+          onPress: () => navigateAfterSignup(),
         },
         {
           text: "Open Settings",
@@ -73,7 +88,7 @@ const Notification = () => {
             } else {
               Linking.openSettings();
             }
-            router.replace("/(tabs)");
+            navigateAfterSignup();
           },
         },
       ]
@@ -99,18 +114,18 @@ const Notification = () => {
       if (status === "granted") {
         // Permission granted - hit the API
         await updatePushNotificationStatus(true);
-        // Navigate to tabs after permission granted
-        router.replace("/(tabs)");
+        // Navigate after permission granted
+        navigateAfterSignup();
       } else if (status === "denied") {
         // Permission denied - show alert to open settings
         openSettings();
       } else {
         // Permission undetermined or other status
-        router.replace("/(tabs)");
+        navigateAfterSignup();
       }
     } catch (error) {
       console.error("Error requesting notification permission:", error);
-      router.replace("/(tabs)");
+      navigateAfterSignup();
     } finally {
       setIsLoading(false);
     }
@@ -176,7 +191,7 @@ const Notification = () => {
           isLoading={isLoading}
         />
         <Spacer size={"$lg"} />
-        <OpTouch onPress={() => router.replace("/(tabs)")}>
+        <OpTouch onPress={() => navigateAfterSignup()}>
           <TextMDSemiBold textAlign="center" color={"$primary"}>
             {t("common.nopeMaybeLater")}
           </TextMDSemiBold>

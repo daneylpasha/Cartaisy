@@ -1,6 +1,7 @@
 import { queryClient } from "@/api/config/queryClient";
 import { AppInitializer } from "@/components/providers/AppInitializer";
 import { HEADER_CONFIGS } from "@/constants/headers";
+import { AuthGuardProvider } from "@/contexts/AuthGuardContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import config from "@/tamagui.config";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -118,78 +119,80 @@ export default function RootLayout() {
               defaultTheme={colorScheme ?? "light"}
             >
               <BottomSheetModalProvider>
-                <Stack
-                  screenOptions={{ headerShown: false }}
-                  initialRouteName="splash"
-                >
-                  <Stack.Screen name="splash" />
-                  <Stack.Screen name="wellcome" />
-                  <Stack.Screen name="onboardingSlides" />
-                  <Stack.Screen name="(auth)" />
-                  <Stack.Screen name="(tabs)" />
-                  <Stack.Screen name="notification" />
-                  <Stack.Screen name="fullName" />
-                  <Stack.Screen name="phoneNumber" />
-                  <Stack.Screen name="search" />
-                  <Stack.Screen name="cancelOrder" />
-                  <Stack.Screen
-                    name="addAddress"
-                    options={HEADER_CONFIGS.addAddress}
-                  />
-                  <Stack.Screen
-                    name="personalInfo"
-                    options={HEADER_CONFIGS.personalInfo}
-                  />
-                  <Stack.Screen
-                    name="notificationSettings"
-                    options={HEADER_CONFIGS.notificationSettings}
-                  />
-                  <Stack.Screen
-                    name="paymentMethod"
-                    options={HEADER_CONFIGS.paymentMethod}
-                  />
-                  <Stack.Screen
-                    name="securitySettings"
-                    options={HEADER_CONFIGS.securitySettings}
-                  />
-                  <Stack.Screen
-                    name="changePassword"
-                    options={HEADER_CONFIGS.changePassword}
-                  />
-                  <Stack.Screen
-                    name="newPassword"
-                    options={HEADER_CONFIGS.newPassword}
-                  />
-                  <Stack.Screen
-                    name="addNewCardDetails"
-                    options={HEADER_CONFIGS.addNewCardDetails}
-                  />
-                  <Stack.Screen
-                    name="checkout"
-                    options={HEADER_CONFIGS.checkout}
-                  />
-                  <Stack.Screen
-                    name="order-success"
-                    options={{ presentation: "modal", headerShown: false }}
-                  />
-                  <Stack.Screen name="orders" options={HEADER_CONFIGS.orders} />
-                  <Stack.Screen
-                    name="ordersDetails"
-                    options={HEADER_CONFIGS.ordersDetails}
-                  />
-                  <Stack.Screen
-                    name="allAddressList"
-                    options={HEADER_CONFIGS.allAddressList}
-                  />
+                <AuthGuardProvider>
+                  <Stack
+                    screenOptions={{ headerShown: false }}
+                    initialRouteName="splash"
+                  >
+                    <Stack.Screen name="splash" />
+                    <Stack.Screen name="wellcome" />
+                    <Stack.Screen name="onboardingSlides" />
+                    <Stack.Screen name="(auth)" />
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen name="notification" />
+                    <Stack.Screen name="fullName" />
+                    <Stack.Screen name="phoneNumber" />
+                    <Stack.Screen name="search" />
+                    <Stack.Screen name="cancelOrder" />
+                    <Stack.Screen
+                      name="addAddress"
+                      options={HEADER_CONFIGS.addAddress}
+                    />
+                    <Stack.Screen
+                      name="personalInfo"
+                      options={HEADER_CONFIGS.personalInfo}
+                    />
+                    <Stack.Screen
+                      name="notificationSettings"
+                      options={HEADER_CONFIGS.notificationSettings}
+                    />
+                    <Stack.Screen
+                      name="paymentMethod"
+                      options={HEADER_CONFIGS.paymentMethod}
+                    />
+                    <Stack.Screen
+                      name="securitySettings"
+                      options={HEADER_CONFIGS.securitySettings}
+                    />
+                    <Stack.Screen
+                      name="changePassword"
+                      options={HEADER_CONFIGS.changePassword}
+                    />
+                    <Stack.Screen
+                      name="newPassword"
+                      options={HEADER_CONFIGS.newPassword}
+                    />
+                    <Stack.Screen
+                      name="addNewCardDetails"
+                      options={HEADER_CONFIGS.addNewCardDetails}
+                    />
+                    <Stack.Screen
+                      name="checkout"
+                      options={HEADER_CONFIGS.checkout}
+                    />
+                    <Stack.Screen
+                      name="order-success"
+                      options={{ presentation: "modal", headerShown: false }}
+                    />
+                    <Stack.Screen name="orders" options={HEADER_CONFIGS.orders} />
+                    <Stack.Screen
+                      name="ordersDetails"
+                      options={HEADER_CONFIGS.ordersDetails}
+                    />
+                    <Stack.Screen
+                      name="allAddressList"
+                      options={HEADER_CONFIGS.allAddressList}
+                    />
 
-                  <Stack.Screen
-                    name="_modal"
-                    options={{ presentation: "modal", headerShown: false }}
-                  />
-                  <Stack.Screen name="+not-found" />
+                    <Stack.Screen
+                      name="_modal"
+                      options={{ presentation: "modal", headerShown: false }}
+                    />
+                    <Stack.Screen name="+not-found" />
 
-                  <Stack.Screen name="products" />
-                </Stack>
+                    <Stack.Screen name="products" />
+                  </Stack>
+                </AuthGuardProvider>
               </BottomSheetModalProvider>
             </TamaguiProvider>
           </StripeProvider>

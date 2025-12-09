@@ -5,6 +5,7 @@ import {
 } from "@/api/generated/favorites/favorites";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { SCREEN_WIDTH } from "@/constants/styles";
+import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import { tokens } from "@/tamagui/token";
 import { useQueryClient } from "@tanstack/react-query";
@@ -78,6 +79,9 @@ export const ProductCard = ({
       : context === "sales"
       ? SALES_CARD_WIDTH
       : INLINE_CARD_WIDTH;
+
+  // Auth guard for protected actions
+  const { requireAuth } = useAuthGuard();
 
   // Use Zustand store for favorites
   const addFavoriteToStore = useFavoritesStore((state) => state.addFavorite);
@@ -207,8 +211,22 @@ export const ProductCard = ({
     // Stop event propagation to prevent opening product page
     e?.stopPropagation?.();
 
-    const willBeFavorited = !isFavorited;
+    // Check if user is authenticated, show login modal if not
+    const canProceed = requireAuth({
+      type: "favorite",
+      callback: () => {
+        // This will be called after successful login
+        performFavoriteAction(!isFavorited);
+      },
+    });
 
+    if (!canProceed) return;
+
+    performFavoriteAction(!isFavorited);
+  };
+
+  // Actual favorite action logic
+  const performFavoriteAction = (willBeFavorited: boolean) => {
     // Heart pop animation
     Animated.sequence([
       Animated.timing(scaleAnim, {

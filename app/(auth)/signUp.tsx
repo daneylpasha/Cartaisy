@@ -16,7 +16,7 @@ import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Alert } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { YStack } from "tamagui";
+import { getTokenValue, XStack, YStack } from "tamagui";
 import PasswordStrengthBar from "./components/PasswordStrengthBar";
 
 type SignUpForm = {
@@ -26,7 +26,7 @@ type SignUpForm = {
 };
 
 const SignUp = () => {
-  const { setToken } = useAuthStore();
+  const { setToken, guestSessionId, clearGuestSession } = useAuthStore();
   const { setUser } = useUserStore();
 
   const { mutateAsync: signUpUser, isPending: isSigningUp } = useSignUp({
@@ -46,6 +46,19 @@ const SignUp = () => {
 
       if (data?.data?.user) {
         setUser(data.data.user);
+      }
+
+      // If there was a guest session, show merge notification
+      // Backend automatically merges guest cart when X-Session-ID header is present
+      if (guestSessionId) {
+        console.log('[SignUp] Guest session detected, cart will be auto-merged by backend');
+        Alert.alert(
+          "Account Created!",
+          "Your cart has been saved to your new account.",
+          [{ text: "OK" }]
+        );
+        // Clear guest session after successful signup (backend has already merged)
+        clearGuestSession();
       }
 
       // Use replace to prevent double navigation from splash screen
@@ -95,7 +108,20 @@ const SignUp = () => {
         keyboardOpeningTime={0}
         keyboardDismissMode="interactive"
       >
-        <Spacer size={"$xl"} />
+        {/* Back Button */}
+        <XStack paddingHorizontal={"$md"} paddingTop={"$md"}>
+          <OpTouch
+            onPress={() => router.back()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <AppImage
+              name={"arrowBack"}
+              size={20}
+              tintColor={getTokenValue("$secondary")}
+            />
+          </OpTouch>
+        </XStack>
+        <Spacer size={"$md"} />
         <YStack paddingHorizontal={"$md"} alignItems="center">
           <YStack
             shadowColor={"$primary"}

@@ -18,19 +18,41 @@ export const axiosInstance = Axios.create({
   timeout: 30000, // 30 second timeout to prevent hanging forever
 });
 
-// Request interceptor to add JWT token
+// Request interceptor to add JWT token or guest session headers
 axiosInstance.interceptors.request.use(
   async (config) => {
-    const token = useAuthStore.getState().token;
+    const { token, guestSessionId, deviceId } = useAuthStore.getState();
+
+    // Ensure X-Store-ID is always set (in case env var wasn't loaded at module init)
+    if (!config.headers["X-Store-ID"]) {
+      config.headers["X-Store-ID"] = process.env.EXPO_PUBLIC_STORE_ID || "";
+    }
 
     console.log("[API Request]:", config.url);
+    console.log("[API Request] X-Store-ID:", config.headers["X-Store-ID"]);
     console.log("[API Request] Token exists:", !!token);
+    console.log("[API Request] Guest session exists:", !!guestSessionId);
 
+    // Add authentication header
     if (token) {
+      // Logged-in user
       config.headers.Authorization = `Bearer ${token}`;
       console.log("[API Request] Authorization header set");
-    } else {
-      console.log("[API Request] WARNING: No token available!");
+
+      // If there's a guest session, include it for backend auto-merge
+      if (guestSessionId) {
+        config.headers["X-Session-ID"] = guestSessionId;
+        console.log("[API Request] Including guest session for auto-merge");
+      }
+    } else if (guestSessionId) {
+      // Guest user with existing session
+      config.headers["X-Session-ID"] = guestSessionId;
+      console.log("[API Request] Guest session header set");
+    }
+
+    // Always add device ID for tracking
+    if (deviceId) {
+      config.headers["X-Device-ID"] = deviceId;
     }
 
     return config;
@@ -41,10 +63,23 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle auth errors
+// Response interceptor to handle auth errors and capture session IDs
 axiosInstance.interceptors.response.use(
   (response) => {
     console.log("API Response SUCCESS", response?.data);
+
+    // Capture new session ID from response headers (for guest sessions)
+    const newSessionId = response.headers["x-session-id"];
+    if (newSessionId) {
+      const { guestSessionId, setGuestSession, token } = useAuthStore.getState();
+
+      // If we don't have a session ID and we're not logged in, save the new one
+      if (!guestSessionId && !token) {
+        console.log("[API Response] Received new guest session ID:", newSessionId);
+        setGuestSession(newSessionId);
+      }
+    }
+
     return response;
   },
   async (error: AxiosError) => {

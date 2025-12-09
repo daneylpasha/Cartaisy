@@ -5,6 +5,7 @@ import {
 import { useGetProductDetail } from "@/api/generated/products/products";
 import { useGetProductRecommendations } from "@/api/generated/recommendations/recommendations";
 import { useCartManager } from "@/api/hooks/useCartManager";
+import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import {
   HeadingXSBold,
   TextMDBold,
@@ -68,6 +69,7 @@ const ProductDetailsScreen = () => {
   const { top: TOP_INSET } = useSafeAreaInsets();
   const { getTotalQuantity } = useCartStore();
   const cartItemCount = getTotalQuantity();
+  const { requireAuth } = useAuthGuard();
   const {
     addToCart,
     isLoading: isAddingToCart,
@@ -305,8 +307,22 @@ const ProductDetailsScreen = () => {
 
   // Handle favorite press
   const handleFavoritePress = () => {
-    const willBeFavorited = !isFavorited;
+    // Check if user is authenticated, show login modal if not
+    const canProceed = requireAuth({
+      type: "favorite",
+      callback: () => {
+        // This will be called after successful login
+        performFavoriteAction(!isFavorited);
+      },
+    });
 
+    if (!canProceed) return;
+
+    performFavoriteAction(!isFavorited);
+  };
+
+  // Actual favorite action logic
+  const performFavoriteAction = (willBeFavorited: boolean) => {
     // Heart pop animation
     Animated.sequence([
       Animated.timing(scaleAnim, {
@@ -913,6 +929,22 @@ const ProductDetailsScreen = () => {
 
   // Handle Add to Cart
   const handleAddToCart = async () => {
+    // Check if user is authenticated, show login modal if not
+    const canProceed = requireAuth({
+      type: "cart",
+      callback: () => {
+        // This will be called after successful login - perform the add to cart action
+        performAddToCart();
+      },
+    });
+
+    if (!canProceed) return;
+
+    performAddToCart();
+  };
+
+  // Actual Add to Cart logic
+  const performAddToCart = async () => {
     setSelectionError(null);
 
     // Check if product is in stock

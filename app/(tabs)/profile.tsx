@@ -10,13 +10,15 @@ import { ActiveListItem } from "@/components/organisms/profile/ActiveListItems";
 import { DangerZoneListItem } from "@/components/organisms/profile/DangerZoneListItems";
 import { GeneralListItems } from "@/components/organisms/profile/GeneralListItems";
 
-import { useGetProfile } from "@/api/generated/authentication/authentication";
-import { useGetAddresses } from "@/api/generated/addresses/addresses";
+import { useCustomerGetProfile } from "@/api/generated/customer-authentication/customer-authentication";
+import { useAuthenticatedAddresses } from "@/api/hooks/useAddresses";
 import { PaymentListItem } from "@/components/organisms/profile/PaymentListItems";
 import { SecurityListItem } from "@/components/organisms/profile/SecurityListItems";
 import { WishlistCarousel } from "@/components/organisms/profile/WishListCarousel";
 import { SHADOW_STYLES } from "@/constants/styles";
+import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
+import useUserStore from "@/store/useUserStore";
 import { t } from "@/translations";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
@@ -30,12 +32,49 @@ const ProfileScreen = () => {
   const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
   const { showAlert, AlertComponent } = useCustomAlert();
 
-  // Get user profile data
-  const { data: profileApiData, isLoading: isLoadingProfile } = useGetProfile();
-  const user = profileApiData?.data?.user;
+  // Get auth state to check if user is logged in
+  const { isGuest, token } = useAuthStore();
+  const isLoggedIn = !!token && !isGuest;
 
-  // Get addresses to find default address
-  const { data: addressesData } = useGetAddresses();
+  // Get local user store data (set during signup)
+  const localUser = useUserStore((state) => state.user);
+
+  // Get user profile data from API (only fetch if logged in)
+  const {
+    data: profileApiData,
+    isLoading: isLoadingProfile,
+    refetch: refetchProfile,
+  } = useCustomerGetProfile({
+    query: {
+      enabled: isLoggedIn, // Only fetch profile if user is logged in
+      retry: (failureCount, error: any) => {
+        // Don't retry on auth errors
+        if (
+          error?.response?.status === 401 ||
+          error?.response?.status === 500
+        ) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+    },
+  });
+  const apiUser = (profileApiData as any)?.data?.user;
+
+  // Combine API user with local user store (local store as fallback for freshly signed up users)
+  const user = apiUser || localUser;
+
+  // Get addresses to find default address (only fetches when authenticated)
+  const { addresses } = useAuthenticatedAddresses();
+
+  // Refetch profile when screen comes into focus (to get updated data after login/signup)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (isLoggedIn) {
+        refetchProfile();
+      }
+    }, [isLoggedIn, refetchProfile])
+  );
 
   // Check for success message from profile update
   useFocusEffect(
@@ -59,9 +98,10 @@ const ProfileScreen = () => {
     }, [showAlert])
   );
 
-  // Extract user info using updated schema fields
-  const userName =
-    (user as any)?.fullName || user?.email?.split("@")[0] || "Guest User";
+  // Extract user info - prioritize API data, fall back to local store, then show Guest User
+  const userName = isLoggedIn
+    ? (user as any)?.name || user?.email?.split("@")[0] || "User"
+    : "Guest User";
 
   // Use defaultAddress from profile, or find the default address from addresses list
   const defaultAddr = React.useMemo(() => {
@@ -72,18 +112,16 @@ const ProfileScreen = () => {
     }
 
     // Fallback: find address with isDefault: true from addresses list
-    // Backend returns array directly or in .addresses property
-    const addresses = Array.isArray(addressesData?.data)
-      ? addressesData.data
-      : (addressesData?.data?.addresses || []);
-    const defaultFromList = addresses.find((addr: any) => addr.isDefault === true);
+    const defaultFromList = addresses.find(
+      (addr: any) => addr.isDefault === true
+    );
     if (defaultFromList) {
       return defaultFromList;
     }
 
     // If no default found, use the first address
     return addresses.length > 0 ? addresses[0] : null;
-  }, [user, addressesData]);
+  }, [user, addresses]);
 
   const location = defaultAddr
     ? `${defaultAddr.city || ""}, ${defaultAddr.province || ""} ${

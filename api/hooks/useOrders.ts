@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../apiClient";
+import useAuthStore from "@/store/useAuthStore";
 
 // Order interface based on backend response
 export interface Order {
@@ -76,10 +77,24 @@ export const fetchOrders = async (
 
 // React Query hook
 export const useOrders = (page = 1, limit = 20) => {
+  // Check if user is authenticated
+  const token = useAuthStore((state) => state.token);
+  const isGuest = useAuthStore((state) => state.isGuest);
+  const _hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const isAuthenticated = _hasHydrated && !!token && !isGuest;
+
   return useQuery({
     queryKey: ["orders", page, limit],
     queryFn: () => fetchOrders(page, limit),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: isAuthenticated, // Only fetch if user is authenticated
+    retry: (failureCount, error: any) => {
+      // Don't retry on auth errors
+      if (error?.response?.status === 401 || error?.response?.status === 500) {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 };
 

@@ -18,7 +18,11 @@ const Splash = () => {
       hasNavigated.current = true;
 
       // Get current state at navigation time (not stale closure values)
-      const { token, isProfileComplete } = useAuthStore.getState();
+      const { token, isProfileComplete, enableGuestMode, initializeDeviceId } =
+        useAuthStore.getState();
+
+      // Initialize device ID for tracking
+      initializeDeviceId();
 
       if (token && isProfileComplete) {
         // User is logged in and profile is complete
@@ -27,8 +31,10 @@ const Splash = () => {
         // User is logged in but profile is incomplete - continue signup flow
         router.replace("/fullName");
       } else {
-        // User is not logged in
-        router.replace("/onboardingSlides");
+        // User is not logged in - enable guest mode and go to main app
+        // This allows guests to browse and add to cart without signing up
+        enableGuestMode();
+        router.replace("/(tabs)");
       }
     }, SPLASH_DURATION);
 

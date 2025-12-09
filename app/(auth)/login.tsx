@@ -30,7 +30,7 @@ type LoginForm = {
 
 const Login = () => {
   const [isChecked, setIsChecked] = useState(false);
-  const { setToken, setProfileComplete } = useAuthStore();
+  const { setToken, setProfileComplete, guestSessionId, clearGuestSession } = useAuthStore();
   const { setUser } = useUserStore();
 
   const { mutateAsync: loginUser, isPending: isLoggingIn } = useLogin({
@@ -51,6 +51,19 @@ const Login = () => {
 
       // Existing users logging in have completed their profile
       setProfileComplete(true);
+
+      // If there was a guest session, show merge notification and clear it
+      if (guestSessionId) {
+        console.log('[Login] Guest session detected, cart will be auto-merged by backend');
+        Alert.alert(
+          "Welcome back!",
+          "Your cart items have been saved to your account.",
+          [{ text: "OK" }]
+        );
+        // Clear guest session after successful login (backend has already merged)
+        clearGuestSession();
+      }
+
       router.replace("/(tabs)");
     },
     onError: (error) => {

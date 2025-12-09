@@ -9,12 +9,15 @@ import {
   ParagraphMD,
   TextLGBold,
   TextMDBold,
+  TextMDSemiBold,
   TextSMSemiBold,
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
+import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { SecondaryButton } from "@/components/molecules/buttons/SecondaryButton";
+import useAuthStore from "@/store/useAuthStore";
 import { t } from "@/translations";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
@@ -26,12 +29,20 @@ import { getTokenValue, XStack, YStack } from "tamagui";
 const PaymentMethod = () => {
   const { bottom: bottomSafeAreaInset } = useSafeAreaInsets();
 
-  // Fetch saved payment methods
+  // Check if user is logged in
+  const { token, isGuest } = useAuthStore();
+  const isLoggedIn = !!token && !isGuest;
+
+  // Fetch saved payment methods (only if logged in)
   const {
     data: paymentMethodsResponse,
     isLoading,
     refetch,
-  } = useListPaymentMethods();
+  } = useListPaymentMethods({
+    query: {
+      enabled: isLoggedIn,
+    },
+  });
 
   // Refetch payment methods when screen comes into focus
   useFocusEffect(
@@ -88,6 +99,41 @@ const PaymentMethod = () => {
       data: { paymentMethodId: cardId },
     });
   };
+
+  // Show login prompt for guest users
+  if (!isLoggedIn) {
+    return (
+      <YStack backgroundColor="$background" flex={1}>
+        <YStack padding={"$md"}>
+          <HeadingSMBold>{t("paymentMethod.title")}</HeadingSMBold>
+          <Spacer size="$reg" />
+          <ParagraphMD color="$secondary">
+            {t("paymentMethod.subtitle")}
+          </ParagraphMD>
+        </YStack>
+        <YStack
+          flex={1}
+          justifyContent="center"
+          alignItems="center"
+          paddingHorizontal="$lg"
+        >
+          <TextMDSemiBold textAlign="center">
+            Sign in to manage your payment methods
+          </TextMDSemiBold>
+          <Spacer size="$sm" />
+          <ParagraphMD color="$secondary" textAlign="center">
+            Please log in to add, view, or manage your saved cards.
+          </ParagraphMD>
+          <Spacer size="$lg" />
+          <PrimaryButton
+            label="Sign In"
+            onPress={() => router.push("/(auth)/login")}
+            width={200}
+          />
+        </YStack>
+      </YStack>
+    );
+  }
 
   return (
     <YStack backgroundColor="$background" flex={1}>

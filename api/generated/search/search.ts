@@ -40,11 +40,15 @@ import type {
   InitialSearchScreenResponse,
   LogSearch200,
   LogSearchBody,
+  PopularSearchesResponse,
+  PredictiveSearchResponse,
   RecentSearchesResponse,
   SearchContextResponse,
   SearchParams,
   SearchProductsParams,
   SearchProductsResponse,
+  ShopifyGetPopularSearchesParams,
+  ShopifyGetSearchSuggestionsParams,
   TrackCollectionView200,
   TrackCollectionViewBody,
   TrackProductClick200,
@@ -61,17 +65,17 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Get Search Suggestions
-Fast autocomplete suggestions from search history and products
+ * Predictive Search - Autocomplete/Suggestions
+Fast search for autocomplete dropdown (< 100ms typical response time)
  */
-export const getSearchSuggestions = (
-    params?: GetSearchSuggestionsParams,
+export const shopifyGetSearchSuggestions = (
+    params: ShopifyGetSearchSuggestionsParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<unknown>(
-      {url: `/customer/search/suggestions`, method: 'GET',
+      return customInstance<PredictiveSearchResponse>(
+      {url: `/search/suggestions`, method: 'GET',
         params, signal
     },
       options);
@@ -80,66 +84,66 @@ export const getSearchSuggestions = (
 
 
 
-export const getGetSearchSuggestionsQueryKey = (params?: GetSearchSuggestionsParams,) => {
+export const getShopifyGetSearchSuggestionsQueryKey = (params?: ShopifyGetSearchSuggestionsParams,) => {
     return [
-    `/customer/search/suggestions`, ...(params ? [params]: [])
+    `/search/suggestions`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getGetSearchSuggestionsQueryOptions = <TData = Awaited<ReturnType<typeof getSearchSuggestions>>, TError = unknown>(params?: GetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSearchSuggestions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getShopifyGetSearchSuggestionsQueryOptions = <TData = Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>, TError = unknown>(params: ShopifyGetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetSearchSuggestionsQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getShopifyGetSearchSuggestionsQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSearchSuggestions>>> = ({ signal }) => getSearchSuggestions(params, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>> = ({ signal }) => shopifyGetSearchSuggestions(params, requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSearchSuggestions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetSearchSuggestionsQueryResult = NonNullable<Awaited<ReturnType<typeof getSearchSuggestions>>>
-export type GetSearchSuggestionsQueryError = unknown
+export type ShopifyGetSearchSuggestionsQueryResult = NonNullable<Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>>
+export type ShopifyGetSearchSuggestionsQueryError = unknown
 
 
-export function useGetSearchSuggestions<TData = Awaited<ReturnType<typeof getSearchSuggestions>>, TError = unknown>(
- params: undefined |  GetSearchSuggestionsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSearchSuggestions>>, TError, TData>> & Pick<
+export function useShopifyGetSearchSuggestions<TData = Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>, TError = unknown>(
+ params: ShopifyGetSearchSuggestionsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getSearchSuggestions>>,
+          Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>,
           TError,
-          Awaited<ReturnType<typeof getSearchSuggestions>>
+          Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSearchSuggestions<TData = Awaited<ReturnType<typeof getSearchSuggestions>>, TError = unknown>(
- params?: GetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSearchSuggestions>>, TError, TData>> & Pick<
+export function useShopifyGetSearchSuggestions<TData = Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>, TError = unknown>(
+ params: ShopifyGetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getSearchSuggestions>>,
+          Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>,
           TError,
-          Awaited<ReturnType<typeof getSearchSuggestions>>
+          Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSearchSuggestions<TData = Awaited<ReturnType<typeof getSearchSuggestions>>, TError = unknown>(
- params?: GetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSearchSuggestions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useShopifyGetSearchSuggestions<TData = Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>, TError = unknown>(
+ params: ShopifyGetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSearchSuggestions<TData = Awaited<ReturnType<typeof getSearchSuggestions>>, TError = unknown>(
- params?: GetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSearchSuggestions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useShopifyGetSearchSuggestions<TData = Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>, TError = unknown>(
+ params: ShopifyGetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shopifyGetSearchSuggestions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetSearchSuggestionsQueryOptions(params,options)
+  const queryOptions = getShopifyGetSearchSuggestionsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -314,14 +318,14 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  * Get Popular Searches
 Returns most frequently searched terms
  */
-export const getPopularSearches = (
-    params?: GetPopularSearchesParams,
+export const shopifyGetPopularSearches = (
+    params?: ShopifyGetPopularSearchesParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<unknown>(
-      {url: `/customer/search/popular`, method: 'GET',
+      return customInstance<PopularSearchesResponse>(
+      {url: `/search/popular`, method: 'GET',
         params, signal
     },
       options);
@@ -330,66 +334,66 @@ export const getPopularSearches = (
 
 
 
-export const getGetPopularSearchesQueryKey = (params?: GetPopularSearchesParams,) => {
+export const getShopifyGetPopularSearchesQueryKey = (params?: ShopifyGetPopularSearchesParams,) => {
     return [
-    `/customer/search/popular`, ...(params ? [params]: [])
+    `/search/popular`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getGetPopularSearchesQueryOptions = <TData = Awaited<ReturnType<typeof getPopularSearches>>, TError = unknown>(params?: GetPopularSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPopularSearches>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getShopifyGetPopularSearchesQueryOptions = <TData = Awaited<ReturnType<typeof shopifyGetPopularSearches>>, TError = unknown>(params?: ShopifyGetPopularSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shopifyGetPopularSearches>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetPopularSearchesQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getShopifyGetPopularSearchesQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPopularSearches>>> = ({ signal }) => getPopularSearches(params, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof shopifyGetPopularSearches>>> = ({ signal }) => shopifyGetPopularSearches(params, requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPopularSearches>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof shopifyGetPopularSearches>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetPopularSearchesQueryResult = NonNullable<Awaited<ReturnType<typeof getPopularSearches>>>
-export type GetPopularSearchesQueryError = unknown
+export type ShopifyGetPopularSearchesQueryResult = NonNullable<Awaited<ReturnType<typeof shopifyGetPopularSearches>>>
+export type ShopifyGetPopularSearchesQueryError = unknown
 
 
-export function useGetPopularSearches<TData = Awaited<ReturnType<typeof getPopularSearches>>, TError = unknown>(
- params: undefined |  GetPopularSearchesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPopularSearches>>, TError, TData>> & Pick<
+export function useShopifyGetPopularSearches<TData = Awaited<ReturnType<typeof shopifyGetPopularSearches>>, TError = unknown>(
+ params: undefined |  ShopifyGetPopularSearchesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof shopifyGetPopularSearches>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPopularSearches>>,
+          Awaited<ReturnType<typeof shopifyGetPopularSearches>>,
           TError,
-          Awaited<ReturnType<typeof getPopularSearches>>
+          Awaited<ReturnType<typeof shopifyGetPopularSearches>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPopularSearches<TData = Awaited<ReturnType<typeof getPopularSearches>>, TError = unknown>(
- params?: GetPopularSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPopularSearches>>, TError, TData>> & Pick<
+export function useShopifyGetPopularSearches<TData = Awaited<ReturnType<typeof shopifyGetPopularSearches>>, TError = unknown>(
+ params?: ShopifyGetPopularSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shopifyGetPopularSearches>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPopularSearches>>,
+          Awaited<ReturnType<typeof shopifyGetPopularSearches>>,
           TError,
-          Awaited<ReturnType<typeof getPopularSearches>>
+          Awaited<ReturnType<typeof shopifyGetPopularSearches>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPopularSearches<TData = Awaited<ReturnType<typeof getPopularSearches>>, TError = unknown>(
- params?: GetPopularSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPopularSearches>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useShopifyGetPopularSearches<TData = Awaited<ReturnType<typeof shopifyGetPopularSearches>>, TError = unknown>(
+ params?: ShopifyGetPopularSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shopifyGetPopularSearches>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetPopularSearches<TData = Awaited<ReturnType<typeof getPopularSearches>>, TError = unknown>(
- params?: GetPopularSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPopularSearches>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useShopifyGetPopularSearches<TData = Awaited<ReturnType<typeof shopifyGetPopularSearches>>, TError = unknown>(
+ params?: ShopifyGetPopularSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shopifyGetPopularSearches>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetPopularSearchesQueryOptions(params,options)
+  const queryOptions = getShopifyGetPopularSearchesQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -813,6 +817,186 @@ export function useSearch<TData = Awaited<ReturnType<typeof search>>, TError = u
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSearchQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Get Search Suggestions
+Fast autocomplete suggestions from search history and products
+ */
+export const getSearchSuggestions = (
+    params?: GetSearchSuggestionsParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/customer/search/suggestions`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetSearchSuggestionsQueryKey = (params?: GetSearchSuggestionsParams,) => {
+    return [
+    `/customer/search/suggestions`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getGetSearchSuggestionsQueryOptions = <TData = Awaited<ReturnType<typeof getSearchSuggestions>>, TError = unknown>(params?: GetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSearchSuggestions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSearchSuggestionsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSearchSuggestions>>> = ({ signal }) => getSearchSuggestions(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSearchSuggestions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetSearchSuggestionsQueryResult = NonNullable<Awaited<ReturnType<typeof getSearchSuggestions>>>
+export type GetSearchSuggestionsQueryError = unknown
+
+
+export function useGetSearchSuggestions<TData = Awaited<ReturnType<typeof getSearchSuggestions>>, TError = unknown>(
+ params: undefined |  GetSearchSuggestionsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSearchSuggestions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSearchSuggestions>>,
+          TError,
+          Awaited<ReturnType<typeof getSearchSuggestions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSearchSuggestions<TData = Awaited<ReturnType<typeof getSearchSuggestions>>, TError = unknown>(
+ params?: GetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSearchSuggestions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSearchSuggestions>>,
+          TError,
+          Awaited<ReturnType<typeof getSearchSuggestions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSearchSuggestions<TData = Awaited<ReturnType<typeof getSearchSuggestions>>, TError = unknown>(
+ params?: GetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSearchSuggestions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSearchSuggestions<TData = Awaited<ReturnType<typeof getSearchSuggestions>>, TError = unknown>(
+ params?: GetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSearchSuggestions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSearchSuggestionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Get Popular Searches
+Returns most frequently searched terms
+ */
+export const getPopularSearches = (
+    params?: GetPopularSearchesParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/customer/search/popular`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetPopularSearchesQueryKey = (params?: GetPopularSearchesParams,) => {
+    return [
+    `/customer/search/popular`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getGetPopularSearchesQueryOptions = <TData = Awaited<ReturnType<typeof getPopularSearches>>, TError = unknown>(params?: GetPopularSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPopularSearches>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPopularSearchesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPopularSearches>>> = ({ signal }) => getPopularSearches(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPopularSearches>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPopularSearchesQueryResult = NonNullable<Awaited<ReturnType<typeof getPopularSearches>>>
+export type GetPopularSearchesQueryError = unknown
+
+
+export function useGetPopularSearches<TData = Awaited<ReturnType<typeof getPopularSearches>>, TError = unknown>(
+ params: undefined |  GetPopularSearchesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPopularSearches>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPopularSearches>>,
+          TError,
+          Awaited<ReturnType<typeof getPopularSearches>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPopularSearches<TData = Awaited<ReturnType<typeof getPopularSearches>>, TError = unknown>(
+ params?: GetPopularSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPopularSearches>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPopularSearches>>,
+          TError,
+          Awaited<ReturnType<typeof getPopularSearches>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPopularSearches<TData = Awaited<ReturnType<typeof getPopularSearches>>, TError = unknown>(
+ params?: GetPopularSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPopularSearches>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetPopularSearches<TData = Awaited<ReturnType<typeof getPopularSearches>>, TError = unknown>(
+ params?: GetPopularSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPopularSearches>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPopularSearchesQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

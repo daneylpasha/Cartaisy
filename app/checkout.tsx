@@ -10,7 +10,9 @@ import { CheckoutStepper } from "@/components/molecules/checkout/CheckoutStepper
 import Confirmation from "@/components/molecules/checkout/Confirmation";
 import PaymentStepper from "@/components/molecules/checkout/Payment";
 import Shipping from "@/components/molecules/checkout/Shipping";
+import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useCartStore from "@/store/useCartStore";
+import useAuthStore from "@/store/useAuthStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -32,12 +34,35 @@ const CheckoutScreen = () => {
   const initialSessionId = params.sessionId as string;
   const queryClient = useQueryClient();
 
+  // Auth guard for blocking guest access
+  const { requireAuth, isAuthenticated } = useAuthGuard();
+
+  // Auth store for guest mode detection
+  const { token } = useAuthStore();
+
   // Cart store and clear mutation
   const { cartId, clearCart: clearCartStore } = useCartStore();
   const { mutate: clearCartAPI } = useClearCart();
 
   const [sessionId, setSessionId] = useState<string>(initialSessionId || "");
+  // Always start at shipping step (no guest checkout)
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
+
+  // Block guest access - show login modal and redirect back
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Show login modal
+      requireAuth({
+        type: "checkout",
+        callback: () => {
+          // After successful login, user will be back on checkout (current screen)
+          // No action needed as they're already on checkout
+        },
+      });
+      // Go back to previous screen (cart)
+      router.back();
+    }
+  }, [isAuthenticated]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [checkoutSummary, setCheckoutSummary] = useState<any>(null);
   const [open, setOpen] = useState(false);
@@ -260,6 +285,7 @@ const CheckoutScreen = () => {
   };
 
   const getCurrentStepIndex = () => {
+    // Only authenticated users can checkout - 3 steps: shipping, payment, confirmation
     const steps: CheckoutStep[] = ["shipping", "payment", "confirmation"];
     return steps.indexOf(currentStep);
   };

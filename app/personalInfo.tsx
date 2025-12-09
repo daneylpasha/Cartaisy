@@ -31,8 +31,9 @@ import CountryPicker, {
 } from "react-native-country-picker-modal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
-import { useGetProfile, useUpdateProfile, getGetProfileQueryKey } from "@/api/generated/authentication/authentication";
-import { useGetAddresses, getGetAddressesQueryKey } from "@/api/generated/addresses/addresses";
+import { useCustomerGetProfile, useCustomerUpdateProfile, getCustomerGetProfileQueryKey } from "@/api/generated/customer-authentication/customer-authentication";
+import { getCustomerGetAddressesQueryKey } from "@/api/generated/customer-addresses/customer-addresses";
+import { useAuthenticatedAddresses } from "@/api/hooks/useAddresses";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 
@@ -87,12 +88,22 @@ const PersonalInfo = () => {
   const { bottom: bottomSafeAreaInset } = useSafeAreaInsets();
   const todayISO = useMemo(() => toISO(new Date()), []);
 
-  // Get user profile data
-  const { data: profileApiData, isLoading: isLoadingProfile, refetch: refetchProfile } = useGetProfile();
-  const user = profileApiData?.data?.user;
+  // Get user profile data (this page requires authentication)
+  const { data: profileApiData, isLoading: isLoadingProfile, refetch: refetchProfile } = useCustomerGetProfile({
+    query: {
+      retry: (failureCount, error: any) => {
+        // Don't retry on auth errors
+        if (error?.response?.status === 401 || error?.response?.status === 500) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+    },
+  });
+  const user = (profileApiData as any)?.data?.user;
 
-  // Get addresses to display selected address
-  const { data: addressesData } = useGetAddresses();
+  // Get addresses to display selected address (only fetches when authenticated)
+  const { addresses } = useAuthenticatedAddresses();
 
   // Refetch profile when screen comes back into focus (after address selection)
   useFocusEffect(
@@ -134,24 +145,21 @@ const PersonalInfo = () => {
   useEffect(() => {
     if (pendingAddressId) {
       console.log("Pending address ID:", pendingAddressId);
-      const addresses = Array.isArray(addressesData?.data)
-        ? addressesData.data
-        : (addressesData?.data?.addresses || []);
       console.log("Available addresses:", addresses);
       if (addresses.length > 0) {
         const found = addresses.find((addr: any) => addr.id === pendingAddressId);
         console.log("Found selected address:", found);
       }
     }
-  }, [pendingAddressId, addressesData]);
+  }, [pendingAddressId, addresses]);
 
   // Update profile mutation
-  const { mutate: updateProfileMutation, isPending: isUpdating } = useUpdateProfile({
+  const { mutate: updateProfileMutation, isPending: isUpdating } = useCustomerUpdateProfile({
     mutation: {
       onSuccess: () => {
         // Invalidate all related queries
-        queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetAddressesQueryKey() }); // Invalidate addresses list
+        queryClient.invalidateQueries({ queryKey: getCustomerGetProfileQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getCustomerGetAddressesQueryKey() }); // Invalidate addresses list
         console.log("[PersonalInfo] Invalidated all address-related caches");
         // Don't show alert here - will show on profile screen after navigation
       },
@@ -170,14 +178,52 @@ const PersonalInfo = () => {
     if (user) {
       console.log("Prefilling form with user data:", JSON.stringify(user, null, 2));
 
-      // Full Name - now guaranteed to be present (empty string if not set)
-      form.setValue("fullname", (user as any).fullName || "");
+      // Full Name - API returns "name" not "fullName"
+      form.setValue("fullname", (user as any).name || "");
 
       // Email (read-only)
       form.setValue("email", user.email || "");
 
-      // Phone Number - correct field name
-      form.setValue("phone", (user as any).phoneNumber || "");
+      // Phone Number - API returns "phone" with country code (e.g., "+19297829204")
+      // Extract the phone number without country code for the form
+      const fullPhone = (user as any).phone || "";
+      if (fullPhone) {
+        // Try to extract country code and set the country picker accordingly
+        const phoneCountryMap: Record<string, { code: string; digits: number }> = {
+          "+1": { code: "US", digits: 1 },    // US/Canada
+          "+44": { code: "GB", digits: 2 },   // UK
+          "+92": { code: "PK", digits: 2 },   // Pakistan
+          "+91": { code: "IN", digits: 2 },   // India
+          "+61": { code: "AU", digits: 2 },   // Australia
+          "+86": { code: "CN", digits: 2 },   // China
+          "+49": { code: "DE", digits: 2 },   // Germany
+          "+33": { code: "FR", digits: 2 },   // France
+        };
+
+        let phoneWithoutCode = fullPhone;
+        for (const [prefix, info] of Object.entries(phoneCountryMap)) {
+          if (fullPhone.startsWith(prefix)) {
+            phoneWithoutCode = fullPhone.slice(prefix.length);
+            // Update country picker if not already set from address
+            const countryData: Record<string, Country> = {
+              US: { cca2: "US", name: "United States", callingCode: ["1"], currency: ["USD"], flag: "flag-us", region: "Americas", subregion: "North America" },
+              GB: { cca2: "GB", name: "United Kingdom", callingCode: ["44"], currency: ["GBP"], flag: "flag-gb", region: "Europe", subregion: "Northern Europe" },
+              CA: { cca2: "CA", name: "Canada", callingCode: ["1"], currency: ["CAD"], flag: "flag-ca", region: "Americas", subregion: "North America" },
+              PK: { cca2: "PK", name: "Pakistan", callingCode: ["92"], currency: ["PKR"], flag: "flag-pk", region: "Asia", subregion: "Southern Asia" },
+              IN: { cca2: "IN", name: "India", callingCode: ["91"], currency: ["INR"], flag: "flag-in", region: "Asia", subregion: "Southern Asia" },
+              AU: { cca2: "AU", name: "Australia", callingCode: ["61"], currency: ["AUD"], flag: "flag-au", region: "Oceania", subregion: "Australia and New Zealand" },
+              CN: { cca2: "CN", name: "China", callingCode: ["86"], currency: ["CNY"], flag: "flag-cn", region: "Asia", subregion: "Eastern Asia" },
+              DE: { cca2: "DE", name: "Germany", callingCode: ["49"], currency: ["EUR"], flag: "flag-de", region: "Europe", subregion: "Western Europe" },
+              FR: { cca2: "FR", name: "France", callingCode: ["33"], currency: ["EUR"], flag: "flag-fr", region: "Europe", subregion: "Western Europe" },
+            };
+            if (countryData[info.code]) {
+              setSelectedCountry(countryData[info.code]);
+            }
+            break;
+          }
+        }
+        form.setValue("phone", phoneWithoutCode);
+      }
 
       // Gender - now guaranteed to be present (empty string if not set)
       const userGender = (user as any).gender;
@@ -201,8 +247,11 @@ const PersonalInfo = () => {
         }
       }
 
-      // Country - set the country picker based on country code from API
-      const userCountry = (user as any).country;
+      // Country - get from default address or first address
+      const userAddresses = (user as any).addresses || [];
+      const defaultAddress = userAddresses.find((addr: any) => addr.isDefault) || userAddresses[0];
+      const userCountry = defaultAddress?.country || defaultAddress?.countryCode;
+
       if (userCountry && userCountry !== selectedCountry.cca2) {
         console.log("Setting user country to:", userCountry);
         // Manually create country object for common countries
@@ -276,7 +325,7 @@ const PersonalInfo = () => {
           // Wait a bit for the backend to process the address update
           // Then refetch profile to get the updated default address
           const refetchResult = await refetchProfile();
-          console.log("[PersonalInfo] Refetched profile:", JSON.stringify(refetchResult.data?.data?.user?.defaultAddress, null, 2));
+          console.log("[PersonalInfo] Refetched profile:", JSON.stringify((refetchResult.data as any)?.data?.user?.defaultAddress, null, 2));
 
           // Clear pending state after refetch completes
           setPendingAddressId(null);
@@ -704,10 +753,6 @@ const PersonalInfo = () => {
                     }
 
                     // Fallback: find address with isDefault: true from addresses list
-                    // Backend returns array directly or in .addresses property
-                    const addresses = Array.isArray(addressesData?.data)
-                      ? addressesData.data
-                      : (addressesData?.data?.addresses || []);
                     const defaultFromList = addresses.find((addr: any) => addr.isDefault === true);
                     if (defaultFromList) {
                       return [

@@ -1,16 +1,49 @@
 import { useOrders } from "@/api/hooks/useOrders";
-import { TextMDSemiBold } from "@/components/atoms";
+import { TextMDSemiBold, ParagraphMD } from "@/components/atoms";
 import { Divider } from "@/components/atoms/Divider";
 import { Loader } from "@/components/atoms/Loader";
+import { PrimaryButton } from "@/components/molecules/buttons";
 import OrderCard from "@/components/molecules/orders/OrderCard";
 import { tokens } from "@/tamagui/token";
+import useAuthStore from "@/store/useAuthStore";
 import { router } from "expo-router";
 import React from "react";
 import { FlatList, RefreshControl } from "react-native";
 import { getTokenValue, Spacer, YStack } from "tamagui";
 
 const OrdersListItem = () => {
+  // Check if user is logged in
+  const { token, isGuest } = useAuthStore();
+  const isLoggedIn = !!token && !isGuest;
+
   const { data, isLoading, error, refetch, isRefetching } = useOrders();
+
+  // Show login prompt for guest users
+  if (!isLoggedIn) {
+    return (
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        minHeight={600}
+        paddingHorizontal="$lg"
+      >
+        <TextMDSemiBold textAlign="center">
+          Sign in to view your orders
+        </TextMDSemiBold>
+        <Spacer size="$sm" />
+        <ParagraphMD color="$secondary" textAlign="center">
+          Please log in to see your order history and track your purchases.
+        </ParagraphMD>
+        <Spacer size="$lg" />
+        <PrimaryButton
+          label="Sign In"
+          onPress={() => router.push("/(auth)/login")}
+          width={200}
+        />
+      </YStack>
+    );
+  }
 
   if (isLoading) {
     return (

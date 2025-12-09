@@ -1,7 +1,4 @@
-import {
-  useGetAddresses,
-  useSetDefaultAddress,
-} from "@/api/generated/addresses/addresses";
+import { useFormattedAddresses } from "@/api/hooks/useAddresses";
 import {
   HeadingSMBold,
   ParagraphMD,
@@ -41,66 +38,35 @@ const SelectAddressScreen = () => {
     currentSelectedId ?? 0
   );
   const [isEditMode, setIsEditMode] = useState(false);
-  const { data: addressesResponse, refetch: refetchAddresses } =
-    useGetAddresses();
 
-  // Mutation to set default address
-  const { mutate: setDefaultAddressMutation, isPending: isSettingDefault } =
-    useSetDefaultAddress({
-      mutation: {
-        onSuccess: () => {
-          console.log("[AllAddressList] Default address set successfully");
-          refetchAddresses();
-        },
-        onError: (error: any) => {
-          console.error(
-            "[AllAddressList] Failed to set default address:",
-            error
-          );
-        },
-      },
-    });
+  // Use authenticated addresses hook - only fetches when user is logged in
+  const {
+    addresses: rawAddresses,
+    formattedAddresses,
+    isAuthenticated,
+    refetch: refetchAddresses,
+    setDefault: setDefaultAddressMutation,
+    isSettingDefault,
+  } = useFormattedAddresses();
 
-  // Refetch addresses when screen comes into focus (after adding new address)
+  // Refetch addresses when screen comes into focus (only if authenticated)
   useFocusEffect(
     React.useCallback(() => {
-      refetchAddresses();
-    }, [refetchAddresses])
-  );
-  console.log(
-    "[AllAddressList] RAW API RESPONSE:",
-    JSON.stringify(addressesResponse?.data, null, 2)
+      if (isAuthenticated) {
+        refetchAddresses();
+      }
+    }, [refetchAddresses, isAuthenticated])
   );
 
-  // Store raw addresses to get real IDs
-  // Backend returns data as array directly, not { addresses: [...] }
-  const rawAddresses = Array.isArray(addressesResponse?.data)
-    ? addressesResponse.data
-    : (addressesResponse?.data?.addresses || []);
-
-  const addressData: AddressDataItem[] = rawAddresses.map((addr, index) => {
-    console.log(
-      `[AllAddressList] Mapping address ${index}, full object:`,
-      JSON.stringify(addr, null, 2)
-    );
-    return {
-      id: index,
-      addressId: addr._id || String(index), // Use MongoDB _id for API operations
-      name: addr.label || "Address",
-      address: [
-        addr.address1,
-        addr.address2,
-        addr.city,
-        addr.province,
-        addr.country,
-        addr.zip,
-      ]
-        .filter(Boolean)
-        .join(", "),
-      shipping: "Shipping Available",
-      isDefault: addr.isDefault || false,
-    };
-  });
+  // Map to expected format
+  const addressData: AddressDataItem[] = formattedAddresses.map((addr) => ({
+    id: addr.id,
+    addressId: addr.addressId,
+    name: addr.name,
+    address: addr.address,
+    shipping: addr.shipping,
+    isDefault: addr.isDefault,
+  }));
 
   // Set selected address on mount or when default address changes
   useEffect(() => {
@@ -138,7 +104,7 @@ const SelectAddressScreen = () => {
           "[AllAddressList] Setting default address from profile, addressId:",
           addressId
         );
-        setDefaultAddressMutation({ addressId });
+        setDefaultAddressMutation(addressId);
       }
     }
   };

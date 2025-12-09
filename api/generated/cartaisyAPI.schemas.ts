@@ -634,6 +634,179 @@ export interface GetDefaultStoredPaymentMethodResponse {
   message?: string;
 }
 
+export type CarouselItemResponsePromoTag = {
+  textColor: string;
+  backgroundColor: string;
+  text: string;
+};
+
+/**
+ * Carousel item for hero section
+ */
+export interface CarouselItemResponse {
+  imageUrl: string;
+  title: string;
+  subtitle: string;
+  ctaText: string;
+  collectionId: string;
+  endsAt?: string;
+  promoTag?: CarouselItemResponsePromoTag;
+  isActive: boolean;
+}
+
+/**
+ * Category grid item
+ */
+export interface CategoryGridItemResponse {
+  imageUrl: string;
+  title: string;
+  collectionId: string;
+}
+
+export type CalloutBannerItemResponseAction = {
+  value: string;
+  type: string;
+};
+
+/**
+ * Callout banner item
+ */
+export interface CalloutBannerItemResponse {
+  imageUrl: string;
+  title: string;
+  subTitle: string;
+  buttonText: string;
+  action: CalloutBannerItemResponseAction;
+  backgroundColor?: string;
+  textColor?: string;
+  buttonColor?: string;
+}
+
+/**
+ * Promo banner item
+ */
+export interface PromoBannerItemResponse {
+  image: string;
+  title: string;
+  subtitle: string;
+  ctaText: string;
+  collectionId: string;
+  backgroundColor?: string;
+  textColor?: string;
+  buttonColor?: string;
+}
+
+export type CollectionDisplayResponseType = typeof CollectionDisplayResponseType[keyof typeof CollectionDisplayResponseType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionDisplayResponseType = {
+  large_row: 'large_row',
+  small_grid: 'small_grid',
+  medium_row: 'medium_row',
+} as const;
+
+/**
+ * Collection display item
+ */
+export interface CollectionDisplayResponse {
+  type: CollectionDisplayResponseType;
+  order: number;
+  collection: unknown;
+}
+
+export type CategoryCollectionGridResponseCollectionsItem = {
+  collectionId: string;
+  title: string;
+  image: string;
+};
+
+/**
+ * Category collection grid item
+ */
+export interface CategoryCollectionGridResponse {
+  title: string;
+  subtitle: string;
+  collections: CategoryCollectionGridResponseCollectionsItem[];
+}
+
+export type CollectionShowcaseResponseType = typeof CollectionShowcaseResponseType[keyof typeof CollectionShowcaseResponseType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CollectionShowcaseResponseType = {
+  grid: 'grid',
+  circular: 'circular',
+} as const;
+
+export type CollectionShowcaseResponseCollectionsItem = {
+  collectionId: string;
+  title: string;
+  image: string;
+};
+
+/**
+ * Collection showcase item
+ */
+export interface CollectionShowcaseResponse {
+  type: CollectionShowcaseResponseType;
+  title: string;
+  icon?: string;
+  collections: CollectionShowcaseResponseCollectionsItem[];
+}
+
+export type LayoutSectionResponseType = typeof LayoutSectionResponseType[keyof typeof LayoutSectionResponseType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LayoutSectionResponseType = {
+  carousel: 'carousel',
+  promo_banners: 'promo_banners',
+  callout_banners: 'callout_banners',
+  category_grid: 'category_grid',
+  collection_displays: 'collection_displays',
+  collection_showcases: 'collection_showcases',
+  category_collection_grid: 'category_collection_grid',
+} as const;
+
+/**
+ * Layout section
+ */
+export interface LayoutSectionResponse {
+  type: LayoutSectionResponseType;
+  position: number;
+  isVisible: boolean;
+}
+
+/**
+ * Homescreen metadata
+ */
+export interface HomescreenMetadataResponse {
+  carouselItemsCount: number;
+  categoryGridItemsCount: number;
+  calloutBannersCount: number;
+  promoBannersCount: number;
+  collectionDisplaysCount: number;
+  categoryCollectionGridCount: number;
+  collectionShowcasesCount: number;
+  lastUpdated: string;
+}
+
+/**
+ * Complete homescreen data
+ */
+export interface HomescreenDataResponse {
+  carousel: CarouselItemResponse[];
+  categoryGrid: CategoryGridItemResponse[];
+  calloutBanners: CalloutBannerItemResponse[];
+  promoBanners: PromoBannerItemResponse[];
+  collectionDisplays: CollectionDisplayResponse[];
+  categoryCollectionGrid: CategoryCollectionGridResponse[];
+  collectionShowcases: CollectionShowcaseResponse[];
+  layout: LayoutSectionResponse[];
+  metadata: HomescreenMetadataResponse;
+}
+
 export type FavoritesResponseData = {
   productIds: string[];
 };
@@ -684,6 +857,239 @@ export type DetailedFavoritesResponseData = {
 export interface DetailedFavoritesResponse {
   success: boolean;
   data: DetailedFavoritesResponseData;
+}
+
+export type CustomerDataGender = typeof CustomerDataGender[keyof typeof CustomerDataGender];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerDataGender = {
+  male: 'male',
+  female: 'female',
+  other: 'other',
+  prefer_not_to_say: 'prefer_not_to_say',
+} as const;
+
+/**
+ * Customer data response interface
+ */
+export interface CustomerData {
+  id: string;
+  email: string;
+  name?: string;
+  phone?: string;
+  avatar?: string;
+  gender?: CustomerDataGender;
+  dateOfBirth?: string;
+  country?: string;
+  storeId: string;
+  addresses: unknown[];
+  preferences: unknown;
+  isVerified: boolean;
+  isActive: boolean;
+  createdAt: string;
+  lastLoginAt?: string;
+}
+
+export interface CustomerRegisterRequest {
+  /** Customer email address */
+  email: string;
+  /** Password (minimum 6 characters) */
+  password: string;
+  /** Customer full name (optional) */
+  name?: string;
+  /** Customer phone number (optional) */
+  phone?: string;
+}
+
+export interface CustomerLoginRequest {
+  /** Customer email address */
+  email: string;
+  /** Customer password */
+  password: string;
+}
+
+/**
+ * Gender
+ */
+export type CustomerUpdateProfileRequestGender = typeof CustomerUpdateProfileRequestGender[keyof typeof CustomerUpdateProfileRequestGender];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerUpdateProfileRequestGender = {
+  male: 'male',
+  female: 'female',
+  other: 'other',
+  prefer_not_to_say: 'prefer_not_to_say',
+} as const;
+
+export type CustomerUpdateProfileRequestPreferencesNotifications = {
+  orderUpdates?: boolean;
+  promotions?: boolean;
+  sms?: boolean;
+  push?: boolean;
+  email?: boolean;
+};
+
+/**
+ * Notification and other preferences
+ */
+export type CustomerUpdateProfileRequestPreferences = {
+  notifications?: CustomerUpdateProfileRequestPreferencesNotifications;
+  language?: string;
+  currency?: string;
+};
+
+export interface CustomerUpdateProfileRequest {
+  /** Customer full name */
+  name?: string;
+  /** Alternative field name for full name */
+  fullName?: string;
+  /** Customer phone number */
+  phone?: string;
+  /** Alternative field name for phone number */
+  phoneNumber?: string;
+  /** Avatar URL */
+  avatar?: string;
+  /** Gender */
+  gender?: CustomerUpdateProfileRequestGender;
+  /** Date of birth (ISO string) */
+  dateOfBirth?: string;
+  /** Country */
+  country?: string;
+  /** Notification and other preferences */
+  preferences?: CustomerUpdateProfileRequestPreferences;
+}
+
+export interface CustomerLogoutRequest {
+  /** Device token to remove (optional) */
+  deviceToken?: string;
+}
+
+/**
+ * Device platform
+ */
+export type CustomerDeviceTokenRequestPlatform = typeof CustomerDeviceTokenRequestPlatform[keyof typeof CustomerDeviceTokenRequestPlatform];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerDeviceTokenRequestPlatform = {
+  ios: 'ios',
+  android: 'android',
+} as const;
+
+export interface CustomerDeviceTokenRequest {
+  /** Push notification token */
+  token: string;
+  /** Device platform */
+  platform: CustomerDeviceTokenRequestPlatform;
+}
+
+export interface CustomerDeleteAccountRequest {
+  /** Customer's password for verification */
+  password: string;
+}
+
+export type CustomerAddressResponseType = typeof CustomerAddressResponseType[keyof typeof CustomerAddressResponseType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerAddressResponseType = {
+  billing: 'billing',
+  shipping: 'shipping',
+  both: 'both',
+} as const;
+
+export interface CustomerAddressResponse {
+  _id?: string;
+  label?: string;
+  type?: CustomerAddressResponseType;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address1: string;
+  address2?: string;
+  city?: string;
+  province: string;
+  country: string;
+  countryCode?: string;
+  zip?: string;
+  deliveryInstructions?: string;
+  isDefault?: boolean;
+}
+
+/**
+ * Address type
+ */
+export type CustomerAddAddressRequestType = typeof CustomerAddAddressRequestType[keyof typeof CustomerAddAddressRequestType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerAddAddressRequestType = {
+  billing: 'billing',
+  shipping: 'shipping',
+  both: 'both',
+} as const;
+
+/**
+ * Customer Address interface for request body
+ */
+export interface CustomerAddAddressRequest {
+  /** Address label like "Home", "Work" */
+  label?: string;
+  /** Address type */
+  type?: CustomerAddAddressRequestType;
+  /** First name */
+  firstName?: string;
+  /** Last name */
+  lastName?: string;
+  /** Phone number */
+  phone?: string;
+  /** Street address line 1 */
+  address1: string;
+  /** Street address line 2 */
+  address2?: string;
+  /** City */
+  city?: string;
+  /** State/Province */
+  province: string;
+  /** Country name */
+  country: string;
+  /** ISO country code like "US", "GB" */
+  countryCode?: string;
+  /** Postal/ZIP code */
+  zip?: string;
+  /** Delivery instructions (max 300 characters) */
+  deliveryInstructions?: string;
+  /** Set as default address */
+  isDefault?: boolean;
+}
+
+export type CustomerUpdateAddressRequestType = typeof CustomerUpdateAddressRequestType[keyof typeof CustomerUpdateAddressRequestType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerUpdateAddressRequestType = {
+  billing: 'billing',
+  shipping: 'shipping',
+  both: 'both',
+} as const;
+
+export interface CustomerUpdateAddressRequest {
+  label?: string;
+  type?: CustomerUpdateAddressRequestType;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address1?: string;
+  address2?: string;
+  city?: string;
+  province?: string;
+  country?: string;
+  countryCode?: string;
+  zip?: string;
+  deliveryInstructions?: string;
+  isDefault?: boolean;
 }
 
 export type CollectionProductImagesItem = {
@@ -1558,7 +1964,7 @@ export interface IAddress {
   isDefault?: boolean;
 }
 
-export type GetSearchSuggestionsParams = {
+export type ShopifyGetSearchSuggestionsParams = {
 /**
  * - Search query (2+ characters recommended)
  */
@@ -1602,7 +2008,7 @@ export type TrackProductClick200 = {
   success: boolean;
 };
 
-export type GetPopularSearchesParams = {
+export type ShopifyGetPopularSearchesParams = {
 /**
  * - Number of results (default: 10)
  */
@@ -1853,9 +2259,228 @@ export type GetCartRecommendations500 = {
   success: boolean;
 };
 
+export type GetHomescreenDataParams = {
+/**
+ * Alternative: Store ID from query parameter
+ */
+storeId?: string;
+};
+
+export type GetHomescreenData200 = {
+  error?: string;
+  data: HomescreenDataResponse;
+  success: boolean;
+};
+
 export type GetDetailedFavoritesParams = {
 page?: number;
 limit?: number;
+};
+
+export type CustomerRegister201Data = {
+  refreshToken: string;
+  token: string;
+  user: CustomerData;
+};
+
+export type CustomerRegister201Status = typeof CustomerRegister201Status[keyof typeof CustomerRegister201Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerRegister201Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerRegister201 = {
+  data?: CustomerRegister201Data;
+  message: string;
+  status: CustomerRegister201Status;
+};
+
+export type CustomerLogin200Data = {
+  refreshToken: string;
+  token: string;
+  user: CustomerData;
+};
+
+export type CustomerLogin200Status = typeof CustomerLogin200Status[keyof typeof CustomerLogin200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerLogin200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerLogin200 = {
+  data?: CustomerLogin200Data;
+  message: string;
+  status: CustomerLogin200Status;
+};
+
+export type CustomerGetProfile200Data = {
+  user: CustomerData;
+};
+
+export type CustomerGetProfile200Status = typeof CustomerGetProfile200Status[keyof typeof CustomerGetProfile200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerGetProfile200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerGetProfile200 = {
+  message?: string;
+  data?: CustomerGetProfile200Data;
+  status: CustomerGetProfile200Status;
+};
+
+export type CustomerUpdateProfile200Data = {
+  user: CustomerData;
+};
+
+export type CustomerUpdateProfile200Status = typeof CustomerUpdateProfile200Status[keyof typeof CustomerUpdateProfile200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerUpdateProfile200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerUpdateProfile200 = {
+  data?: CustomerUpdateProfile200Data;
+  message: string;
+  status: CustomerUpdateProfile200Status;
+};
+
+export type CustomerLogout200Status = typeof CustomerLogout200Status[keyof typeof CustomerLogout200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerLogout200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerLogout200 = {
+  message: string;
+  status: CustomerLogout200Status;
+};
+
+export type CustomerUpdateDeviceToken200Status = typeof CustomerUpdateDeviceToken200Status[keyof typeof CustomerUpdateDeviceToken200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerUpdateDeviceToken200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerUpdateDeviceToken200 = {
+  message: string;
+  status: CustomerUpdateDeviceToken200Status;
+};
+
+export type CustomerDeleteAccount200 = {
+  message: string;
+  success: boolean;
+};
+
+export type CustomerGetAddresses200Status = typeof CustomerGetAddresses200Status[keyof typeof CustomerGetAddresses200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerGetAddresses200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerGetAddresses200 = {
+  message?: string;
+  data?: CustomerAddressResponse[];
+  status: CustomerGetAddresses200Status;
+};
+
+export type CustomerAddAddress201Status = typeof CustomerAddAddress201Status[keyof typeof CustomerAddAddress201Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerAddAddress201Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerAddAddress201 = {
+  data?: CustomerAddressResponse;
+  message: string;
+  status: CustomerAddAddress201Status;
+};
+
+export type CustomerUpdateAddress200Status = typeof CustomerUpdateAddress200Status[keyof typeof CustomerUpdateAddress200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerUpdateAddress200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerUpdateAddress200 = {
+  data?: CustomerAddressResponse;
+  message: string;
+  status: CustomerUpdateAddress200Status;
+};
+
+export type CustomerDeleteAddress200Status = typeof CustomerDeleteAddress200Status[keyof typeof CustomerDeleteAddress200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerDeleteAddress200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerDeleteAddress200 = {
+  message: string;
+  status: CustomerDeleteAddress200Status;
+};
+
+export type CustomerSetDefaultAddress200Status = typeof CustomerSetDefaultAddress200Status[keyof typeof CustomerSetDefaultAddress200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerSetDefaultAddress200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerSetDefaultAddress200 = {
+  data?: CustomerAddressResponse;
+  message: string;
+  status: CustomerSetDefaultAddress200Status;
+};
+
+export type CustomerGetDefaultAddress200Data = {
+  address: CustomerAddressResponse;
+};
+
+export type CustomerGetDefaultAddress200Status = typeof CustomerGetDefaultAddress200Status[keyof typeof CustomerGetDefaultAddress200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerGetDefaultAddress200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerGetDefaultAddress200 = {
+  message?: string;
+  data?: CustomerGetDefaultAddress200Data;
+  status: CustomerGetDefaultAddress200Status;
 };
 
 export type GetCollectionProductsParams = {

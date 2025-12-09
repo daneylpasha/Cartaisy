@@ -20,6 +20,7 @@ import {
   BottomSheetModalWithView,
 } from "@/components/molecules/bottom-sheets";
 import AlertModal from "@/components/organisms/AlertModal";
+import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
 import { router, useLocalSearchParams } from "expo-router";
@@ -34,25 +35,43 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 import {
-  useAddAddress,
-  getGetAddressesQueryKey,
-  useGetAddresses,
-  useSetDefaultAddress,
-  useUpdateAddress,
-  useDeleteAddress,
-} from "@/api/generated/addresses/addresses";
+  getCustomerGetAddressesQueryKey,
+  useCustomerAddAddress,
+  useCustomerUpdateAddress,
+  useCustomerDeleteAddress,
+  useCustomerSetDefaultAddress,
+} from "@/api/generated/customer-addresses/customer-addresses";
+import { useAuthenticatedAddresses } from "@/api/hooks/useAddresses";
 import type {
-  IAddress,
-  AddAddressBody,
-  UpdateAddressBody
+  CustomerAddAddressRequest,
+  CustomerUpdateAddressRequest
 } from "@/api/generated/cartaisyAPI.schemas";
 import { useQueryClient } from "@tanstack/react-query";
 import useUserStore from "@/store/useUserStore";
 
 const AddAddress = () => {
   const params = useLocalSearchParams();
+
+  // Auth guard for blocking guest access
+  const { requireAuth, isAuthenticated } = useAuthGuard();
+
+  // Block guest access - show login modal and redirect back
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Show login modal
+      requireAuth({
+        type: "address",
+        callback: () => {
+          // After successful login, user can add address
+        },
+      });
+      // Go back to previous screen
+      router.back();
+    }
+  }, [isAuthenticated]);
+
   const editData = useMemo(() => {
-    return params.editData ? JSON.parse(params.editData as string) as IAddress : null;
+    return params.editData ? JSON.parse(params.editData as string) : null;
   }, [params.editData]);
 
   const editAddressId = params.editAddressId as string | undefined;
@@ -79,8 +98,8 @@ const AddAddress = () => {
   });
   const queryClient = useQueryClient();
 
-  // Fetch existing addresses to check if this is the first one
-  const { data: addressesResponse } = useGetAddresses();
+  // Use authenticated addresses hook - only fetches when user is logged in
+  const { addresses: existingAddresses } = useAuthenticatedAddresses();
   const { setDefaultAddress } = useUserStore();
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [showLastAddressWarning, setShowLastAddressWarning] = useState(false);
@@ -88,12 +107,12 @@ const AddAddress = () => {
   const descLen = (desc ?? "").length;
 
   // Set default address mutation
-  const { mutate: setDefaultAddressAPI } = useSetDefaultAddress({
+  const { mutate: setDefaultAddressAPI } = useCustomerSetDefaultAddress({
     mutation: {
       onSuccess: (response) => {
         console.log("[AddAddress] Default address set successfully:", response);
         // Refetch addresses to get updated default
-        queryClient.invalidateQueries({ queryKey: getGetAddressesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getCustomerGetAddressesQueryKey() });
       },
       onError: (error) => {
         console.error("[AddAddress] Failed to set default address:", error);
@@ -102,25 +121,25 @@ const AddAddress = () => {
   });
 
   // Add address mutation
-  const { mutate: addAddressMutation, isPending: isAddPending } = useAddAddress({
+  const { mutate: addAddressMutation, isPending: isAddPending } = useCustomerAddAddress({
     mutation: {
       onSuccess: (response) => {
         console.log("[AddAddress] Address added successfully:", response);
 
-        const existingAddresses = addressesResponse?.data?.addresses || [];
         const isFirstAddress = existingAddresses.length === 0;
 
         // If this is the first address, set it as default via API
-        if (isFirstAddress && response?.data?.address?._id) {
+        const newAddress = (response as any)?.data?.address;
+        if (isFirstAddress && newAddress?._id) {
           console.log("[AddAddress] This is the first address, setting as default...");
-          setDefaultAddressAPI({ addressId: response.data.address._id });
-        } else if (response?.data?.address?.isDefault) {
+          setDefaultAddressAPI({ addressId: newAddress._id });
+        } else if ((response as any)?.data?.address?.isDefault) {
           // If the API already marked it as default, update the store
-          setDefaultAddress(response.data.address);
+          setDefaultAddress((response as any).data.address);
         }
 
         // Invalidate addresses query to refetch updated list
-        queryClient.invalidateQueries({ queryKey: getGetAddressesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getCustomerGetAddressesQueryKey() });
         router.back();
       },
       onError: (error) => {
@@ -131,13 +150,13 @@ const AddAddress = () => {
   });
 
   // Update address mutation
-  const { mutate: updateAddressMutation, isPending: isUpdatePending } = useUpdateAddress({
+  const { mutate: updateAddressMutation, isPending: isUpdatePending } = useCustomerUpdateAddress({
     mutation: {
       onSuccess: (response) => {
         console.log("[AddAddress] Address updated successfully:", response);
 
         // Invalidate addresses query to refetch updated list
-        queryClient.invalidateQueries({ queryKey: getGetAddressesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getCustomerGetAddressesQueryKey() });
         router.back();
       },
       onError: (error) => {
@@ -148,13 +167,13 @@ const AddAddress = () => {
   });
 
   // Delete address mutation
-  const { mutate: deleteAddressMutation, isPending: isDeletePending } = useDeleteAddress({
+  const { mutate: deleteAddressMutation, isPending: isDeletePending } = useCustomerDeleteAddress({
     mutation: {
       onSuccess: (response) => {
         console.log("[AddAddress] Address deleted successfully:", response);
 
         // Invalidate addresses query to refetch updated list
-        queryClient.invalidateQueries({ queryKey: getGetAddressesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getCustomerGetAddressesQueryKey() });
         router.back();
       },
       onError: (error: any) => {
@@ -174,7 +193,7 @@ const AddAddress = () => {
 
     if (isEditMode && editAddressId) {
       // Update existing address
-      const updateData: UpdateAddressBody = {
+      const updateData: CustomerUpdateAddressRequest = {
         label: data.addressName,
         address1: data.streetAddress,
         address2: data.apartmentSuite,
@@ -187,16 +206,13 @@ const AddAddress = () => {
         type: "both",
       };
 
-      console.log("[AddAddress] Updating address with data:", updateData);
+      console.log("[AddAddress] Updating address with id:", editAddressId, "with data:", updateData);
       updateAddressMutation({ addressId: editAddressId, data: updateData });
     } else {
-      // Add new address - backend returns data as array directly
-      const existingAddresses = Array.isArray(addressesResponse?.data)
-        ? addressesResponse.data
-        : (addressesResponse?.data?.addresses || []);
+      // Add new address
       const isFirstAddress = existingAddresses.length === 0;
 
-      const addressData: AddAddressBody = {
+      const addressData: CustomerAddAddressRequest = {
         label: data.addressName,
         address1: data.streetAddress,
         address2: data.apartmentSuite,
@@ -222,26 +238,21 @@ const AddAddress = () => {
       return;
     }
 
-    // Backend returns data as array directly, not { addresses: [...] }
-    const addresses = Array.isArray(addressesResponse?.data)
-      ? addressesResponse.data
-      : (addressesResponse?.data?.addresses || []);
-
     // Check if this is the last address
-    if (addresses.length === 1) {
+    if (existingAddresses.length === 1) {
       setShowLastAddressWarning(true);
       return;
     }
 
     // Find the address being deleted by _id
-    const addressIndex = addresses.findIndex((addr: any) => addr._id === editAddressId);
-    const addressToDelete = addresses[addressIndex];
+    const addressIndex = existingAddresses.findIndex((addr: any) => addr._id === editAddressId);
+    const addressToDelete = existingAddresses[addressIndex];
 
     // If deleting the default address, set the next one as default
-    if (addressToDelete?.isDefault && addresses.length > 1) {
+    if (addressToDelete?.isDefault && existingAddresses.length > 1) {
       // Find the next address (prefer the one after, otherwise before)
-      const nextIndex = addressIndex < addresses.length - 1 ? addressIndex + 1 : addressIndex - 1;
-      const nextAddress = addresses[nextIndex];
+      const nextIndex = addressIndex < existingAddresses.length - 1 ? addressIndex + 1 : addressIndex - 1;
+      const nextAddress = existingAddresses[nextIndex];
 
       if (nextAddress?._id) {
         console.log("[AddAddress] Deleting default address, setting next address as default:", nextAddress._id);
@@ -250,10 +261,8 @@ const AddAddress = () => {
       }
     }
 
-    // Delete the address using MongoDB _id
+    // Delete the address using addressId
     console.log("[AddAddress] Deleting address with id:", editAddressId);
-    console.log("[AddAddress] editAddressId type:", typeof editAddressId);
-    console.log("[AddAddress] Expected DELETE URL: /customer/addresses/" + editAddressId);
     deleteAddressMutation({ addressId: editAddressId });
   };
 

@@ -16,7 +16,9 @@ type ProductsHorizontalScrollerProps = {
 const ProductsHorizontalScroller = ({
   collections,
 }: ProductsHorizontalScrollerProps) => {
+  // Subscribe to both isFavorite function AND favoriteProductIds to trigger re-render when favorites change
   const isFavorite = useFavoritesStore((state) => state.isFavorite);
+  const favoriteProductIds = useFavoritesStore((state) => state.favoriteProductIds);
   const targetCollection = collections?.find(
     (collectionItem) => collectionItem.type === "large_row"
   );
@@ -52,6 +54,7 @@ const ProductsHorizontalScroller = ({
         }
         horizontal
         showsHorizontalScrollIndicator={false}
+        extraData={favoriteProductIds}
         contentContainerStyle={{
           paddingHorizontal: tokens.space.md,
           gap: tokens.space.md,

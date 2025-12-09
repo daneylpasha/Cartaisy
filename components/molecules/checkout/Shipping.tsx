@@ -31,7 +31,7 @@ import CountryPicker, {
   CountryCode,
 } from "react-native-country-picker-modal";
 
-import { useGetAddresses } from "@/api/generated/addresses/addresses";
+import { useFormattedAddresses } from "@/api/hooks/useAddresses";
 import {
   useGetShippingRates,
   useSaveShipping,
@@ -71,7 +71,12 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
       null
     );
     const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
-    const { data: addressesResponse } = useGetAddresses();
+
+    // Use authenticated addresses hook - only fetches when user is logged in
+    const {
+      formattedAddresses: addressData,
+      isAuthenticated,
+    } = useFormattedAddresses();
 
     // Fetch shipping rates when address is selected
     // Note: addressId is the array index (0, 1, 2...) from the /addresses endpoint
@@ -83,7 +88,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
     const { data: shippingRatesResponse, isLoading: isLoadingShippingRates } =
       useGetShippingRates(shippingRatesParams, {
         query: {
-          enabled: !!sessionId && selectedAddressId !== null,
+          enabled: !!sessionId && selectedAddressId !== null && isAuthenticated,
         },
       });
 
@@ -121,30 +126,6 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
         });
       }
     }, [shippingRatesResponse]);
-
-    // Backend returns data as array directly, not { addresses: [...] }
-    const rawAddresses = Array.isArray(addressesResponse?.data)
-      ? addressesResponse.data
-      : (addressesResponse?.data?.addresses || []);
-
-    const addressData = rawAddresses.map(
-      (addr: any, index: number) => ({
-        id: index, // Using index as ID since IAddress doesn't have id field
-        name: addr.label || "Address",
-        address: [
-          addr.address1,
-          addr.address2,
-          addr.city,
-          addr.province,
-          addr.country,
-          addr.zip,
-        ]
-          .filter(Boolean)
-          .join(", "),
-        shipping: "Shipping Available",
-        isDefault: addr.isDefault || false,
-      })
-    );
 
     // Handle address selection
     const handleAddressSelect = (addressIndex: number) => {

@@ -10,10 +10,11 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { ProductCard } from "@/components/molecules/ProductCard";
+import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import { tokens } from "@/tamagui/token";
-import { router } from "expo-router";
-import React, { useEffect } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
 
@@ -53,20 +54,47 @@ const WishlistScreen = () => {
   const favoriteProductIds = useFavoritesStore(
     (state) => state.favoriteProductIds
   );
+  const setFavorites = useFavoritesStore((state) => state.setFavorites);
 
-  // Get detailed favorites with complete product data
-  const { data: favoritesData, isLoading } = useGetDetailedFavorites(
+  // Check if user is logged in
+  const { token, isGuest, _hasHydrated } = useAuthStore();
+  const isAuthenticated = _hasHydrated && !!token && !isGuest;
+
+  // Get detailed favorites with complete product data (only if authenticated)
+  const { data: favoritesData, isLoading, refetch } = useGetDetailedFavorites(
     {
       page: 1,
       limit: 100,
     },
     {
       query: {
+        enabled: isAuthenticated, // Only fetch if user is logged in
         refetchOnMount: "always", // Always refetch when component mounts
         staleTime: 0, // Always consider data stale for immediate updates
       },
     }
   );
+
+  // Refetch favorites when screen comes into focus (to sync after login)
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        console.log("[Wishlist] Screen focused, refetching favorites...");
+        refetch();
+      }
+    }, [isAuthenticated, refetch])
+  );
+
+  // Sync favorites to store when data is fetched
+  useEffect(() => {
+    if (favoritesData?.data?.products) {
+      const productIds = favoritesData.data.products.map(
+        (p: any) => p.productId || p.id
+      );
+      console.log("[Wishlist] Syncing favorites to store:", productIds);
+      setFavorites(productIds);
+    }
+  }, [favoritesData, setFavorites]);
 
   // Use detailed favorites API directly - backend returns complete product details
   // Transform the data to match Product schema (images as string array)

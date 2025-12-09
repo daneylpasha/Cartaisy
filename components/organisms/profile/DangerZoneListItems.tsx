@@ -5,12 +5,13 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { FlatList } from "react-native";
 import useAuthStore from "@/store/useAuthStore";
+import useFavoritesStore from "@/store/useFavoritesStore";
 import useUserStore from "@/store/useUserStore";
 
 import { YStack } from "tamagui";
 import CloseAccountModal from "./CloseAccountModal";
 import SignoutAccountModal from "./SignoutAccountModal";
-import { useDeleteAccount } from "@/api/generated/authentication/authentication";
+import { useCustomerDeleteAccount } from "@/api/generated/customer-authentication/customer-authentication";
 import { useQueryClient } from "@tanstack/react-query";
 import { Alert } from "react-native";
 
@@ -20,10 +21,11 @@ export const DangerZoneListItem = () => {
   const [password, setPassword] = useState("");
   const { clearAuth } = useAuthStore();
   const { clearUser } = useUserStore();
+  const { clearFavorites } = useFavoritesStore();
   const queryClient = useQueryClient();
 
   // Delete account mutation
-  const { mutate: deleteAccountMutation, isPending: isDeletingAccount } = useDeleteAccount({
+  const { mutate: deleteAccountMutation, isPending: isDeletingAccount } = useCustomerDeleteAccount({
     mutation: {
       onSuccess: () => {
         console.log("[DeleteAccount] Account deleted successfully");
@@ -50,10 +52,12 @@ export const DangerZoneListItem = () => {
     console.log("[SignOut] Logging out...");
     clearAuth();
     clearUser();
+    clearFavorites(); // Clear favorites since guest users can't have favorites
     queryClient.clear();
     setSignout(false);
     setIsLoggingOut(false);
-    router.replace("/(auth)/login");
+    // Navigate to home screen instead of login
+    router.replace("/(tabs)");
   };
   const DATA = [
     {

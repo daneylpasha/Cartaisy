@@ -1,7 +1,4 @@
-import {
-  useGetAddresses,
-  useSetDefaultAddress,
-} from "@/api/generated/addresses/addresses";
+import { useFormattedAddresses } from "@/api/hooks/useAddresses";
 import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
 import { ParagraphMD, TextLGBold, TextSMSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
@@ -24,7 +21,7 @@ import { PromoBannerCard } from "@/components/organisms/home/PromoBannerCard";
 import ProductsHorizontalScroller from "@/components/organisms/productHorizontalScroller/ProductsHorizontalScroller";
 import ProductsGridScroller from "@/components/organisms/ProductsGridScroller/ProductsGridScroller";
 import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller/SalesHorizontalScroller";
-import useUserStore from "@/store/useUserStore";
+import useAuthStore from "@/store/useAuthStore";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -81,82 +78,42 @@ const HomeScreen = () => {
   const [open, setOpen] = useState(false);
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
-  // Get user data from store
-  const { user, setDefaultAddress } = useUserStore();
-  const userName = user
-    ? `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-      user.fullName ||
-      "User"
-    : "User";
-
-  // Fetch addresses from API
+  // Use authenticated addresses hook - only fetches when user is logged in
   const {
-    data: addressesResponse,
-    isLoading: isLoadingAddresses,
-    error: addressError,
+    addresses: rawAddresses,
+    formattedAddresses: addressData,
+    defaultAddressIndex,
+    isAuthenticated,
     refetch: refetchAddresses,
-  } = useGetAddresses();
+    setDefault: setDefaultAddressMutation,
+  } = useFormattedAddresses();
 
-  // Backend returns data as array directly, not { addresses: [...] }
-  const rawAddresses = Array.isArray(addressesResponse?.data)
-    ? addressesResponse.data
-    : (addressesResponse?.data?.addresses || []);
-
-  // Update user store when addresses are fetched - find the default one
-  React.useEffect(() => {
-    const defaultAddr = rawAddresses.find((addr: any) => addr.isDefault);
-    if (defaultAddr) {
-      setDefaultAddress(defaultAddr);
-    }
-  }, [addressesResponse, setDefaultAddress]);
-
-  // Set default address mutation
-  const { mutate: setDefaultAddressMutation, isPending: isSettingDefault } =
-    useSetDefaultAddress({
-      mutation: {
-        onSuccess: (_response, variables) => {
-          // Find the address that was set as default by addressId
-          const defaultAddress = rawAddresses.find((addr: any) => addr._id === variables.addressId);
-          if (defaultAddress) {
-            setDefaultAddress(defaultAddress);
-          }
-          // Refetch addresses to get updated list
-          refetchAddresses();
-        },
-      },
-    });
-
-  // Refetch addresses when screen comes into focus (e.g., after adding new address)
+  // Refetch addresses when screen comes into focus (only if authenticated)
   useFocusEffect(
     useCallback(() => {
-      refetchAddresses();
-    }, [refetchAddresses])
+      if (isAuthenticated) {
+        refetchAddresses();
+      }
+    }, [refetchAddresses, isAuthenticated])
   );
 
-  // Map API addresses to AddressCard format
-  const addressData = rawAddresses.map((addr: any, index: number) => ({
-    id: index,
-    addressId: addr._id || String(index), // Use MongoDB _id
-    name: addr.label || userName,
-    address: [
-      addr.address1,
-      addr.address2,
-      addr.city,
-      addr.province,
-      addr.country,
-      addr.zip,
-    ]
-      .filter(Boolean)
-      .join(", "),
-    shipping: "Shipping Available",
-    isDefault: addr.isDefault || false,
-  }));
-
-  // Find the default address index
-  const defaultAddressIndex = addressData.findIndex((addr) => addr.isDefault);
-
-  const { data, isLoading, refetch, error } = useHomeScreenData();
+  // Wait for auth store to hydrate before fetching homescreen data
+  const { _hasHydrated, token } = useAuthStore();
+  const { data, isLoading, refetch, error } = useHomeScreenData(undefined, {
+    query: {
+      enabled: _hasHydrated, // Only fetch after auth store has loaded token from storage
+    },
+  });
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("[HomeScreen] _hasHydrated:", _hasHydrated);
+    console.log("[HomeScreen] token exists:", !!token);
+    console.log("[HomeScreen] isLoading:", isLoading);
+    console.log("[HomeScreen] error:", error);
+    console.log("[HomeScreen] data:", data);
+  }, [_hasHydrated, token, isLoading, error, data]);
 
   const onRefresh = async () => {
     setIsRefreshing(true);
@@ -220,7 +177,7 @@ const HomeScreen = () => {
       const selectedAddr = rawAddresses[selectedAddress];
       const addressId = selectedAddr?._id;
       if (addressId) {
-        setDefaultAddressMutation({ addressId });
+        setDefaultAddressMutation(addressId);
       }
     }
     setOpen(false);
