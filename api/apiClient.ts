@@ -1,9 +1,8 @@
 import useAuthStore from "@/store/useAuthStore";
 import Axios, { AxiosError, AxiosRequestConfig } from "axios";
 
-// Backend URL
-const API_BASE_URL =
-  "https://cartaisy-backend-production.up.railway.app/api/v1";
+// Backend URL (from environment variable)
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || "";
 
 // Store ID for multi-tenancy (from environment variable)
 const STORE_ID = process.env.EXPO_PUBLIC_STORE_ID || "";

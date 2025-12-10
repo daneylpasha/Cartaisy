@@ -1,7 +1,7 @@
 const PRODUCTS_CONFIG = {
   SHOPIFY: {
-    STORE_URL: "https://pwhqbm-db.myshopify.com",
-    API_VERSION: "2025-07",
+    STORE_URL: process.env.EXPO_PUBLIC_SHOPIFY_STORE_URL || "",
+    API_VERSION: process.env.EXPO_PUBLIC_SHOPIFY_API_VERSION || "2025-07",
     // ENDPOINTS: {
     //   PRODUCTS: "/admin/api/2025-07/products.json",
     //   COLLECTIONS: "/admin/api/2025-07/custom_collections.json",

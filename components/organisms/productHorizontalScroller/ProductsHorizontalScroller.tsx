@@ -46,7 +46,7 @@ const ProductsHorizontalScroller = ({
         color="primary"
         onPressSeeAll={handleViewAll}
       />
-      <Spacer size={"$xl"} />
+      <Spacer size={"$reg"} />
       <FlatList
         data={targetCollection?.collection.products}
         keyExtractor={(product, index) =>

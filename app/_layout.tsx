@@ -111,8 +111,10 @@ export default function RootLayout() {
             publishableKey={
               process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
             }
-            urlScheme="cartaisy"
-            merchantIdentifier="merchant.com.cartaisy"
+            urlScheme={process.env.EXPO_PUBLIC_APP_SCHEME || "cartaisy"}
+            merchantIdentifier={
+              process.env.EXPO_PUBLIC_STRIPE_MERCHANT_ID || "merchant.com.cartaisy"
+            }
           >
             <TamaguiProvider
               config={config}
