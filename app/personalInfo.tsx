@@ -36,6 +36,7 @@ import { getCustomerGetAddressesQueryKey } from "@/api/generated/customer-addres
 import { useAuthenticatedAddresses } from "@/api/hooks/useAddresses";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
+import useAuthStore from "@/store/useAuthStore";
 
 const toISO = (d: Date) => {
   const y = d.getFullYear();
@@ -59,6 +60,10 @@ const PersonalInfo = () => {
   const params = useLocalSearchParams();
   const form = useForm();
   const { showAlert, AlertComponent } = useCustomAlert();
+
+  // Check if user is logged in
+  const { isGuest, token } = useAuthStore();
+  const isLoggedIn = !!token && !isGuest;
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [pendingAddressId, setPendingAddressId] = useState<string | null>(null);
   const [pendingAddressText, setPendingAddressText] = useState<string | null>(null);
@@ -91,6 +96,7 @@ const PersonalInfo = () => {
   // Get user profile data (this page requires authentication)
   const { data: profileApiData, isLoading: isLoadingProfile, refetch: refetchProfile } = useCustomerGetProfile({
     query: {
+      enabled: isLoggedIn, // Only fetch if user is logged in
       retry: (failureCount, error: any) => {
         // Don't retry on auth errors
         if (error?.response?.status === 401 || error?.response?.status === 500) {

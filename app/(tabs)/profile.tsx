@@ -16,6 +16,7 @@ import { PaymentListItem } from "@/components/organisms/profile/PaymentListItems
 import { SecurityListItem } from "@/components/organisms/profile/SecurityListItems";
 import { WishlistCarousel } from "@/components/organisms/profile/WishListCarousel";
 import { SHADOW_STYLES } from "@/constants/styles";
+import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import useUserStore from "@/store/useUserStore";
@@ -31,6 +32,7 @@ import { XStack, YStack } from "tamagui";
 const ProfileScreen = () => {
   const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
   const { showAlert, AlertComponent } = useCustomAlert();
+  const { showLoginModal } = useAuthGuard();
 
   // Get auth state to check if user is logged in
   const { isGuest, token } = useAuthStore();
@@ -139,6 +141,7 @@ const ProfileScreen = () => {
     (state) => state.favoriteProductIds
   );
   const hasWishlistItems = favoriteProductIds.size > 0;
+  // Build profile data based on login state
   const profileData = [
     {
       id: "header",
@@ -152,70 +155,77 @@ const ProfileScreen = () => {
             <TextMDRegular color="$secondary">{location}</TextMDRegular>
             <Spacer size="$lg" />
           </YStack>
-          <XStack justifyContent="center" alignItems="center">
-            <YStack
-              paddingHorizontal={"$md"}
-              paddingVertical={"$reg"}
-              alignItems="center"
-              justifyContent="center"
-              borderRightWidth={0.7}
-              borderColor="$lightgrey"
-            >
-              <AppImage name="calendar" width={18} height={19} />
-              <Spacer size="$reg" />
-              <TextSMRegular color="$secondary">{"User Since"}</TextSMRegular>
-              <TextXLBold>{userSince}</TextXLBold>
-            </YStack>
-            <YStack
-              paddingHorizontal={"$md"}
-              paddingVertical={"$reg"}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <AppImage name="piggyBank" width={18} height={19} />
-              <Spacer size="$reg" />
-              <TextSMRegular color="$secondary">
-                {"Total Purchase"}
-              </TextSMRegular>
-              <TextXLBold>{totalPurchases}</TextXLBold>
-            </YStack>
-          </XStack>
+          {isLoggedIn && (
+            <XStack justifyContent="center" alignItems="center">
+              <YStack
+                paddingHorizontal={"$md"}
+                paddingVertical={"$reg"}
+                alignItems="center"
+                justifyContent="center"
+                borderRightWidth={0.7}
+                borderColor="$lightgrey"
+              >
+                <AppImage name="calendar" width={18} height={19} />
+                <Spacer size="$reg" />
+                <TextSMRegular color="$secondary">{"User Since"}</TextSMRegular>
+                <TextXLBold>{userSince}</TextXLBold>
+              </YStack>
+              <YStack
+                paddingHorizontal={"$md"}
+                paddingVertical={"$reg"}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <AppImage name="piggyBank" width={18} height={19} />
+                <Spacer size="$reg" />
+                <TextSMRegular color="$secondary">
+                  {"Total Purchase"}
+                </TextSMRegular>
+                <TextXLBold>{totalPurchases}</TextXLBold>
+              </YStack>
+            </XStack>
+          )}
         </YStack>
       ),
     },
-    {
-      id: "purchases",
-      type: "purchases",
-      content: (
-        <>
-          <Spacer size="$lg" />
-          <SectionHeader
-            title="My Orders"
-            showImage={false}
-            color="primary"
-            seeAllText="View All"
-            onPressSeeAll={() => {
-              router.push("/orders");
-            }}
-          />
-          <YStack paddingHorizontal="$md">
-            <Spacer size="$reg" />
-            <YStack
-              padding={"$reg"}
-              backgroundColor="$white"
-              borderRadius={"$md"}
-              style={{
-                ...SHADOW_STYLES,
-              }}
-            >
-              <ActiveOrders activeOrders={3} />
-              <Spacer size="$md" />
-              <ActiveListItem />
-            </YStack>
-          </YStack>
-        </>
-      ),
-    },
+    // Only show orders for logged in users
+    ...(isLoggedIn
+      ? [
+          {
+            id: "purchases",
+            type: "purchases",
+            content: (
+              <>
+                <Spacer size="$lg" />
+                <SectionHeader
+                  title="My Orders"
+                  showImage={false}
+                  color="primary"
+                  seeAllText="View All"
+                  onPressSeeAll={() => {
+                    router.push("/orders");
+                  }}
+                />
+                <YStack paddingHorizontal="$md">
+                  <Spacer size="$reg" />
+                  <YStack
+                    padding={"$reg"}
+                    backgroundColor="$white"
+                    borderRadius={"$md"}
+                    style={{
+                      ...SHADOW_STYLES,
+                    }}
+                  >
+                    <ActiveOrders activeOrders={3} />
+                    <Spacer size="$md" />
+                    <ActiveListItem />
+                  </YStack>
+                </YStack>
+              </>
+            ),
+          },
+        ]
+      : []),
     // Conditionally include wishlist sections only if there are items
     ...(hasWishlistItems
       ? [
@@ -247,61 +257,107 @@ const ProfileScreen = () => {
           },
         ]
       : []),
-    {
-      id: "generalListItem",
-      type: "generalListItem",
-      content: (
-        <>
-          <Spacer size="$lg" />
-          <SectionHeader title="General" showImage={false} />
-          <Spacer size="$reg" />
-          <GeneralListItems />
-        </>
-      ),
-    },
-    {
-      id: "payment",
-      type: "payment",
-      content: (
-        <>
-          <Spacer size="$lg" />
-          <SectionHeader title="Payment" showImage={false} />
-          <Spacer size="$reg" />
-          <PaymentListItem />
-        </>
-      ),
-    },
-
-    {
-      id: "security",
-      type: "security",
-      content: (
-        <>
-          <Spacer size="$lg" />
-          <SectionHeader title="Security" showImage={false} />
-          <Spacer size="$reg" />
-          <SecurityListItem />
-        </>
-      ),
-    },
-    {
-      id: "dangerZone",
-      type: "dangerZone",
-      content: (
-        <>
-          <Spacer size="$lg" />
-          <XStack paddingRight={"$md"} justifyContent="space-between">
-            <SectionHeader title="Danger Zone" showImage={false} />
-            <YStack paddingRight={"$reg"}>
-              <AppImage name="danger" size={19} />
-            </YStack>
-          </XStack>
-          <Spacer size="$reg" />
-          <DangerZoneListItem />
-          <Spacer size="$xl" />
-        </>
-      ),
-    },
+    // Only show General, Payment, Security, and Danger Zone for logged in users
+    ...(isLoggedIn
+      ? [
+          {
+            id: "generalListItem",
+            type: "generalListItem",
+            content: (
+              <>
+                <Spacer size="$lg" />
+                <SectionHeader title="General" showImage={false} />
+                <Spacer size="$reg" />
+                <GeneralListItems />
+              </>
+            ),
+          },
+          {
+            id: "payment",
+            type: "payment",
+            content: (
+              <>
+                <Spacer size="$lg" />
+                <SectionHeader title="Payment" showImage={false} />
+                <Spacer size="$reg" />
+                <PaymentListItem />
+              </>
+            ),
+          },
+          {
+            id: "security",
+            type: "security",
+            content: (
+              <>
+                <Spacer size="$lg" />
+                <SectionHeader title="Security" showImage={false} />
+                <Spacer size="$reg" />
+                <SecurityListItem />
+              </>
+            ),
+          },
+          {
+            id: "dangerZone",
+            type: "dangerZone",
+            content: (
+              <>
+                <Spacer size="$lg" />
+                <XStack paddingRight={"$md"} justifyContent="space-between">
+                  <SectionHeader title="Danger Zone" showImage={false} />
+                  <YStack paddingRight={"$reg"}>
+                    <AppImage name="danger" size={19} />
+                  </YStack>
+                </XStack>
+                <Spacer size="$reg" />
+                <DangerZoneListItem />
+                <Spacer size="$xl" />
+              </>
+            ),
+          },
+        ]
+      : [
+          // Guest user: show login prompt
+          {
+            id: "guestLoginPrompt",
+            type: "guestLoginPrompt",
+            content: (
+              <>
+                <Spacer size="$xl" />
+                <YStack
+                  paddingHorizontal="$md"
+                  paddingVertical="$lg"
+                  marginHorizontal="$md"
+                  backgroundColor="$white"
+                  borderRadius="$md"
+                  alignItems="center"
+                  style={{
+                    ...SHADOW_STYLES,
+                  }}
+                >
+                  <AppImage name="userIcon" width={48} height={48} />
+                  <Spacer size="$md" />
+                  <TextSMSemiBold>Sign in to access your account</TextSMSemiBold>
+                  <Spacer size="$sm" />
+                  <TextSMRegular color="$secondary" textAlign="center">
+                    View orders, manage addresses, and more
+                  </TextSMRegular>
+                  <Spacer size="$lg" />
+                  <YStack
+                    backgroundColor="$primary"
+                    paddingHorizontal="$xl"
+                    paddingVertical="$reg"
+                    borderRadius="$md"
+                    pressStyle={{ opacity: 0.8 }}
+                    onPress={showLoginModal}
+                  >
+                    <TextSMSemiBold color="$white">Sign In</TextSMSemiBold>
+                  </YStack>
+                </YStack>
+                <Spacer size="$xl" />
+              </>
+            ),
+          },
+        ]),
   ];
 
   const renderItem = ({ item }: { item: any }) => {

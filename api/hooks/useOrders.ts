@@ -111,11 +111,24 @@ export const fetchOrderDetails = async (
 
 // React Query hook for order details
 export const useOrderDetails = (orderId: string) => {
+  // Check if user is authenticated
+  const token = useAuthStore((state) => state.token);
+  const isGuest = useAuthStore((state) => state.isGuest);
+  const _hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const isAuthenticated = _hasHydrated && !!token && !isGuest;
+
   return useQuery({
     queryKey: ["order", orderId],
     queryFn: () => fetchOrderDetails(orderId),
-    enabled: !!orderId, // Only fetch if orderId exists
+    enabled: !!orderId && isAuthenticated, // Only fetch if orderId exists and user is authenticated
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: (failureCount, error: any) => {
+      // Don't retry on auth errors
+      if (error?.response?.status === 401 || error?.response?.status === 500) {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 };
 

@@ -433,7 +433,7 @@ const HomeScreen = () => {
               <YStack
                 alignItems="center"
                 justifyContent="center"
-                paddingVertical="$xl"
+                height={400}
               >
                 <AppImage
                   name="locationUnfilled"
