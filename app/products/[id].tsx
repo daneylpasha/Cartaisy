@@ -1141,8 +1141,9 @@ const ProductDetailsScreen = () => {
         </>
       )}
 
-      {/* Full-screen viewer */}
+      {/* Full-screen viewer - key prop forces remount to reset zoom state */}
       <ImageViewing
+        key={viewerOpen ? `viewer-${viewerIndex}` : 'viewer-closed'}
         images={viewerImages}
         imageIndex={viewerIndex}
         doubleTapToZoomEnabled={true}

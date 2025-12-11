@@ -24,7 +24,13 @@ import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScrol
 import useAuthStore from "@/store/useAuthStore";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Animated,
   FlatList,
@@ -107,13 +113,13 @@ const HomeScreen = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Debug logging
-  useEffect(() => {
-    console.log("[HomeScreen] _hasHydrated:", _hasHydrated);
-    console.log("[HomeScreen] token exists:", !!token);
-    console.log("[HomeScreen] isLoading:", isLoading);
-    console.log("[HomeScreen] error:", error);
-    console.log("[HomeScreen] data:", data);
-  }, [_hasHydrated, token, isLoading, error, data]);
+  // useEffect(() => {
+  //   console.log("[HomeScreen] _hasHydrated:", _hasHydrated);
+  //   console.log("[HomeScreen] token exists:", !!token);
+  //   console.log("[HomeScreen] isLoading:", isLoading);
+  //   console.log("[HomeScreen] error:", error);
+  //   console.log("[HomeScreen] data:", data);
+  // }, [_hasHydrated, token, isLoading, error, data]);
 
   const onRefresh = async () => {
     setIsRefreshing(true);
@@ -125,7 +131,7 @@ const HomeScreen = () => {
   };
 
   const homescreenData = data?.data;
-  console.log("HomeScreen Data:", homescreenData);
+  // console.log("HomeScreen Data:", homescreenData);
 
   const handleAddNewAddress = () => {
     // Check if user already has 5 addresses
@@ -205,57 +211,71 @@ const HomeScreen = () => {
   const renderComponentForType = (type: LayoutType): React.ReactNode => {
     switch (type) {
       case "carousel":
-        return <FeaturedPromotionsCarousel carousels={homescreenData?.carousel} />;
+        return (
+          <FeaturedPromotionsCarousel carousels={homescreenData?.carousel} />
+        );
       case "promo_banners":
         return <PromoBannerCard promoBanners={homescreenData?.promoBanners} />;
       case "callout_banners":
-        return <CalloutBanners calloutBanners={homescreenData?.calloutBanners} />;
+        return (
+          <CalloutBanners calloutBanners={homescreenData?.calloutBanners} />
+        );
       case "category_grid":
         return <CollectionsGrid itemData={homescreenData?.categoryGrid} />;
       case "collection_displays":
         // Render collections in the order they appear in the API response (sorted by order field)
         return (
           <>
-            {(homescreenData?.collectionDisplays as CollectionDisplayItem[] | undefined)?.map(
-              (collection: CollectionDisplayItem, index: number) => {
-                if (collection.type === "large_row") {
-                  return (
-                    <ProductsHorizontalScroller
-                      key={`collection-${collection.order ?? index}`}
-                      collections={[collection]}
-                    />
-                  );
-                }
-                if (collection.type === "small_grid") {
-                  return (
-                    <ProductsGridScroller
-                      key={`collection-${collection.order ?? index}`}
-                      collection={[collection]}
-                    />
-                  );
-                }
-                if (collection.type === "medium_row") {
-                  return (
-                    <SalesHorizontalScroller
-                      key={`collection-${collection.order ?? index}`}
-                      collection={[collection]}
-                    />
-                  );
-                }
-                return null;
+            {(
+              homescreenData?.collectionDisplays as
+                | CollectionDisplayItem[]
+                | undefined
+            )?.map((collection: CollectionDisplayItem, index: number) => {
+              if (collection.type === "large_row") {
+                return (
+                  <ProductsHorizontalScroller
+                    key={`collection-${collection.order ?? index}`}
+                    collections={[collection]}
+                  />
+                );
               }
-            )}
+              if (collection.type === "small_grid") {
+                return (
+                  <ProductsGridScroller
+                    key={`collection-${collection.order ?? index}`}
+                    collection={[collection]}
+                  />
+                );
+              }
+              if (collection.type === "medium_row") {
+                return (
+                  <SalesHorizontalScroller
+                    key={`collection-${collection.order ?? index}`}
+                    collection={[collection]}
+                  />
+                );
+              }
+              return null;
+            })}
           </>
         );
       case "collection_showcases":
         return (
           <>
-            <CollectionsCardGrid collectionShowcases={homescreenData?.collectionShowcases} />
-            <BrandsCollections brandsCollections={homescreenData?.collectionShowcases} />
+            <CollectionsCardGrid
+              collectionShowcases={homescreenData?.collectionShowcases}
+            />
+            <BrandsCollections
+              brandsCollections={homescreenData?.collectionShowcases}
+            />
           </>
         );
       case "category_collection_grid":
-        return <CategorySuggestions categoryCollectionGrid={homescreenData?.categoryCollectionGrid} />;
+        return (
+          <CategorySuggestions
+            categoryCollectionGrid={homescreenData?.categoryCollectionGrid}
+          />
+        );
       default:
         return null;
     }
@@ -333,8 +353,10 @@ const HomeScreen = () => {
         topInset={TOP_INSET}
         rotateAnim={rotateAnim}
         onAddressPress={() => {
-          // Refetch addresses when opening bottomsheet
-          refetchAddresses();
+          // Refetch addresses when opening bottomsheet - only for authenticated users
+          if (isAuthenticated) {
+            refetchAddresses();
+          }
           bottomSheetModalRef.current?.present();
           setOpen(true);
           Animated.timing(rotateAnim, {
@@ -430,11 +452,7 @@ const HomeScreen = () => {
                 </OpTouch>
               </XStack>
             ) : (
-              <YStack
-                alignItems="center"
-                justifyContent="center"
-                height={400}
-              >
+              <YStack alignItems="center" justifyContent="center" height={400}>
                 <AppImage
                   name="locationUnfilled"
                   width={48}
