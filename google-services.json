@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "263022966458",
+    "project_id": "cartaisy-production",
+    "storage_bucket": "cartaisy-production.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:263022966458:android:39a0c638829857eaf9b483",
+        "android_client_info": {
+          "package_name": "com.rendernext.cartaisy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzGAq91TTWrw9rjARYukizu5-8zA81RfI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

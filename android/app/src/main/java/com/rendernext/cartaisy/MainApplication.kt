@@ -1,4 +1,4 @@
-package com.cartaisy.app
+package com.rendernext.cartaisy
 
 import android.app.Application
 import android.content.res.Configuration

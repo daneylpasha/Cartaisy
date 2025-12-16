@@ -10,8 +10,11 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 
 import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
+import Constants from "expo-constants";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
+import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -27,7 +30,24 @@ Notifications.setNotificationHandler({
     shouldShowList: true,
   }),
 });
+
 async function registerForPushNotificationsAsync() {
+  let token;
+
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "default",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#FF231F7C",
+    });
+  }
+
+  if (!Device.isDevice) {
+    console.log("Must use physical device for Push Notifications");
+    return;
+  }
+
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
   if (existingStatus !== "granted") {
@@ -36,13 +56,32 @@ async function registerForPushNotificationsAsync() {
   }
 
   if (finalStatus !== "granted") {
-    alert("Permission not granted!");
+    console.log("Permission not granted for push notifications!");
     return;
   }
 
-  const tokenData = await Notifications.getExpoPushTokenAsync();
-  console.log("Expo Push Token:", tokenData.data);
-  return tokenData.data;
+  try {
+    // Get the project ID from app config
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+
+    if (projectId) {
+      // Use Expo Push Token if projectId is available
+      const expoPushToken = await Notifications.getExpoPushTokenAsync({
+        projectId,
+      });
+      token = expoPushToken.data;
+      console.log("Expo Push Token:", token);
+    } else {
+      // Fallback to native FCM token for Android
+      const devicePushToken = await Notifications.getDevicePushTokenAsync();
+      token = devicePushToken.data;
+      console.log("Device Push Token (FCM):", token);
+    }
+  } catch (error) {
+    console.log("Error getting push token:", error);
+  }
+
+  return token;
 }
 export default function RootLayout() {
   const colorScheme = useColorScheme();

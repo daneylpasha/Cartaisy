@@ -1,4 +1,4 @@
-package com.cartaisy.app
+package com.rendernext.cartaisy
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
