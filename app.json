@@ -19,6 +19,9 @@
       "bundleIdentifier": "com.rendernext.cartaisy",
       "infoPlist": {
         "UIBackgroundModes": ["remote-notification"]
+      },
+      "entitlements": {
+        "com.apple.developer.in-app-payments": ["merchant.com.cartaisy"]
       }
     },
     "android": {
@@ -57,7 +60,14 @@
         }
       ],
       "@react-native-firebase/app",
-      "@react-native-firebase/messaging"
+      "@react-native-firebase/messaging",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.cartaisy",
+          "enableGooglePay": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

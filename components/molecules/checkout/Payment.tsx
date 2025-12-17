@@ -7,6 +7,7 @@ import { Divider } from "@/components/atoms/Divider";
 import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
+import { WalletPaymentButtons } from "@/components/molecules/checkout/WalletPaymentButtons";
 import { t } from "@/translations";
 import { router, useFocusEffect } from "expo-router";
 import React, { forwardRef, useImperativeHandle, useState } from "react";
@@ -22,20 +23,25 @@ type PaymentProps = {
   image?: keyof typeof Icons;
 };
 
+export type PaymentMethodType = "card" | "apple_pay" | "google_pay";
+
 interface PaymentStepperProps {
   sessionId: string;
-  onStepComplete: () => void;
+  onStepComplete: (walletPaymentMethodId?: string, paymentType?: PaymentMethodType) => void;
   onError?: () => void;
+  orderTotal?: number; // Total amount for wallet pay display
 }
 
 export interface PaymentStepperRef {
   handleContinue: () => void;
   isLoading: boolean;
+  selectedPaymentType: PaymentMethodType;
 }
 
 const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
-  ({ sessionId, onStepComplete, onError }, ref) => {
+  ({ sessionId, onStepComplete, onError, orderTotal = 0 }, ref) => {
     const [selectedPayment, setSelectedPayment] = useState<string>("");
+    const [selectedPaymentType, setSelectedPaymentType] = useState<PaymentMethodType>("card");
     const { showAlert, AlertComponent } = useCustomAlert();
 
     const {
@@ -79,6 +85,27 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
       }
     }, [paymentMethods, selectedPayment]);
 
+    // Handle wallet payment success
+    const handleWalletPaymentSuccess = (paymentMethodId: string, paymentType: "apple_pay" | "google_pay") => {
+      console.log("[Payment] Wallet payment successful:", paymentType, paymentMethodId);
+      setSelectedPaymentType(paymentType);
+      // For wallet payments, pass the payment method ID to the parent
+      // The checkout flow will handle this differently than card payments
+      onStepComplete(paymentMethodId, paymentType);
+    };
+
+    // Handle wallet payment error
+    const handleWalletPaymentError = (error: string) => {
+      console.error("[Payment] Wallet payment error:", error);
+      showAlert({
+        type: "error",
+        title: "Payment Failed",
+        message: error,
+        buttons: [{ text: "OK" }],
+      });
+      onError?.();
+    };
+
     // Expose handleContinue method and loading state to parent via ref
     useImperativeHandle(ref, () => ({
       handleContinue: () => {
@@ -94,8 +121,9 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
           return;
         }
 
-        // Save payment method
+        // Save payment method (card payment)
         console.log("[Payment] Saving payment method:", selectedPayment);
+        setSelectedPaymentType("card");
         savePaymentStep({
           data: {
             sessionId: sessionId,
@@ -104,6 +132,7 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
         });
       },
       isLoading: isSavingPayment,
+      selectedPaymentType,
     }));
 
     // const paymentMethods = [
@@ -245,6 +274,18 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
         />
         <Spacer size={"$reg"} />
         <YStack paddingHorizontal={"$md"}>
+          {/* Wallet Payment Options (Apple Pay / Google Pay) */}
+          {orderTotal > 0 && (
+            <WalletPaymentButtons
+              amount={orderTotal}
+              currency="USD"
+              onPaymentSuccess={handleWalletPaymentSuccess}
+              onPaymentError={handleWalletPaymentError}
+              label="Cartaisy Order"
+            />
+          )}
+
+          {/* Card Payment Options */}
           <YStack
             backgroundColor={"$white"}
             borderWidth={1}

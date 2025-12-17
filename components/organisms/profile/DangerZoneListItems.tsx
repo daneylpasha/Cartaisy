@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { FlatList } from "react-native";
 import useAuthStore from "@/store/useAuthStore";
+import useCartStore from "@/store/useCartStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import useUserStore from "@/store/useUserStore";
 
@@ -20,6 +21,7 @@ export const DangerZoneListItem = () => {
   const [signout, setSignout] = useState(false);
   const [password, setPassword] = useState("");
   const { clearAuth } = useAuthStore();
+  const { clearCart } = useCartStore();
   const { clearUser } = useUserStore();
   const { clearFavorites } = useFavoritesStore();
   const queryClient = useQueryClient();
@@ -30,7 +32,9 @@ export const DangerZoneListItem = () => {
       onSuccess: () => {
         console.log("[DeleteAccount] Account deleted successfully");
         clearAuth();
+        clearCart(); // Clear cart data
         clearUser();
+        clearFavorites(); // Clear favorites
         queryClient.clear(); // Clear all cached data
         setShow(false);
         router.replace("/(auth)/login");
@@ -51,6 +55,7 @@ export const DangerZoneListItem = () => {
     setIsLoggingOut(true);
     console.log("[SignOut] Logging out...");
     clearAuth();
+    clearCart(); // Clear cart to prevent data leakage to next user
     clearUser();
     clearFavorites(); // Clear favorites since guest users can't have favorites
     queryClient.clear();

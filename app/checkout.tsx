@@ -8,7 +8,7 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import { CheckoutStepper } from "@/components/molecules/checkout/CheckoutStepper";
 import Confirmation from "@/components/molecules/checkout/Confirmation";
-import PaymentStepper from "@/components/molecules/checkout/Payment";
+import PaymentStepper, { PaymentMethodType } from "@/components/molecules/checkout/Payment";
 import Shipping from "@/components/molecules/checkout/Shipping";
 import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useCartStore from "@/store/useCartStore";
@@ -41,12 +41,19 @@ const CheckoutScreen = () => {
   const { token } = useAuthStore();
 
   // Cart store and clear mutation
-  const { cartId, clearCart: clearCartStore } = useCartStore();
+  const { cartId, clearCart: clearCartStore, getTotalPrice } = useCartStore();
   const { mutate: clearCartAPI } = useClearCart();
 
   const [sessionId, setSessionId] = useState<string>(initialSessionId || "");
   // Always start at shipping step (no guest checkout)
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
+
+  // Wallet payment state
+  const [walletPaymentMethodId, setWalletPaymentMethodId] = useState<string | null>(null);
+  const [walletPaymentType, setWalletPaymentType] = useState<PaymentMethodType | null>(null);
+
+  // Calculate order total from cart for wallet pay display
+  const orderTotal = getTotalPrice();
 
   // Block guest access - show login modal and redirect back
   useEffect(() => {
@@ -171,11 +178,17 @@ const CheckoutScreen = () => {
               checkoutSummary?.shippingAddress ||
               {},
             payment: {
-              cardBrand: orderData.payment?.method || "card",
+              cardBrand: walletPaymentType === "apple_pay"
+                ? "Apple Pay"
+                : walletPaymentType === "google_pay"
+                  ? "Google Pay"
+                  : orderData.payment?.method || "card",
               last4:
-                orderData.payment?.last4 ||
-                checkoutSummary?.paymentMethod?.last4 ||
-                "****",
+                walletPaymentType && walletPaymentType !== "card"
+                  ? "" // No last4 for wallet payments
+                  : orderData.payment?.last4 ||
+                    checkoutSummary?.paymentMethod?.last4 ||
+                    "****",
             },
             shipping: {
               method:
@@ -278,10 +291,34 @@ const CheckoutScreen = () => {
     setCurrentStep("payment");
   };
 
-  const handlePaymentComplete = () => {
-    console.log("[Checkout] Payment step completed, moving to confirmation");
-    setIsProcessing(false);
-    setCurrentStep("confirmation");
+  const handlePaymentComplete = (
+    paymentMethodId?: string,
+    paymentType?: PaymentMethodType
+  ) => {
+    console.log("[Checkout] Payment step completed");
+    console.log("[Checkout] Payment type:", paymentType);
+    console.log("[Checkout] Payment method ID:", paymentMethodId);
+
+    // Store wallet payment info if provided
+    if (paymentMethodId && paymentType && paymentType !== "card") {
+      setWalletPaymentMethodId(paymentMethodId);
+      setWalletPaymentType(paymentType);
+      console.log("[Checkout] Wallet payment detected, completing order directly...");
+
+      // For wallet payments, skip confirmation and complete order directly
+      // since the user already confirmed via Apple Pay/Google Pay
+      setIsProcessing(true);
+      completeCheckout({
+        data: {
+          sessionId,
+          paymentIntentId: paymentMethodId, // Pass wallet payment method ID
+        },
+      });
+    } else {
+      // Standard card flow - move to confirmation step
+      setIsProcessing(false);
+      setCurrentStep("confirmation");
+    }
   };
 
   const getCurrentStepIndex = () => {
@@ -327,6 +364,7 @@ const CheckoutScreen = () => {
             sessionId={sessionId}
             onStepComplete={handlePaymentComplete}
             onError={() => setIsProcessing(false)}
+            orderTotal={orderTotal}
           />
         );
 
