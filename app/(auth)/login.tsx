@@ -1,4 +1,5 @@
 import { useLogin } from "@/api/hooks/useAuth";
+import { getCart } from "@/api/generated/cart/cart";
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { OpTouch } from "@/components/atoms/OpTouch";
@@ -15,6 +16,7 @@ import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { SecondaryButton } from "@/components/molecules/buttons/SecondaryButton";
 import { SHADOW_STYLES } from "@/constants/styles";
 import useAuthStore from "@/store/useAuthStore";
+import useCartStore from "@/store/useCartStore";
 import useUserStore from "@/store/useUserStore";
 import { t } from "@/translations";
 import { router } from "expo-router";
@@ -34,8 +36,10 @@ const Login = () => {
   const { setUser } = useUserStore();
 
   const { mutateAsync: loginUser, isPending: isLoggingIn } = useLogin({
-    onSuccess: (data) => {
-      console.log('[Login] API Response:', JSON.stringify(data, null, 2));
+    onSuccess: async (data) => {
+      console.log('[DEBUG] ========== LOGIN SUCCESS ==========');
+      console.log('[DEBUG] Full login response:', JSON.stringify(data, null, 2));
+      console.log('[DEBUG] User object:', JSON.stringify(data?.data?.user, null, 2));
       console.log('[Login] Token from response:', data?.data?.token ? 'EXISTS' : 'NULL');
 
       if (data?.data?.token) {
@@ -64,6 +68,58 @@ const Login = () => {
         clearGuestSession();
       }
 
+      // Restore cart if customer has saved shopifyCartId
+      const shopifyCartId = (data?.data?.user as any)?.shopifyCartId;
+      console.log('[DEBUG] shopifyCartId from user:', shopifyCartId, 'type:', typeof shopifyCartId);
+
+      if (shopifyCartId) {
+        console.log("[DEBUG] Entering cart restoration block...");
+        console.log("[Login] Found saved cartId, attempting to restore cart...");
+        try {
+          const { syncWithApiResponse } = useCartStore.getState();
+          const cartResponse = await getCart(encodeURIComponent(shopifyCartId));
+
+          if (cartResponse?.data?.items && cartResponse.data.items.length > 0) {
+            // Convert API response to local cart format
+            const convertedItems = cartResponse.data.items.map((item: any) => ({
+              lineItemId: item.id,
+              productId: item.productId?.replace("gid://shopify/Product/", "") || "",
+              variantId: item.merchandiseId?.replace("gid://shopify/ProductVariant/", "") || "",
+              merchandiseId: item.merchandiseId || "",
+              quantity: item.quantity || 1,
+              title: item.title || "",
+              variantTitle: item.variantTitle || "",
+              price: typeof item.price === "string" ? parseFloat(item.price) : (item.price || 0),
+              compareAtPrice: item.compareAtPrice
+                ? (typeof item.compareAtPrice === "string" ? parseFloat(item.compareAtPrice) : item.compareAtPrice)
+                : null,
+              image: item.image || null,
+              currency: item.currency || "USD",
+              quantityAvailable: item.quantityAvailable || 99,
+              metafields: item.metafields || [],
+              selectedOptions: item.selectedOptions || [],
+              brandName: item.brandName || undefined,
+            }));
+
+            syncWithApiResponse({
+              cartId: shopifyCartId,
+              items: convertedItems,
+            });
+
+            console.log("[Login] Cart restored successfully:", convertedItems.length, "items");
+          } else {
+            console.log("[Login] Saved cart was empty");
+          }
+        } catch (error) {
+          // Cart might be expired in Shopify - that's okay, user starts fresh
+          console.log("[Login] Could not restore cart (may be expired):", error);
+        }
+      } else {
+        console.log("[DEBUG] No shopifyCartId in response - skipping cart restoration");
+        console.log("[Login] No saved cartId found");
+      }
+
+      console.log('[DEBUG] ========== LOGIN COMPLETE ==========');
       router.replace("/(tabs)");
     },
     onError: (error) => {

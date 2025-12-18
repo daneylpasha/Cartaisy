@@ -477,7 +477,7 @@ export default function RootLayout() {
           >
             <TamaguiProvider
               config={config}
-              defaultTheme={colorScheme ?? "light"}
+              defaultTheme="light"
             >
               <BottomSheetModalProvider>
                 <AuthGuardProvider>

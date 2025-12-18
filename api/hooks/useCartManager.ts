@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useCreateCart, useAddItems, getCart, useUpdateItemQuantity, useRemoveItem } from '../generated/cart/cart';
 import useCartStore, { CartItem } from '@/store/useCartStore';
+import useAuthStore from '@/store/useAuthStore';
+import { saveCartToProfile } from '../endpoints/cart';
 import type { CartLineItem } from '../generated/cartaisyAPI.schemas';
 
 interface AddToCartParams {
@@ -164,6 +166,17 @@ export const useCartManager = (): UseCartManagerReturn => {
         });
 
         console.log('[useCartManager] Cart created successfully:', createResponse.data.cartId);
+
+        // Save cartId to customer profile (if logged in) for persistence across sessions
+        const token = useAuthStore.getState().token;
+        console.log("[DEBUG] About to save cart to profile, token exists:", !!token, "cartId:", createResponse.data.cartId);
+        if (token && createResponse.data.cartId) {
+          console.log("[DEBUG] Conditions met, calling saveCartToProfile...");
+          // Fire and forget - don't await, don't block cart operations
+          saveCartToProfile(createResponse.data.cartId);
+        } else {
+          console.log("[DEBUG] Conditions NOT met - token:", !!token, "cartId:", !!createResponse.data.cartId);
+        }
       } else {
         // Step 3: Add item to existing valid cart
         console.log('[useCartManager] Adding to existing cart:', currentCartId);

@@ -45,7 +45,7 @@ export const HomeHeader = ({
 
   return (
     <YStack
-      paddingTop={Platform.OS === "android" ? topInset + 24 : 0}
+      paddingTop={Platform.OS === "android" ? 10 : 0}
       paddingHorizontal="$md"
       backgroundColor="$primary"
       paddingBottom={"$md"}

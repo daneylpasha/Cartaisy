@@ -889,6 +889,7 @@ export interface CustomerData {
   isActive: boolean;
   createdAt: string;
   lastLoginAt?: string;
+  shopifyCartId?: string;
 }
 
 export interface CustomerRegisterRequest {
@@ -979,8 +980,10 @@ export const CustomerDeviceTokenRequestPlatform = {
 } as const;
 
 export interface CustomerDeviceTokenRequest {
-  /** Push notification token */
-  token: string;
+  /** Push notification token (preferred) */
+  token?: string;
+  /** Push notification token (alternative name for mobile compatibility) */
+  deviceToken?: string;
   /** Device platform */
   platform: CustomerDeviceTokenRequestPlatform;
 }
@@ -1434,6 +1437,7 @@ export type CheckoutSummaryResponseDataItemsItem = {
 
 export type CheckoutSummaryResponseData = {
   expiresAt: string;
+  paymentError?: string;
   status: string;
   promoCode?: string;
   deliveryInstructions?: string;
@@ -1470,14 +1474,25 @@ export type CompleteCheckoutResponseDataPayment = {
 };
 
 export type CompleteCheckoutResponseDataOrder = {
+  timeline?: unknown;
+  paymentInfo?: unknown;
+  shippingMethod?: unknown;
+  billingAddress?: unknown;
+  shippingAddress?: unknown;
+  discount?: unknown;
+  pricing?: unknown;
+  products?: unknown[];
   estimatedDelivery?: string;
   status: string;
   currency: string;
   totalPrice: number;
+  phone?: string;
+  email?: string;
   confirmationNumber?: string;
   shopifyOrderId?: string;
   orderNumber: string;
   id: string;
+  [key: string]: unknown;
 };
 
 export type CompleteCheckoutResponseData = {
@@ -1600,6 +1615,11 @@ export interface ClearCartResponse {
   message: string;
 }
 
+export interface SaveCartResponse {
+  status: string;
+  message: string;
+}
+
 export type RegisterResponseStatus = typeof RegisterResponseStatus[keyof typeof RegisterResponseStatus];
 
 
@@ -1656,6 +1676,8 @@ export type LoginResponseDataUser = {
   avatar?: string;
   isActive: boolean;
   isEmailVerified: boolean;
+  storeName?: string;
+  storeId?: string;
   role: string;
   email: string;
   name?: string;
@@ -1739,6 +1761,49 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
+export type RefreshTokenResponseStatus = typeof RefreshTokenResponseStatus[keyof typeof RefreshTokenResponseStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RefreshTokenResponseStatus = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type RefreshTokenResponseDataUser = {
+  avatar?: string;
+  isActive: boolean;
+  isEmailVerified: boolean;
+  storeName?: string;
+  storeId?: string;
+  role: string;
+  email: string;
+  name?: string;
+  id: string;
+};
+
+export type RefreshTokenResponseData = {
+  refreshToken: string;
+  token: string;
+  user: RefreshTokenResponseDataUser;
+};
+
+/**
+ * Refresh token response
+ */
+export interface RefreshTokenResponse {
+  status: RefreshTokenResponseStatus;
+  message: string;
+  data?: RefreshTokenResponseData;
+}
+
+/**
+ * Refresh token request
+ */
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
 export type GetProfileResponseStatus = typeof GetProfileResponseStatus[keyof typeof GetProfileResponseStatus];
 
 
@@ -1763,6 +1828,8 @@ export type GetProfileResponseDataUser = {
   avatar?: string;
   isActive: boolean;
   isEmailVerified: boolean;
+  storeName?: string;
+  storeId?: string;
   role: string;
   /** @nullable */
   defaultAddress: GetProfileResponseDataUserDefaultAddress;
@@ -2259,6 +2326,13 @@ export type GetCartRecommendations500 = {
   success: boolean;
 };
 
+export type GetProductDetailParams = {
+/**
+ * - ISO 3166-1 alpha-2 country code for multi-currency pricing (e.g., 'US', 'GB', 'CA')
+ */
+country?: string;
+};
+
 export type GetHomescreenDataParams = {
 /**
  * Alternative: Store ID from query parameter
@@ -2518,6 +2592,20 @@ addressId: number;
 };
 
 export type CompleteCheckout200 = CompleteCheckoutResponse | CheckoutRequiresActionResponse;
+
+export type CreateCartParams = {
+/**
+ * - ISO 3166-1 alpha-2 country code for multi-currency pricing (e.g., 'US', 'GB', 'CA')
+ */
+country?: string;
+};
+
+export type GetCartParams = {
+/**
+ * - ISO 3166-1 alpha-2 country code for multi-currency pricing (e.g., 'US', 'GB', 'CA')
+ */
+country?: string;
+};
 
 export type GetAddresses200Data = {
   count: number;

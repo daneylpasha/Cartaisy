@@ -1,4 +1,5 @@
 import { useLogin } from "@/api/hooks/useAuth";
+import { getCart } from "@/api/generated/cart/cart";
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { OpTouch } from "@/components/atoms/OpTouch";
@@ -13,6 +14,7 @@ import {
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { SHADOW_STYLES } from "@/constants/styles";
 import useAuthStore from "@/store/useAuthStore";
+import useCartStore from "@/store/useCartStore";
 import useUserStore from "@/store/useUserStore";
 import { t } from "@/translations";
 import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
@@ -49,7 +51,7 @@ export const LoginBottomSheet = forwardRef<LoginBottomSheetRef, LoginBottomSheet
     const { setUser } = useUserStore();
 
     const { mutateAsync: loginUser, isPending: isLoggingIn } = useLogin({
-      onSuccess: (data) => {
+      onSuccess: async (data) => {
         console.log("[LoginBottomSheet] API Response:", JSON.stringify(data, null, 2));
 
         if (data?.data?.token) {
@@ -66,6 +68,61 @@ export const LoginBottomSheet = forwardRef<LoginBottomSheetRef, LoginBottomSheet
           console.log("[LoginBottomSheet] Guest session detected, cart will be auto-merged");
           clearGuestSession();
         }
+
+        // ========== CART RESTORATION ==========
+        const shopifyCartId = data?.data?.user?.shopifyCartId;
+        console.log("[DEBUG] ========== CART RESTORATION (BottomSheet) ==========");
+        console.log("[DEBUG] shopifyCartId from login response:", shopifyCartId);
+
+        if (shopifyCartId) {
+          console.log("[DEBUG] Found shopifyCartId, attempting to restore cart...");
+          try {
+            const { syncWithApiResponse } = useCartStore.getState();
+            const encodedCartId = encodeURIComponent(shopifyCartId);
+            console.log("[DEBUG] Fetching cart with encoded ID:", encodedCartId);
+
+            const cartResponse = await getCart(encodedCartId);
+            console.log("[DEBUG] Cart API response:", JSON.stringify(cartResponse?.data, null, 2));
+
+            if (cartResponse?.data?.items && cartResponse.data.items.length > 0) {
+              const convertedItems = cartResponse.data.items.map((item: any) => ({
+                lineItemId: item.id,
+                productId: item.productId?.replace("gid://shopify/Product/", "") || "",
+                variantId: item.merchandiseId?.replace("gid://shopify/ProductVariant/", "") || "",
+                merchandiseId: item.merchandiseId || "",
+                quantity: item.quantity || 1,
+                title: item.title || "",
+                variantTitle: item.variantTitle || "",
+                price: typeof item.price === "string" ? parseFloat(item.price) : (item.price || 0),
+                compareAtPrice: item.compareAtPrice
+                  ? (typeof item.compareAtPrice === "string" ? parseFloat(item.compareAtPrice) : item.compareAtPrice)
+                  : null,
+                image: item.image || null,
+                currency: item.currency || "USD",
+                quantityAvailable: item.quantityAvailable || 99,
+                metafields: item.metafields || [],
+                selectedOptions: item.selectedOptions || [],
+                brandName: item.brandName || undefined,
+              }));
+
+              syncWithApiResponse({
+                cartId: shopifyCartId,
+                items: convertedItems,
+              });
+
+              console.log("[DEBUG] ✅ Cart restored successfully:", convertedItems.length, "items");
+            } else {
+              console.log("[DEBUG] Cart response had no items");
+            }
+          } catch (error) {
+            console.log("[DEBUG] ❌ Cart restoration error:", error);
+            // Don't crash - just continue with empty cart
+          }
+        } else {
+          console.log("[DEBUG] No shopifyCartId in response - skipping cart restoration");
+        }
+        console.log("[DEBUG] ========== CART RESTORATION COMPLETE ==========");
+        // ========== END CART RESTORATION ==========
 
         // Dismiss the bottom sheet
         bottomSheetRef.current?.dismiss();

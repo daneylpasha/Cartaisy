@@ -1,5 +1,6 @@
 import { useClearCart } from "@/api/generated/cart/cart";
 import { useCompleteCheckout } from "@/api/generated/checkout/checkout";
+import { clearSavedCart } from "@/api/endpoints/cart";
 import { TextMDBold, TextSMRegular, TextSMSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
@@ -225,6 +226,11 @@ const CheckoutScreen = () => {
 
           // Clear cart from local store
           clearCartStore();
+
+          // Clear saved cart from customer profile (fire and forget)
+          if (token) {
+            clearSavedCart();
+          }
 
           queryClient.invalidateQueries({ queryKey: ["orders"] });
           console.log("[Checkout] ✅ Orders cache invalidated");

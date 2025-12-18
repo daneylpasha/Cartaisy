@@ -8,7 +8,9 @@ import { getTokenValue } from "tamagui";
 
 export default function TabLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView
+      style={{ flex: 1, paddingBottom: Platform.OS === "android" ? 0 : 0 }}
+    >
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: getTokenValue("$primary"),
