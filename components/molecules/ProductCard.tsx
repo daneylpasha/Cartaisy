@@ -1,4 +1,5 @@
 import { Product } from "@/api/generated/cartaisyAPI.schemas";
+import { formatPrice } from "@/utils/formatPrice";
 import {
   useAddFavorite,
   useRemoveFavorite,
@@ -363,17 +364,14 @@ export const ProductCard = ({
 
           <XStack alignItems="center">
             <TextMDBold>
-              US${product.price ? Number(product.price).toFixed(2) : "0.00"}
+              {formatPrice(product.price, product.currency)}
             </TextMDBold>
             <Spacer size="$xs" />
             {product.compareAtPrice &&
             product.price &&
             product.price !== product.compareAtPrice ? (
               <TextSMRegular color="$icon" textDecorationLine="line-through">
-                US$
-                {product.compareAtPrice
-                  ? Number(product.compareAtPrice).toFixed(2)
-                  : "0.00"}
+                {formatPrice(product.compareAtPrice, product.currency)}
               </TextSMRegular>
             ) : null}
           </XStack>

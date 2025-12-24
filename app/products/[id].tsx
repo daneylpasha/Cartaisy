@@ -39,6 +39,7 @@ import useCartStore from "@/store/useCartStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import { t } from "@/translations";
 import { getColorHex } from "@/utils/colorHelper";
+import { formatPrice } from "@/utils/formatPrice";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
 import {
@@ -513,9 +514,10 @@ const ProductDetailsScreen = () => {
             <YStack>
               <XStack alignItems="center">
                 <HeadingXSBold color="$text">
-                  {`US$${(
-                    (product?.currentPrice ? Number(product.currentPrice) : 0) * count
-                  ).toFixed(2)}`}
+                  {formatPrice(
+                    (product?.currentPrice ? Number(product.currentPrice) : 0) * count,
+                    product?.currency
+                  )}
                 </HeadingXSBold>
                 <Spacer size="$xs" />
                 {product?.originalPrice && product.originalPrice > 0 && (
@@ -523,7 +525,7 @@ const ProductDetailsScreen = () => {
                     color="$icon"
                     textDecorationLine="line-through"
                   >
-                    US${Number(product.originalPrice).toFixed(2)}
+                    {formatPrice(product.originalPrice, product?.currency)}
                   </TextSMRegular>
                 )}
               </XStack>

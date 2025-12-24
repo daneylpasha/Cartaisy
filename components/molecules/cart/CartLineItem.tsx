@@ -1,5 +1,6 @@
 // CartLineItem.tsx
 import Icons from "@/assets/Icons";
+import { formatPrice } from "@/utils/formatPrice";
 import {
   Loader,
   TextLGBold,
@@ -23,6 +24,7 @@ export type CartLineItemProps = {
   title: string;
   currentPrice: number;
   originalPrice?: number;
+  currency?: string; // Currency code (USD, GBP, EUR, etc.)
   couponsCount?: number;
   freeDelivery?: boolean;
   options?: { label: string }[];
@@ -45,6 +47,7 @@ export default function CartLineItem(props: CartLineItemProps) {
     title,
     currentPrice,
     originalPrice,
+    currency = 'USD',
     couponsCount,
     freeDelivery,
     options = [],
@@ -104,12 +107,12 @@ export default function CartLineItem(props: CartLineItemProps) {
           <Spacer size={"$xs"} />
           {/* Price Row */}
           <XStack alignItems="center">
-            <TextLGBold>US${currentPrice.toFixed(2)}</TextLGBold>
+            <TextLGBold>{formatPrice(currentPrice, currency)}</TextLGBold>
             {originalPrice && originalPrice !== currentPrice ? (
               <>
                 <Spacer size="$xs" />
                 <TextSMRegular color="$icon" textDecorationLine="line-through">
-                  US${originalPrice.toFixed(2)}
+                  {formatPrice(originalPrice, currency)}
                 </TextSMRegular>
               </>
             ) : null}

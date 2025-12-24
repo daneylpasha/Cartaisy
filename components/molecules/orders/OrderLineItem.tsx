@@ -4,6 +4,7 @@ import {
   TextSMRegular,
   TextXSRegular,
 } from "@/components/atoms";
+import { formatPrice } from "@/utils/formatPrice";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
 import { Spacer } from "@/components/atoms/Spacer";
@@ -20,6 +21,7 @@ type LineItem = {
   price?: number;
   quantity?: number;
   total?: number;
+  currency?: string;
 };
 
 type OrderLineItemProps = {
@@ -93,13 +95,13 @@ const OrderLineItem = ({ item, isLast = false }: OrderLineItemProps) => {
           {/* Price */}
           <XStack alignItems="center">
             <TextSMMedium fontWeight="600">
-              US${(item.total || item.price || 0).toFixed(2)}
+              {formatPrice(item.total || item.price || 0, item.currency)}
             </TextSMMedium>
             {item.price && item.price !== item.total && (
               <>
                 <Spacer size={"$sm"} />
                 <TextXSRegular color="$secondary" textDecorationLine="line-through">
-                  US${item.price.toFixed(2)}
+                  {formatPrice(item.price, item.currency)}
                 </TextXSRegular>
               </>
             )}

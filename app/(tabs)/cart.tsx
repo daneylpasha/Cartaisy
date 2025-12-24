@@ -24,6 +24,7 @@ import ErrorModal from "@/components/organisms/ErrorModal";
 import useCartStore from "@/store/useCartStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import { tokens } from "@/tamagui/token";
+import { formatPrice } from "@/utils/formatPrice";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated } from "react-native";
@@ -214,6 +215,7 @@ const CartScreen = () => {
           }`}
           currentPrice={item.price}
           originalPrice={item.compareAtPrice ? item.compareAtPrice : undefined}
+          currency={item.currency}
           options={options}
           inStockCount={item.quantityAvailable}
           quantity={item.quantity}
@@ -444,6 +446,7 @@ const CartScreen = () => {
   }, 0);
   const originalTotal = subtotal + savings; // Original total before discount
   const grandTotal = subtotal; // Final amount to pay (after discount)
+  const cartCurrency = items[0]?.currency || 'USD'; // Get currency from first cart item
 
   return (
     <YStack flex={1} backgroundColor="$background">
@@ -503,7 +506,7 @@ const CartScreen = () => {
                     color="$secondary"
                     textDecorationLine="line-through"
                   >
-                    {`US$${originalTotal.toFixed(2)}`}
+                    {formatPrice(originalTotal, cartCurrency)}
                   </TextSMRegular>
                 </XStack>
               )}
@@ -511,7 +514,7 @@ const CartScreen = () => {
                 <XStack paddingVertical={"$sm"} justifyContent="space-between">
                   <TextSMRegular color="$secondary">You save</TextSMRegular>
                   <TextSMSemiBold color="$green">
-                    {`- US$${savings.toFixed(2)}`}
+                    {`- ${formatPrice(savings, cartCurrency)}`}
                   </TextSMSemiBold>
                 </XStack>
               )}
@@ -521,7 +524,7 @@ const CartScreen = () => {
                     items.length === 1 ? "Item" : "Items"
                   })`}
                 </TextSMSemiBold>
-                <TextSMSemiBold>{`US$${subtotal.toFixed(2)}`}</TextSMSemiBold>
+                <TextSMSemiBold>{formatPrice(subtotal, cartCurrency)}</TextSMSemiBold>
               </XStack>
               <XStack paddingVertical={"$sm"} justifyContent="space-between">
                 <TextSMRegular color="$secondary">Taxes</TextSMRegular>
@@ -537,7 +540,7 @@ const CartScreen = () => {
               <XStack justifyContent="space-between">
                 <TextSMSemiBold>Grand Total</TextSMSemiBold>
                 <XStack alignItems="center">
-                  <TextMDBold>{`US$${grandTotal.toFixed(2)}`}</TextMDBold>
+                  <TextMDBold>{formatPrice(grandTotal, cartCurrency)}</TextMDBold>
                   <Spacer size={"$xs"} />
                   <AppImage
                     name="caretRight"

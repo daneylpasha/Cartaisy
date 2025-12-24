@@ -4,6 +4,7 @@ import {
   TextSMRegular,
   TextSMSemiBold,
 } from "@/components/atoms";
+import { formatPrice } from "@/utils/formatPrice";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
@@ -22,6 +23,7 @@ type OrderCardProps = {
     itemCount?: number;
     shipping?: string;
     totalPrice?: number;
+    currency?: string;
     onPress?: () => void;
   };
 };
@@ -128,7 +130,7 @@ const OrderCard = ({ item }: OrderCardProps) => {
               <YStack alignItems="flex-end">
                 <TextSMRegular color="$secondary">Total</TextSMRegular>
                 <Spacer size={"$xs"} />
-                <TextLGBold>${displayTotal.toFixed(2)}</TextLGBold>
+                <TextLGBold>{formatPrice(displayTotal, item.currency)}</TextLGBold>
               </YStack>
             </XStack>
 

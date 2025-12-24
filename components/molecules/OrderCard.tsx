@@ -1,5 +1,6 @@
 import Icons from "@/assets/Icons";
 import { tokens } from "@/tamagui/token";
+import { formatPrice } from "@/utils/formatPrice";
 import React from "react";
 import { Spacer, XStack, YStack } from "tamagui";
 import { TextLGBold, TextSMMedium, TextXSRegular } from "../atoms";
@@ -15,6 +16,7 @@ type OrderItemProps = {
   total?: number;
   quantity?: number;
   variantTitle?: string;
+  currency?: string;
   onPress?: () => void;
 };
 const OrderCard = ({ item }: { item: OrderItemProps }) => {
@@ -59,7 +61,7 @@ const OrderCard = ({ item }: { item: OrderItemProps }) => {
           <Spacer size={"$sm"} />
           {/* Price Row */}
           <XStack alignItems="center">
-            <TextLGBold>US${displayPrice.toFixed(2)}</TextLGBold>
+            <TextLGBold>{formatPrice(displayPrice, item.currency)}</TextLGBold>
             {displayOriginalPrice > displayPrice && (
               <>
                 <Spacer size={"$sm"} />
@@ -67,7 +69,7 @@ const OrderCard = ({ item }: { item: OrderItemProps }) => {
                   textDecorationLine="line-through"
                   color="$secondary"
                 >
-                  US${displayOriginalPrice.toFixed(2)}
+                  {formatPrice(displayOriginalPrice, item.currency)}
                 </TextXSRegular>
               </>
             )}

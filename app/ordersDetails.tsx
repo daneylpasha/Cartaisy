@@ -18,6 +18,7 @@ import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
 import OrderLineItem from "@/components/molecules/orders/OrderLineItem";
 import CancelOrderModal from "@/components/organisms/order-details/CancelOrderModal";
 import { SHADOW_STYLES } from "@/constants/styles";
+import { formatPrice } from "@/utils/formatPrice";
 import { useLocalSearchParams } from "expo-router";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -34,12 +35,6 @@ const ordersDetails = () => {
 
   const { mutate: cancelOrderMutation, isPending: isCancelling } =
     useCancelOrder();
-
-  // Format currency helper
-  const formatCurrency = (amount: number = 0, currency: string = "USD") => {
-    const currencySymbol = currency === "USD" ? "$" : currency;
-    return `${currencySymbol}${amount.toFixed(2)}`;
-  };
 
   // Calculate total quantity from line items
   const totalQuantity =
@@ -297,7 +292,7 @@ const ordersDetails = () => {
                     <Spacer size={"$xs-sm"} />
                     <TextXSRegular color="$secondary">
                       Cost:{" "}
-                      {formatCurrency(
+                      {formatPrice(
                         order.shipping?.cost || order.shippingCost,
                         order.currency
                       )}
@@ -402,23 +397,23 @@ const ordersDetails = () => {
             <Spacer size={"$reg"} />
             <XStack paddingVertical={"$sm"} justifyContent="space-between">
               <TextSMSemiBold>Subtotal ({totalQuantity} Items)</TextSMSemiBold>
-              <TextSMSemiBold>US${order.subtotalPrice}</TextSMSemiBold>
+              <TextSMSemiBold>{formatPrice(order.subtotalPrice, order.currency)}</TextSMSemiBold>
             </XStack>
             {order.discount > 0 && (
               <XStack paddingVertical={"$sm"} justifyContent="space-between">
                 <TextSMRegular color="$secondary">Discount</TextSMRegular>
                 <TextSMSemiBold color="$green">
-                  US$-{order.discount}
+                  -{formatPrice(order.discount, order.currency)}
                 </TextSMSemiBold>
               </XStack>
             )}
             <XStack paddingVertical={"$sm"} justifyContent="space-between">
               <TextSMRegular color="$secondary">Taxes</TextSMRegular>
-              <TextSMSemiBold>US${order.totalTax}</TextSMSemiBold>
+              <TextSMSemiBold>{formatPrice(order.totalTax, order.currency)}</TextSMSemiBold>
             </XStack>
             <XStack paddingVertical={"$sm"} justifyContent="space-between">
               <TextSMRegular color="$secondary">Delivery Fee</TextSMRegular>
-              <TextSMSemiBold>US${order.shippingCost}</TextSMSemiBold>
+              <TextSMSemiBold>{formatPrice(order.shippingCost, order.currency)}</TextSMSemiBold>
             </XStack>
             <Spacer size={"$md"} />
           </Animated.View>
@@ -429,7 +424,7 @@ const ordersDetails = () => {
             <XStack justifyContent="space-between">
               <TextSMSemiBold>Grand Total</TextSMSemiBold>
               <XStack alignItems="center">
-                <TextMDBold>US${order.totalPrice}</TextMDBold>
+                <TextMDBold>{formatPrice(order.totalPrice, order.currency)}</TextMDBold>
                 <Spacer size={"$xs"} />
                 <AppImage
                   name="caretRight"

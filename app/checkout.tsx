@@ -17,6 +17,7 @@ import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useAuthStore from "@/store/useAuthStore";
 import useCartStore from "@/store/useCartStore";
+import { formatPrice } from "@/utils/formatPrice";
 import { PlatformPay, usePlatformPay } from "@stripe/stripe-react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -46,7 +47,8 @@ const CheckoutScreen = () => {
   const { token } = useAuthStore();
 
   // Cart store and clear mutation
-  const { cartId, clearCart: clearCartStore, getTotalPrice } = useCartStore();
+  const { cartId, clearCart: clearCartStore, getTotalPrice, items } = useCartStore();
+  const cartCurrency = items[0]?.currency || 'USD'; // Get currency from first cart item
   const { mutate: clearCartAPI } = useClearCart();
 
   const [sessionId, setSessionId] = useState<string>(initialSessionId || "");
@@ -461,6 +463,7 @@ const CheckoutScreen = () => {
           <Shipping
             ref={shippingRef}
             sessionId={sessionId}
+            currency={cartCurrency}
             onStepComplete={handleShippingComplete}
             onError={() => setIsProcessing(false)}
           />
@@ -559,7 +562,7 @@ const CheckoutScreen = () => {
                       Subtotal ({checkoutSummary?.items?.length || 0} Items)
                     </TextSMSemiBold>
                     <TextSMSemiBold>
-                      US${checkoutSummary?.pricing?.subtotal?.toFixed(2)}
+                      {formatPrice(checkoutSummary?.pricing?.subtotal, cartCurrency)}
                     </TextSMSemiBold>
                   </XStack>
                   {(checkoutSummary?.pricing?.discountAmount || 0) > 0 && (
@@ -569,9 +572,7 @@ const CheckoutScreen = () => {
                     >
                       <TextSMRegular color="$secondary">Discount</TextSMRegular>
                       <TextSMSemiBold color="$green">
-                        US$
-                        {checkoutSummary?.pricing?.discountAmount?.toFixed(2) ||
-                          "0.00"}
+                        -{formatPrice(checkoutSummary?.pricing?.discountAmount, cartCurrency)}
                       </TextSMSemiBold>
                     </XStack>
                   )}
@@ -584,9 +585,7 @@ const CheckoutScreen = () => {
                         {"Coupon Discount"}
                       </TextSMRegular>
                       <TextSMSemiBold color="$green">
-                        US$
-                        {checkoutSummary?.pricing?.couponDiscount?.toFixed(2) ||
-                          "0.00"}
+                        -{formatPrice(checkoutSummary?.pricing?.couponDiscount, cartCurrency)}
                       </TextSMSemiBold>
                     </XStack>
                   )}
@@ -596,8 +595,7 @@ const CheckoutScreen = () => {
                   >
                     <TextSMRegular color="$secondary">Taxes</TextSMRegular>
                     <TextSMSemiBold>
-                      {/* {checkoutSummary?.pricing?.currency || "$"} */}
-                      US${checkoutSummary?.pricing?.tax?.toFixed(2) || "0.00"}
+                      {formatPrice(checkoutSummary?.pricing?.tax, cartCurrency)}
                     </TextSMSemiBold>
                   </XStack>
                   <XStack
@@ -608,9 +606,7 @@ const CheckoutScreen = () => {
                       {"Delivery Fee"}
                     </TextSMRegular>
                     <TextSMSemiBold>
-                      US$
-                      {checkoutSummary?.pricing?.shippingCost?.toFixed(2) ||
-                        "0.00"}
+                      {formatPrice(checkoutSummary?.pricing?.shippingCost, cartCurrency)}
                     </TextSMSemiBold>
                   </XStack>
                   <Spacer size={"$md"} />
@@ -628,9 +624,7 @@ const CheckoutScreen = () => {
                     <TextSMSemiBold>{"GrandTotal"}</TextSMSemiBold>
                     <XStack alignItems="center">
                       <TextMDBold>
-                        US$
-                        {checkoutSummary?.pricing?.grandTotal?.toFixed(2) ||
-                          "0.00"}
+                        {formatPrice(checkoutSummary?.pricing?.grandTotal, cartCurrency)}
                       </TextMDBold>
                       <Spacer size={"$xs"} />
                       <AppImage

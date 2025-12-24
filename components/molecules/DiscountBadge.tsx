@@ -2,17 +2,18 @@ import React from 'react';
 import { YStack } from 'tamagui';
 import { TextXSBold } from '@/components/atoms/texts/TextXSBold';
 import { TextXSRegular } from '@/components/atoms/texts/TextXSRegular';
+import { formatPrice } from '@/utils/formatPrice';
 
 interface DiscountBadgeProps {
   price: number;
   compareAtPrice?: number;
-  currency?: string;
+  currency?: string; // ISO 4217 currency code (USD, GBP, EUR, etc.)
 }
 
 export const DiscountBadge: React.FC<DiscountBadgeProps> = ({
   price,
   compareAtPrice,
-  currency = '$',
+  currency = 'USD',
 }) => {
   // Only show if there's a discount
   if (!compareAtPrice || compareAtPrice <= price) {
@@ -42,20 +43,20 @@ export const DiscountBadge: React.FC<DiscountBadgeProps> = ({
 interface PriceWithDiscountProps {
   price: number;
   compareAtPrice?: number;
-  currency?: string;
+  currency?: string; // ISO 4217 currency code (USD, GBP, EUR, etc.)
 }
 
 export const PriceWithDiscount: React.FC<PriceWithDiscountProps> = ({
   price,
   compareAtPrice,
-  currency = '$',
+  currency = 'USD',
 }) => {
   const hasDiscount = compareAtPrice && compareAtPrice > price;
 
   return (
     <YStack gap="$xs-sm">
       <TextXSBold color="$darkgrey" fontSize={18}>
-        {currency}{price.toFixed(2)}
+        {formatPrice(price, currency)}
       </TextXSBold>
 
       {hasDiscount && (
@@ -64,7 +65,7 @@ export const PriceWithDiscount: React.FC<PriceWithDiscountProps> = ({
           fontSize={14}
           textDecorationLine="line-through"
         >
-          {currency}{compareAtPrice.toFixed(2)}
+          {formatPrice(compareAtPrice, currency)}
         </TextXSRegular>
       )}
     </YStack>

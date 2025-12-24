@@ -15,6 +15,7 @@ import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
+import { formatPrice } from "@/utils/formatPrice";
 import { router, useLocalSearchParams } from "expo-router";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import React, {
@@ -52,6 +53,7 @@ type PhoneNumberForm = {
 
 interface ShippingProps {
   sessionId: string;
+  currency?: string; // Currency code from cart/checkout
   onStepComplete?: (sessionId: string) => void;
   onError?: () => void;
 }
@@ -62,7 +64,7 @@ export interface ShippingRef {
 }
 
 const Shipping = forwardRef<ShippingRef, ShippingProps>(
-  ({ sessionId, onStepComplete, onError }, ref) => {
+  ({ sessionId, currency = 'USD', onStepComplete, onError }, ref) => {
     const params = useLocalSearchParams();
 
     const { showAlert, AlertComponent } = useCustomAlert();
@@ -178,7 +180,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
         rate.description ||
         "Estimated delivery: Not available",
       image: "deliveryBox" as const,
-      cost: `Cost: $${rate.price.toFixed(2)}`,
+      cost: `Cost: ${formatPrice(rate.price, currency)}`,
       price: rate.price,
     }));
 

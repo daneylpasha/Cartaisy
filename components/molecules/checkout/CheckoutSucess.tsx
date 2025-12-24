@@ -5,6 +5,7 @@ import {
   TextSMRegular,
   TextSMSemiBold,
 } from "@/components/atoms";
+import { formatPrice } from "@/utils/formatPrice";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
 import { Loader } from "@/components/atoms/Loader";
@@ -130,7 +131,7 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
       <Spacer size={"$sm"} />
       {totalSavings > 0 && (
         <ParagraphMD color="$secondary" textAlign="center">
-          {`You saved US$${totalSavings.toFixed(2)} on this order`}
+          {`You saved ${formatPrice(totalSavings, orderDetails.pricing?.currency)} on this order`}
         </ParagraphMD>
       )}
       <Spacer size={"$sm"} />
@@ -149,7 +150,7 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
       </YStack>
       <Spacer size={"$sm"} />
       <TextMDSemiBold color="$primary">
-        US${orderDetails.pricing.totalPrice.toFixed(2)}
+        {formatPrice(orderDetails.pricing.totalPrice, orderDetails.pricing?.currency)}
       </TextMDSemiBold>
       <Spacer size={"$xl"} />
 
