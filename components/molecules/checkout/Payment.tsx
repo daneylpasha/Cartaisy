@@ -7,11 +7,11 @@ import { Divider } from "@/components/atoms/Divider";
 import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
-import { WalletPaymentButtons } from "@/components/molecules/checkout/WalletPaymentButtons";
 import { t } from "@/translations";
+import { isPlatformPaySupported } from "@stripe/stripe-react-native";
 import { router, useFocusEffect } from "expo-router";
-import React, { forwardRef, useImperativeHandle, useState } from "react";
-import { FlatList } from "react-native";
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { FlatList, Platform } from "react-native";
 import { getTokenValue, Spacer, XStack, YStack } from "tamagui";
 import { SectionHeader } from "../SectionHeader";
 
@@ -29,7 +29,6 @@ interface PaymentStepperProps {
   sessionId: string;
   onStepComplete: (walletPaymentMethodId?: string, paymentType?: PaymentMethodType) => void;
   onError?: () => void;
-  orderTotal?: number; // Total amount for wallet pay display
 }
 
 export interface PaymentStepperRef {
@@ -39,10 +38,26 @@ export interface PaymentStepperRef {
 }
 
 const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
-  ({ sessionId, onStepComplete, onError, orderTotal = 0 }, ref) => {
+  ({ sessionId, onStepComplete, onError }, ref) => {
     const [selectedPayment, setSelectedPayment] = useState<string>("");
     const [selectedPaymentType, setSelectedPaymentType] = useState<PaymentMethodType>("card");
+    const [isPlatformPayAvailable, setIsPlatformPayAvailable] = useState(false);
     const { showAlert, AlertComponent } = useCustomAlert();
+
+    // Check platform pay availability
+    useEffect(() => {
+      const checkPlatformPay = async () => {
+        try {
+          const supported = await isPlatformPaySupported();
+          console.log("[Payment] Platform pay supported:", supported);
+          setIsPlatformPayAvailable(supported);
+        } catch (error) {
+          console.log("[Payment] Error checking platform pay:", error);
+          setIsPlatformPayAvailable(false);
+        }
+      };
+      checkPlatformPay();
+    }, []);
 
     const {
       data: paymentMethodsResponse,
@@ -85,25 +100,19 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
       }
     }, [paymentMethods, selectedPayment]);
 
-    // Handle wallet payment success
-    const handleWalletPaymentSuccess = (paymentMethodId: string, paymentType: "apple_pay" | "google_pay") => {
-      console.log("[Payment] Wallet payment successful:", paymentType, paymentMethodId);
-      setSelectedPaymentType(paymentType);
-      // For wallet payments, pass the payment method ID to the parent
-      // The checkout flow will handle this differently than card payments
-      onStepComplete(paymentMethodId, paymentType);
+    // Handle platform pay selection
+    const handleSelectPlatformPay = () => {
+      const platformPayType = Platform.OS === "ios" ? "apple_pay" : "google_pay";
+      setSelectedPayment("platform_pay");
+      setSelectedPaymentType(platformPayType);
+      console.log("[Payment] Selected platform pay:", platformPayType);
     };
 
-    // Handle wallet payment error
-    const handleWalletPaymentError = (error: string) => {
-      console.error("[Payment] Wallet payment error:", error);
-      showAlert({
-        type: "error",
-        title: "Payment Failed",
-        message: error,
-        buttons: [{ text: "OK" }],
-      });
-      onError?.();
+    // Handle card selection
+    const handleSelectCard = (cardId: string) => {
+      setSelectedPayment(cardId);
+      setSelectedPaymentType("card");
+      console.log("[Payment] Selected card:", cardId);
     };
 
     // Expose handleContinue method and loading state to parent via ref
@@ -121,9 +130,15 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
           return;
         }
 
+        // If platform pay selected, just pass to next step (payment will happen on confirmation)
+        if (selectedPayment === "platform_pay") {
+          console.log("[Payment] Platform pay selected, moving to confirmation");
+          onStepComplete(undefined, selectedPaymentType);
+          return;
+        }
+
         // Save payment method (card payment)
         console.log("[Payment] Saving payment method:", selectedPayment);
-        setSelectedPaymentType("card");
         savePaymentStep({
           data: {
             sessionId: sessionId,
@@ -179,7 +194,7 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
       const cardIcon = getCardIcon(cardBrand);
 
       return (
-        <OpTouch key={item.id} onPress={() => setSelectedPayment(item.id)}>
+        <OpTouch key={item.id} onPress={() => handleSelectCard(item.id)}>
           <XStack
             alignItems="center"
             justifyContent="space-between"
@@ -274,17 +289,6 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
         />
         <Spacer size={"$reg"} />
         <YStack paddingHorizontal={"$md"}>
-          {/* Wallet Payment Options (Apple Pay / Google Pay) */}
-          {orderTotal > 0 && (
-            <WalletPaymentButtons
-              amount={orderTotal}
-              currency="USD"
-              onPaymentSuccess={handleWalletPaymentSuccess}
-              onPaymentError={handleWalletPaymentError}
-              label="Cartaisy Order"
-            />
-          )}
-
           {/* Card Payment Options */}
           <YStack
             backgroundColor={"$white"}
@@ -297,7 +301,7 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
               <YStack paddingVertical="$lg" alignItems="center">
                 <Loader size="small" color="$primary" />
               </YStack>
-            ) : paymentMethods.length === 0 ? (
+            ) : paymentMethods.length === 0 && !isPlatformPayAvailable ? (
               <YStack paddingVertical="$md" alignItems="center">
                 <TextSMMedium color="$secondary">
                   No payment methods added
@@ -305,14 +309,87 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
               </YStack>
             ) : (
               <>
-                <FlatList
-                  data={paymentMethods}
-                  keyExtractor={(item) => item.id.toString()}
-                  showsVerticalScrollIndicator={false}
-                  renderItem={renderItem}
-                  ItemSeparatorComponent={() => <Spacer size={"$md"} />}
-                />
-                <Spacer size={"$md"} />
+                {/* Platform Pay Option */}
+                {isPlatformPayAvailable && (
+                  <>
+                    <OpTouch onPress={handleSelectPlatformPay}>
+                      <XStack
+                        alignItems="center"
+                        justifyContent="space-between"
+                        paddingVertical={"$xxs"}
+                        borderColor={"$primary"}
+                        backgroundColor={
+                          selectedPayment === "platform_pay" ? "$primarylight" : "$white"
+                        }
+                        borderWidth={selectedPayment === "platform_pay" ? 1 : 0}
+                        padding={"$reg"}
+                        borderRadius={"$md"}
+                      >
+                        <XStack alignItems="center">
+                          <XStack
+                            width={46}
+                            height={32}
+                            borderWidth={0.5}
+                            borderColor={"$grey"}
+                            borderRadius={"$sm"}
+                            alignItems="center"
+                            justifyContent="center"
+                            backgroundColor="$white"
+                          >
+                            <AppImage
+                              name={Platform.OS === "ios" ? "apple" : "googleIcon"}
+                              width={24}
+                              height={24}
+                              resizeMode="contain"
+                            />
+                          </XStack>
+                          <Spacer size={"$reg"} />
+                          <TextSMMedium color="$secondary">
+                            {Platform.OS === "ios" ? "Apple Pay" : "Google Pay"}
+                          </TextSMMedium>
+                        </XStack>
+                        <YStack
+                          width={22}
+                          height={22}
+                          borderWidth={2}
+                          borderColor={
+                            selectedPayment === "platform_pay"
+                              ? getTokenValue("$primary")
+                              : getTokenValue("$lightgrey")
+                          }
+                          borderRadius={"$full"}
+                          backgroundColor="$white"
+                          justifyContent="center"
+                          alignItems="center"
+                        >
+                          {selectedPayment === "platform_pay" && (
+                            <YStack
+                              width={8}
+                              height={8}
+                              borderRadius={"$full"}
+                              backgroundColor="$primary"
+                            />
+                          )}
+                        </YStack>
+                      </XStack>
+                    </OpTouch>
+                    {paymentMethods.length > 0 && <Spacer size={"$md"} />}
+                  </>
+                )}
+
+                {/* Card Payment Options */}
+                {paymentMethods.length > 0 && (
+                  <>
+                    <FlatList
+                      data={paymentMethods}
+                      keyExtractor={(item) => item.id.toString()}
+                      showsVerticalScrollIndicator={false}
+                      renderItem={renderItem}
+                      ItemSeparatorComponent={() => <Spacer size={"$md"} />}
+                    />
+                    <Spacer size={"$md"} />
+                  </>
+                )}
                 <Divider />
               </>
             )}

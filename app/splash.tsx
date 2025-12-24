@@ -1,5 +1,6 @@
 import { AppImage } from "@/components/atoms/AppImage";
 import useAuthStore from "@/store/useAuthStore";
+import { wasDeepLinkHandled, resetDeepLinkState } from "@/utils/navigationState";
 import { router } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { YStack } from "tamagui";
@@ -16,6 +17,14 @@ const Splash = () => {
     const timer = setTimeout(() => {
       if (hasNavigated.current) return;
       hasNavigated.current = true;
+
+      // Check if deep link navigation was already handled (cold start)
+      // If so, don't override it with default navigation
+      if (wasDeepLinkHandled()) {
+        console.log('[Splash] Deep link already handled, skipping default navigation');
+        resetDeepLinkState(); // Reset for next time
+        return;
+      }
 
       // Get current state at navigation time (not stale closure values)
       const { token, isProfileComplete, enableGuestMode, initializeDeviceId } =

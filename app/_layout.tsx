@@ -23,6 +23,7 @@ import authApi from "@/api/endpoints/auth";
 import useAuthStore from "@/store/useAuthStore";
 import { notificationTracker } from "@/services/notificationTracker";
 import { handleNotificationDeepLink, NotificationDeepLinkPayload } from "@/utils/deepLinkHandler";
+import { setDeepLinkHandled } from "@/utils/navigationState";
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -42,6 +43,24 @@ Notifications.setNotificationHandler({
 messaging().setBackgroundMessageHandler(async (remoteMessage) => {
   console.log('🔔 [PUSH] Background message received:', JSON.stringify(remoteMessage, null, 2));
 });
+
+// Store initial notification from killed state (captured BEFORE navigation is ready)
+let pendingInitialNotification: any = null;
+
+// Check for initial notification IMMEDIATELY (before component mounts)
+messaging()
+  .getInitialNotification()
+  .then(remoteMessage => {
+    if (remoteMessage) {
+      console.log('🔔 [PUSH] Killed state: Initial notification captured:', JSON.stringify(remoteMessage.data, null, 2));
+      pendingInitialNotification = remoteMessage;
+    } else {
+      console.log('🔔 [PUSH] Killed state: No initial notification');
+    }
+  })
+  .catch(error => {
+    console.error('🔔 [PUSH] Killed state: Error getting initial notification:', error);
+  });
 
 async function registerForPushNotificationsAsync(): Promise<string | undefined> {
   console.log('🔔 [PUSH] ========================================');
@@ -339,9 +358,13 @@ export default function RootLayout() {
         // Handle deep link navigation
         if (notificationData) {
           console.log('🔔 [PUSH] Checking for deep link in notification data...');
-          const handled = handleNotificationDeepLink(notificationData, router);
+          const handled = handleNotificationDeepLink(notificationData, router, {
+            delay: 300, // Small delay to ensure navigation is ready (background/foreground)
+          });
           if (handled) {
             console.log('🔔 [PUSH] Deep link navigation initiated');
+            // Mark that deep link was handled - prevents splash from overriding
+            setDeepLinkHandled(true);
           } else {
             console.log('🔔 [PUSH] No deep link found, staying on current screen');
           }
@@ -433,6 +456,8 @@ export default function RootLayout() {
             });
             if (handled) {
               console.log('🔔 [PUSH] Cold start: Deep link navigation scheduled');
+              // Mark that deep link was handled - prevents splash from overriding
+              setDeepLinkHandled(true);
             } else {
               console.log('🔔 [PUSH] Cold start: No deep link in notification');
             }
@@ -458,6 +483,50 @@ export default function RootLayout() {
     "Figtree-ExtraBold": require("../assets/fonts/Figtree-ExtraBold.ttf"),
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+
+  // Process pending notification from killed state AFTER fonts are loaded and navigation is ready
+  useEffect(() => {
+    if (!loaded) return;
+
+    // Give navigation time to be fully ready, then process pending notification
+    const timer = setTimeout(() => {
+      if (pendingInitialNotification) {
+        console.log('🔔 [PUSH] Killed state: Processing pending notification now...');
+        console.log('🔔 [PUSH] Killed state: Data:', JSON.stringify(pendingInitialNotification.data, null, 2));
+
+        const notificationData = pendingInitialNotification.data as NotificationDeepLinkPayload | undefined;
+        const notificationId = notificationData?.notificationId as string | undefined;
+        const deviceId = useAuthStore.getState().deviceId || undefined;
+
+        // Track notification open
+        if (notificationId) {
+          console.log('🔔 [PUSH] Killed state: Tracking open for:', notificationId);
+          notificationTracker.trackOpen(notificationId, deviceId, {
+            title: pendingInitialNotification.notification?.title,
+            source: 'killed_state',
+          });
+        }
+
+        // Handle deep link navigation
+        if (notificationData) {
+          console.log('🔔 [PUSH] Killed state: type =', notificationData.type);
+          console.log('🔔 [PUSH] Killed state: deepLink =', notificationData.deepLink);
+          const handled = handleNotificationDeepLink(notificationData, router, {
+            delay: 500, // Additional delay for navigation stability
+          });
+          if (handled) {
+            console.log('🔔 [PUSH] Killed state: Deep link navigation scheduled');
+            setDeepLinkHandled(true);
+          }
+        }
+
+        // Clear pending notification
+        pendingInitialNotification = null;
+      }
+    }, 1000); // Wait 1 second after fonts load to ensure navigation is fully ready
+
+    return () => clearTimeout(timer);
+  }, [loaded]);
 
   if (!loaded) return null;
 

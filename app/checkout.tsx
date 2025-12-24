@@ -1,6 +1,6 @@
+import { clearSavedCart } from "@/api/endpoints/cart";
 import { useClearCart } from "@/api/generated/cart/cart";
 import { useCompleteCheckout } from "@/api/generated/checkout/checkout";
-import { clearSavedCart } from "@/api/endpoints/cart";
 import { TextMDBold, TextSMRegular, TextSMSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
@@ -9,11 +9,15 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import { CheckoutStepper } from "@/components/molecules/checkout/CheckoutStepper";
 import Confirmation from "@/components/molecules/checkout/Confirmation";
-import PaymentStepper, { PaymentMethodType } from "@/components/molecules/checkout/Payment";
+import PaymentStepper, {
+  PaymentMethodType,
+} from "@/components/molecules/checkout/Payment";
 import Shipping from "@/components/molecules/checkout/Shipping";
+import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import { useAuthGuard } from "@/contexts/AuthGuardContext";
-import useCartStore from "@/store/useCartStore";
 import useAuthStore from "@/store/useAuthStore";
+import useCartStore from "@/store/useCartStore";
+import { PlatformPay, usePlatformPay } from "@stripe/stripe-react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -49,9 +53,9 @@ const CheckoutScreen = () => {
   // Always start at shipping step (no guest checkout)
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
 
-  // Wallet payment state
-  const [walletPaymentMethodId, setWalletPaymentMethodId] = useState<string | null>(null);
-  const [walletPaymentType, setWalletPaymentType] = useState<PaymentMethodType | null>(null);
+  // Payment type state (card, apple_pay, google_pay)
+  const [walletPaymentType, setWalletPaymentType] =
+    useState<PaymentMethodType | null>(null);
 
   // Calculate order total from cart for wallet pay display
   const orderTotal = getTotalPrice();
@@ -76,6 +80,10 @@ const CheckoutScreen = () => {
   const [open, setOpen] = useState(false);
   const shippingRef = useRef<any>(null);
   const paymentRef = useRef<any>(null);
+
+  // Platform pay hook
+  const { createPlatformPayPaymentMethod } = usePlatformPay();
+  const { showAlert, AlertComponent } = useCustomAlert();
 
   // Animation refs
   const animatedHeight = useRef(new Animated.Value(0)).current;
@@ -179,9 +187,10 @@ const CheckoutScreen = () => {
               checkoutSummary?.shippingAddress ||
               {},
             payment: {
-              cardBrand: walletPaymentType === "apple_pay"
-                ? "Apple Pay"
-                : walletPaymentType === "google_pay"
+              cardBrand:
+                walletPaymentType === "apple_pay"
+                  ? "Apple Pay"
+                  : walletPaymentType === "google_pay"
                   ? "Google Pay"
                   : orderData.payment?.method || "card",
               last4:
@@ -267,6 +276,99 @@ const CheckoutScreen = () => {
     setCurrentStep(steps[stepIndex]);
   };
 
+  // Handle platform pay payment
+  const handlePlatformPayPayment = async () => {
+    try {
+      // Use grandTotal from checkout summary (includes subtotal + shipping + tax)
+      const grandTotal = checkoutSummary?.pricing?.grandTotal || orderTotal;
+      console.log("[Checkout] Starting platform pay for amount:", grandTotal);
+
+      const { error, paymentMethod } = await createPlatformPayPaymentMethod({
+        applePay: {
+          cartItems: [
+            {
+              label: "Subtotal",
+              amount: (checkoutSummary?.pricing?.subtotal || orderTotal).toFixed(2),
+              paymentType: PlatformPay.PaymentType.Immediate,
+            },
+            {
+              label: "Shipping",
+              amount: (checkoutSummary?.pricing?.shippingCost || 0).toFixed(2),
+              paymentType: PlatformPay.PaymentType.Immediate,
+            },
+            {
+              label: "Tax",
+              amount: (checkoutSummary?.pricing?.tax || 0).toFixed(2),
+              paymentType: PlatformPay.PaymentType.Immediate,
+            },
+            {
+              label: process.env.EXPO_PUBLIC_APP_NAME || "Total",
+              amount: grandTotal.toFixed(2),
+              paymentType: PlatformPay.PaymentType.Immediate,
+            },
+          ],
+          merchantCountryCode: "US",
+          currencyCode: "USD",
+        },
+        googlePay: {
+          amount: Math.round(grandTotal * 100),
+          currencyCode: "USD",
+          testEnv: __DEV__,
+          merchantCountryCode: "US",
+          merchantName: process.env.EXPO_PUBLIC_APP_NAME || "Store",
+        },
+      });
+
+      if (error) {
+        console.log("[Checkout] Platform pay error:", error);
+        // Check if user cancelled
+        if (
+          error.code === "Canceled" ||
+          error.message?.toLowerCase().includes("cancel")
+        ) {
+          console.log("[Checkout] User cancelled platform pay");
+          setIsProcessing(false);
+          return;
+        }
+        showAlert({
+          type: "error",
+          title: "Payment Failed",
+          message: "Unable to process payment. Please try again.",
+          buttons: [{ text: "OK" }],
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      if (paymentMethod) {
+        console.log(
+          "[Checkout] Platform pay successful, payment method:",
+          paymentMethod.id
+        );
+
+        // For Google Pay/Apple Pay, pass the payment method ID directly
+        // Note: Platform pay payment methods are one-time use and cannot be saved via step2
+        // The backend will create and confirm the payment intent using this payment method
+        console.log("[Checkout] Completing checkout with platform pay payment method");
+        completeCheckout({
+          data: {
+            sessionId,
+            paymentMethodId: paymentMethod.id,
+          },
+        });
+      }
+    } catch (error) {
+      console.log("[Checkout] Platform pay exception:", error);
+      setIsProcessing(false);
+      showAlert({
+        type: "error",
+        title: "Payment Failed",
+        message: "An unexpected error occurred. Please try again.",
+        buttons: [{ text: "OK" }],
+      });
+    }
+  };
+
   const handleContinue = () => {
     setIsProcessing(true);
     if (currentStep === "shipping") {
@@ -280,13 +382,22 @@ const CheckoutScreen = () => {
         paymentRef.current.handleContinue();
       }
     } else if (currentStep === "confirmation") {
-      // Complete the order
-      console.log("[Checkout] Completing order with sessionId:", sessionId);
-      completeCheckout({
-        data: {
-          sessionId,
-        },
-      });
+      // Check if platform pay was selected
+      if (walletPaymentType && walletPaymentType !== "card") {
+        console.log("[Checkout] Processing platform pay:", walletPaymentType);
+        handlePlatformPayPayment();
+      } else {
+        // Complete the order for card payment
+        console.log(
+          "[Checkout] Completing card order with sessionId:",
+          sessionId
+        );
+        completeCheckout({
+          data: {
+            sessionId,
+          },
+        });
+      }
     }
   };
 
@@ -305,26 +416,18 @@ const CheckoutScreen = () => {
     console.log("[Checkout] Payment type:", paymentType);
     console.log("[Checkout] Payment method ID:", paymentMethodId);
 
-    // Store wallet payment info if provided
-    if (paymentMethodId && paymentType && paymentType !== "card") {
-      setWalletPaymentMethodId(paymentMethodId);
+    // Store payment type if platform pay selected
+    if (paymentType && paymentType !== "card") {
       setWalletPaymentType(paymentType);
-      console.log("[Checkout] Wallet payment detected, completing order directly...");
-
-      // For wallet payments, skip confirmation and complete order directly
-      // since the user already confirmed via Apple Pay/Google Pay
-      setIsProcessing(true);
-      completeCheckout({
-        data: {
-          sessionId,
-          paymentIntentId: paymentMethodId, // Pass wallet payment method ID
-        },
-      });
+      console.log("[Checkout] Platform pay selected:", paymentType);
     } else {
-      // Standard card flow - move to confirmation step
-      setIsProcessing(false);
-      setCurrentStep("confirmation");
+      setWalletPaymentType(null);
     }
+
+    // Move to confirmation step for all payment types
+    // Platform pay sheet will be shown on "Complete Order" press
+    setIsProcessing(false);
+    setCurrentStep("confirmation");
   };
 
   const getCurrentStepIndex = () => {
@@ -370,7 +473,6 @@ const CheckoutScreen = () => {
             sessionId={sessionId}
             onStepComplete={handlePaymentComplete}
             onError={() => setIsProcessing(false)}
-            orderTotal={orderTotal}
           />
         );
 
@@ -388,12 +490,12 @@ const CheckoutScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 80}
-    >
-      <YStack backgroundColor="$background" flex={1}>
+    <YStack flex={1} backgroundColor="$background">
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 80}
+      >
         <CheckoutStepper
           steps={[
             { label: "Shipping", status: getStepStatus(0) },
@@ -514,7 +616,11 @@ const CheckoutScreen = () => {
                   <Spacer size={"$md"} />
                 </YStack>
               </Animated.View>
-              <YStack paddingHorizontal={"$md"}>
+              <YStack
+                paddingHorizontal={"$md"}
+                paddingBottom={Math.max(bottomSafeAreaInset, 16)}
+                backgroundColor="$background"
+              >
                 <Divider />
                 <Spacer size={"$sm"} />
                 <OpTouch onPress={toggleOrderSummary}>
@@ -559,7 +665,11 @@ const CheckoutScreen = () => {
             </>
           )}
           {currentStep !== "confirmation" && (
-            <YStack paddingHorizontal={"$md"}>
+            <YStack
+              paddingHorizontal={"$md"}
+              paddingBottom={Math.max(bottomSafeAreaInset, 16)}
+              backgroundColor="$background"
+            >
               <PrimaryButton
                 label="Continue"
                 onPress={handleContinue}
@@ -568,9 +678,9 @@ const CheckoutScreen = () => {
             </YStack>
           )}
         </>
-        <Spacer size={bottomSafeAreaInset} />
-      </YStack>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+      <AlertComponent />
+    </YStack>
   );
 };
 export default CheckoutScreen;

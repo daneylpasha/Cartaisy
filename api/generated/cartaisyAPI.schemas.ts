@@ -910,6 +910,11 @@ export interface CustomerLoginRequest {
   password: string;
 }
 
+export interface CustomerRefreshTokenRequest {
+  /** Refresh token from login/register response */
+  refreshToken: string;
+}
+
 /**
  * Gender
  */
@@ -1538,6 +1543,7 @@ export interface CheckoutRequiresActionResponse {
 export interface CompleteCheckoutRequest {
   sessionId: string;
   paymentIntentId?: string;
+  paymentMethodId?: string;
 }
 
 /**
@@ -2391,6 +2397,27 @@ export type CustomerLogin200 = {
   data?: CustomerLogin200Data;
   message: string;
   status: CustomerLogin200Status;
+};
+
+export type CustomerRefreshToken200Data = {
+  refreshToken: string;
+  token: string;
+  user: CustomerData;
+};
+
+export type CustomerRefreshToken200Status = typeof CustomerRefreshToken200Status[keyof typeof CustomerRefreshToken200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerRefreshToken200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerRefreshToken200 = {
+  data?: CustomerRefreshToken200Data;
+  message: string;
+  status: CustomerRefreshToken200Status;
 };
 
 export type CustomerGetProfile200Data = {

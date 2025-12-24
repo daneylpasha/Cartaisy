@@ -566,12 +566,16 @@ const CartScreen = () => {
                   return;
                 }
 
+                console.log("[CHECKOUT] Initializing checkout with cartId:", cartId);
+                console.log("[CHECKOUT] Cart items count:", items.length);
+                console.log("[CHECKOUT] Cart items:", items.map(i => ({ id: i.lineItemId, title: i.title, qty: i.quantity })));
+
                 setIsInitializingCheckout(true);
                 initializeCheckoutMutation(
                   { data: { cartId } },
                   {
                     onSuccess: (response) => {
-                      console.log("[Checkout] Init success:", response);
+                      console.log("[CHECKOUT] Init success - sessionId:", response.data.sessionId);
                       // Store sessionId in cart store or pass to checkout screen
                       router.push(
                         `/checkout?sessionId=${response.data.sessionId}`

@@ -33,6 +33,8 @@ import type {
   CustomerLoginRequest,
   CustomerLogout200,
   CustomerLogoutRequest,
+  CustomerRefreshToken200,
+  CustomerRefreshTokenRequest,
   CustomerRegister201,
   CustomerRegisterRequest,
   CustomerUpdateDeviceToken200,
@@ -174,6 +176,71 @@ export const useCustomerLogin = <TError = void | void | void | void,
       > => {
 
       const mutationOptions = getCustomerLoginMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Refresh access token for customer
+ * @summary Refresh customer access token
+ */
+export const customerRefreshToken = (
+    customerRefreshTokenRequest: CustomerRefreshTokenRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CustomerRefreshToken200>(
+      {url: `/customer/auth/refresh-token`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: customerRefreshTokenRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getCustomerRefreshTokenMutationOptions = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof customerRefreshToken>>, TError,{data: CustomerRefreshTokenRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof customerRefreshToken>>, TError,{data: CustomerRefreshTokenRequest}, TContext> => {
+
+const mutationKey = ['customerRefreshToken'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof customerRefreshToken>>, {data: CustomerRefreshTokenRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  customerRefreshToken(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CustomerRefreshTokenMutationResult = NonNullable<Awaited<ReturnType<typeof customerRefreshToken>>>
+    export type CustomerRefreshTokenMutationBody = CustomerRefreshTokenRequest
+    export type CustomerRefreshTokenMutationError = void | void | void | void
+
+    /**
+ * @summary Refresh customer access token
+ */
+export const useCustomerRefreshToken = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof customerRefreshToken>>, TError,{data: CustomerRefreshTokenRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof customerRefreshToken>>,
+        TError,
+        {data: CustomerRefreshTokenRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getCustomerRefreshTokenMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

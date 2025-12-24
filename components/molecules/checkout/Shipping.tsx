@@ -25,7 +25,7 @@ import React, {
   useState,
 } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { StyleSheet, TextInput } from "react-native";
+import { Keyboard, StyleSheet, TextInput } from "react-native";
 import CountryPicker, {
   Country,
   CountryCode,
@@ -287,6 +287,14 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
       setShowCountryPicker(false);
     };
 
+    // Dismiss keyboard before opening country picker to prevent jerk
+    const handleOpenCountryPicker = () => {
+      Keyboard.dismiss();
+      setTimeout(() => {
+        setShowCountryPicker(true);
+      }, 100);
+    };
+
     // Handle form validation errors
     const onFormError = (errors: any) => {
       console.log("[Shipping] Form validation failed:", errors);
@@ -493,7 +501,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
               }}
               render={({ field: { onChange, value } }) => (
                 <XStack alignItems="center">
-                  <OpTouch onPress={() => setShowCountryPicker(true)}>
+                  <OpTouch onPress={handleOpenCountryPicker}>
                     <XStack
                       alignItems="center"
                       // borderWidth={1}
@@ -536,12 +544,6 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
                       value={value}
                       keyboardType="numeric"
                       inputRef={phoneInputRef}
-                      onFocus={() => {
-                        // Scroll to phone input when focused
-                        setTimeout(() => {
-                          phoneInputRef.current?.scrollResponderScrollNativeHandleToKeyboard?.();
-                        }, 100);
-                      }}
                       onChangeText={(text) => {
                         // Only allow numbers
                         const numericText = text.replace(/[^0-9]/g, "");
@@ -549,7 +551,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
                       }}
                       placeholder={t("profile.phoneNumber.placeholder")}
                     />
-                    <OpTouch onPress={() => setShowCountryPicker(true)}>
+                    <OpTouch onPress={handleOpenCountryPicker}>
                       <AppImage name="arrowDown" width={14} height={8} />
                     </OpTouch>
                   </XStack>

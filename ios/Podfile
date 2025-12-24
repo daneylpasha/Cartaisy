@@ -13,6 +13,13 @@ install! 'cocoapods',
 
 prepare_react_native_project!
 
+# Firebase modular headers
+pod 'GoogleUtilities', :modular_headers => true
+pod 'FirebaseCore', :modular_headers => true
+pod 'FirebaseCoreInternal', :modular_headers => true
+pod 'FirebaseInstallations', :modular_headers => true
+pod 'FirebaseMessaging', :modular_headers => true
+
 target 'cartaisy' do
   use_expo_modules!
 

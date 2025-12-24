@@ -1,7 +1,11 @@
 import { useGetFavorites } from "@/api/generated/favorites/favorites";
 import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import Axios from "axios";
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || "";
+const STORE_ID = process.env.EXPO_PUBLIC_STORE_ID || "";
 
 /**
  * Central initialization component for app-level features
@@ -11,7 +15,8 @@ import { useEffect } from "react";
  */
 export const AppInitializer = () => {
   // ==================== GUEST MODE INITIALIZATION ====================
-  const { token, initializeDeviceId, enableGuestMode, _hasHydrated } = useAuthStore();
+  const { token, refreshToken, initializeDeviceId, enableGuestMode, setToken, clearAuth, _hasHydrated } = useAuthStore();
+  const tokenRefreshAttemptedRef = useRef(false);
 
   useEffect(() => {
     if (_hasHydrated) {
@@ -25,6 +30,58 @@ export const AppInitializer = () => {
       }
     }
   }, [_hasHydrated, token, initializeDeviceId, enableGuestMode]);
+
+  // ==================== STARTUP TOKEN REFRESH ====================
+  // Proactively refresh token on app startup if user is logged in
+  // This handles cases where the access token expired while the app was closed
+  useEffect(() => {
+    const refreshTokenOnStartup = async () => {
+      // Only attempt once per app session
+      if (tokenRefreshAttemptedRef.current) return;
+
+      // Only if we have both tokens (user was logged in)
+      if (!_hasHydrated || !token || !refreshToken) return;
+
+      tokenRefreshAttemptedRef.current = true;
+      console.log("[AppInitializer] Proactively refreshing token on startup...");
+
+      try {
+        const response = await Axios.post(
+          `${API_BASE_URL}/customer/auth/refresh-token`,
+          { refreshToken },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "X-Store-ID": STORE_ID,
+            },
+          }
+        );
+
+        const newAccessToken = response.data?.data?.accessToken || response.data?.data?.token;
+        const newRefreshToken = response.data?.data?.refreshToken;
+
+        if (newAccessToken) {
+          console.log("[AppInitializer] Token refresh SUCCESS - new token received");
+          setToken(newAccessToken, newRefreshToken || refreshToken);
+        } else {
+          console.log("[AppInitializer] Token refresh response missing access token");
+        }
+      } catch (error: any) {
+        console.log("[AppInitializer] Token refresh FAILED:", error?.message);
+        console.log("[AppInitializer] Status:", error?.response?.status);
+        console.log("[AppInitializer] Response:", error?.response?.data);
+
+        // If refresh token is also expired/invalid, clear auth
+        if (error?.response?.status === 401 || error?.response?.status === 403) {
+          console.log("[AppInitializer] Refresh token invalid - clearing auth");
+          clearAuth();
+        }
+        // For other errors (network, etc.), keep existing tokens and let user retry
+      }
+    };
+
+    refreshTokenOnStartup();
+  }, [_hasHydrated, token, refreshToken, setToken, clearAuth]);
 
   // ==================== FAVORITES INITIALIZATION ====================
   const setFavorites = useFavoritesStore((state) => state.setFavorites);
