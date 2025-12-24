@@ -1,5 +1,6 @@
 import { useLogin } from "@/api/hooks/useAuth";
 import { getCart } from "@/api/generated/cart/cart";
+import { debugLog } from "@/utils/logger";
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { OpTouch } from "@/components/atoms/OpTouch";
@@ -71,18 +72,18 @@ export const LoginBottomSheet = forwardRef<LoginBottomSheetRef, LoginBottomSheet
 
         // ========== CART RESTORATION ==========
         const shopifyCartId = data?.data?.user?.shopifyCartId;
-        console.log("[DEBUG] ========== CART RESTORATION (BottomSheet) ==========");
-        console.log("[DEBUG] shopifyCartId from login response:", shopifyCartId);
+        debugLog("[DEBUG] ========== CART RESTORATION (BottomSheet) ==========");
+        debugLog("[DEBUG] shopifyCartId from login response:", shopifyCartId);
 
         if (shopifyCartId) {
-          console.log("[DEBUG] Found shopifyCartId, attempting to restore cart...");
+          debugLog("[DEBUG] Found shopifyCartId, attempting to restore cart...");
           try {
             const { syncWithApiResponse } = useCartStore.getState();
             const encodedCartId = encodeURIComponent(shopifyCartId);
-            console.log("[DEBUG] Fetching cart with encoded ID:", encodedCartId);
+            debugLog("[DEBUG] Fetching cart with encoded ID:", encodedCartId);
 
             const cartResponse = await getCart(encodedCartId);
-            console.log("[DEBUG] Cart API response:", JSON.stringify(cartResponse?.data, null, 2));
+            debugLog("[DEBUG] Cart API response:", JSON.stringify(cartResponse?.data, null, 2));
 
             if (cartResponse?.data?.items && cartResponse.data.items.length > 0) {
               const convertedItems = cartResponse.data.items.map((item: any) => ({
@@ -110,18 +111,18 @@ export const LoginBottomSheet = forwardRef<LoginBottomSheetRef, LoginBottomSheet
                 items: convertedItems,
               });
 
-              console.log("[DEBUG] ✅ Cart restored successfully:", convertedItems.length, "items");
+              debugLog("[DEBUG] ✅ Cart restored successfully:", convertedItems.length, "items");
             } else {
-              console.log("[DEBUG] Cart response had no items");
+              debugLog("[DEBUG] Cart response had no items");
             }
           } catch (error) {
-            console.log("[DEBUG] ❌ Cart restoration error:", error);
+            debugLog("[DEBUG] ❌ Cart restoration error:", error);
             // Don't crash - just continue with empty cart
           }
         } else {
-          console.log("[DEBUG] No shopifyCartId in response - skipping cart restoration");
+          debugLog("[DEBUG] No shopifyCartId in response - skipping cart restoration");
         }
-        console.log("[DEBUG] ========== CART RESTORATION COMPLETE ==========");
+        debugLog("[DEBUG] ========== CART RESTORATION COMPLETE ==========");
         // ========== END CART RESTORATION ==========
 
         // Dismiss the bottom sheet
