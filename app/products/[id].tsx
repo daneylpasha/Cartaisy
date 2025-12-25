@@ -473,7 +473,7 @@ const ProductDetailsScreen = () => {
                 <Spacer size={"$sm"} />
               </>
             )}
-            {product?.discountPercent != null && product.discountPercent > 0 && (
+            {product?.discountPercent && product.discountPercent > 0 && (
               <XStack
                 borderWidth={1}
                 borderColor="$error"
@@ -520,7 +520,7 @@ const ProductDetailsScreen = () => {
                   )}
                 </HeadingXSBold>
                 <Spacer size="$xs" />
-                {product?.originalPrice != null && product.originalPrice > 0 && (
+                {product?.originalPrice && product.originalPrice > 0 && (
                   <TextSMRegular
                     color="$icon"
                     textDecorationLine="line-through"

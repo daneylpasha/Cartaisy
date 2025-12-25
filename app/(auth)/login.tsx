@@ -1,6 +1,5 @@
 import { useLogin } from "@/api/hooks/useAuth";
 import { getCart } from "@/api/generated/cart/cart";
-import { debugLog } from "@/utils/logger";
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { OpTouch } from "@/components/atoms/OpTouch";
@@ -38,9 +37,9 @@ const Login = () => {
 
   const { mutateAsync: loginUser, isPending: isLoggingIn } = useLogin({
     onSuccess: async (data) => {
-      debugLog('[DEBUG] ========== LOGIN SUCCESS ==========');
-      debugLog('[DEBUG] Full login response:', JSON.stringify(data, null, 2));
-      debugLog('[DEBUG] User object:', JSON.stringify(data?.data?.user, null, 2));
+      console.log('[DEBUG] ========== LOGIN SUCCESS ==========');
+      console.log('[DEBUG] Full login response:', JSON.stringify(data, null, 2));
+      console.log('[DEBUG] User object:', JSON.stringify(data?.data?.user, null, 2));
       console.log('[Login] Token from response:', data?.data?.token ? 'EXISTS' : 'NULL');
 
       if (data?.data?.token) {
@@ -71,10 +70,10 @@ const Login = () => {
 
       // Restore cart if customer has saved shopifyCartId
       const shopifyCartId = (data?.data?.user as any)?.shopifyCartId;
-      debugLog('[DEBUG] shopifyCartId from user:', shopifyCartId, 'type:', typeof shopifyCartId);
+      console.log('[DEBUG] shopifyCartId from user:', shopifyCartId, 'type:', typeof shopifyCartId);
 
       if (shopifyCartId) {
-        debugLog("[DEBUG] Entering cart restoration block...");
+        console.log("[DEBUG] Entering cart restoration block...");
         console.log("[Login] Found saved cartId, attempting to restore cart...");
         try {
           const { syncWithApiResponse } = useCartStore.getState();
@@ -116,11 +115,11 @@ const Login = () => {
           console.log("[Login] Could not restore cart (may be expired):", error);
         }
       } else {
-        debugLog("[DEBUG] No shopifyCartId in response - skipping cart restoration");
+        console.log("[DEBUG] No shopifyCartId in response - skipping cart restoration");
         console.log("[Login] No saved cartId found");
       }
 
-      debugLog('[DEBUG] ========== LOGIN COMPLETE ==========');
+      console.log('[DEBUG] ========== LOGIN COMPLETE ==========');
       router.replace("/(tabs)");
     },
     onError: (error) => {

@@ -1,4 +1,3 @@
-import { debugLog } from "@/utils/logger";
 import { axiosInstance } from "../apiClient";
 
 /**
@@ -6,17 +5,17 @@ import { axiosInstance } from "../apiClient";
  * Called after cart creation when user is authenticated
  */
 export const saveCartToProfile = async (cartId: string): Promise<void> => {
-  debugLog("[DEBUG] saveCartToProfile called with:", cartId);
+  console.log("[DEBUG] saveCartToProfile called with:", cartId);
   try {
     const encodedCartId = encodeURIComponent(cartId);
-    debugLog("[DEBUG] Making POST to:", `/cart/${encodedCartId}/save`);
+    console.log("[DEBUG] Making POST to:", `/cart/${encodedCartId}/save`);
     const response = await axiosInstance.post(`/cart/${encodedCartId}/save`);
-    debugLog("[DEBUG] saveCartToProfile response:", response?.data);
+    console.log("[DEBUG] saveCartToProfile response:", response?.data);
     console.log("[CartAPI] Cart saved to profile:", cartId);
   } catch (error: any) {
     // Don't throw - this is a background operation
     // Cart will still work locally, just won't persist across logout/login
-    debugLog("[DEBUG] saveCartToProfile error:", error?.response?.data || error?.message || error);
+    console.error("[DEBUG] saveCartToProfile error:", error?.response?.data || error?.message || error);
     console.warn("[CartAPI] Failed to save cart to profile:", error);
   }
 };
