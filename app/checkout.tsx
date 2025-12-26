@@ -496,8 +496,8 @@ const CheckoutScreen = () => {
     <YStack flex={1} backgroundColor="$background">
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 80}
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
         <CheckoutStepper
           steps={[
@@ -515,8 +515,9 @@ const CheckoutScreen = () => {
           showsVerticalScrollIndicator={false}
           scrollEnabled={true}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
           contentContainerStyle={{
-            paddingBottom: getTokenValue("$2xl"),
+            paddingBottom: 150,
           }}
         />
         <>

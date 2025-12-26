@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useCreateCart, useAddItems, getCart, useUpdateItemQuantity, useRemoveItem } from '../generated/cart/cart';
 import useCartStore, { CartItem } from '@/store/useCartStore';
 import useAuthStore from '@/store/useAuthStore';
-import { saveCartToProfile } from '../endpoints/cart';
+import { saveCartToProfile, clearSavedCart } from '../endpoints/cart';
 import type { CartLineItem } from '../generated/cartaisyAPI.schemas';
 
 interface AddToCartParams {
@@ -202,6 +202,12 @@ export const useCartManager = (): UseCartManagerReturn => {
         });
 
         console.log('[useCartManager] Item added successfully');
+
+        // Sync cart to backend for abandoned cart tracking
+        const token = useAuthStore.getState().token;
+        if (token && addResponse.data.cartId) {
+          saveCartToProfile(addResponse.data.cartId);
+        }
       }
 
     } catch (err: any) {
@@ -248,6 +254,12 @@ export const useCartManager = (): UseCartManagerReturn => {
       });
 
       console.log('[useCartManager] Item quantity updated successfully');
+
+      // Sync cart to backend for abandoned cart tracking
+      const token = useAuthStore.getState().token;
+      if (token && updateResponse.data.cartId) {
+        saveCartToProfile(updateResponse.data.cartId);
+      }
     } catch (err: any) {
       console.error('[useCartManager] Update quantity error:', err);
       const errorMessage = err?.response?.data?.message || err?.message || 'Failed to update quantity';
@@ -291,6 +303,19 @@ export const useCartManager = (): UseCartManagerReturn => {
       });
 
       console.log('[useCartManager] Item removed successfully');
+
+      // Sync cart to backend for abandoned cart tracking
+      const token = useAuthStore.getState().token;
+      if (token) {
+        if (convertedItems.length === 0) {
+          // Cart is now empty - clear saved cart from backend
+          console.log('[useCartManager] Cart is empty, clearing saved cart from backend');
+          clearSavedCart();
+        } else if (removeResponse.data.cartId) {
+          // Cart still has items - sync updated cart
+          saveCartToProfile(removeResponse.data.cartId);
+        }
+      }
     } catch (err: any) {
       console.error('[useCartManager] Remove item error:', err);
       const errorMessage = err?.response?.data?.message || err?.message || 'Failed to remove item';

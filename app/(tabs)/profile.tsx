@@ -1,4 +1,9 @@
-import { TextSMRegular, TextSMSemiBold, TextXLBold } from "@/components/atoms";
+import {
+  Loader,
+  TextSMRegular,
+  TextSMSemiBold,
+  TextXLBold,
+} from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
@@ -35,7 +40,7 @@ const ProfileScreen = () => {
   const { showLoginModal } = useAuthGuard();
 
   // Get auth state to check if user is logged in
-  const { isGuest, token } = useAuthStore();
+  const { isGuest, token, _hasHydrated } = useAuthStore();
   const isLoggedIn = !!token && !isGuest;
 
   // Get local user store data (set during signup)
@@ -336,7 +341,9 @@ const ProfileScreen = () => {
                 >
                   <AppImage name="userIcon" width={48} height={48} />
                   <Spacer size="$md" />
-                  <TextSMSemiBold>Sign in to access your account</TextSMSemiBold>
+                  <TextSMSemiBold>
+                    Sign in to access your account
+                  </TextSMSemiBold>
                   <Spacer size="$sm" />
                   <TextSMRegular color="$secondary" textAlign="center">
                     View orders, manage addresses, and more
@@ -369,6 +376,17 @@ const ProfileScreen = () => {
     );
   };
 
+  // Show loading state while auth store is hydrating
+  if (!_hasHydrated) {
+    return (
+      <ScreenContainer backgroundColor="background">
+        <YStack flex={1} justifyContent="center" alignItems="center">
+          <Loader size="large" />
+        </YStack>
+      </ScreenContainer>
+    );
+  }
+
   return (
     <>
       <AlertComponent />
@@ -384,7 +402,7 @@ const ProfileScreen = () => {
               <Spacer size={"$sm"} />
               <TextSMSemiBold>{`${t(
                 "common.companyName"
-              )} v3.1.8 bugfix9`}</TextSMSemiBold>
+              )} v3.1.8`}</TextSMSemiBold>
               <Spacer size={"$sm"} />
               <TextSMRegular color="$secondary">{`All rights reserved, 2028©`}</TextSMRegular>
               {/* <Spacer size={"$md"} /> */}

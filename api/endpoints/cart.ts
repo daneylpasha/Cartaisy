@@ -2,21 +2,19 @@ import { axiosInstance } from "../apiClient";
 
 /**
  * Save Shopify cartId to customer profile for persistence across sessions
- * Called after cart creation when user is authenticated
+ * Called after cart creation/update when user is authenticated
+ * This enables abandoned cart notifications with fresh cart data
  */
 export const saveCartToProfile = async (cartId: string): Promise<void> => {
-  console.log("[DEBUG] saveCartToProfile called with:", cartId);
+  console.log("[CartAPI] Syncing cart to backend:", cartId);
   try {
-    const encodedCartId = encodeURIComponent(cartId);
-    console.log("[DEBUG] Making POST to:", `/cart/${encodedCartId}/save`);
-    const response = await axiosInstance.post(`/cart/${encodedCartId}/save`);
-    console.log("[DEBUG] saveCartToProfile response:", response?.data);
-    console.log("[CartAPI] Cart saved to profile:", cartId);
+    // POST /cart/saved with cartId in body for abandoned cart tracking
+    const response = await axiosInstance.post('/cart/saved', { cartId });
+    console.log("[CartAPI] Cart synced successfully:", response?.data);
   } catch (error: any) {
     // Don't throw - this is a background operation
-    // Cart will still work locally, just won't persist across logout/login
-    console.error("[DEBUG] saveCartToProfile error:", error?.response?.data || error?.message || error);
-    console.warn("[CartAPI] Failed to save cart to profile:", error);
+    // Cart will still work locally, backend just won't have latest data
+    console.warn("[CartAPI] Failed to sync cart:", error?.response?.data?.message || error?.message);
   }
 };
 

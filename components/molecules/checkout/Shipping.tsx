@@ -153,7 +153,6 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
       }
     }, [addressData.length, params.selectedAddressId]);
 
-    const form = useForm();
     const bottomSheetRef = useRef<BottomSheetModal>(null);
     const phoneInputRef = useRef<any>(null);
 
@@ -430,22 +429,23 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
           >
             <Controller
               name="deliveryinstructions"
-              control={form.control}
-              rules={{
-                required: "Delivery Instructions is required",
-              }}
+              control={control}
               render={({ field, fieldState }) => (
                 <>
                   <TextInput
                     selectionColor={"black"}
                     value={field.value}
                     onChangeText={field.onChange}
+                    onFocus={() => {
+                      // Prevent focus from jumping by ensuring this input handles its own focus
+                    }}
                     placeholder={"Just leave them in front of the door..."}
                     multiline={true}
                     numberOfLines={8}
                     textAlignVertical="top"
                     placeholderTextColor={getTokenValue("$textgrey")}
                     style={Styles.input}
+                    blurOnSubmit={false}
                   />
                   {fieldState.error?.message && (
                     <TextSMSemiBold color="$error">
@@ -535,12 +535,12 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
                       />
                     </XStack>
                   </OpTouch>
-                  <XStack alignItems="center" paddingHorizontal={"$reg"}>
+                  <XStack alignItems="center" paddingHorizontal={"$reg"} flex={1}>
                     <TextMDSemiBold color="$secondary">
                       +{selectedCountry.callingCode[0]}
                     </TextMDSemiBold>
                     <FormInput
-                      width={"68%"}
+                      width={"100%"}
                       borderWidth={0}
                       paddingHorizontal={0}
                       value={value}
@@ -553,9 +553,6 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
                       }}
                       placeholder={t("profile.phoneNumber.placeholder")}
                     />
-                    <OpTouch onPress={handleOpenCountryPicker}>
-                      <AppImage name="arrowDown" width={14} height={8} />
-                    </OpTouch>
                   </XStack>
                 </XStack>
               )}

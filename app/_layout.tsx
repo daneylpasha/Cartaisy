@@ -54,6 +54,14 @@ messaging()
     if (remoteMessage) {
       console.log('🔔 [PUSH] Killed state: Initial notification captured:', JSON.stringify(remoteMessage.data, null, 2));
       pendingInitialNotification = remoteMessage;
+
+      // IMPORTANT: Set deep link flag IMMEDIATELY to prevent splash screen from navigating
+      // This ensures splash screen waits for the deep link navigation to complete
+      const notificationData = remoteMessage.data as NotificationDeepLinkPayload | undefined;
+      if (notificationData && (notificationData.type || notificationData.deepLink || notificationData.action)) {
+        console.log('🔔 [PUSH] Killed state: Setting deep link flag early to prevent splash override');
+        setDeepLinkHandled(true);
+      }
     } else {
       console.log('🔔 [PUSH] Killed state: No initial notification');
     }
