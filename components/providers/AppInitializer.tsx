@@ -1,6 +1,8 @@
 import { useGetFavorites } from "@/api/generated/favorites/favorites";
+import { getStoreConfig } from "@/api/endpoints/storeConfig";
 import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { useEffect, useRef } from "react";
 import Axios from "axios";
 
@@ -110,6 +112,32 @@ export const AppInitializer = () => {
       setFavorites(favoritesData.data.productIds);
     }
   }, [favoritesData, setFavorites]);
+
+  // ==================== STORE CONFIG INITIALIZATION ====================
+  // Fetch store configuration (currency, timezone, etc.) from backend
+  const storeConfigFetchedRef = useRef(false);
+
+  useEffect(() => {
+    const initializeStoreConfig = async () => {
+      // Only fetch once per app session
+      if (storeConfigFetchedRef.current) return;
+      storeConfigFetchedRef.current = true;
+
+      try {
+        const config = await getStoreConfig();
+        useStoreConfigStore.getState().setConfig({
+          currency: config.currency || "USD",
+          timezone: config.timezone || "UTC",
+          storeName: config.name || "",
+        });
+        console.log("[AppInitializer] Store config loaded - Currency:", config.currency);
+      } catch (error) {
+        console.warn("[AppInitializer] Failed to load store config:", error);
+      }
+    };
+
+    initializeStoreConfig();
+  }, []);
 
   // ==================== ADD MORE INITIALIZATIONS BELOW ====================
   // Example: Cart sync, user preferences, notification settings, etc.

@@ -211,7 +211,9 @@ export const useCartManager = (): UseCartManagerReturn => {
       }
 
     } catch (err: any) {
-      console.error('[useCartManager] Error:', err);
+      if (__DEV__) {
+        console.log('[useCartManager] Add to cart error:', err?.response?.data || err?.message);
+      }
       const errorMessage = err?.response?.data?.message || err?.message || 'Failed to add item to cart';
       setError(errorMessage);
       throw err; // Re-throw to let caller handle
@@ -261,7 +263,9 @@ export const useCartManager = (): UseCartManagerReturn => {
         saveCartToProfile(updateResponse.data.cartId);
       }
     } catch (err: any) {
-      console.error('[useCartManager] Update quantity error:', err);
+      if (__DEV__) {
+        console.log('[useCartManager] Update quantity error:', err?.response?.data || err?.message);
+      }
       const errorMessage = err?.response?.data?.message || err?.message || 'Failed to update quantity';
       setError(errorMessage);
       throw err;
@@ -317,7 +321,9 @@ export const useCartManager = (): UseCartManagerReturn => {
         }
       }
     } catch (err: any) {
-      console.error('[useCartManager] Remove item error:', err);
+      if (__DEV__) {
+        console.log('[useCartManager] Remove item error:', err?.response?.data || err?.message);
+      }
       const errorMessage = err?.response?.data?.message || err?.message || 'Failed to remove item';
       setError(errorMessage);
       throw err;
@@ -356,7 +362,9 @@ export const useCartManager = (): UseCartManagerReturn => {
 
       console.log('[useCartManager] Cart synced successfully');
     } catch (err: any) {
-      console.error('[useCartManager] Cart sync error:', err);
+      if (__DEV__) {
+        console.log('[useCartManager] Cart sync error:', err?.response?.data || err?.message);
+      }
       // Don't throw - this is a background sync operation
     }
   };

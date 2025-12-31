@@ -9,11 +9,13 @@ export const queryClient = new QueryClient({
     },
     mutations: {
       onError: (error: any) => {
-        console.error("❌ [React Query] Global Mutation Error:", {
-          message: error?.message,
-          response: error?.response?.data,
-          status: error?.response?.status,
-        });
+        if (__DEV__) {
+          console.log("❌ [React Query] Global Mutation Error:", {
+            message: error?.message,
+            response: error?.response?.data,
+            status: error?.response?.status,
+          });
+        }
       },
     },
   },

@@ -32,11 +32,11 @@ import CountryPicker, {
   CountryCode,
 } from "react-native-country-picker-modal";
 
-import { useFormattedAddresses } from "@/api/hooks/useAddresses";
 import {
   useGetShippingRates,
   useSaveShipping,
 } from "@/api/generated/checkout/checkout";
+import { useFormattedAddresses } from "@/api/hooks/useAddresses";
 import { BottomSheetModalWithFlatList } from "@/components/organisms/bottomSheet";
 import { fonts } from "@/tamagui/fonts";
 import { tokens } from "@/tamagui/token";
@@ -64,7 +64,7 @@ export interface ShippingRef {
 }
 
 const Shipping = forwardRef<ShippingRef, ShippingProps>(
-  ({ sessionId, currency = 'USD', onStepComplete, onError }, ref) => {
+  ({ sessionId, currency = "USD", onStepComplete, onError }, ref) => {
     const params = useLocalSearchParams();
 
     const { showAlert, AlertComponent } = useCustomAlert();
@@ -75,10 +75,8 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
     const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
 
     // Use authenticated addresses hook - only fetches when user is logged in
-    const {
-      formattedAddresses: addressData,
-      isAuthenticated,
-    } = useFormattedAddresses();
+    const { formattedAddresses: addressData, isAuthenticated } =
+      useFormattedAddresses();
 
     // Fetch shipping rates when address is selected
     // Note: addressId is the array index (0, 1, 2...) from the /addresses endpoint
@@ -535,25 +533,34 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
                       />
                     </XStack>
                   </OpTouch>
-                  <XStack alignItems="center" paddingHorizontal={"$reg"} flex={1}>
-                    <TextMDSemiBold color="$secondary">
-                      +{selectedCountry.callingCode[0]}
-                    </TextMDSemiBold>
-                    <FormInput
-                      width={"100%"}
-                      borderWidth={0}
-                      paddingHorizontal={0}
-                      value={value}
-                      keyboardType="numeric"
-                      inputRef={phoneInputRef}
-                      onChangeText={(text) => {
-                        // Only allow numbers
-                        const numericText = text.replace(/[^0-9]/g, "");
-                        onChange(numericText);
-                      }}
-                      placeholder={t("profile.phoneNumber.placeholder")}
-                    />
-                  </XStack>
+                  <OpTouch
+                    onPress={() => phoneInputRef.current?.focus()}
+                    style={{ flex: 1 }}
+                  >
+                    <XStack
+                      alignItems="center"
+                      paddingHorizontal={"$reg"}
+                      flex={1}
+                    >
+                      <TextMDSemiBold color="$secondary">
+                        +{selectedCountry.callingCode[0]}
+                      </TextMDSemiBold>
+                      <FormInput
+                        width={"100%"}
+                        borderWidth={0}
+                        paddingHorizontal={0}
+                        value={value}
+                        keyboardType="numeric"
+                        inputRef={phoneInputRef}
+                        onChangeText={(text) => {
+                          // Only allow numbers
+                          const numericText = text.replace(/[^0-9]/g, "");
+                          onChange(numericText);
+                        }}
+                        placeholder={t("profile.phoneNumber.placeholder")}
+                      />
+                    </XStack>
+                  </OpTouch>
                 </XStack>
               )}
             />

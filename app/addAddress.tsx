@@ -15,18 +15,37 @@ import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { SecondaryButton } from "@/components/molecules/buttons/SecondaryButton";
 import { fonts } from "@/tamagui/fonts";
 
+import type {
+  CustomerAddAddressRequest,
+  CustomerUpdateAddressRequest,
+} from "@/api/generated/cartaisyAPI.schemas";
+import {
+  getCustomerGetAddressesQueryKey,
+  useCustomerAddAddress,
+  useCustomerDeleteAddress,
+  useCustomerSetDefaultAddress,
+  useCustomerUpdateAddress,
+} from "@/api/generated/customer-addresses/customer-addresses";
+import { useAuthenticatedAddresses } from "@/api/hooks/useAddresses";
 import {
   BaseBottomSheetRef,
   BottomSheetModalWithView,
 } from "@/components/molecules/bottom-sheets";
 import AlertModal from "@/components/organisms/AlertModal";
-import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import { SHADOW_STYLES } from "@/constants/styles";
+import { useAuthGuard } from "@/contexts/AuthGuardContext";
+import useUserStore from "@/store/useUserStore";
 import { t } from "@/translations";
+import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { ScrollView, StyleSheet, TextInput } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  TextInput,
+} from "react-native";
 import CountryPicker, {
   Country,
   CountryCode,
@@ -34,20 +53,6 @@ import CountryPicker, {
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
-import {
-  getCustomerGetAddressesQueryKey,
-  useCustomerAddAddress,
-  useCustomerUpdateAddress,
-  useCustomerDeleteAddress,
-  useCustomerSetDefaultAddress,
-} from "@/api/generated/customer-addresses/customer-addresses";
-import { useAuthenticatedAddresses } from "@/api/hooks/useAddresses";
-import type {
-  CustomerAddAddressRequest,
-  CustomerUpdateAddressRequest
-} from "@/api/generated/cartaisyAPI.schemas";
-import { useQueryClient } from "@tanstack/react-query";
-import useUserStore from "@/store/useUserStore";
 
 const AddAddress = () => {
   const params = useLocalSearchParams();
@@ -82,15 +87,18 @@ const AddAddress = () => {
   console.log("[AddAddress] Edit addressId from params:", editAddressId);
   console.log("[AddAddress] All params:", params);
 
-  const defaultValues = useMemo(() => ({
-    addressName: editData?.label || "",
-    streetAddress: editData?.address1 || "",
-    apartmentSuite: editData?.address2 || "",
-    city: editData?.city || "",
-    stateProvince: editData?.province || "",
-    postCode: editData?.zip || "",
-    description: editData?.deliveryInstructions || "",
-  }), [editData]);
+  const defaultValues = useMemo(
+    () => ({
+      addressName: editData?.label || "",
+      streetAddress: editData?.address1 || "",
+      apartmentSuite: editData?.address2 || "",
+      city: editData?.city || "",
+      stateProvince: editData?.province || "",
+      postCode: editData?.zip || "",
+      description: editData?.deliveryInstructions || "",
+    }),
+    [editData]
+  );
 
   const form = useForm({
     mode: "onChange",
@@ -112,7 +120,9 @@ const AddAddress = () => {
       onSuccess: (response) => {
         console.log("[AddAddress] Default address set successfully:", response);
         // Refetch addresses to get updated default
-        queryClient.invalidateQueries({ queryKey: getCustomerGetAddressesQueryKey() });
+        queryClient.invalidateQueries({
+          queryKey: getCustomerGetAddressesQueryKey(),
+        });
       },
       onError: (error) => {
         console.error("[AddAddress] Failed to set default address:", error);
@@ -121,70 +131,87 @@ const AddAddress = () => {
   });
 
   // Add address mutation
-  const { mutate: addAddressMutation, isPending: isAddPending } = useCustomerAddAddress({
-    mutation: {
-      onSuccess: (response) => {
-        console.log("[AddAddress] Address added successfully:", response);
+  const { mutate: addAddressMutation, isPending: isAddPending } =
+    useCustomerAddAddress({
+      mutation: {
+        onSuccess: (response) => {
+          console.log("[AddAddress] Address added successfully:", response);
 
-        const isFirstAddress = existingAddresses.length === 0;
+          const isFirstAddress = existingAddresses.length === 0;
 
-        // If this is the first address, set it as default via API
-        const newAddress = (response as any)?.data?.address;
-        if (isFirstAddress && newAddress?._id) {
-          console.log("[AddAddress] This is the first address, setting as default...");
-          setDefaultAddressAPI({ addressId: newAddress._id });
-        } else if ((response as any)?.data?.address?.isDefault) {
-          // If the API already marked it as default, update the store
-          setDefaultAddress((response as any).data.address);
-        }
+          // If this is the first address, set it as default via API
+          const newAddress = (response as any)?.data?.address;
+          if (isFirstAddress && newAddress?._id) {
+            console.log(
+              "[AddAddress] This is the first address, setting as default..."
+            );
+            setDefaultAddressAPI({ addressId: newAddress._id });
+          } else if ((response as any)?.data?.address?.isDefault) {
+            // If the API already marked it as default, update the store
+            setDefaultAddress((response as any).data.address);
+          }
 
-        // Invalidate addresses query to refetch updated list
-        queryClient.invalidateQueries({ queryKey: getCustomerGetAddressesQueryKey() });
-        router.back();
+          // Invalidate addresses query to refetch updated list
+          queryClient.invalidateQueries({
+            queryKey: getCustomerGetAddressesQueryKey(),
+          });
+          router.back();
+        },
+        onError: (error) => {
+          console.error("[AddAddress] Failed to add address:", error);
+          // You can show a toast/alert here
+        },
       },
-      onError: (error) => {
-        console.error("[AddAddress] Failed to add address:", error);
-        // You can show a toast/alert here
-      },
-    },
-  });
+    });
 
   // Update address mutation
-  const { mutate: updateAddressMutation, isPending: isUpdatePending } = useCustomerUpdateAddress({
-    mutation: {
-      onSuccess: (response) => {
-        console.log("[AddAddress] Address updated successfully:", response);
+  const { mutate: updateAddressMutation, isPending: isUpdatePending } =
+    useCustomerUpdateAddress({
+      mutation: {
+        onSuccess: (response) => {
+          console.log("[AddAddress] Address updated successfully:", response);
 
-        // Invalidate addresses query to refetch updated list
-        queryClient.invalidateQueries({ queryKey: getCustomerGetAddressesQueryKey() });
-        router.back();
+          // Invalidate addresses query to refetch updated list
+          queryClient.invalidateQueries({
+            queryKey: getCustomerGetAddressesQueryKey(),
+          });
+          router.back();
+        },
+        onError: (error) => {
+          console.error("[AddAddress] Failed to update address:", error);
+          // You can show a toast/alert here
+        },
       },
-      onError: (error) => {
-        console.error("[AddAddress] Failed to update address:", error);
-        // You can show a toast/alert here
-      },
-    },
-  });
+    });
 
   // Delete address mutation
-  const { mutate: deleteAddressMutation, isPending: isDeletePending } = useCustomerDeleteAddress({
-    mutation: {
-      onSuccess: (response) => {
-        console.log("[AddAddress] Address deleted successfully:", response);
+  const { mutate: deleteAddressMutation, isPending: isDeletePending } =
+    useCustomerDeleteAddress({
+      mutation: {
+        onSuccess: (response) => {
+          console.log("[AddAddress] Address deleted successfully:", response);
 
-        // Invalidate addresses query to refetch updated list
-        queryClient.invalidateQueries({ queryKey: getCustomerGetAddressesQueryKey() });
-        router.back();
+          // Invalidate addresses query to refetch updated list
+          queryClient.invalidateQueries({
+            queryKey: getCustomerGetAddressesQueryKey(),
+          });
+          router.back();
+        },
+        onError: (error: any) => {
+          console.error("[AddAddress] Failed to delete address:", error);
+          console.error(
+            "[AddAddress] Delete error response:",
+            error?.response?.data
+          );
+          console.error(
+            "[AddAddress] Delete error status:",
+            error?.response?.status
+          );
+          console.error("[AddAddress] Delete request URL:", error?.config?.url);
+          // You can show a toast/alert here
+        },
       },
-      onError: (error: any) => {
-        console.error("[AddAddress] Failed to delete address:", error);
-        console.error("[AddAddress] Delete error response:", error?.response?.data);
-        console.error("[AddAddress] Delete error status:", error?.response?.status);
-        console.error("[AddAddress] Delete request URL:", error?.config?.url);
-        // You can show a toast/alert here
-      },
-    },
-  });
+    });
 
   const isPending = isAddPending || isUpdatePending || isDeletePending;
 
@@ -206,7 +233,12 @@ const AddAddress = () => {
         type: "both",
       };
 
-      console.log("[AddAddress] Updating address with id:", editAddressId, "with data:", updateData);
+      console.log(
+        "[AddAddress] Updating address with id:",
+        editAddressId,
+        "with data:",
+        updateData
+      );
       updateAddressMutation({ addressId: editAddressId, data: updateData });
     } else {
       // Add new address
@@ -232,9 +264,16 @@ const AddAddress = () => {
   };
 
   const handleDelete = () => {
-    console.log("[AddAddress] handleDelete called - editAddressId:", editAddressId, "isEditMode:", isEditMode);
+    console.log(
+      "[AddAddress] handleDelete called - editAddressId:",
+      editAddressId,
+      "isEditMode:",
+      isEditMode
+    );
     if (!isEditMode || !editAddressId) {
-      console.log("[AddAddress] handleDelete returning early - missing editAddressId or not in edit mode");
+      console.log(
+        "[AddAddress] handleDelete returning early - missing editAddressId or not in edit mode"
+      );
       return;
     }
 
@@ -245,17 +284,25 @@ const AddAddress = () => {
     }
 
     // Find the address being deleted by _id
-    const addressIndex = existingAddresses.findIndex((addr: any) => addr._id === editAddressId);
+    const addressIndex = existingAddresses.findIndex(
+      (addr: any) => addr._id === editAddressId
+    );
     const addressToDelete = existingAddresses[addressIndex];
 
     // If deleting the default address, set the next one as default
     if (addressToDelete?.isDefault && existingAddresses.length > 1) {
       // Find the next address (prefer the one after, otherwise before)
-      const nextIndex = addressIndex < existingAddresses.length - 1 ? addressIndex + 1 : addressIndex - 1;
+      const nextIndex =
+        addressIndex < existingAddresses.length - 1
+          ? addressIndex + 1
+          : addressIndex - 1;
       const nextAddress = existingAddresses[nextIndex];
 
       if (nextAddress?._id) {
-        console.log("[AddAddress] Deleting default address, setting next address as default:", nextAddress._id);
+        console.log(
+          "[AddAddress] Deleting default address, setting next address as default:",
+          nextAddress._id
+        );
         // First set the new default, then delete
         setDefaultAddressAPI({ addressId: nextAddress._id });
       }
@@ -284,7 +331,10 @@ const AddAddress = () => {
 
     if (isEditMode && editData) {
       console.log("[AddAddress] Pre-filling form with edit data:", editData);
-      console.log("[AddAddress] Current form values before reset:", form.getValues());
+      console.log(
+        "[AddAddress] Current form values before reset:",
+        form.getValues()
+      );
 
       // Use reset to properly re-render all fields with new values
       form.reset(defaultValues, {
@@ -377,7 +427,9 @@ const AddAddress = () => {
                   />
                   <OpTouch
                     hitSlop={{ bottom: 10, top: 10, left: 10, right: 10 }}
-                    onPress={() => helpBottomSheetRef.current?.handleOpenPress()}
+                    onPress={() =>
+                      helpBottomSheetRef.current?.handleOpenPress()
+                    }
                   >
                     <AppImage name="warningIcon" width={16} height={16} />
                   </OpTouch>
@@ -655,42 +707,51 @@ const AddAddress = () => {
           <Spacer size={"$lg"} />
         </YStack>
       </KeyboardAwareScrollView>
-      <ScrollView showsVerticalScrollIndicator={false}></ScrollView>
-      <YStack paddingHorizontal={"$md"}>
-        {Object.keys(form.formState.errors).length > 0 && (
-          <>
-            <TextSMSemiBold color="$error">
-              {Object.values(form.formState.errors)[0]?.message as string}
-            </TextSMSemiBold>
-            <Spacer size={"$sm"} />
-          </>
-        )}
-        <PrimaryButton
-          label={isEditMode ? "Update Address" : "Save Address"}
-          onPress={() => {
-            console.log(`[AddAddress] ${isEditMode ? "Update" : "Save"} Address button pressed`);
-            console.log("[AddAddress] Form errors:", form.formState.errors);
-            console.log("[AddAddress] Form values:", form.getValues());
-            form.handleSubmit(onSubmit)();
-          }}
-          width={"100%"}
-          iconPosition="left"
-          isLoading={isPending && !isDeletePending}
-        />
-        {isEditMode && (
-          <>
-            <Spacer size={"$md"} />
-            <SecondaryButton
-              label="Delete Address"
-              onPress={handleDelete}
-              width={"100%"}
-              borderColor="$error"
-              color="$error"
-              isLoading={isDeletePending}
-            />
-          </>
-        )}
-      </YStack>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        // keyboardVerticalOffset={90}
+      >
+        <YStack paddingHorizontal={"$md"}>
+          {Object.keys(form.formState.errors).length > 0 && (
+            <>
+              <TextSMSemiBold color="$error">
+                {Object.values(form.formState.errors)[0]?.message as string}
+              </TextSMSemiBold>
+              <Spacer size={"$sm"} />
+            </>
+          )}
+          <PrimaryButton
+            label={isEditMode ? "Update Address" : "Save Address"}
+            onPress={() => {
+              console.log(
+                `[AddAddress] ${
+                  isEditMode ? "Update" : "Save"
+                } Address button pressed`
+              );
+              console.log("[AddAddress] Form errors:", form.formState.errors);
+              console.log("[AddAddress] Form values:", form.getValues());
+              form.handleSubmit(onSubmit)();
+            }}
+            width={"100%"}
+            iconPosition="left"
+            isLoading={isPending && !isDeletePending}
+          />
+          {isEditMode && (
+            <>
+              <Spacer size={"$md"} />
+              <SecondaryButton
+                label="Delete Address"
+                onPress={handleDelete}
+                width={"100%"}
+                borderColor="$error"
+                color="$error"
+                isLoading={isDeletePending}
+              />
+            </>
+          )}
+        </YStack>
+      </KeyboardAvoidingView>
       {/* paddingBottom={} */}
       <Spacer size={bottomSafeAreaInset} />
       <BottomSheetModalWithView snapPoints={["40%"]} ref={helpBottomSheetRef}>
@@ -755,7 +816,8 @@ const AddAddress = () => {
         >
           <HeadingSMBold color="$text">Cannot Delete Address</HeadingSMBold>
           <ParagraphMD color="$secondary">
-            You must have at least one delivery address on your account. Add a new address before deleting this one.
+            You must have at least one delivery address on your account. Add a
+            new address before deleting this one.
           </ParagraphMD>
           <OpTouch onPress={() => setShowLastAddressWarning(false)}>
             <YStack

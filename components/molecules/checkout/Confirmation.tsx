@@ -23,9 +23,11 @@ import { SectionHeader } from "../SectionHeader";
 interface ConfirmationProps {
   sessionId: string;
   onSummaryLoaded?: (summary: any) => void;
+  onInputFocus?: () => void;
+  isKeyboardVisible?: boolean;
 }
 
-const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
+const Confirmation = ({ sessionId, onSummaryLoaded, onInputFocus, isKeyboardVisible }: ConfirmationProps) => {
   const form = useForm();
   const { showAlert, AlertComponent } = useCustomAlert();
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
@@ -364,6 +366,7 @@ const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
                       onChangeText={field.onChange}
                       placeholder={"Enter Promo Code"}
                       onSubmitEditing={handleApplyPromo}
+                      onFocus={onInputFocus}
                     />
                   </YStack>
                 )}
@@ -417,6 +420,7 @@ const Confirmation = ({ sessionId, onSummaryLoaded }: ConfirmationProps) => {
           </>
         )}
         <AlertComponent />
+        {isKeyboardVisible && <YStack height={50} />}
       </YStack>
     </TouchableWithoutFeedback>
   );
