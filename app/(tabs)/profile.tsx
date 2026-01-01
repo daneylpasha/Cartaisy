@@ -5,6 +5,7 @@ import {
   TextXLBold,
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
+import { OpTouch } from "@/components/atoms/OpTouch";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
@@ -349,16 +350,15 @@ const ProfileScreen = () => {
                     View orders, manage addresses, and more
                   </TextSMRegular>
                   <Spacer size="$lg" />
-                  <YStack
-                    backgroundColor="$primary"
-                    paddingHorizontal="$xl"
-                    paddingVertical="$reg"
-                    borderRadius="$md"
-                    pressStyle={{ opacity: 0.8 }}
+                  <OpTouch
+                    backgroundColor="primary"
+                    paddingHorizontal="xl"
+                    paddingVertical="reg"
+                    borderRadius="md"
                     onPress={showLoginModal}
                   >
                     <TextSMSemiBold color="$white">Sign In</TextSMSemiBold>
-                  </YStack>
+                  </OpTouch>
                 </YStack>
                 <Spacer size="$xl" />
               </>

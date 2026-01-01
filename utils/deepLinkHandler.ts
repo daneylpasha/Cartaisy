@@ -35,6 +35,7 @@ export interface NotificationDeepLinkPayload {
   // Legacy support for simple link format
   link?: string;
   type?: string;
+  action?: string;
   productId?: string;
   collectionId?: string;
   orderId?: string;

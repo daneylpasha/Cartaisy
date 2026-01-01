@@ -1,8 +1,10 @@
 import type { AppConfig } from "@/tamagui/config";
 import { tokens } from "@/tamagui/token";
-import React from "react";
+import React, { useRef, useCallback } from "react";
 import {
   DimensionValue,
+  GestureResponderEvent,
+  Platform,
   StyleProp,
   TouchableOpacity,
   TouchableOpacityProps,
@@ -66,8 +68,24 @@ const OpTouch = ({
   flex,
   icon,
   iconPosition,
+  onPress,
   ...props
 }: OpTouchProps) => {
+  // Debounce to prevent double tap navigation
+  const lastPressTime = useRef(0);
+  const DEBOUNCE_DELAY = 400; // ms
+
+  const handlePress = useCallback(
+    (event: GestureResponderEvent) => {
+      const now = Date.now();
+      if (now - lastPressTime.current < DEBOUNCE_DELAY) {
+        return; // Ignore rapid taps
+      }
+      lastPressTime.current = now;
+      onPress?.(event);
+    },
+    [onPress]
+  );
   const getTokenValue = (
     token: string | undefined,
     tokenType: "space" | "color" | "radius"
@@ -100,7 +118,12 @@ const OpTouch = ({
   };
 
   return (
-    <TouchableOpacity {...props} style={[customStyle, style]}>
+    <TouchableOpacity
+      activeOpacity={Platform.OS === "android" ? 1 : 0.7}
+      {...props}
+      onPress={handlePress}
+      style={[customStyle, style]}
+    >
       {icon && iconPosition === "left" ? icon : null}
       {children}
       {icon && iconPosition === "right" ? icon : null}

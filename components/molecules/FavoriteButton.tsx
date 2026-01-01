@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import { TouchableOpacity } from 'react-native';
 import { YStack } from 'tamagui';
 import * as Haptics from 'expo-haptics';
@@ -21,11 +21,21 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
 }) => {
   const isFavorite = useIsFavorite(productId);
 
-  const handlePress = () => {
+  // Debounce to prevent double tap
+  const lastPressTime = useRef(0);
+  const DEBOUNCE_DELAY = 400;
+
+  const handlePress = useCallback(() => {
+    const now = Date.now();
+    if (now - lastPressTime.current < DEBOUNCE_DELAY) {
+      return;
+    }
+    lastPressTime.current = now;
+
     // Haptic feedback
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onToggle(productId);
-  };
+  }, [productId, onToggle]);
 
   return (
     <TouchableOpacity onPress={handlePress} disabled={isLoading}>

@@ -46,26 +46,22 @@ axiosInstance.interceptors.request.use(
       config.headers["X-Store-ID"] = process.env.EXPO_PUBLIC_STORE_ID || "";
     }
 
-    console.log("[API Request]:", config.url);
-    console.log("[API Request] X-Store-ID:", config.headers["X-Store-ID"]);
-    console.log("[API Request] Token exists:", !!token);
-    console.log("[API Request] Guest session exists:", !!guestSessionId);
+    if (__DEV__) {
+      console.log("[API Request]:", config.url);
+    }
 
     // Add authentication header
     if (token) {
       // Logged-in user
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("[API Request] Authorization header set");
 
       // If there's a guest session, include it for backend auto-merge
       if (guestSessionId) {
         config.headers["X-Session-ID"] = guestSessionId;
-        console.log("[API Request] Including guest session for auto-merge");
       }
     } else if (guestSessionId) {
       // Guest user with existing session
       config.headers["X-Session-ID"] = guestSessionId;
-      console.log("[API Request] Guest session header set");
     }
 
     // Always add device ID for tracking
@@ -76,7 +72,9 @@ axiosInstance.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.log("[API Request Error]:", error.message);
+    if (__DEV__) {
+      console.log("[API Request Error]:", error.message);
+    }
     return Promise.reject(error);
   }
 );
@@ -84,7 +82,9 @@ axiosInstance.interceptors.request.use(
 // Response interceptor to handle auth errors and capture session IDs
 axiosInstance.interceptors.response.use(
   (response) => {
-    console.log("API Response SUCCESS", response?.data);
+    if (__DEV__) {
+      console.log("API Response SUCCESS", response?.config?.url);
+    }
 
     // Capture new session ID from response headers (for guest sessions)
     const newSessionId = response.headers["x-session-id"];
@@ -93,7 +93,6 @@ axiosInstance.interceptors.response.use(
 
       // If we don't have a session ID and we're not logged in, save the new one
       if (!guestSessionId && !token) {
-        console.log("[API Response] Received new guest session ID:", newSessionId);
         setGuestSession(newSessionId);
       }
     }
@@ -103,9 +102,10 @@ axiosInstance.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    console.log("[API Response ERROR] URL:", error.config?.url);
-    console.log("[API Response ERROR] HTTP Status:", error.response?.status);
-    console.log("[API Response ERROR] Response Data:", error.response?.data);
+    if (__DEV__) {
+      console.log("[API Response ERROR] URL:", error.config?.url);
+      console.log("[API Response ERROR] HTTP Status:", error.response?.status);
+    }
 
     // Check if this is a token expiry error (401)
     // Also check for specific error codes from backend if available
@@ -137,7 +137,6 @@ axiosInstance.interceptors.response.use(
       if (refreshToken && token) {
         if (isRefreshing) {
           // If already refreshing, queue this request
-          console.log("[Token Refresh] Request queued, waiting for refresh:", originalRequest.url);
           return new Promise((resolve, reject) => {
             failedQueue.push({ resolve, reject });
           }).then((newToken) => {
@@ -150,8 +149,6 @@ axiosInstance.interceptors.response.use(
 
         originalRequest._retry = true;
         isRefreshing = true;
-
-        console.log("[Token Refresh] Attempting to refresh token...");
 
         try {
           // Call refresh token endpoint directly to avoid interceptor loop
@@ -170,8 +167,6 @@ axiosInstance.interceptors.response.use(
           const newRefreshToken = response.data?.data?.refreshToken;
 
           if (newAccessToken) {
-            console.log("[Token Refresh] Success! New token received");
-
             // Update tokens in store
             setToken(newAccessToken, newRefreshToken || refreshToken);
 
@@ -189,22 +184,16 @@ axiosInstance.interceptors.response.use(
             throw new Error("No access token in refresh response");
           }
         } catch (refreshError) {
-          console.log("[Token Refresh] Failed:", refreshError);
-
           // Process queued requests with error
           processQueue(refreshError, null);
 
           // Clear auth - refresh token is also expired/invalid
-          console.log("[Token Refresh] Clearing auth due to refresh failure");
           clearAuth();
 
           return Promise.reject(refreshError);
         } finally {
           isRefreshing = false;
         }
-      } else {
-        // No refresh token available, just reject
-        console.log("[API Response ERROR] 401 received but no refresh token available");
       }
     }
 

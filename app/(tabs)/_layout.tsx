@@ -2,7 +2,7 @@ import { TextMDSemiBold, TextSMRegular } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform } from "react-native";
+import { Platform, Pressable } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { getTokenValue } from "tamagui";
 
@@ -16,7 +16,27 @@ export default function TabLayout() {
           tabBarActiveTintColor: getTokenValue("$primary"),
           headerShown: false,
           tabBarShowLabel: true,
-
+          // Disable ripple effect on Android
+          tabBarButton: (props) => {
+            const {
+              children,
+              style,
+              onPress,
+              onLongPress,
+              accessibilityState,
+            } = props;
+            return (
+              <Pressable
+                style={style}
+                onPress={onPress}
+                onLongPress={onLongPress}
+                accessibilityState={accessibilityState}
+                android_ripple={null}
+              >
+                {children}
+              </Pressable>
+            );
+          },
           tabBarStyle: Platform.select({
             ios: {
               // Use a transparent background on iOS to show the blur effect
@@ -25,6 +45,8 @@ export default function TabLayout() {
             },
             android: {
               backgroundColor: getTokenValue("$background"),
+              height: 80,
+              paddingTop: 5,
             },
             default: {},
           }),

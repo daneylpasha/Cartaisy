@@ -59,7 +59,6 @@ export const useCartManager = (): UseCartManagerReturn => {
       return response.success;
     } catch (err) {
       // Cart is expired or invalid
-      console.log('[useCartManager] Cart validation failed:', err);
       return false;
     }
   };
@@ -88,13 +87,6 @@ export const useCartManager = (): UseCartManagerReturn => {
    * Convert API CartLineItem to Zustand CartItem format
    */
   const convertApiItemToCartItem = (apiItem: CartLineItem): CartItem => {
-    console.log('[useCartManager] Converting API item:', {
-      title: apiItem.title,
-      hasMetafields: !!apiItem.metafields,
-      metafields: apiItem.metafields,
-      fullApiItem: apiItem,
-    });
-
     return {
       lineItemId: apiItem.id,
       productId: apiItem.productId,
@@ -129,7 +121,6 @@ export const useCartManager = (): UseCartManagerReturn => {
         const isValid = await validateCartId(currentCartId);
 
         if (!isValid) {
-          console.log('[useCartManager] CartId expired, recovery needed');
           needsRecovery = true;
           currentCartId = null;
         }
@@ -137,14 +128,10 @@ export const useCartManager = (): UseCartManagerReturn => {
 
       // Step 2: Create new cart or recover
       if (!currentCartId || needsRecovery) {
-        console.log('[useCartManager] Creating new cart');
-
         // Prepare items: all existing items from Zustand + new item
         const itemsToAdd = needsRecovery
           ? [...items.map(convertToCartItemInput), convertToCartItemInput(newItem)]
           : [convertToCartItemInput(newItem)];
-
-        console.log('[useCartManager] Items to add:', JSON.stringify(itemsToAdd, null, 2));
 
         const createResponse = await createCartMutation.mutateAsync({
           data: {
@@ -165,22 +152,14 @@ export const useCartManager = (): UseCartManagerReturn => {
           items: convertedItems,
         });
 
-        console.log('[useCartManager] Cart created successfully:', createResponse.data.cartId);
-
         // Save cartId to customer profile (if logged in) for persistence across sessions
         const token = useAuthStore.getState().token;
-        console.log("[DEBUG] About to save cart to profile, token exists:", !!token, "cartId:", createResponse.data.cartId);
         if (token && createResponse.data.cartId) {
-          console.log("[DEBUG] Conditions met, calling saveCartToProfile...");
           // Fire and forget - don't await, don't block cart operations
           saveCartToProfile(createResponse.data.cartId);
-        } else {
-          console.log("[DEBUG] Conditions NOT met - token:", !!token, "cartId:", !!createResponse.data.cartId);
         }
       } else {
         // Step 3: Add item to existing valid cart
-        console.log('[useCartManager] Adding to existing cart:', currentCartId);
-
         const addResponse = await addItemsMutation.mutateAsync({
           cartId: encodeURIComponent(currentCartId),
           data: {
@@ -200,8 +179,6 @@ export const useCartManager = (): UseCartManagerReturn => {
           cartId: addResponse.data.cartId,
           items: convertedItems,
         });
-
-        console.log('[useCartManager] Item added successfully');
 
         // Sync cart to backend for abandoned cart tracking
         const token = useAuthStore.getState().token;
@@ -234,8 +211,6 @@ export const useCartManager = (): UseCartManagerReturn => {
     setError(null);
 
     try {
-      console.log('[useCartManager] Updating item quantity:', { lineItemId, quantity });
-
       const updateResponse = await updateItemQuantityMutation.mutateAsync({
         cartId: encodeURIComponent(cartId),
         lineItemId: encodeURIComponent(lineItemId),
@@ -254,8 +229,6 @@ export const useCartManager = (): UseCartManagerReturn => {
         cartId: updateResponse.data.cartId,
         items: convertedItems,
       });
-
-      console.log('[useCartManager] Item quantity updated successfully');
 
       // Sync cart to backend for abandoned cart tracking
       const token = useAuthStore.getState().token;
@@ -286,8 +259,6 @@ export const useCartManager = (): UseCartManagerReturn => {
     setError(null);
 
     try {
-      console.log('[useCartManager] Removing item:', lineItemId);
-
       const removeResponse = await removeItemMutation.mutateAsync({
         cartId: encodeURIComponent(cartId),
         lineItemId: encodeURIComponent(lineItemId),
@@ -306,14 +277,11 @@ export const useCartManager = (): UseCartManagerReturn => {
         items: convertedItems,
       });
 
-      console.log('[useCartManager] Item removed successfully');
-
       // Sync cart to backend for abandoned cart tracking
       const token = useAuthStore.getState().token;
       if (token) {
         if (convertedItems.length === 0) {
           // Cart is now empty - clear saved cart from backend
-          console.log('[useCartManager] Cart is empty, clearing saved cart from backend');
           clearSavedCart();
         } else if (removeResponse.data.cartId) {
           // Cart still has items - sync updated cart
@@ -338,16 +306,13 @@ export const useCartManager = (): UseCartManagerReturn => {
    */
   const syncCart = async (): Promise<void> => {
     if (!cartId) {
-      console.log('[useCartManager] No cartId to sync');
       return;
     }
 
     try {
-      console.log('[useCartManager] Syncing cart with API:', cartId);
       const cartResponse = await getCart(encodeURIComponent(cartId));
 
       if (!cartResponse?.success) {
-        console.log('[useCartManager] Cart sync failed, cart may be expired');
         return;
       }
 
@@ -359,8 +324,6 @@ export const useCartManager = (): UseCartManagerReturn => {
         cartId: cartResponse.data.cartId,
         items: convertedItems,
       });
-
-      console.log('[useCartManager] Cart synced successfully');
     } catch (err: any) {
       if (__DEV__) {
         console.log('[useCartManager] Cart sync error:', err?.response?.data || err?.message);
