@@ -7,6 +7,17 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { getTokenValue } from "tamagui";
 
 export default function TabLayout() {
+  // Set Android status bar on every focus
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     if (Platform.OS === "android") {
+  //       StatusBar.setBarStyle("dark-content", true);
+  //       StatusBar.setBackgroundColor("#FFFFFF", true);
+  //       StatusBar.setTranslucent(false);
+  //     }
+  //   }, [])
+  // );
+
   return (
     <GestureHandlerRootView
       style={{ flex: 1, paddingBottom: Platform.OS === "android" ? 0 : 0 }}

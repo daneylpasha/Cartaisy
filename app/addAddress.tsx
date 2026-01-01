@@ -36,16 +36,16 @@ import { SHADOW_STYLES } from "@/constants/styles";
 import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useUserStore from "@/store/useUserStore";
 import { t } from "@/translations";
+import {
+  KeyboardAvoiderInsets,
+  KeyboardAvoiderView,
+} from "@good-react-native/keyboard-avoider";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
+import { DynamicStatusBar } from "@/components/atoms";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  TextInput,
-} from "react-native";
+import { Keyboard, Platform, StyleSheet, TextInput } from "react-native";
 import CountryPicker, {
   Country,
   CountryCode,
@@ -113,6 +113,28 @@ const AddAddress = () => {
   const [showLastAddressWarning, setShowLastAddressWarning] = useState(false);
   const desc = useWatch({ control: form.control, name: "description" });
   const descLen = (desc ?? "").length;
+
+  // Track keyboard visibility
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const keyboardShowListener = Keyboard.addListener(showEvent, () => {
+      setIsKeyboardVisible(true);
+    });
+    const keyboardHideListener = Keyboard.addListener(hideEvent, () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardShowListener.remove();
+      keyboardHideListener.remove();
+    };
+  }, []);
 
   // Set default address mutation
   const { mutate: setDefaultAddressAPI } = useCustomerSetDefaultAddress({
@@ -364,6 +386,7 @@ const AddAddress = () => {
 
   return (
     <YStack backgroundColor="$background" flex={1}>
+      <DynamicStatusBar backgroundColor="#FFFFFF" />
       <KeyboardAwareScrollView
         bounces={false}
         showsVerticalScrollIndicator={false}
@@ -705,14 +728,16 @@ const AddAddress = () => {
             </XStack>
           </YStack>
           <Spacer size={"$lg"} />
+          <KeyboardAvoiderInsets
+            extraSpace={Platform.OS === "android" ? 120 : 80}
+          />
         </YStack>
       </KeyboardAwareScrollView>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        // keyboardVerticalOffset={90}
-      >
-        <YStack paddingHorizontal={"$md"}>
+      <KeyboardAvoiderView>
+        <YStack
+          paddingHorizontal={"$md"}
+          paddingBottom={isKeyboardVisible ? 0 : bottomSafeAreaInset}
+        >
           {Object.keys(form.formState.errors).length > 0 && (
             <>
               <TextSMSemiBold color="$error">
@@ -751,9 +776,7 @@ const AddAddress = () => {
             </>
           )}
         </YStack>
-      </KeyboardAvoidingView>
-      {/* paddingBottom={} */}
-      <Spacer size={bottomSafeAreaInset} />
+      </KeyboardAvoiderView>
       <BottomSheetModalWithView snapPoints={["40%"]} ref={helpBottomSheetRef}>
         <YStack
           backgroundColor="$white"

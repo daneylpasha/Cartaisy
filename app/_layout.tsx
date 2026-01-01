@@ -24,6 +24,7 @@ import {
   NotificationDeepLinkPayload,
 } from "@/utils/deepLinkHandler";
 import { setDeepLinkHandled } from "@/utils/navigationState";
+import firebase from "@react-native-firebase/app";
 import messaging from "@react-native-firebase/messaging";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
@@ -34,6 +35,15 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { TamaguiProvider } from "tamagui";
+
+// Helper to check if Firebase is initialized
+const isFirebaseInitialized = () => {
+  try {
+    return firebase.apps.length > 0;
+  } catch {
+    return false;
+  }
+};
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -52,51 +62,62 @@ Notifications.setNotificationHandler({
   },
 });
 
-// Register Firebase background handler (must be outside component)
-messaging().setBackgroundMessageHandler(async (remoteMessage) => {
-  console.log(
-    "🔔 [PUSH] Background message received:",
-    JSON.stringify(remoteMessage, null, 2)
-  );
-});
-
 // Store initial notification from killed state (captured BEFORE navigation is ready)
 let pendingInitialNotification: any = null;
 
-// Check for initial notification IMMEDIATELY (before component mounts)
-messaging()
-  .getInitialNotification()
-  .then((remoteMessage) => {
-    if (remoteMessage) {
+// Register Firebase background handler (must be outside component)
+// Only run if Firebase is initialized
+if (isFirebaseInitialized()) {
+  try {
+    messaging().setBackgroundMessageHandler(async (remoteMessage) => {
       console.log(
-        "🔔 [PUSH] Killed state: Initial notification captured:",
-        JSON.stringify(remoteMessage.data, null, 2)
+        "🔔 [PUSH] Background message received:",
+        JSON.stringify(remoteMessage, null, 2)
       );
-      pendingInitialNotification = remoteMessage;
+    });
 
-      // IMPORTANT: Set deep link flag IMMEDIATELY to prevent splash screen from navigating
-      // This ensures splash screen waits for the deep link navigation to complete
-      const notificationData = remoteMessage.data as
-        | NotificationDeepLinkPayload
-        | undefined;
-      if (
-        notificationData &&
-        (notificationData.type ||
-          notificationData.deepLink ||
-          notificationData.action)
-      ) {
-        setDeepLinkHandled(true);
-      }
-    } else {
-      console.log("🔔 [PUSH] Killed state: No initial notification");
-    }
-  })
-  .catch((error) => {
-    console.error(
-      "🔔 [PUSH] Killed state: Error getting initial notification:",
-      error
-    );
-  });
+    // Check for initial notification IMMEDIATELY (before component mounts)
+    messaging()
+      .getInitialNotification()
+      .then((remoteMessage) => {
+        if (remoteMessage) {
+          console.log(
+            "🔔 [PUSH] Killed state: Initial notification captured:",
+            JSON.stringify(remoteMessage.data, null, 2)
+          );
+          pendingInitialNotification = remoteMessage;
+
+          // IMPORTANT: Set deep link flag IMMEDIATELY to prevent splash screen from navigating
+          // This ensures splash screen waits for the deep link navigation to complete
+          const notificationData = remoteMessage.data as
+            | NotificationDeepLinkPayload
+            | undefined;
+          if (
+            notificationData &&
+            (notificationData.type ||
+              notificationData.deepLink ||
+              notificationData.action)
+          ) {
+            setDeepLinkHandled(true);
+          }
+        } else {
+          console.log("🔔 [PUSH] Killed state: No initial notification");
+        }
+      })
+      .catch((error) => {
+        console.error(
+          "🔔 [PUSH] Killed state: Error getting initial notification:",
+          error
+        );
+      });
+  } catch (error) {
+    console.warn("🔔 [PUSH] Firebase messaging error:", error);
+  }
+} else {
+  console.warn(
+    "🔔 [PUSH] Firebase not initialized yet, skipping background handler setup"
+  );
+}
 
 async function registerForPushNotificationsAsync(): Promise<
   string | undefined
@@ -329,64 +350,67 @@ export default function RootLayout() {
       );
     });
 
-    // Firebase foreground message handler
-    const unsubscribeFirebase = messaging().onMessage(async (remoteMessage) => {
-      console.log("🔔 [PUSH] Foreground message received:", remoteMessage);
-      console.log("🔔 [PUSH] Notification:", remoteMessage.notification);
-      console.log(
-        "🔔 [PUSH] Image URL:",
-        remoteMessage.notification?.android?.imageUrl
-      );
-      console.log("🔔 [PUSH] Data:", remoteMessage.data);
+    // Firebase foreground message handler - only if Firebase is initialized
+    let unsubscribeFirebase: (() => void) | undefined;
+    let unsubscribeTokenRefresh: (() => void) | undefined;
 
-      // Extract notificationId from data payload
-      const notificationId = remoteMessage.data?.notificationId as
-        | string
-        | undefined;
-      const deviceId = useAuthStore.getState().deviceId || undefined;
-
-      // Track notification delivery
-      if (notificationId) {
+    if (isFirebaseInitialized()) {
+      unsubscribeFirebase = messaging().onMessage(async (remoteMessage) => {
+        console.log("🔔 [PUSH] Foreground message received:", remoteMessage);
+        console.log("🔔 [PUSH] Notification:", remoteMessage.notification);
         console.log(
-          "🔔 [PUSH] Tracking delivery for notificationId:",
-          notificationId
+          "🔔 [PUSH] Image URL:",
+          remoteMessage.notification?.android?.imageUrl
         );
-        notificationTracker.trackDelivery(notificationId, deviceId, {
-          title: remoteMessage.notification?.title,
-          source: "foreground",
-        });
-      } else {
-        console.warn(
-          "🔔 [PUSH] No notificationId in payload, skipping delivery tracking"
-        );
-      }
+        console.log("🔔 [PUSH] Data:", remoteMessage.data);
 
-      // Show as local notification using expo-notifications
-      // Pass the notificationId in data for open tracking later
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: remoteMessage.notification?.title || "New Message",
-          body: remoteMessage.notification?.body || "",
-          data: {
-            ...remoteMessage.data,
-            notificationId, // Ensure notificationId is passed through
+        // Extract notificationId from data payload
+        const notificationId = remoteMessage.data?.notificationId as
+          | string
+          | undefined;
+        const deviceId = useAuthStore.getState().deviceId || undefined;
+
+        // Track notification delivery
+        if (notificationId) {
+          console.log(
+            "🔔 [PUSH] Tracking delivery for notificationId:",
+            notificationId
+          );
+          notificationTracker.trackDelivery(notificationId, deviceId, {
+            title: remoteMessage.notification?.title,
+            source: "foreground",
+          });
+        } else {
+          console.warn(
+            "🔔 [PUSH] No notificationId in payload, skipping delivery tracking"
+          );
+        }
+
+        // Show as local notification using expo-notifications
+        // Pass the notificationId in data for open tracking later
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: remoteMessage.notification?.title || "New Message",
+            body: remoteMessage.notification?.body || "",
+            data: {
+              ...remoteMessage.data,
+              notificationId, // Ensure notificationId is passed through
+            },
           },
-        },
-        trigger: null, // Show immediately
+          trigger: null, // Show immediately
+        });
       });
-    });
 
-    // Firebase token refresh handler
-    const unsubscribeTokenRefresh = messaging().onTokenRefresh(
-      async (newToken) => {
+      // Firebase token refresh handler
+      unsubscribeTokenRefresh = messaging().onTokenRefresh(async (newToken) => {
         console.log(
           "🔔 [PUSH] Token refreshed:",
           newToken.substring(0, 30) + "..."
         );
         setExpoPushToken(newToken);
         // Token will be sent to backend via the other useEffect
-      }
-    );
+      });
+    }
 
     // Expo notification listeners (for local notifications triggered by Firebase)
     const subscription = Notifications.addNotificationReceivedListener(
@@ -514,8 +538,8 @@ export default function RootLayout() {
     );
 
     return () => {
-      unsubscribeFirebase();
-      unsubscribeTokenRefresh();
+      unsubscribeFirebase?.();
+      unsubscribeTokenRefresh?.();
       subscription.remove();
       responseSub.remove();
     };
@@ -715,6 +739,15 @@ export default function RootLayout() {
 
     return () => clearTimeout(timer);
   }, [loaded]);
+
+  // Set Android status bar imperatively (must be before conditional return)
+  // useEffect(() => {
+  //   if (Platform.OS === "android") {
+  //     RNStatusBar.setBarStyle("dark-content");
+  //     RNStatusBar.setBackgroundColor("#FFFFFF");
+  //     RNStatusBar.setTranslucent(false);
+  //   }
+  // }, []);
 
   if (!loaded) return null;
 

@@ -581,7 +581,7 @@ const CheckoutScreen = () => {
         <KeyboardAvoiderView>
           <YStack
             paddingHorizontal="$md"
-            paddingBottom={Math.max(bottomSafeAreaInset, 16)}
+            paddingBottom={isKeyboardVisible ? 0 : Math.max(bottomSafeAreaInset, 16)}
             backgroundColor="$background"
           >
             <PrimaryButton
@@ -693,7 +693,7 @@ const CheckoutScreen = () => {
           )}
           <YStack
             paddingHorizontal={"$md"}
-            paddingBottom={Math.max(bottomSafeAreaInset, 16)}
+            paddingBottom={isKeyboardVisible ? 0 : Math.max(bottomSafeAreaInset, 16)}
             paddingTop={"$sm"}
             backgroundColor="$background"
           >
@@ -744,9 +744,6 @@ const CheckoutScreen = () => {
               }
               isLoading={isProcessing}
             />
-            {isKeyboardVisible && Platform.OS === "ios" && (
-              <Spacer size={"$xl"} />
-            )}
           </YStack>
         </KeyboardAvoiderView>
       )}

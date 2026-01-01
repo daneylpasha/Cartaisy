@@ -3,6 +3,7 @@ import useAuthStore from "@/store/useAuthStore";
 import { wasDeepLinkHandled, resetDeepLinkState } from "@/utils/navigationState";
 import { router } from "expo-router";
 import React, { useEffect, useRef } from "react";
+import { StatusBar } from "react-native";
 import { YStack } from "tamagui";
 
 const SPLASH_DURATION = 3000;
@@ -57,6 +58,7 @@ const Splash = () => {
       justifyContent="center"
       alignItems="center"
     >
+      <StatusBar hidden={true} />
       <AppImage width={70} height={79} name={"bagWhite"} />
     </YStack>
   );

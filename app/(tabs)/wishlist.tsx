@@ -1,8 +1,13 @@
-import { HeadingSMBold, TextXLBold } from "@/components/atoms";
+import { DynamicStatusBar, HeadingSMBold, TextXLBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Spacer } from "@/components/atoms/Spacer";
 import { t } from "@/translations";
-import { FlatList, LayoutAnimation, Platform, UIManager } from "react-native";
+import {
+  FlatList,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+} from "react-native";
 
 import { useGetDetailedFavorites } from "@/api/generated/favorites/favorites";
 import { Loader } from "@/components/atoms/Loader";
@@ -61,7 +66,11 @@ const WishlistScreen = () => {
   const isAuthenticated = _hasHydrated && !!token && !isGuest;
 
   // Get detailed favorites with complete product data (only if authenticated)
-  const { data: favoritesData, isLoading, refetch } = useGetDetailedFavorites(
+  const {
+    data: favoritesData,
+    isLoading,
+    refetch,
+  } = useGetDetailedFavorites(
     {
       page: 1,
       limit: 100,
@@ -112,7 +121,7 @@ const WishlistScreen = () => {
         // Convert images from object array to string array
         images: Array.isArray(product.images)
           ? product.images.map((img: any) =>
-              typeof img === 'string' ? img : img.url
+              typeof img === "string" ? img : img.url
             )
           : [],
         // Ensure productId exists
@@ -147,7 +156,8 @@ const WishlistScreen = () => {
 
   // Memoized key extractor
   const keyExtractor = React.useCallback(
-    (item: any, index: number) => `wishlist-${item.productId || item.id || index}`,
+    (item: any, index: number) =>
+      `wishlist-${item.productId || item.id || index}`,
     []
   );
 
@@ -190,6 +200,7 @@ const WishlistScreen = () => {
 
   return (
     <ScreenContainer backgroundColor="$background">
+      <DynamicStatusBar backgroundColor="#FFFFFF" />
       <YStack
         justifyContent="center"
         alignItems="center"

@@ -1,4 +1,5 @@
 import {
+  DynamicStatusBar,
   Loader,
   TextSMRegular,
   TextSMSemiBold,
@@ -389,6 +390,7 @@ const ProfileScreen = () => {
 
   return (
     <>
+      <DynamicStatusBar backgroundColor="#FFFFFF" />
       <AlertComponent />
       <ScreenContainer backgroundColor="background">
         <FlatList

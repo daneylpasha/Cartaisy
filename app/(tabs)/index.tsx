@@ -31,13 +31,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  Animated,
-  FlatList,
-  Platform,
-  RefreshControl,
-  StatusBar,
-} from "react-native";
+import { Animated, FlatList, Platform, RefreshControl } from "react-native";
+import { DynamicStatusBar } from "@/components/atoms";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
@@ -343,12 +338,7 @@ const HomeScreen = () => {
   return (
     <>
       <YStack backgroundColor={"$primary"} height={TOP_INSET} />
-      {Platform.OS === "android" && (
-        <StatusBar
-          barStyle={"light-content"}
-          backgroundColor={getTokenValue("$primary")}
-        />
-      )}
+      <DynamicStatusBar backgroundColor="#A82A50" />
       <HomeHeader
         topInset={TOP_INSET}
         rotateAnim={rotateAnim}

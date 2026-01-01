@@ -1,4 +1,5 @@
 import {
+  DynamicStatusBar,
   HeadingXSBold,
   ParagraphMD,
   TextMDBold,
@@ -450,6 +451,7 @@ const CartScreen = () => {
 
   return (
     <YStack flex={1} backgroundColor="$background">
+      <DynamicStatusBar backgroundColor="#FFFFFF" />
       <FlatList
         data={items}
         renderItem={renderCartItem}
