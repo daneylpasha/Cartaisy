@@ -38,8 +38,6 @@ export const PrimaryButton = ({
       borderRadius={"md"}
       paddingVertical={paddingVertical}
       onPress={onPress}
-      disabled={isLoading || disabled}
-      opacity={isLoading || disabled ? 0.5 : 1}
       width={width}
     >
       <XStack alignItems="center" justifyContent="center" gap="$sm-reg">

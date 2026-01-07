@@ -27,17 +27,14 @@ import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import useUserStore from "@/store/useUserStore";
-import { t } from "@/translations";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import React from "react";
-import { FlatList, Platform } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { FlatList } from "react-native";
 import { XStack, YStack } from "tamagui";
 
 const ProfileScreen = () => {
-  const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
   const { showAlert, AlertComponent } = useCustomAlert();
   const { showLoginModal } = useAuthGuard();
 
@@ -69,6 +66,14 @@ const ProfileScreen = () => {
     },
   });
   const apiUser = (profileApiData as any)?.data?.user;
+
+  // DEBUG: Check API response
+  console.log(
+    "[Profile] API Response:",
+    JSON.stringify(profileApiData, null, 2)
+  );
+  console.log("[Profile] totalSpent:", apiUser?.totalSpent);
+  console.log("[Profile] totalOrdersCount:", apiUser?.totalOrdersCount);
 
   // Combine API user with local user store (local store as fallback for freshly signed up users)
   const user = apiUser || localUser;
@@ -108,9 +113,18 @@ const ProfileScreen = () => {
   );
 
   // Extract user info - prioritize API data, fall back to local store, then show Guest User
-  const userName = isLoggedIn
+  const rawUserName = isLoggedIn
     ? (user as any)?.name || user?.email?.split("@")[0] || "User"
     : "Guest User";
+
+  // Capitalize first letter of each word in username
+  const userName = rawUserName
+    .split(" ")
+    .map(
+      (word: string) =>
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    )
+    .join(" ");
 
   // Use defaultAddress from profile, or find the default address from addresses list
   const defaultAddr = React.useMemo(() => {
@@ -141,7 +155,8 @@ const ProfileScreen = () => {
   const userSince = user?.createdAt
     ? new Date(user.createdAt).getFullYear().toString()
     : "2024";
-  const totalPurchases = user?.totalOrdersCount || 0;
+  const totalSpent = user?.totalSpent || 0;
+  const formattedTotalSpent = `$${totalSpent.toLocaleString()}`;
 
   // Check if wishlist has items
   const favoriteProductIds = useFavoritesStore(
@@ -188,7 +203,7 @@ const ProfileScreen = () => {
                 <TextSMRegular color="$secondary">
                   {"Total Purchase"}
                 </TextSMRegular>
-                <TextXLBold>{totalPurchases}</TextXLBold>
+                <TextXLBold>{formattedTotalSpent}</TextXLBold>
               </YStack>
             </XStack>
           )}
@@ -392,26 +407,22 @@ const ProfileScreen = () => {
     <>
       <DynamicStatusBar backgroundColor="#FFFFFF" />
       <AlertComponent />
-      <ScreenContainer backgroundColor="background">
+      <ScreenContainer backgroundColor="background" disableBottomInset>
         <FlatList
           data={profileData}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
+          // contentContainerStyle={{ paddingBottom: 20 }}
           ListFooterComponent={() => (
             <YStack alignItems="center" justifyContent="center">
-              <AppImage name="bagSvg" width={23} height={26} />
-              <Spacer size={"$sm"} />
-              <TextSMSemiBold>{`${t(
-                "common.companyName"
-              )} v3.1.8`}</TextSMSemiBold>
+              <AppImage name="cartaisyColorlogo" width={65} height={26} />
               <Spacer size={"$sm"} />
               <TextSMRegular color="$secondary">{`All rights reserved, 2028©`}</TextSMRegular>
-              {/* <Spacer size={"$md"} /> */}
+              <Spacer size={"$md"} />
             </YStack>
           )}
         />
-        <Spacer size={Platform.OS === "ios" ? BOTTOM_INSET + 20 : 0} />
       </ScreenContainer>
     </>
   );

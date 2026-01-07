@@ -32,6 +32,7 @@ import type {
   CreateCartParams,
   GetCartParams,
   SaveCartResponse,
+  SaveCartToProfileBodyBody,
   UpdateItemQuantityRequest
 } from '../cartaisyAPI.schemas';
 
@@ -443,6 +444,135 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * Clear saved cart ID from customer profile
+Call this after checkout completion to remove stale cart reference
+ * @summary Clear saved cart from profile
+ */
+export const clearSavedCart = (
+    
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<SaveCartResponse>(
+      {url: `/cart/saved`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getClearSavedCartMutationOptions = <TError = SaveCartResponse | SaveCartResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearSavedCart>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof clearSavedCart>>, TError,void, TContext> => {
+
+const mutationKey = ['clearSavedCart'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearSavedCart>>, void> = () => {
+          
+
+          return  clearSavedCart(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClearSavedCartMutationResult = NonNullable<Awaited<ReturnType<typeof clearSavedCart>>>
+    
+    export type ClearSavedCartMutationError = SaveCartResponse | SaveCartResponse
+
+    /**
+ * @summary Clear saved cart from profile
+ */
+export const useClearSavedCart = <TError = SaveCartResponse | SaveCartResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearSavedCart>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof clearSavedCart>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getClearSavedCartMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Save Shopify cart ID to customer profile for persistence across sessions
+Call this after creating/updating cart to enable cart recovery on next login
+ * @summary Save cart to customer profile (body)
+ */
+export const saveCartToProfileBody = (
+    saveCartToProfileBodyBody: SaveCartToProfileBodyBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<SaveCartResponse>(
+      {url: `/cart/saved`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: saveCartToProfileBodyBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getSaveCartToProfileBodyMutationOptions = <TError = SaveCartResponse | SaveCartResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCartToProfileBody>>, TError,{data: SaveCartToProfileBodyBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveCartToProfileBody>>, TError,{data: SaveCartToProfileBodyBody}, TContext> => {
+
+const mutationKey = ['saveCartToProfileBody'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveCartToProfileBody>>, {data: SaveCartToProfileBodyBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveCartToProfileBody(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveCartToProfileBodyMutationResult = NonNullable<Awaited<ReturnType<typeof saveCartToProfileBody>>>
+    export type SaveCartToProfileBodyMutationBody = SaveCartToProfileBodyBody
+    export type SaveCartToProfileBodyMutationError = SaveCartResponse | SaveCartResponse
+
+    /**
+ * @summary Save cart to customer profile (body)
+ */
+export const useSaveCartToProfileBody = <TError = SaveCartResponse | SaveCartResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCartToProfileBody>>, TError,{data: SaveCartToProfileBodyBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof saveCartToProfileBody>>,
+        TError,
+        {data: SaveCartToProfileBodyBody},
+        TContext
+      > => {
+
+      const mutationOptions = getSaveCartToProfileBodyMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Associate cart with logged-in customer
 Call this when user logs in to merge guest cart with their account
  */
@@ -505,7 +635,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     /**
  * Save Shopify cart ID to customer profile for persistence across sessions
 Call this after creating/updating cart to enable cart recovery on next login
- * @summary Save cart to customer profile
+ * @summary Save cart to customer profile (path)
  */
 export const saveCartToProfile = (
     cartId: string,
@@ -551,7 +681,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveCartToProfileMutationError = SaveCartResponse | SaveCartResponse
 
     /**
- * @summary Save cart to customer profile
+ * @summary Save cart to customer profile (path)
  */
 export const useSaveCartToProfile = <TError = SaveCartResponse | SaveCartResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCartToProfile>>, TError,{cartId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -563,69 +693,6 @@ export const useSaveCartToProfile = <TError = SaveCartResponse | SaveCartRespons
       > => {
 
       const mutationOptions = getSaveCartToProfileMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Clear saved cart ID from customer profile
-Call this after checkout completion to remove stale cart reference
- * @summary Clear saved cart from profile
- */
-export const clearSavedCart = (
-    
- options?: SecondParameter<typeof customInstance>,) => {
-      
-      
-      return customInstance<SaveCartResponse>(
-      {url: `/cart/saved`, method: 'DELETE'
-    },
-      options);
-    }
-  
-
-
-export const getClearSavedCartMutationOptions = <TError = SaveCartResponse | SaveCartResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearSavedCart>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof clearSavedCart>>, TError,void, TContext> => {
-
-const mutationKey = ['clearSavedCart'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearSavedCart>>, void> = () => {
-          
-
-          return  clearSavedCart(requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ClearSavedCartMutationResult = NonNullable<Awaited<ReturnType<typeof clearSavedCart>>>
-    
-    export type ClearSavedCartMutationError = SaveCartResponse | SaveCartResponse
-
-    /**
- * @summary Clear saved cart from profile
- */
-export const useClearSavedCart = <TError = SaveCartResponse | SaveCartResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearSavedCart>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof clearSavedCart>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getClearSavedCartMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

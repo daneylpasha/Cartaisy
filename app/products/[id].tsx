@@ -4,6 +4,7 @@ import {
 } from "@/api/generated/favorites/favorites";
 import { useGetProductDetail } from "@/api/generated/products/products";
 import { useGetProductRecommendations } from "@/api/generated/recommendations/recommendations";
+import { useInitializeCheckout } from "@/api/generated/checkout/checkout";
 import { useCartManager } from "@/api/hooks/useCartManager";
 import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import {
@@ -76,6 +77,10 @@ const ProductDetailsScreen = () => {
     isLoading: isAddingToCart,
     error: addToCartError,
   } = useCartManager();
+
+  // Initialize checkout mutation for Buy Now
+  const { mutate: initializeCheckoutMutation } = useInitializeCheckout();
+  const [isBuyingNow, setIsBuyingNow] = useState(false);
 
   const { data: productDetailData, isLoading: isLoadingProduct } =
     useGetProductDetail(id);
@@ -1038,9 +1043,134 @@ const ProductDetailsScreen = () => {
     }
   };
 
-  // Handle Buy Now
-  const handleBuyNow = () => {
-    router.navigate("/cart");
+  // Handle Buy Now - Add to cart and navigate to checkout
+  const handleBuyNow = async () => {
+    // Check if user is authenticated, show login modal if not
+    const canProceed = requireAuth({
+      type: "cart",
+      callback: () => {
+        // This will be called after successful login
+        performBuyNow();
+      },
+    });
+
+    if (!canProceed) return;
+
+    performBuyNow();
+  };
+
+  // Actual Buy Now logic
+  const performBuyNow = async () => {
+    setSelectionError(null);
+    setIsBuyingNow(true);
+
+    // Check if product is in stock
+    if (!product?.inStock || product?.totalInventory === 0) {
+      setErrorModal({
+        visible: true,
+        title: "Out of Stock",
+        message: "This product is currently out of stock.",
+      });
+      setIsBuyingNow(false);
+      return;
+    }
+
+    // Check if variant selection is required
+    if (variantTypes.length > 0 && !selectedVariant) {
+      setSelectionError(
+        `Please select ${variantTypes.map((v) => v.name).join(", ")}`
+      );
+      flatListRef.current?.scrollToIndex({
+        index: 2,
+        animated: true,
+        viewPosition: 0.2,
+      });
+      setIsBuyingNow(false);
+      return;
+    }
+
+    // Get the variant to add
+    const variantToAdd = selectedVariant || product?.variants?.[0];
+
+    if (!variantToAdd) {
+      setErrorModal({
+        visible: true,
+        title: "Error",
+        message: "Unable to process. Please try again.",
+      });
+      setIsBuyingNow(false);
+      return;
+    }
+
+    // Check if quantity is available
+    if (count > variantToAdd.quantityAvailable) {
+      setErrorModal({
+        visible: true,
+        title: "Insufficient Stock",
+        message: `Only ${variantToAdd.quantityAvailable} items available.`,
+      });
+      setIsBuyingNow(false);
+      return;
+    }
+
+    // Create cart item
+    const cartItem = {
+      productId: product.id,
+      variantId: variantToAdd.id,
+      merchandiseId: variantToAdd.id,
+      title: product.title,
+      variantTitle:
+        variantToAdd.title === "Default Title" ? "" : variantToAdd.title,
+      image: variantToAdd.image || product.images?.[0] || null,
+      price: variantToAdd.price,
+      compareAtPrice: variantToAdd.compareAtPrice || null,
+      currency: product.currency,
+      quantity: count,
+      quantityAvailable: variantToAdd.quantityAvailable,
+      selectedOptions: variantToAdd.selectedOptions || [],
+      brandName: brandName,
+    };
+
+    try {
+      // Add to cart via API
+      const result = await addToCart(cartItem);
+
+      // Get the cartId from the result or store
+      const currentCartId = (result as any)?.cartId || useCartStore.getState().cartId;
+
+      if (!currentCartId) {
+        throw new Error("Cart ID not found");
+      }
+
+      // Initialize checkout to get sessionId
+      initializeCheckoutMutation(
+        { data: { cartId: currentCartId } },
+        {
+          onSuccess: (response) => {
+            console.log("[BuyNow] Checkout initialized, sessionId:", response.data.sessionId);
+            setIsBuyingNow(false);
+            router.push(`/checkout?sessionId=${response.data.sessionId}`);
+          },
+          onError: (error: any) => {
+            console.error("[BuyNow] Failed to initialize checkout:", error);
+            setIsBuyingNow(false);
+            setErrorModal({
+              visible: true,
+              title: "Checkout Error",
+              message: error?.response?.data?.error?.message || "Failed to proceed to checkout. Please try again.",
+            });
+          },
+        }
+      );
+    } catch (error) {
+      setIsBuyingNow(false);
+      setErrorModal({
+        visible: true,
+        title: "Error",
+        message:
+          addToCartError || "Failed to add item to cart. Please try again.",
+      });
+    }
   };
 
   return (
@@ -1134,10 +1264,10 @@ const ProductDetailsScreen = () => {
               iconPosition="left"
               onPress={handleAddToCart}
               label="Add to Cart"
-              isLoading={isAddingToCart}
+              isLoading={isAddingToCart && !isBuyingNow}
             />
             <Spacer size={"$sm"} />
-            <PrimaryButton label="Buy Now" onPress={handleBuyNow} />
+            <PrimaryButton label="Buy Now" onPress={handleBuyNow} isLoading={isBuyingNow} />
             <Spacer size={"$sm"} />
           </YStack>
         </>

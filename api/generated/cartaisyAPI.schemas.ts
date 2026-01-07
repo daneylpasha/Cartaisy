@@ -890,6 +890,8 @@ export interface CustomerData {
   createdAt: string;
   lastLoginAt?: string;
   shopifyCartId?: string;
+  totalSpent?: number;
+  totalOrdersCount?: number;
 }
 
 export interface CustomerRegisterRequest {
@@ -1613,16 +1615,16 @@ export interface UpdateItemQuantityRequest {
   quantity: number;
 }
 
+export interface SaveCartResponse {
+  status: string;
+  message: string;
+}
+
 /**
  * Clear cart response
  */
 export interface ClearCartResponse {
   success: boolean;
-  message: string;
-}
-
-export interface SaveCartResponse {
-  status: string;
   message: string;
 }
 
@@ -2632,6 +2634,13 @@ export type GetCartParams = {
  * - ISO 3166-1 alpha-2 country code for multi-currency pricing (e.g., 'US', 'GB', 'CA')
  */
 country?: string;
+};
+
+/**
+ * - Object containing cartId
+ */
+export type SaveCartToProfileBodyBody = {
+  cartId: string;
 };
 
 export type GetAddresses200Data = {

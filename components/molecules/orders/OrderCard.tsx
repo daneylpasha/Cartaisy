@@ -4,12 +4,12 @@ import {
   TextSMRegular,
   TextSMSemiBold,
 } from "@/components/atoms";
-import { formatPrice } from "@/utils/formatPrice";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { SHADOW_STYLES } from "@/constants/styles";
+import { formatPrice } from "@/utils/formatPrice";
 import { router } from "expo-router";
 import React from "react";
 import { getTokenValue, XStack, YStack } from "tamagui";
@@ -65,102 +65,95 @@ const OrderCard = ({ item }: OrderCardProps) => {
 
   return (
     <YStack>
-      <OpTouch onPress={handlePress}>
-        <YStack
-          style={{ ...SHADOW_STYLES }}
-          backgroundColor={"$white"}
-          borderRadius={"$lg"}
-          overflow="hidden"
+      <YStack
+        style={{ ...SHADOW_STYLES }}
+        backgroundColor={"$white"}
+        borderRadius={"$lg"}
+        overflow="hidden"
+      >
+        {/* Header Section */}
+        <XStack
+          padding={"$lg"}
+          justifyContent="space-between"
+          alignItems="center"
         >
-          {/* Header Section */}
-          <XStack
-            padding={"$lg"}
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <YStack flex={1}>
-              <TextMDSemiBold>{orderNumber}</TextMDSemiBold>
+          <YStack flex={1}>
+            <TextMDSemiBold>{orderNumber}</TextMDSemiBold>
+            <Spacer size={"$xs"} />
+            <XStack alignItems="center">
+              <AppImage
+                name="calendar"
+                width={14}
+                height={14}
+                tintColor={getTokenValue("$secondary")}
+              />
               <Spacer size={"$xs"} />
-              <XStack alignItems="center">
-                <AppImage
-                  name="calendar"
-                  width={14}
-                  height={14}
-                  tintColor={getTokenValue("$secondary")}
-                />
-                <Spacer size={"$xs"} />
-                <TextSMRegular color={"$secondary"}>{displayDate}</TextSMRegular>
-              </XStack>
-            </YStack>
-            <Spacer size={"$md"} />
-            <XStack
-              backgroundColor={getStatusColor()}
-              borderRadius={"$md"}
-              paddingHorizontal={"$sm"}
-              paddingVertical={"$xs"}
-              alignItems="center"
-              justifyContent="center"
-            >
-              {displayStatus === "In Progress" && (
-                <>
-                  <AppImage name="hourGlass" width={8} height={9} />
-                  <Spacer size={"$xs"} />
-                </>
-              )}
-              <TextSMSemiBold color={getStatusTextColor()}>
-                {displayStatus}
-              </TextSMSemiBold>
+              <TextSMRegular color={"$secondary"}>{displayDate}</TextSMRegular>
             </XStack>
-          </XStack>
-
-          <Divider />
-
-          {/* Order Details Section */}
-          <YStack padding={"$lg"}>
-            <XStack justifyContent="space-between">
-              <YStack flex={1}>
-                <TextSMRegular color="$secondary">
-                  {`${itemCount} ${itemCount === 1 ? "item" : "items"}`}
-                </TextSMRegular>
-                <Spacer size={"$xs"} />
-                <TextSMRegular color="$secondary">
-                  {displayShipping} Shipping
-                </TextSMRegular>
-              </YStack>
-              <YStack alignItems="flex-end">
-                <TextSMRegular color="$secondary">Total</TextSMRegular>
-                <Spacer size={"$xs"} />
-                <TextLGBold>{formatPrice(displayTotal, item.currency)}</TextLGBold>
-              </YStack>
-            </XStack>
-
-            {/* Track Button - Only for In Progress */}
+          </YStack>
+          <Spacer size={"$md"} />
+          <XStack
+            backgroundColor={getStatusColor()}
+            borderRadius={"$md"}
+            paddingHorizontal={"$sm"}
+            paddingVertical={"$xs"}
+            alignItems="center"
+            justifyContent="center"
+          >
             {displayStatus === "In Progress" && (
               <>
-                <Spacer size={"$md"} />
-                <OpTouch
-                  onPress={() => {
-                    console.log("[Track] Tracking order:", item.id);
-                  }}
-                >
-                  <XStack
-                    alignItems="center"
-                    justifyContent="center"
-                    paddingHorizontal={"$reg"}
-                    paddingVertical={"$sm"}
-                    backgroundColor="$primary"
-                    borderRadius={"$md"}
-                  >
-                    <AppImage name="QrCode" width={11} height={11} />
-                    <Spacer size={"$sm"} />
-                    <TextSMSemiBold color="$white">Track</TextSMSemiBold>
-                  </XStack>
-                </OpTouch>
+                <AppImage name="hourGlass" width={8} height={9} />
+                <Spacer size={"$xs"} />
               </>
             )}
-          </YStack>
+            <TextSMSemiBold color={getStatusTextColor()}>
+              {displayStatus}
+            </TextSMSemiBold>
+          </XStack>
+        </XStack>
+
+        <Divider />
+
+        {/* Order Details Section */}
+        <YStack padding={"$lg"}>
+          <XStack justifyContent="space-between">
+            <YStack flex={1}>
+              <TextSMRegular color="$secondary">
+                {`${itemCount} ${itemCount === 1 ? "item" : "items"}`}
+              </TextSMRegular>
+              <Spacer size={"$xs"} />
+              <TextSMRegular color="$secondary">
+                {displayShipping} Shipping
+              </TextSMRegular>
+            </YStack>
+            <YStack alignItems="flex-end">
+              <TextSMRegular color="$secondary">Total</TextSMRegular>
+              <Spacer size={"$xs"} />
+              <TextLGBold>
+                {formatPrice(displayTotal, item.currency)}
+              </TextLGBold>
+            </YStack>
+          </XStack>
+
+          <Spacer size={"$md"} />
+          <OpTouch onPress={handlePress}>
+            <XStack
+              alignItems="center"
+              justifyContent="center"
+              paddingHorizontal={"$reg"}
+              paddingVertical={"$sm"}
+              backgroundColor="$primary"
+              borderRadius={"$md"}
+            >
+              {/* <AppImage name="QrCode" width={11} height={11} />
+                    <Spacer size={"$sm"} /> */}
+              <TextSMSemiBold color="$white">Details</TextSMSemiBold>
+            </XStack>
+          </OpTouch>
         </YStack>
-      </OpTouch>
+      </YStack>
+      {/* <OpTouch>
+      </OpTouch> */}
     </YStack>
   );
 };

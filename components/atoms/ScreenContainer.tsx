@@ -11,6 +11,7 @@ type ScreenContainerProps = {
   backgroundColor?: ColorTokenWithPrefix;
   topNotchColor?: ColorTokenWithPrefix;
   bottomNotchColor?: ColorTokenWithPrefix;
+  disableBottomInset?: boolean;
 };
 
 const ScreenContainer = ({
@@ -18,6 +19,7 @@ const ScreenContainer = ({
   backgroundColor,
   topNotchColor,
   bottomNotchColor,
+  disableBottomInset = false,
 }: ScreenContainerProps) => {
   const getTokenValue = (token: ColorTokenWithPrefix | undefined) => {
     if (!token) return undefined;
@@ -48,12 +50,14 @@ const ScreenContainer = ({
       </SafeAreaView>
 
       {/* Bottom notch */}
-      <SafeAreaView
-        edges={["bottom"]}
-        style={{
-          backgroundColor: getTokenValue(bottomNotchColor || backgroundColor),
-        }}
-      />
+      {!disableBottomInset && (
+        <SafeAreaView
+          edges={["bottom"]}
+          style={{
+            backgroundColor: getTokenValue(bottomNotchColor || backgroundColor),
+          }}
+        />
+      )}
     </View>
   );
 };

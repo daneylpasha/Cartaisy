@@ -1,3 +1,10 @@
+import { getCustomerGetAddressesQueryKey } from "@/api/generated/customer-addresses/customer-addresses";
+import {
+  getCustomerGetProfileQueryKey,
+  useCustomerGetProfile,
+  useCustomerUpdateProfile,
+} from "@/api/generated/customer-authentication/customer-authentication";
+import { useAuthenticatedAddresses } from "@/api/hooks/useAddresses";
 import {
   HeadingSMBold,
   ParagraphMD,
@@ -15,15 +22,18 @@ import { TextMDSemiBold } from "@/components/atoms/texts/TextMDSemiBold";
 import { BottomSheetModalWithView } from "@/components/molecules/bottom-sheets";
 import type { BaseBottomSheetRef } from "@/components/molecules/bottom-sheets/types";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
+import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import { SHADOW_STYLES } from "@/constants/styles";
+import useAuthStore from "@/store/useAuthStore";
 import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
-import { useMemo, useRef, useState, useEffect, useCallback } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
+import { useQueryClient } from "@tanstack/react-query";
+import { router, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ScrollView } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import { Calendar } from "react-native-calendars";
 import CountryPicker, {
   Country,
@@ -31,12 +41,6 @@ import CountryPicker, {
 } from "react-native-country-picker-modal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
-import { useCustomerGetProfile, useCustomerUpdateProfile, getCustomerGetProfileQueryKey } from "@/api/generated/customer-authentication/customer-authentication";
-import { getCustomerGetAddressesQueryKey } from "@/api/generated/customer-addresses/customer-addresses";
-import { useAuthenticatedAddresses } from "@/api/hooks/useAddresses";
-import { useQueryClient } from "@tanstack/react-query";
-import { router, useLocalSearchParams } from "expo-router";
-import useAuthStore from "@/store/useAuthStore";
 
 const toISO = (d: Date) => {
   const y = d.getFullYear();
@@ -66,7 +70,9 @@ const PersonalInfo = () => {
   const isLoggedIn = !!token && !isGuest;
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [pendingAddressId, setPendingAddressId] = useState<string | null>(null);
-  const [pendingAddressText, setPendingAddressText] = useState<string | null>(null);
+  const [pendingAddressText, setPendingAddressText] = useState<string | null>(
+    null
+  );
   const [selectedCountry, setSelectedCountry] = useState<Country>({
     callingCode: ["44"],
     cca2: "GB",
@@ -94,12 +100,19 @@ const PersonalInfo = () => {
   const todayISO = useMemo(() => toISO(new Date()), []);
 
   // Get user profile data (this page requires authentication)
-  const { data: profileApiData, isLoading: isLoadingProfile, refetch: refetchProfile } = useCustomerGetProfile({
+  const {
+    data: profileApiData,
+    isLoading: isLoadingProfile,
+    refetch: refetchProfile,
+  } = useCustomerGetProfile({
     query: {
       enabled: isLoggedIn, // Only fetch if user is logged in
       retry: (failureCount, error: any) => {
         // Don't retry on auth errors
-        if (error?.response?.status === 401 || error?.response?.status === 500) {
+        if (
+          error?.response?.status === 401 ||
+          error?.response?.status === 500
+        ) {
           return false;
         }
         return failureCount < 2;
@@ -121,7 +134,10 @@ const PersonalInfo = () => {
       AsyncStorage.getItem("pendingSelectedAddress")
         .then((data) => {
           if (data) {
-            console.log("[PersonalInfo] Found pending address in storage:", data);
+            console.log(
+              "[PersonalInfo] Found pending address in storage:",
+              data
+            );
             const addressData = JSON.parse(data);
             setPendingAddressId(addressData.id);
             setPendingAddressText(addressData.text);
@@ -131,7 +147,10 @@ const PersonalInfo = () => {
           }
         })
         .catch((error) => {
-          console.error("[PersonalInfo] Failed to read pending address:", error);
+          console.error(
+            "[PersonalInfo] Failed to read pending address:",
+            error
+          );
         });
     }, [refetchProfile])
   );
@@ -153,36 +172,47 @@ const PersonalInfo = () => {
       console.log("Pending address ID:", pendingAddressId);
       console.log("Available addresses:", addresses);
       if (addresses.length > 0) {
-        const found = addresses.find((addr: any) => addr.id === pendingAddressId);
+        const found = addresses.find(
+          (addr: any) => addr.id === pendingAddressId
+        );
         console.log("Found selected address:", found);
       }
     }
   }, [pendingAddressId, addresses]);
 
   // Update profile mutation
-  const { mutate: updateProfileMutation, isPending: isUpdating } = useCustomerUpdateProfile({
-    mutation: {
-      onSuccess: () => {
-        // Invalidate all related queries
-        queryClient.invalidateQueries({ queryKey: getCustomerGetProfileQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getCustomerGetAddressesQueryKey() }); // Invalidate addresses list
-        console.log("[PersonalInfo] Invalidated all address-related caches");
-        // Don't show alert here - will show on profile screen after navigation
+  const { mutate: updateProfileMutation, isPending: isUpdating } =
+    useCustomerUpdateProfile({
+      mutation: {
+        onSuccess: () => {
+          // Invalidate all related queries
+          queryClient.invalidateQueries({
+            queryKey: getCustomerGetProfileQueryKey(),
+          });
+          queryClient.invalidateQueries({
+            queryKey: getCustomerGetAddressesQueryKey(),
+          }); // Invalidate addresses list
+          console.log("[PersonalInfo] Invalidated all address-related caches");
+          // Don't show alert here - will show on profile screen after navigation
+        },
+        onError: (error: any) => {
+          showAlert({
+            type: "error",
+            title: "Error",
+            message:
+              error?.response?.data?.message || "Failed to update profile",
+          });
+        },
       },
-      onError: (error: any) => {
-        showAlert({
-          type: "error",
-          title: "Error",
-          message: error?.response?.data?.message || "Failed to update profile",
-        });
-      },
-    },
-  });
+    });
 
   // Prefill form with user data
   useEffect(() => {
     if (user) {
-      console.log("Prefilling form with user data:", JSON.stringify(user, null, 2));
+      console.log(
+        "Prefilling form with user data:",
+        JSON.stringify(user, null, 2)
+      );
 
       // Full Name - API returns "name" not "fullName"
       form.setValue("fullname", (user as any).name || "");
@@ -195,15 +225,18 @@ const PersonalInfo = () => {
       const fullPhone = (user as any).phone || "";
       if (fullPhone) {
         // Try to extract country code and set the country picker accordingly
-        const phoneCountryMap: Record<string, { code: string; digits: number }> = {
-          "+1": { code: "US", digits: 1 },    // US/Canada
-          "+44": { code: "GB", digits: 2 },   // UK
-          "+92": { code: "PK", digits: 2 },   // Pakistan
-          "+91": { code: "IN", digits: 2 },   // India
-          "+61": { code: "AU", digits: 2 },   // Australia
-          "+86": { code: "CN", digits: 2 },   // China
-          "+49": { code: "DE", digits: 2 },   // Germany
-          "+33": { code: "FR", digits: 2 },   // France
+        const phoneCountryMap: Record<
+          string,
+          { code: string; digits: number }
+        > = {
+          "+1": { code: "US", digits: 1 }, // US/Canada
+          "+44": { code: "GB", digits: 2 }, // UK
+          "+92": { code: "PK", digits: 2 }, // Pakistan
+          "+91": { code: "IN", digits: 2 }, // India
+          "+61": { code: "AU", digits: 2 }, // Australia
+          "+86": { code: "CN", digits: 2 }, // China
+          "+49": { code: "DE", digits: 2 }, // Germany
+          "+33": { code: "FR", digits: 2 }, // France
         };
 
         let phoneWithoutCode = fullPhone;
@@ -212,15 +245,87 @@ const PersonalInfo = () => {
             phoneWithoutCode = fullPhone.slice(prefix.length);
             // Update country picker if not already set from address
             const countryData: Record<string, Country> = {
-              US: { cca2: "US", name: "United States", callingCode: ["1"], currency: ["USD"], flag: "flag-us", region: "Americas", subregion: "North America" },
-              GB: { cca2: "GB", name: "United Kingdom", callingCode: ["44"], currency: ["GBP"], flag: "flag-gb", region: "Europe", subregion: "Northern Europe" },
-              CA: { cca2: "CA", name: "Canada", callingCode: ["1"], currency: ["CAD"], flag: "flag-ca", region: "Americas", subregion: "North America" },
-              PK: { cca2: "PK", name: "Pakistan", callingCode: ["92"], currency: ["PKR"], flag: "flag-pk", region: "Asia", subregion: "Southern Asia" },
-              IN: { cca2: "IN", name: "India", callingCode: ["91"], currency: ["INR"], flag: "flag-in", region: "Asia", subregion: "Southern Asia" },
-              AU: { cca2: "AU", name: "Australia", callingCode: ["61"], currency: ["AUD"], flag: "flag-au", region: "Oceania", subregion: "Australia and New Zealand" },
-              CN: { cca2: "CN", name: "China", callingCode: ["86"], currency: ["CNY"], flag: "flag-cn", region: "Asia", subregion: "Eastern Asia" },
-              DE: { cca2: "DE", name: "Germany", callingCode: ["49"], currency: ["EUR"], flag: "flag-de", region: "Europe", subregion: "Western Europe" },
-              FR: { cca2: "FR", name: "France", callingCode: ["33"], currency: ["EUR"], flag: "flag-fr", region: "Europe", subregion: "Western Europe" },
+              US: {
+                cca2: "US",
+                name: "United States",
+                callingCode: ["1"],
+                currency: ["USD"],
+                flag: "flag-us",
+                region: "Americas",
+                subregion: "North America",
+              },
+              GB: {
+                cca2: "GB",
+                name: "United Kingdom",
+                callingCode: ["44"],
+                currency: ["GBP"],
+                flag: "flag-gb",
+                region: "Europe",
+                subregion: "Northern Europe",
+              },
+              CA: {
+                cca2: "CA",
+                name: "Canada",
+                callingCode: ["1"],
+                currency: ["CAD"],
+                flag: "flag-ca",
+                region: "Americas",
+                subregion: "North America",
+              },
+              PK: {
+                cca2: "PK",
+                name: "Pakistan",
+                callingCode: ["92"],
+                currency: ["PKR"],
+                flag: "flag-pk",
+                region: "Asia",
+                subregion: "Southern Asia",
+              },
+              IN: {
+                cca2: "IN",
+                name: "India",
+                callingCode: ["91"],
+                currency: ["INR"],
+                flag: "flag-in",
+                region: "Asia",
+                subregion: "Southern Asia",
+              },
+              AU: {
+                cca2: "AU",
+                name: "Australia",
+                callingCode: ["61"],
+                currency: ["AUD"],
+                flag: "flag-au",
+                region: "Oceania",
+                subregion: "Australia and New Zealand",
+              },
+              CN: {
+                cca2: "CN",
+                name: "China",
+                callingCode: ["86"],
+                currency: ["CNY"],
+                flag: "flag-cn",
+                region: "Asia",
+                subregion: "Eastern Asia",
+              },
+              DE: {
+                cca2: "DE",
+                name: "Germany",
+                callingCode: ["49"],
+                currency: ["EUR"],
+                flag: "flag-de",
+                region: "Europe",
+                subregion: "Western Europe",
+              },
+              FR: {
+                cca2: "FR",
+                name: "France",
+                callingCode: ["33"],
+                currency: ["EUR"],
+                flag: "flag-fr",
+                region: "Europe",
+                subregion: "Western Europe",
+              },
             };
             if (countryData[info.code]) {
               setSelectedCountry(countryData[info.code]);
@@ -255,18 +360,60 @@ const PersonalInfo = () => {
 
       // Country - get from default address or first address
       const userAddresses = (user as any).addresses || [];
-      const defaultAddress = userAddresses.find((addr: any) => addr.isDefault) || userAddresses[0];
-      const userCountry = defaultAddress?.country || defaultAddress?.countryCode;
+      const defaultAddress =
+        userAddresses.find((addr: any) => addr.isDefault) || userAddresses[0];
+      const userCountry =
+        defaultAddress?.country || defaultAddress?.countryCode;
 
       if (userCountry && userCountry !== selectedCountry.cca2) {
         console.log("Setting user country to:", userCountry);
         // Manually create country object for common countries
         const countryData: Record<string, Country> = {
-          US: { cca2: "US", name: "United States", callingCode: ["1"], currency: ["USD"], flag: "flag-us", region: "Americas", subregion: "North America" },
-          GB: { cca2: "GB", name: "United Kingdom", callingCode: ["44"], currency: ["GBP"], flag: "flag-gb", region: "Europe", subregion: "Northern Europe" },
-          CA: { cca2: "CA", name: "Canada", callingCode: ["1"], currency: ["CAD"], flag: "flag-ca", region: "Americas", subregion: "North America" },
-          PK: { cca2: "PK", name: "Pakistan", callingCode: ["92"], currency: ["PKR"], flag: "flag-pk", region: "Asia", subregion: "Southern Asia" },
-          IN: { cca2: "IN", name: "India", callingCode: ["91"], currency: ["INR"], flag: "flag-in", region: "Asia", subregion: "Southern Asia" },
+          US: {
+            cca2: "US",
+            name: "United States",
+            callingCode: ["1"],
+            currency: ["USD"],
+            flag: "flag-us",
+            region: "Americas",
+            subregion: "North America",
+          },
+          GB: {
+            cca2: "GB",
+            name: "United Kingdom",
+            callingCode: ["44"],
+            currency: ["GBP"],
+            flag: "flag-gb",
+            region: "Europe",
+            subregion: "Northern Europe",
+          },
+          CA: {
+            cca2: "CA",
+            name: "Canada",
+            callingCode: ["1"],
+            currency: ["CAD"],
+            flag: "flag-ca",
+            region: "Americas",
+            subregion: "North America",
+          },
+          PK: {
+            cca2: "PK",
+            name: "Pakistan",
+            callingCode: ["92"],
+            currency: ["PKR"],
+            flag: "flag-pk",
+            region: "Asia",
+            subregion: "Southern Asia",
+          },
+          IN: {
+            cca2: "IN",
+            name: "India",
+            callingCode: ["91"],
+            currency: ["INR"],
+            flag: "flag-in",
+            region: "Asia",
+            subregion: "Southern Asia",
+          },
         };
 
         if (countryData[userCountry]) {
@@ -313,25 +460,41 @@ const PersonalInfo = () => {
     // If there's a pending address, include it in the profile update
     // The backend expects addressIndex (the index of address in the addresses array)
     if (pendingAddressId && pendingAddressId !== "undefined") {
-      console.log("[PersonalInfo] Including address index in profile update:", pendingAddressId);
+      console.log(
+        "[PersonalInfo] Including address index in profile update:",
+        pendingAddressId
+      );
 
       // The pendingAddressId is the index (0, 1, 2, etc.) from the address list
       updateData.addressIndex = parseInt(pendingAddressId, 10);
     }
 
-    console.log("[PersonalInfo] Final update data:", JSON.stringify(updateData, null, 2));
+    console.log(
+      "[PersonalInfo] Final update data:",
+      JSON.stringify(updateData, null, 2)
+    );
 
     // Update profile (including address if selected)
     updateProfileMutation(
       { data: updateData },
       {
         onSuccess: async (response) => {
-          console.log("[PersonalInfo] Profile update response:", JSON.stringify(response, null, 2));
+          console.log(
+            "[PersonalInfo] Profile update response:",
+            JSON.stringify(response, null, 2)
+          );
 
           // Wait a bit for the backend to process the address update
           // Then refetch profile to get the updated default address
           const refetchResult = await refetchProfile();
-          console.log("[PersonalInfo] Refetched profile:", JSON.stringify((refetchResult.data as any)?.data?.user?.defaultAddress, null, 2));
+          console.log(
+            "[PersonalInfo] Refetched profile:",
+            JSON.stringify(
+              (refetchResult.data as any)?.data?.user?.defaultAddress,
+              null,
+              2
+            )
+          );
 
           // Clear pending state after refetch completes
           setPendingAddressId(null);
@@ -344,7 +507,10 @@ const PersonalInfo = () => {
           router.back();
         },
         onError: (error: any) => {
-          console.error("[PersonalInfo] Profile update error:", JSON.stringify(error?.response?.data, null, 2));
+          console.error(
+            "[PersonalInfo] Profile update error:",
+            JSON.stringify(error?.response?.data, null, 2)
+          );
         },
       }
     );
@@ -355,177 +521,25 @@ const PersonalInfo = () => {
       <AlertComponent />
       <YStack
         backgroundColor="$background"
-      paddingBottom={bottomSafeAreaInset}
-      flex={1}
-    >
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <YStack padding={"$md"}>
-          <HeadingSMBold>{"Personal Info"}</HeadingSMBold>
-        </YStack>
-        <Spacer size={"$md"} />
-        <YStack paddingHorizontal={"$md"}>
-          <TextSMSemiBold>{"Full Name"}</TextSMSemiBold>
-          <Spacer size={"$sm"} />
+        paddingBottom={bottomSafeAreaInset}
+        flex={1}
+      >
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <YStack padding={"$md"}>
+            <HeadingSMBold>{"Personal Info"}</HeadingSMBold>
+          </YStack>
+          <Spacer size={"$md"} />
+          <YStack paddingHorizontal={"$md"}>
+            <TextSMSemiBold>{"Full Name"}</TextSMSemiBold>
+            <Spacer size={"$sm"} />
 
-          <Controller
-            name="fullname"
-            control={form.control}
-            rules={{
-              required: "Full Name is required",
-            }}
-            render={({ field, fieldState }) => (
-              <XStack
-                borderWidth={1}
-                borderColor="$lightgrey"
-                borderRadius="$full"
-                alignItems="center"
-                backgroundColor="$white"
-              >
-                <FormInput
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  paddingHorizontal={16}
-                  placeholder={"Melissa Johnsn"}
-                  width={"90%"}
-                  borderWidth={0}
-                  icon={
-                    <AppImage
-                      tintColor={getTokenValue("$secondary")}
-                      name="userIcon"
-                      width={14}
-                      height={18}
-                    />
-                  }
-                  error={fieldState.error?.message}
-                />
-                <AppImage name="editIcon" width={16} height={16} />
-              </XStack>
-            )}
-          />
-          <Spacer size={"$reg"} />
-          <TextSMSemiBold>{"Country"}</TextSMSemiBold>
-          <Spacer size={"$sm"} />
-          <OpTouch onPress={() => setShowCountryPicker(true)}>
-            <XStack
-              alignItems="center"
-              borderWidth={1}
-              borderColor="$lightgrey"
-              borderRadius="$full"
-              paddingHorizontal="$reg"
-              backgroundColor="$white"
-              paddingVertical="$reg"
-            >
-              <CountryPicker
-                withFilter
-                withFlag
-                withEmoji
-                countryCode={selectedCountry.cca2 as CountryCode}
-                onSelect={onSelectCountry}
-                onClose={() => setShowCountryPicker(false)}
-                visible={showCountryPicker}
-                theme={{
-                  flagSizeButton: 20,
-                }}
-              />
-              <TextMDRegular color="$textgrey">
-                {String(selectedCountry?.name || "Select Country")}
-              </TextMDRegular>
-              <XStack
-                alignItems="center"
-                gap="$sm"
-                paddingHorizontal="$sm"
-                marginLeft={"auto"}
-              >
-                <TextMDSemiBold color="$secondary">
-                  {selectedCountry?.cca2 || ""}
-                </TextMDSemiBold>
-                <AppImage
-                  name="arrowDown"
-                  width={14}
-                  height={8}
-                  tintColor={getTokenValue("$secondary")}
-                />
-              </XStack>
-            </XStack>
-          </OpTouch>
-          <Spacer size={"$reg"} />
-          <TextSMSemiBold>{"Gender"}</TextSMSemiBold>
-          <Spacer size={"$sm"} />
-          <Controller
-            name="gender"
-            control={form.control}
-            rules={{
-              required: "Gender is required",
-            }}
-            render={({ field }) => {
-              const genderValue =
-                (field.value as "male" | "female" | null) ?? null;
-              const genderLabel =
-                genderValue === "male"
-                  ? "Male"
-                  : genderValue === "female"
-                  ? "Female"
-                  : "Select Gender";
-
-              // Sync selectedGender with form value
-              if (selectedGender !== genderValue) {
-                setSelectedGender(genderValue);
-              }
-
-              return (
-                <OpTouch
-                  onPress={() => {
-                    setTempGenderSelection(genderValue);
-                    genderBottomSheetRef.current?.handleOpenPress();
-                  }}
-                >
-                  <XStack
-                    borderWidth={1}
-                    borderColor="$lightgrey"
-                    borderRadius="$full"
-                    alignItems="center"
-                    backgroundColor="$white"
-                    paddingHorizontal="$md"
-                    paddingVertical="$reg"
-                    justifyContent="space-between"
-                  >
-                    <XStack alignItems="center">
-                      <AppImage
-                        name="genderIcon"
-                        width={15}
-                        height={15}
-                        tintColor={getTokenValue("$secondary")}
-                      />
-                      <Spacer size="$reg" />
-                      <TextMDRegular
-                        color={genderValue ? "$black" : "$secondary"}
-                      >
-                        {genderLabel}
-                      </TextMDRegular>
-                    </XStack>
-                    <AppImage
-                      name="arrowDown"
-                      width={14}
-                      height={8}
-                      tintColor={getTokenValue("$secondary")}
-                    />
-                  </XStack>
-                </OpTouch>
-              );
-            }}
-          />
-          <Spacer size={"$reg"} />
-          <TextSMSemiBold>{"Date of Birth"}</TextSMSemiBold>
-          <Spacer size={"$sm"} />
-          <Controller
-            name="dob" // e.g. "dateOfBirth"
-            control={form.control}
-            rules={{ required: "Date of Birth is required" }}
-            render={({ field }) => {
-              const iso = field.value as string | undefined;
-              const display = iso ? formatDMY(fromISO(iso)) : "";
-
-              return (
+            <Controller
+              name="fullname"
+              control={form.control}
+              rules={{
+                required: "Full Name is required",
+              }}
+              render={({ field, fieldState }) => (
                 <XStack
                   borderWidth={1}
                   borderColor="$lightgrey"
@@ -534,161 +548,327 @@ const PersonalInfo = () => {
                   backgroundColor="$white"
                 >
                   <FormInput
-                    value={display}
-                    onChangeText={() => {}}
-                    editable={false}
-                    placeholder={"DD / MM / YYYY"}
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    paddingHorizontal={16}
+                    placeholder={"Melissa Johnsn"}
                     width={"90%"}
                     borderWidth={0}
+                    icon={
+                      <AppImage
+                        tintColor={getTokenValue("$secondary")}
+                        name="userIcon"
+                        width={14}
+                        height={18}
+                      />
+                    }
+                    error={fieldState.error?.message}
                   />
+                  <AppImage name="editIcon" width={16} height={16} />
+                </XStack>
+              )}
+            />
+            <Spacer size={"$reg"} />
+            <TextSMSemiBold>{"Country"}</TextSMSemiBold>
+            <Spacer size={"$sm"} />
+            <OpTouch onPress={() => setShowCountryPicker(true)}>
+              <XStack
+                alignItems="center"
+                borderWidth={1}
+                borderColor="$lightgrey"
+                borderRadius="$full"
+                paddingHorizontal="$reg"
+                backgroundColor="$white"
+                paddingVertical="$reg"
+              >
+                <CountryPicker
+                  withFilter
+                  withFlag
+                  withEmoji
+                  countryCode={selectedCountry.cca2 as CountryCode}
+                  onSelect={onSelectCountry}
+                  onClose={() => setShowCountryPicker(false)}
+                  visible={showCountryPicker}
+                  theme={{
+                    flagSizeButton: 20,
+                  }}
+                />
+                <TextMDRegular color="$textgrey">
+                  {String(selectedCountry?.name || "Select Country")}
+                </TextMDRegular>
+                <XStack
+                  alignItems="center"
+                  gap="$sm"
+                  paddingHorizontal="$sm"
+                  marginLeft={"auto"}
+                >
+                  <TextMDSemiBold color="$secondary">
+                    {selectedCountry?.cca2 || ""}
+                  </TextMDSemiBold>
+                  <AppImage
+                    name="arrowDown"
+                    width={14}
+                    height={8}
+                    tintColor={getTokenValue("$secondary")}
+                  />
+                </XStack>
+              </XStack>
+            </OpTouch>
+            <Spacer size={"$reg"} />
+            <TextSMSemiBold>{"Gender"}</TextSMSemiBold>
+            <Spacer size={"$sm"} />
+            <Controller
+              name="gender"
+              control={form.control}
+              rules={{
+                required: "Gender is required",
+              }}
+              render={({ field }) => {
+                const genderValue =
+                  (field.value as "male" | "female" | null) ?? null;
+                const genderLabel =
+                  genderValue === "male"
+                    ? "Male"
+                    : genderValue === "female"
+                    ? "Female"
+                    : "Select Gender";
+
+                // Sync selectedGender with form value
+                if (selectedGender !== genderValue) {
+                  setSelectedGender(genderValue);
+                }
+
+                return (
                   <OpTouch
                     onPress={() => {
-                      setTempDateSelection(iso || null);
-                      if (iso) {
-                        setCalendarDate(fromISO(iso));
-                      }
-                      calendarBottomSheetRef.current?.handleOpenPress();
+                      setTempGenderSelection(genderValue);
+                      genderBottomSheetRef.current?.handleOpenPress();
                     }}
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                   >
-                    <AppImage
-                      name="calendar"
-                      width={16}
-                      height={16}
-                      tintColor={getTokenValue("$secondary")}
-                    />
-                  </OpTouch>
-                </XStack>
-              );
-            }}
-          />
-
-          <Spacer size={"$reg"} />
-          <TextSMSemiBold>{t("profile.phoneNumber.label")}</TextSMSemiBold>
-          <Spacer size={"$sm"} />
-          <YStack
-            borderRadius={"$3xl"}
-            borderWidth={1}
-            borderColor="$lightgrey"
-            backgroundColor="$white"
-            overflow="hidden"
-          >
-            <Controller
-              control={form.control}
-              name="phone"
-              rules={{
-                required: "Phone number is required",
-                minLength: {
-                  value: 10,
-                  message: "Phone number too short",
-                },
-                // validate: validatePhoneNumber,
-              }}
-              render={({ field: { onChange, value }, fieldState }) => (
-                <XStack alignItems="center">
-                  <OpTouch onPress={() => setShowCountryPicker(true)}>
                     <XStack
+                      borderWidth={1}
+                      borderColor="$lightgrey"
+                      borderRadius="$full"
                       alignItems="center"
-                      // borderWidth={1}
-                      borderRightWidth={1}
-                      borderRightColor="$lightgrey"
-                      paddingHorizontal={"$reg"}
-                      backgroundColor="$background"
-                      paddingVertical={"$reg"}
+                      backgroundColor="$white"
+                      paddingHorizontal="$md"
+                      paddingVertical="$reg"
+                      justifyContent="space-between"
                     >
-                      <CountryPicker
-                        countryCode={selectedCountry.cca2 as CountryCode}
-                        withFilter
-                        withFlag
-                        withCallingCode
-                        withEmoji
-                        onSelect={onSelectCountry}
-                        onClose={() => setShowCountryPicker(false)}
-                        visible={showCountryPicker}
-                        theme={{
-                          flagSizeButton: 20,
-                        }}
-                      />
-                      <Spacer size={"$xxs"} />
+                      <XStack alignItems="center">
+                        <AppImage
+                          name="genderIcon"
+                          width={15}
+                          height={15}
+                          tintColor={getTokenValue("$secondary")}
+                        />
+                        <Spacer size="$reg" />
+                        <TextMDRegular
+                          color={genderValue ? "$black" : "$secondary"}
+                        >
+                          {genderLabel}
+                        </TextMDRegular>
+                      </XStack>
                       <AppImage
                         name="arrowDown"
                         width={14}
                         height={8}
-                        tintColor={getTokenValue("$lightgrey")}
+                        tintColor={getTokenValue("$secondary")}
                       />
                     </XStack>
                   </OpTouch>
-                  <XStack alignItems="center" paddingHorizontal={"$reg"}>
-                    <TextMDSemiBold color="$secondary">
-                      +{selectedCountry.callingCode[0]}
-                    </TextMDSemiBold>
+                );
+              }}
+            />
+            <Spacer size={"$reg"} />
+            <TextSMSemiBold>{"Date of Birth"}</TextSMSemiBold>
+            <Spacer size={"$sm"} />
+            <Controller
+              name="dob" // e.g. "dateOfBirth"
+              control={form.control}
+              rules={{ required: "Date of Birth is required" }}
+              render={({ field }) => {
+                const iso = field.value as string | undefined;
+                const display = iso ? formatDMY(fromISO(iso)) : "";
+
+                return (
+                  <XStack
+                    borderWidth={1}
+                    borderColor="$lightgrey"
+                    borderRadius="$full"
+                    alignItems="center"
+                    backgroundColor="$white"
+                  >
                     <FormInput
-                      width={"70%"}
+                      value={display}
+                      onChangeText={() => {}}
+                      editable={false}
+                      placeholder={"DD / MM / YYYY"}
+                      width={"90%"}
                       borderWidth={0}
-                      paddingHorizontal={0}
-                      value={value}
-                      keyboardType="numeric"
-                      onChangeText={(text) => {
-                        // Only allow numbers
-                        const numericText = text.replace(/[^0-9]/g, "");
-                        onChange(numericText);
-                      }}
-                      placeholder={t("profile.phoneNumber.placeholder")}
                     />
-                    <OpTouch onPress={() => setShowCountryPicker(true)}>
-                      <AppImage name="warningIcon" width={16} height={16} />
+                    <OpTouch
+                      onPress={() => {
+                        setTempDateSelection(iso || null);
+                        if (iso) {
+                          setCalendarDate(fromISO(iso));
+                        }
+                        calendarBottomSheetRef.current?.handleOpenPress();
+                      }}
+                      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    >
+                      <AppImage
+                        name="calendar"
+                        width={16}
+                        height={16}
+                        tintColor={getTokenValue("$secondary")}
+                      />
                     </OpTouch>
                   </XStack>
+                );
+              }}
+            />
+
+            <Spacer size={"$reg"} />
+            <TextSMSemiBold>{t("profile.phoneNumber.label")}</TextSMSemiBold>
+            <Spacer size={"$sm"} />
+            <YStack
+              borderRadius={"$3xl"}
+              borderWidth={1}
+              borderColor="$lightgrey"
+              backgroundColor="$white"
+              overflow="hidden"
+            >
+              <Controller
+                control={form.control}
+                name="phone"
+                rules={{
+                  required: "Phone number is required",
+                  minLength: {
+                    value: 10,
+                    message: "Phone number too short",
+                  },
+                  // validate: validatePhoneNumber,
+                }}
+                render={({ field: { onChange, value }, fieldState }) => (
+                  <XStack alignItems="center">
+                    <OpTouch onPress={() => setShowCountryPicker(true)}>
+                      <XStack
+                        alignItems="center"
+                        // borderWidth={1}
+                        borderRightWidth={1}
+                        borderRightColor="$lightgrey"
+                        paddingHorizontal={"$reg"}
+                        backgroundColor="$background"
+                        paddingVertical={"$reg"}
+                      >
+                        <CountryPicker
+                          countryCode={selectedCountry.cca2 as CountryCode}
+                          withFilter
+                          withFlag
+                          withCallingCode
+                          withEmoji
+                          onSelect={onSelectCountry}
+                          onClose={() => setShowCountryPicker(false)}
+                          visible={showCountryPicker}
+                          theme={{
+                            flagSizeButton: 20,
+                          }}
+                        />
+                        <Spacer size={"$xxs"} />
+                        <AppImage
+                          name="arrowDown"
+                          width={14}
+                          height={8}
+                          tintColor={getTokenValue("$lightgrey")}
+                        />
+                      </XStack>
+                    </OpTouch>
+                    <XStack alignItems="center" paddingHorizontal={"$reg"}>
+                      <TextMDSemiBold color="$secondary">
+                        +{selectedCountry.callingCode[0]}
+                      </TextMDSemiBold>
+                      <FormInput
+                        width={"76%"}
+                        borderWidth={0}
+                        borderRadius={0}
+                        paddingHorizontal={0}
+                        value={value}
+                        keyboardType="numeric"
+                        onChangeText={(text) => {
+                          // Only allow numbers
+                          const numericText = text.replace(/[^0-9]/g, "");
+                          onChange(numericText);
+                        }}
+                        placeholder={t("profile.phoneNumber.placeholder")}
+                      />
+                      <OpTouch onPress={() => setShowCountryPicker(true)}>
+                        <AppImage name="editIcon" width={15} height={15} />
+                      </OpTouch>
+                    </XStack>
+                  </XStack>
+                )}
+              />
+            </YStack>
+
+            <Spacer size={"$reg"} />
+            <TextSMSemiBold>{"Email Address"}</TextSMSemiBold>
+            <Spacer size={"$sm"} />
+            <Controller
+              name="email"
+              control={form.control}
+              rules={{
+                required: "Email is required",
+              }}
+              render={({ field, fieldState }) => (
+                <XStack
+                  borderWidth={1}
+                  borderColor="$lightgrey"
+                  borderRadius="$full"
+                  alignItems="center"
+                  backgroundColor="$white"
+                >
+                  <FormInput
+                    value={field.value}
+                    paddingHorizontal={16}
+                    onChangeText={field.onChange}
+                    placeholder={"melissa@gmail.com"}
+                    width={"90%"}
+                    keyboardType="email-address"
+                    borderWidth={0}
+                    icon={
+                      <AppImage
+                        tintColor={getTokenValue("$secondary")}
+                        name="emailIcon"
+                        width={14}
+                        height={18}
+                      />
+                    }
+                    error={fieldState.error?.message}
+                  />
+                  <OpTouch>
+                    <AppImage name="editIcon" width={14} height={14} />
+                  </OpTouch>
                 </XStack>
               )}
             />
-          </YStack>
+            <Spacer size={"$lg"} />
 
-          <Spacer size={"$reg"} />
-          <TextSMSemiBold>{"Email Address"}</TextSMSemiBold>
-          <Spacer size={"$sm"} />
-          <Controller
-            name="email"
-            control={form.control}
-            rules={{
-              required: "Email is required",
-            }}
-            render={({ field, fieldState }) => (
-              <XStack
-                borderWidth={1}
-                borderColor="$lightgrey"
-                borderRadius="$full"
-                alignItems="center"
-                backgroundColor="$white"
+            <XStack justifyContent="space-between">
+              <TextMDBold>{"Address"}</TextMDBold>
+              <OpTouch
+                onPress={() =>
+                  router.push({
+                    pathname: "/allAddressList",
+                    params: { returnTo: "personalInfo" },
+                  })
+                }
               >
-                <FormInput
-                  value={field.value}
-                  paddingHorizontal={16}
-                  onChangeText={field.onChange}
-                  placeholder={"melissa@gmail.com"}
-                  width={"90%"}
-                  keyboardType="email-address"
-                  borderWidth={0}
-                  icon={
-                    <AppImage
-                      tintColor={getTokenValue("$secondary")}
-                      name="emailIcon"
-                      width={14}
-                      height={18}
-                    />
-                  }
-                  error={fieldState.error?.message}
-                />
-                <OpTouch>
-                  <AppImage name="editIcon" width={14} height={14} />
-                </OpTouch>
-              </XStack>
-            )}
-          />
-          <Spacer size={"$lg"} />
+                <TextSMMedium color="$primary">{"Change"}</TextSMMedium>
+              </OpTouch>
+            </XStack>
+            <Spacer size={"$lg"} />
 
-          <XStack justifyContent="space-between">
-            <TextMDBold>{"Address"}</TextMDBold>
             <OpTouch
               onPress={() =>
                 router.push({
@@ -697,743 +877,739 @@ const PersonalInfo = () => {
                 })
               }
             >
-              <TextSMMedium color="$primary">{"Change"}</TextSMMedium>
+              <YStack
+                style={{
+                  ...SHADOW_STYLES,
+                }}
+                backgroundColor="$white"
+                borderRadius={"$2xl"}
+                padding="$reg"
+              >
+                <XStack>
+                  <YStack
+                    marginTop={-2}
+                    justifyContent="center"
+                    alignItems="center"
+                    borderRadius={"$full"}
+                    width={40}
+                    height={40}
+                    backgroundColor={"$background"}
+                  >
+                    <AppImage
+                      name="locationIconUnfilled"
+                      width={14}
+                      height={18}
+                      tintColor={getTokenValue("$secondary")}
+                    />
+                  </YStack>
+                  <Spacer size={"$sm"} />
+                  <ParagraphMD flex={1} color="$secondary" flexWrap="wrap">
+                    {(() => {
+                      // If there's a pending address text, show it directly
+                      if (pendingAddressText) {
+                        return pendingAddressText;
+                      }
+
+                      // First check profile's defaultAddress
+                      const profileDefault = (user as any)?.defaultAddress;
+                      if (
+                        profileDefault &&
+                        Object.keys(profileDefault).length > 0
+                      ) {
+                        return [
+                          profileDefault.address1,
+                          profileDefault.address2,
+                          profileDefault.city,
+                          profileDefault.province,
+                          profileDefault.country,
+                          profileDefault.zip,
+                        ]
+                          .filter(Boolean)
+                          .join(", ");
+                      }
+
+                      // Fallback: find address with isDefault: true from addresses list
+                      const defaultFromList = addresses.find(
+                        (addr: any) => addr.isDefault === true
+                      );
+                      if (defaultFromList) {
+                        return [
+                          defaultFromList.address1,
+                          defaultFromList.address2,
+                          defaultFromList.city,
+                          defaultFromList.province,
+                          defaultFromList.country,
+                          defaultFromList.zip,
+                        ]
+                          .filter(Boolean)
+                          .join(", ");
+                      }
+
+                      // If no default found, use the first address
+                      if (addresses.length > 0) {
+                        const firstAddr = addresses[0];
+                        return [
+                          firstAddr.address1,
+                          firstAddr.address2,
+                          firstAddr.city,
+                          firstAddr.province,
+                          firstAddr.country,
+                          firstAddr.zip,
+                        ]
+                          .filter(Boolean)
+                          .join(", ");
+                      }
+
+                      return "No address added. Tap to add an address.";
+                    })()}
+                  </ParagraphMD>
+                </XStack>
+              </YStack>
             </OpTouch>
-          </XStack>
-          <Spacer size={"$lg"} />
-
-          <OpTouch
-            onPress={() =>
-              router.push({
-                pathname: "/allAddressList",
-                params: { returnTo: "personalInfo" },
-              })
-            }
-          >
-            <YStack
-              style={{
-                ...SHADOW_STYLES,
-              }}
-              backgroundColor="$white"
-              borderRadius={"$2xl"}
-              padding="$reg"
-            >
-              <XStack>
-                <YStack
-                  marginTop={-2}
-                  justifyContent="center"
-                  alignItems="center"
-                  borderRadius={"$full"}
-                  width={40}
-                  height={40}
-                  backgroundColor={"$background"}
-                >
-                  <AppImage
-                    name="locationIconUnfilled"
-                    width={14}
-                    height={18}
-                    tintColor={getTokenValue("$secondary")}
-                  />
-                </YStack>
-                <Spacer size={"$sm"} />
-                <ParagraphMD flex={1} color="$secondary" flexWrap="wrap">
-                  {(() => {
-                    // If there's a pending address text, show it directly
-                    if (pendingAddressText) {
-                      return pendingAddressText;
-                    }
-
-                    // First check profile's defaultAddress
-                    const profileDefault = (user as any)?.defaultAddress;
-                    if (profileDefault && Object.keys(profileDefault).length > 0) {
-                      return [
-                        profileDefault.address1,
-                        profileDefault.address2,
-                        profileDefault.city,
-                        profileDefault.province,
-                        profileDefault.country,
-                        profileDefault.zip,
-                      ]
-                        .filter(Boolean)
-                        .join(", ");
-                    }
-
-                    // Fallback: find address with isDefault: true from addresses list
-                    const defaultFromList = addresses.find((addr: any) => addr.isDefault === true);
-                    if (defaultFromList) {
-                      return [
-                        defaultFromList.address1,
-                        defaultFromList.address2,
-                        defaultFromList.city,
-                        defaultFromList.province,
-                        defaultFromList.country,
-                        defaultFromList.zip,
-                      ]
-                        .filter(Boolean)
-                        .join(", ");
-                    }
-
-                    // If no default found, use the first address
-                    if (addresses.length > 0) {
-                      const firstAddr = addresses[0];
-                      return [
-                        firstAddr.address1,
-                        firstAddr.address2,
-                        firstAddr.city,
-                        firstAddr.province,
-                        firstAddr.country,
-                        firstAddr.zip,
-                      ]
-                        .filter(Boolean)
-                        .join(", ");
-                    }
-
-                    return "No address added. Tap to add an address.";
-                  })()}
-                </ParagraphMD>
-              </XStack>
+            <Spacer size={"$lg"} />
+            <YStack justifyContent="center" alignItems="center">
+              <AppImage name="unLock" width={15} height={16} />
+              <Spacer size={"$reg"} />
+              <TextSMRegular textAlign="center" color={"$secondary"}>
+                {
+                  "Your profile information is safe with us and we don’t share data to anyone."
+                }
+              </TextSMRegular>
             </YStack>
-          </OpTouch>
-          <Spacer size={"$lg"} />
-          <YStack justifyContent="center" alignItems="center">
-            <AppImage name="unLock" width={15} height={16} />
-            <Spacer size={"$reg"} />
-            <TextSMRegular textAlign="center" color={"$secondary"}>
-              {
-                "Your profile information is safe with us and we don’t share data to anyone."
-              }
-            </TextSMRegular>
+            <Spacer size={"$lg"} />
           </YStack>
-          <Spacer size={"$lg"} />
+        </ScrollView>
+        <YStack paddingHorizontal={"$md"}>
+          <PrimaryButton
+            label="Save Changes"
+            onPress={handleSaveChanges}
+            width={"100%"}
+            iconPosition="right"
+            icon={
+              <AppImage
+                tintColor={getTokenValue("$white")}
+                name="check"
+                width={16}
+                height={16}
+              />
+            }
+            isLoading={isUpdating}
+          />
         </YStack>
-      </ScrollView>
-      <YStack paddingHorizontal={"$md"}>
-        <PrimaryButton
-          label="Save Changes"
-          onPress={handleSaveChanges}
-          width={"100%"}
-          iconPosition="right"
-          icon={
-            <AppImage
-              tintColor={getTokenValue("$white")}
-              name="check"
-              width={16}
-              height={16}
-            />
-          }
-          isLoading={isUpdating}
-        />
-      </YStack>
 
-      {/* Gender Selection Bottom Sheet Modal */}
-      <BottomSheetModalWithView
-        ref={genderBottomSheetRef}
-        enablePanDownToClose
-        enableDynamicSizing
-        backgroundStyle={{
-          backgroundColor: tokens.color.white,
-        }}
-        style={{
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.15,
-          shadowRadius: 30,
-          elevation: 20,
-        }}
-      >
-        <YStack padding="$lg" paddingBottom="$xl" gap="$md">
-          {/* Header */}
-          <YStack alignItems="center" marginBottom="$sm">
-            <TextMDBold textAlign="center" color="$darkgrey">
-              Select Gender
-            </TextMDBold>
-            <TextSMMedium
-              textAlign="center"
-              color="$textgrey"
-              opacity={0.7}
-              marginTop="$xs"
-            >
-              Choose your gender identity
-            </TextSMMedium>
-          </YStack>
+        {/* Gender Selection Bottom Sheet Modal */}
+        <BottomSheetModalWithView
+          ref={genderBottomSheetRef}
+          enablePanDownToClose
+          enableDynamicSizing
+          backgroundStyle={{
+            backgroundColor: tokens.color.white,
+          }}
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: -4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 30,
+            elevation: 20,
+          }}
+        >
+          <YStack padding="$lg" paddingBottom="$xl" gap="$md">
+            {/* Header */}
+            <YStack alignItems="center" marginBottom="$sm">
+              <TextMDBold textAlign="center" color="$darkgrey">
+                Select Gender
+              </TextMDBold>
+              <TextSMMedium
+                textAlign="center"
+                color="$textgrey"
+                opacity={0.7}
+                marginTop="$xs"
+              >
+                Choose your gender identity
+              </TextSMMedium>
+            </YStack>
 
-          {/* Gender Options - More Elegant Sizes */}
-          <XStack gap="$sm" justifyContent="center">
-            <OpTouch
-              flex={1}
-              onPress={() => {
-                setTempGenderSelection("female");
-              }}
-            >
-              <YStack
-                backgroundColor={
-                  tempGenderSelection === "female"
-                    ? "rgba(124, 58, 237, 0.1)"
-                    : "rgba(255, 255, 255, 0.6)"
-                }
-                borderWidth={tempGenderSelection === "female" ? 1.5 : 1}
-                borderColor={
-                  tempGenderSelection === "female"
-                    ? tokens.color.primary
-                    : "rgba(203, 213, 225, 0.3)"
-                }
-                borderRadius="$xl"
-                padding="$md"
-                alignItems="center"
-                justifyContent="center"
-                minHeight={72}
-                style={{
-                  // @ts-ignore - for glass effect
-                  backdropFilter: "blur(8px)",
-                  ...(tempGenderSelection === "female"
-                    ? {
-                        shadowColor: tokens.color.primary,
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.15,
-                        shadowRadius: 8,
-                        elevation: 4,
-                      }
-                    : {
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.05,
-                        shadowRadius: 4,
-                        elevation: 2,
-                      }),
+            {/* Gender Options - More Elegant Sizes */}
+            <XStack gap="$sm" justifyContent="center">
+              <OpTouch
+                flex={1}
+                onPress={() => {
+                  setTempGenderSelection("female");
                 }}
               >
                 <YStack
                   backgroundColor={
                     tempGenderSelection === "female"
-                      ? tokens.color.primary
-                      : "rgba(124, 58, 237, 0.1)"
+                      ? "rgba(124, 58, 237, 0.1)"
+                      : "rgba(255, 255, 255, 0.6)"
                   }
-                  borderRadius="$full"
-                  width={32}
-                  height={32}
-                  alignItems="center"
-                  justifyContent="center"
-                  marginBottom="$xs"
-                >
-                  <AppImage
-                    name="genderIcon"
-                    width={18}
-                    height={18}
-                    tintColor={
-                      tempGenderSelection === "female"
-                        ? tokens.color.white
-                        : tokens.color.primary
-                    }
-                  />
-                </YStack>
-                <TextSMSemiBold
-                  color={
+                  borderWidth={tempGenderSelection === "female" ? 1.5 : 1}
+                  borderColor={
                     tempGenderSelection === "female"
                       ? tokens.color.primary
-                      : tokens.color.darkgrey
+                      : "rgba(203, 213, 225, 0.3)"
                   }
-                >
-                  Female
-                </TextSMSemiBold>
-              </YStack>
-            </OpTouch>
-
-            <OpTouch
-              flex={1}
-              onPress={() => {
-                setTempGenderSelection("male");
-              }}
-            >
-              <YStack
-                backgroundColor={
-                  tempGenderSelection === "male"
-                    ? "rgba(124, 58, 237, 0.1)"
-                    : "rgba(255, 255, 255, 0.6)"
-                }
-                borderWidth={tempGenderSelection === "male" ? 1.5 : 1}
-                borderColor={
-                  tempGenderSelection === "male"
-                    ? tokens.color.primary
-                    : "rgba(203, 213, 225, 0.3)"
-                }
-                borderRadius="$xl"
-                padding="$md"
-                alignItems="center"
-                justifyContent="center"
-                minHeight={72}
-                style={{
-                  // @ts-ignore - for glass effect
-                  backdropFilter: "blur(8px)",
-                  ...(tempGenderSelection === "male"
-                    ? {
-                        shadowColor: tokens.color.primary,
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.15,
-                        shadowRadius: 8,
-                        elevation: 4,
-                      }
-                    : {
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.05,
-                        shadowRadius: 4,
-                        elevation: 2,
-                      }),
-                }}
-              >
-                <YStack
-                  backgroundColor={
-                    tempGenderSelection === "male"
-                      ? tokens.color.primary
-                      : "rgba(124, 58, 237, 0.1)"
-                  }
-                  borderRadius="$full"
-                  width={32}
-                  height={32}
-                  alignItems="center"
-                  justifyContent="center"
-                  marginBottom="$xs"
-                >
-                  <AppImage
-                    name="genderIcon"
-                    width={18}
-                    height={18}
-                    tintColor={
-                      tempGenderSelection === "male"
-                        ? tokens.color.white
-                        : tokens.color.primary
-                    }
-                  />
-                </YStack>
-                <TextSMSemiBold
-                  color={
-                    tempGenderSelection === "male"
-                      ? tokens.color.primary
-                      : tokens.color.darkgrey
-                  }
-                >
-                  Male
-                </TextSMSemiBold>
-              </YStack>
-            </OpTouch>
-          </XStack>
-
-          {/* Save Button */}
-          <YStack marginTop="$md">
-            <OpTouch
-              disabled={!tempGenderSelection}
-              onPress={() => {
-                if (tempGenderSelection) {
-                  form.setValue("gender", tempGenderSelection);
-                  setSelectedGender(tempGenderSelection);
-                  genderBottomSheetRef.current?.handleClosePress();
-                }
-              }}
-            >
-              <YStack opacity={tempGenderSelection ? 1 : 0.5}>
-                <PrimaryButton
-                  label="Save Selection"
-                  onPress={() => {
-                    if (tempGenderSelection) {
-                      form.setValue("gender", tempGenderSelection);
-                      setSelectedGender(tempGenderSelection);
-                      genderBottomSheetRef.current?.handleClosePress();
-                    }
-                  }}
-                  width="100%"
-                  isLoading={false}
-                />
-              </YStack>
-            </OpTouch>
-          </YStack>
-        </YStack>
-      </BottomSheetModalWithView>
-
-      {/* Date Picker Bottom Sheet Modal - iOS Style */}
-      <BottomSheetModalWithView
-        ref={calendarBottomSheetRef}
-        enablePanDownToClose
-        enableDynamicSizing={false}
-        snapPoints={["83%"]}
-        backgroundStyle={{
-          backgroundColor: tokens.color.white,
-        }}
-      >
-        <YStack flex={1}>
-          {/* Scrollable Content */}
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <YStack paddingHorizontal={"$md"}>
-              {/* Header */}
-              <YStack alignItems="center" marginBottom="$lg">
-                <TextMDBold color="$darkgrey">Date of Birth</TextMDBold>
-                <TextSMMedium color="$textgrey" opacity={0.7} marginTop="$xs">
-                  Select your date of birth
-                </TextSMMedium>
-              </YStack>
-
-              {/* iOS-style Month/Year Header */}
-              <XStack
-                justifyContent="center"
-                alignItems="center"
-                gap="$sm"
-                marginBottom="$md"
-              >
-                <OpTouch onPress={() => setShowMonthPicker(!showMonthPicker)}>
-                  <XStack
-                    backgroundColor={
-                      showMonthPicker
-                        ? "rgba(124, 58, 237, 0.1)"
-                        : "$background"
-                    }
-                    borderRadius="$md"
-                    paddingHorizontal="$md"
-                    paddingVertical="$sm"
-                    alignItems="center"
-                    gap="$xs"
-                    borderWidth={1}
-                    borderColor={
-                      showMonthPicker ? tokens.color.primary : "$lightgrey"
-                    }
-                  >
-                    <TextMDSemiBold
-                      color={
-                        showMonthPicker ? tokens.color.primary : "$darkgrey"
-                      }
-                    >
-                      {calendarDate.toLocaleString("default", {
-                        month: "long",
-                      })}
-                    </TextMDSemiBold>
-                    <AppImage
-                      name="arrowDown"
-                      width={10}
-                      height={10}
-                      tintColor={
-                        showMonthPicker
-                          ? tokens.color.primary
-                          : tokens.color.secondary
-                      }
-                      style={{
-                        transform: [
-                          { rotate: showMonthPicker ? "180deg" : "0deg" },
-                        ],
-                      }}
-                    />
-                  </XStack>
-                </OpTouch>
-
-                <OpTouch onPress={() => setShowYearPicker(!showYearPicker)}>
-                  <XStack
-                    backgroundColor={
-                      showYearPicker ? "rgba(124, 58, 237, 0.1)" : "$background"
-                    }
-                    borderRadius="$md"
-                    paddingHorizontal="$md"
-                    paddingVertical="$sm"
-                    alignItems="center"
-                    gap="$xs"
-                    borderWidth={1}
-                    borderColor={
-                      showYearPicker ? tokens.color.primary : "$lightgrey"
-                    }
-                  >
-                    <TextMDSemiBold
-                      color={
-                        showYearPicker ? tokens.color.primary : "$darkgrey"
-                      }
-                    >
-                      {calendarDate.getFullYear()}
-                    </TextMDSemiBold>
-                    <AppImage
-                      name="arrowDown"
-                      width={10}
-                      height={10}
-                      tintColor={
-                        showYearPicker
-                          ? tokens.color.primary
-                          : tokens.color.secondary
-                      }
-                      style={{
-                        transform: [
-                          { rotate: showYearPicker ? "180deg" : "0deg" },
-                        ],
-                      }}
-                    />
-                  </XStack>
-                </OpTouch>
-              </XStack>
-
-              {/* Month Picker - iOS Style Grid */}
-              {showMonthPicker && (
-                <YStack
-                  backgroundColor="$background"
                   borderRadius="$xl"
                   padding="$md"
-                  marginBottom="$md"
-                  borderWidth={1}
-                  borderColor="rgba(203, 213, 225, 0.3)"
+                  alignItems="center"
+                  justifyContent="center"
+                  minHeight={72}
+                  style={{
+                    // @ts-ignore - for glass effect
+                    backdropFilter: "blur(8px)",
+                    ...(tempGenderSelection === "female"
+                      ? {
+                          shadowColor: tokens.color.primary,
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.15,
+                          shadowRadius: 8,
+                          elevation: 4,
+                        }
+                      : {
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 4,
+                          elevation: 2,
+                        }),
+                  }}
                 >
-                  <YStack gap="$sm">
-                    {[0, 3, 6, 9].map((startIdx) => (
-                      <XStack
-                        key={startIdx}
-                        gap="$sm"
-                        justifyContent="space-around"
+                  <YStack
+                    backgroundColor={
+                      tempGenderSelection === "female"
+                        ? tokens.color.primary
+                        : "rgba(124, 58, 237, 0.1)"
+                    }
+                    borderRadius="$full"
+                    width={32}
+                    height={32}
+                    alignItems="center"
+                    justifyContent="center"
+                    marginBottom="$xs"
+                  >
+                    <AppImage
+                      name="genderIcon"
+                      width={18}
+                      height={18}
+                      tintColor={
+                        tempGenderSelection === "female"
+                          ? tokens.color.white
+                          : tokens.color.primary
+                      }
+                    />
+                  </YStack>
+                  <TextSMSemiBold
+                    color={
+                      tempGenderSelection === "female"
+                        ? tokens.color.primary
+                        : tokens.color.darkgrey
+                    }
+                  >
+                    Female
+                  </TextSMSemiBold>
+                </YStack>
+              </OpTouch>
+
+              <OpTouch
+                flex={1}
+                onPress={() => {
+                  setTempGenderSelection("male");
+                }}
+              >
+                <YStack
+                  backgroundColor={
+                    tempGenderSelection === "male"
+                      ? "rgba(124, 58, 237, 0.1)"
+                      : "rgba(255, 255, 255, 0.6)"
+                  }
+                  borderWidth={tempGenderSelection === "male" ? 1.5 : 1}
+                  borderColor={
+                    tempGenderSelection === "male"
+                      ? tokens.color.primary
+                      : "rgba(203, 213, 225, 0.3)"
+                  }
+                  borderRadius="$xl"
+                  padding="$md"
+                  alignItems="center"
+                  justifyContent="center"
+                  minHeight={72}
+                  style={{
+                    // @ts-ignore - for glass effect
+                    backdropFilter: "blur(8px)",
+                    ...(tempGenderSelection === "male"
+                      ? {
+                          shadowColor: tokens.color.primary,
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.15,
+                          shadowRadius: 8,
+                          elevation: 4,
+                        }
+                      : {
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 4,
+                          elevation: 2,
+                        }),
+                  }}
+                >
+                  <YStack
+                    backgroundColor={
+                      tempGenderSelection === "male"
+                        ? tokens.color.primary
+                        : "rgba(124, 58, 237, 0.1)"
+                    }
+                    borderRadius="$full"
+                    width={32}
+                    height={32}
+                    alignItems="center"
+                    justifyContent="center"
+                    marginBottom="$xs"
+                  >
+                    <AppImage
+                      name="genderIcon"
+                      width={18}
+                      height={18}
+                      tintColor={
+                        tempGenderSelection === "male"
+                          ? tokens.color.white
+                          : tokens.color.primary
+                      }
+                    />
+                  </YStack>
+                  <TextSMSemiBold
+                    color={
+                      tempGenderSelection === "male"
+                        ? tokens.color.primary
+                        : tokens.color.darkgrey
+                    }
+                  >
+                    Male
+                  </TextSMSemiBold>
+                </YStack>
+              </OpTouch>
+            </XStack>
+
+            {/* Save Button */}
+            <YStack marginTop="$md">
+              <OpTouch
+                disabled={!tempGenderSelection}
+                onPress={() => {
+                  if (tempGenderSelection) {
+                    form.setValue("gender", tempGenderSelection);
+                    setSelectedGender(tempGenderSelection);
+                    genderBottomSheetRef.current?.handleClosePress();
+                  }
+                }}
+              >
+                <YStack opacity={tempGenderSelection ? 1 : 0.5}>
+                  <PrimaryButton
+                    label="Save Selection"
+                    onPress={() => {
+                      if (tempGenderSelection) {
+                        form.setValue("gender", tempGenderSelection);
+                        setSelectedGender(tempGenderSelection);
+                        genderBottomSheetRef.current?.handleClosePress();
+                      }
+                    }}
+                    width="100%"
+                    isLoading={false}
+                  />
+                </YStack>
+              </OpTouch>
+            </YStack>
+          </YStack>
+        </BottomSheetModalWithView>
+
+        {/* Date Picker Bottom Sheet Modal - iOS Style */}
+        <BottomSheetModalWithView
+          ref={calendarBottomSheetRef}
+          enablePanDownToClose
+          enableDynamicSizing={false}
+          snapPoints={["83%"]}
+          backgroundStyle={{
+            backgroundColor: tokens.color.white,
+          }}
+        >
+          <YStack flex={1}>
+            {/* Scrollable Content */}
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <YStack paddingHorizontal={"$md"}>
+                {/* Header */}
+                <YStack alignItems="center" marginBottom="$lg">
+                  <TextMDBold color="$darkgrey">Date of Birth</TextMDBold>
+                  <TextSMMedium color="$textgrey" opacity={0.7} marginTop="$xs">
+                    Select your date of birth
+                  </TextSMMedium>
+                </YStack>
+
+                {/* iOS-style Month/Year Header */}
+                <XStack
+                  justifyContent="center"
+                  alignItems="center"
+                  gap="$sm"
+                  marginBottom="$md"
+                >
+                  <OpTouch onPress={() => setShowMonthPicker(!showMonthPicker)}>
+                    <XStack
+                      backgroundColor={
+                        showMonthPicker
+                          ? "rgba(124, 58, 237, 0.1)"
+                          : "$background"
+                      }
+                      borderRadius="$md"
+                      paddingHorizontal="$md"
+                      paddingVertical="$sm"
+                      alignItems="center"
+                      gap="$xs"
+                      borderWidth={1}
+                      borderColor={
+                        showMonthPicker ? tokens.color.primary : "$lightgrey"
+                      }
+                    >
+                      <TextMDSemiBold
+                        color={
+                          showMonthPicker ? tokens.color.primary : "$darkgrey"
+                        }
                       >
-                        {[0, 1, 2].map((offset) => {
-                          const monthIdx = startIdx + offset;
-                          const monthDate = new Date(
-                            calendarDate.getFullYear(),
-                            monthIdx,
-                            1
-                          );
-                          const isCurrentMonth =
-                            monthIdx === calendarDate.getMonth();
-                          const monthName = monthDate.toLocaleString(
-                            "default",
-                            { month: "short" }
-                          );
+                        {calendarDate.toLocaleString("default", {
+                          month: "long",
+                        })}
+                      </TextMDSemiBold>
+                      <AppImage
+                        name="arrowDown"
+                        width={10}
+                        height={10}
+                        tintColor={
+                          showMonthPicker
+                            ? tokens.color.primary
+                            : tokens.color.secondary
+                        }
+                        style={{
+                          transform: [
+                            { rotate: showMonthPicker ? "180deg" : "0deg" },
+                          ],
+                        }}
+                      />
+                    </XStack>
+                  </OpTouch>
+
+                  <OpTouch onPress={() => setShowYearPicker(!showYearPicker)}>
+                    <XStack
+                      backgroundColor={
+                        showYearPicker
+                          ? "rgba(124, 58, 237, 0.1)"
+                          : "$background"
+                      }
+                      borderRadius="$md"
+                      paddingHorizontal="$md"
+                      paddingVertical="$sm"
+                      alignItems="center"
+                      gap="$xs"
+                      borderWidth={1}
+                      borderColor={
+                        showYearPicker ? tokens.color.primary : "$lightgrey"
+                      }
+                    >
+                      <TextMDSemiBold
+                        color={
+                          showYearPicker ? tokens.color.primary : "$darkgrey"
+                        }
+                      >
+                        {calendarDate.getFullYear()}
+                      </TextMDSemiBold>
+                      <AppImage
+                        name="arrowDown"
+                        width={10}
+                        height={10}
+                        tintColor={
+                          showYearPicker
+                            ? tokens.color.primary
+                            : tokens.color.secondary
+                        }
+                        style={{
+                          transform: [
+                            { rotate: showYearPicker ? "180deg" : "0deg" },
+                          ],
+                        }}
+                      />
+                    </XStack>
+                  </OpTouch>
+                </XStack>
+
+                {/* Month Picker - iOS Style Grid */}
+                {showMonthPicker && (
+                  <YStack
+                    backgroundColor="$background"
+                    borderRadius="$xl"
+                    padding="$md"
+                    marginBottom="$md"
+                    borderWidth={1}
+                    borderColor="rgba(203, 213, 225, 0.3)"
+                  >
+                    <YStack gap="$sm">
+                      {[0, 3, 6, 9].map((startIdx) => (
+                        <XStack
+                          key={startIdx}
+                          gap="$sm"
+                          justifyContent="space-around"
+                        >
+                          {[0, 1, 2].map((offset) => {
+                            const monthIdx = startIdx + offset;
+                            const monthDate = new Date(
+                              calendarDate.getFullYear(),
+                              monthIdx,
+                              1
+                            );
+                            const isCurrentMonth =
+                              monthIdx === calendarDate.getMonth();
+                            const monthName = monthDate.toLocaleString(
+                              "default",
+                              { month: "short" }
+                            );
+
+                            return (
+                              <OpTouch
+                                key={monthIdx}
+                                flex={1}
+                                onPress={() => {
+                                  const newDate = new Date(calendarDate);
+                                  newDate.setMonth(monthIdx);
+                                  setCalendarDate(newDate);
+                                  setShowMonthPicker(false);
+                                }}
+                              >
+                                <YStack
+                                  backgroundColor={
+                                    isCurrentMonth
+                                      ? tokens.color.primary
+                                      : "$white"
+                                  }
+                                  borderRadius="$lg"
+                                  paddingVertical="$sm"
+                                  alignItems="center"
+                                  borderWidth={isCurrentMonth ? 0 : 1}
+                                  borderColor="$lightgrey"
+                                >
+                                  <TextSMSemiBold
+                                    color={
+                                      isCurrentMonth
+                                        ? tokens.color.white
+                                        : tokens.color.textgrey
+                                    }
+                                  >
+                                    {monthName}
+                                  </TextSMSemiBold>
+                                </YStack>
+                              </OpTouch>
+                            );
+                          })}
+                        </XStack>
+                      ))}
+                    </YStack>
+                  </YStack>
+                )}
+
+                {/* Year Picker - iOS Style Scrollable List */}
+                {showYearPicker && (
+                  <YStack
+                    backgroundColor="$background"
+                    borderRadius="$xl"
+                    padding="$md"
+                    marginBottom="$md"
+                    borderWidth={1}
+                    borderColor="rgba(203, 213, 225, 0.3)"
+                    height={150}
+                  >
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                      <YStack gap="$xs">
+                        {Array.from({ length: 125 }, (_, i) => {
+                          const year = new Date().getFullYear() - i;
+                          const isSelected =
+                            year === calendarDate.getFullYear();
 
                           return (
                             <OpTouch
-                              key={monthIdx}
-                              flex={1}
+                              key={year}
                               onPress={() => {
                                 const newDate = new Date(calendarDate);
-                                newDate.setMonth(monthIdx);
+                                newDate.setFullYear(year);
                                 setCalendarDate(newDate);
-                                setShowMonthPicker(false);
+                                setShowYearPicker(false);
                               }}
                             >
                               <YStack
                                 backgroundColor={
-                                  isCurrentMonth
+                                  isSelected
                                     ? tokens.color.primary
-                                    : "$white"
+                                    : "transparent"
                                 }
-                                borderRadius="$lg"
+                                borderRadius="$md"
                                 paddingVertical="$sm"
-                                alignItems="center"
-                                borderWidth={isCurrentMonth ? 0 : 1}
-                                borderColor="$lightgrey"
+                                paddingHorizontal="$md"
                               >
-                                <TextSMSemiBold
+                                <TextMDSemiBold
+                                  textAlign="center"
                                   color={
-                                    isCurrentMonth
+                                    isSelected
                                       ? tokens.color.white
                                       : tokens.color.textgrey
                                   }
                                 >
-                                  {monthName}
-                                </TextSMSemiBold>
+                                  {year}
+                                </TextMDSemiBold>
                               </YStack>
                             </OpTouch>
                           );
                         })}
-                      </XStack>
-                    ))}
+                      </YStack>
+                    </ScrollView>
                   </YStack>
-                </YStack>
-              )}
+                )}
 
-              {/* Year Picker - iOS Style Scrollable List */}
-              {showYearPicker && (
-                <YStack
-                  backgroundColor="$background"
-                  borderRadius="$xl"
-                  padding="$md"
-                  marginBottom="$md"
-                  borderWidth={1}
-                  borderColor="rgba(203, 213, 225, 0.3)"
-                  height={150}
-                >
-                  <ScrollView showsVerticalScrollIndicator={false}>
-                    <YStack gap="$xs">
-                      {Array.from({ length: 125 }, (_, i) => {
-                        const year = new Date().getFullYear() - i;
-                        const isSelected = year === calendarDate.getFullYear();
-
-                        return (
-                          <OpTouch
-                            key={year}
-                            onPress={() => {
-                              const newDate = new Date(calendarDate);
-                              newDate.setFullYear(year);
-                              setCalendarDate(newDate);
-                              setShowYearPicker(false);
-                            }}
-                          >
-                            <YStack
-                              backgroundColor={
-                                isSelected
-                                  ? tokens.color.primary
-                                  : "transparent"
-                              }
-                              borderRadius="$md"
-                              paddingVertical="$sm"
-                              paddingHorizontal="$md"
-                            >
-                              <TextMDSemiBold
-                                textAlign="center"
-                                color={
-                                  isSelected
-                                    ? tokens.color.white
-                                    : tokens.color.textgrey
-                                }
-                              >
-                                {year}
-                              </TextMDSemiBold>
-                            </YStack>
-                          </OpTouch>
-                        );
-                      })}
+                {/* Calendar Component */}
+                {!showMonthPicker && !showYearPicker && (
+                  <YStack
+                    backgroundColor="$background"
+                    borderRadius="$xl"
+                    padding="$md"
+                    borderWidth={1}
+                    borderColor="rgba(203, 213, 225, 0.3)"
+                  >
+                    <Calendar
+                      current={toISO(calendarDate)}
+                      minDate={toISO(new Date(1900, 0, 1))}
+                      maxDate={todayISO}
+                      hideExtraDays={true}
+                      markedDates={
+                        tempDateSelection
+                          ? {
+                              [tempDateSelection]: {
+                                selected: true,
+                                selectedColor: tokens.color.primary,
+                                selectedTextColor: tokens.color.white,
+                              },
+                            }
+                          : {}
+                      }
+                      onDayPress={(day) => {
+                        setTempDateSelection(day.dateString);
+                      }}
+                      onMonthChange={(month) => {
+                        setCalendarDate(fromISO(month.dateString));
+                      }}
+                      theme={{
+                        backgroundColor: "transparent",
+                        calendarBackground: "transparent",
+                        todayTextColor: tokens.color.primary,
+                        todayBackgroundColor: "rgba(124, 58, 237, 0.1)",
+                        arrowColor: tokens.color.primary,
+                        monthTextColor: tokens.color.darkgrey,
+                        textSectionTitleColor: tokens.color.textgrey,
+                        dayTextColor: tokens.color.darkgrey,
+                        textDisabledColor: tokens.color.lightgrey,
+                        selectedDayBackgroundColor: tokens.color.primary,
+                        selectedDayTextColor: tokens.color.white,
+                        textDayFontFamily: "Figtree-Regular",
+                        textMonthFontFamily: "Figtree-SemiBold",
+                        textDayHeaderFontFamily: "Figtree-Medium",
+                        textDayFontSize: 14,
+                        textMonthFontSize: 16,
+                        textDayHeaderFontSize: 12,
+                      }}
+                      renderArrow={(direction) => (
+                        <AppImage
+                          name="arrowBack"
+                          width={16}
+                          height={16}
+                          tintColor={tokens.color.primary}
+                          style={{
+                            transform: [
+                              {
+                                rotate:
+                                  direction === "right" ? "180deg" : "0deg",
+                              },
+                            ],
+                          }}
+                        />
+                      )}
+                      renderHeader={() => null}
+                      style={{
+                        borderRadius: 12,
+                      }}
+                    />
+                  </YStack>
+                )}
+                <Spacer size={"$sm"} />
+                {/* Quick Actions */}
+                <XStack gap="$sm" justifyContent="center">
+                  <OpTouch
+                    onPress={() => {
+                      const today = new Date();
+                      setCalendarDate(today);
+                      setTempDateSelection(toISO(today));
+                    }}
+                  >
+                    <YStack
+                      backgroundColor="$background"
+                      borderRadius="$md"
+                      paddingHorizontal="$md"
+                      paddingVertical="$sm"
+                      borderWidth={1}
+                      borderColor="$lightgrey"
+                    >
+                      <TextSMMedium color="$primary">Today</TextSMMedium>
                     </YStack>
-                  </ScrollView>
-                </YStack>
-              )}
+                  </OpTouch>
 
-              {/* Calendar Component */}
-              {!showMonthPicker && !showYearPicker && (
-                <YStack
-                  backgroundColor="$background"
-                  borderRadius="$xl"
-                  padding="$md"
-                  borderWidth={1}
-                  borderColor="rgba(203, 213, 225, 0.3)"
-                >
-                  <Calendar
-                    current={toISO(calendarDate)}
-                    minDate={toISO(new Date(1900, 0, 1))}
-                    maxDate={todayISO}
-                    hideExtraDays={true}
-                    markedDates={
-                      tempDateSelection
-                        ? {
-                            [tempDateSelection]: {
-                              selected: true,
-                              selectedColor: tokens.color.primary,
-                              selectedTextColor: tokens.color.white,
-                            },
-                          }
-                        : {}
-                    }
-                    onDayPress={(day) => {
-                      setTempDateSelection(day.dateString);
+                  <OpTouch
+                    onPress={() => {
+                      setTempDateSelection(null);
                     }}
-                    onMonthChange={(month) => {
-                      setCalendarDate(fromISO(month.dateString));
-                    }}
-                    theme={{
-                      backgroundColor: "transparent",
-                      calendarBackground: "transparent",
-                      todayTextColor: tokens.color.primary,
-                      todayBackgroundColor: "rgba(124, 58, 237, 0.1)",
-                      arrowColor: tokens.color.primary,
-                      monthTextColor: tokens.color.darkgrey,
-                      textSectionTitleColor: tokens.color.textgrey,
-                      dayTextColor: tokens.color.darkgrey,
-                      textDisabledColor: tokens.color.lightgrey,
-                      selectedDayBackgroundColor: tokens.color.primary,
-                      selectedDayTextColor: tokens.color.white,
-                      textDayFontFamily: "Figtree-Regular",
-                      textMonthFontFamily: "Figtree-SemiBold",
-                      textDayHeaderFontFamily: "Figtree-Medium",
-                      textDayFontSize: 14,
-                      textMonthFontSize: 16,
-                      textDayHeaderFontSize: 12,
-                    }}
-                    renderArrow={(direction) => (
-                      <AppImage
-                        name="arrowBack"
-                        width={16}
-                        height={16}
-                        tintColor={tokens.color.primary}
-                        style={{
-                          transform: [
-                            {
-                              rotate: direction === "right" ? "180deg" : "0deg",
-                            },
-                          ],
-                        }}
-                      />
-                    )}
-                    renderHeader={() => null}
-                    style={{
-                      borderRadius: 12,
-                    }}
-                  />
-                </YStack>
-              )}
-              <Spacer size={"$sm"} />
-              {/* Quick Actions */}
-              <XStack gap="$sm" justifyContent="center">
-                <OpTouch
-                  onPress={() => {
-                    const today = new Date();
-                    setCalendarDate(today);
-                    setTempDateSelection(toISO(today));
-                  }}
-                >
-                  <YStack
-                    backgroundColor="$background"
-                    borderRadius="$md"
-                    paddingHorizontal="$md"
-                    paddingVertical="$sm"
-                    borderWidth={1}
-                    borderColor="$lightgrey"
                   >
-                    <TextSMMedium color="$primary">Today</TextSMMedium>
-                  </YStack>
-                </OpTouch>
-
-                <OpTouch
-                  onPress={() => {
-                    setTempDateSelection(null);
-                  }}
-                >
-                  <YStack
-                    backgroundColor="$background"
-                    borderRadius="$md"
-                    paddingHorizontal="$md"
-                    paddingVertical="$sm"
-                    borderWidth={1}
-                    borderColor="$lightgrey"
-                  >
-                    <TextSMMedium color="$textgrey">Clear</TextSMMedium>
-                  </YStack>
-                </OpTouch>
-              </XStack>
-            </YStack>
-            <Spacer size={"$lg"} />
-          </ScrollView>
-          {/* Sticky Save Button Footer */}
-          <YStack
-            paddingHorizontal="$lg"
-            backgroundColor={tokens.color.white}
-            borderTopWidth={1}
-            borderTopColor="rgba(203, 213, 225, 0.3)"
-          >
-            <PrimaryButton
-              label={
-                tempDateSelection
-                  ? `Select ${formatDMY(fromISO(tempDateSelection))}`
-                  : "Select Date"
-              }
-              onPress={() => {
-                if (tempDateSelection) {
-                  form.setValue("dob", tempDateSelection);
-                  calendarBottomSheetRef.current?.handleClosePress();
-                  setShowMonthPicker(false);
-                  setShowYearPicker(false);
+                    <YStack
+                      backgroundColor="$background"
+                      borderRadius="$md"
+                      paddingHorizontal="$md"
+                      paddingVertical="$sm"
+                      borderWidth={1}
+                      borderColor="$lightgrey"
+                    >
+                      <TextSMMedium color="$textgrey">Clear</TextSMMedium>
+                    </YStack>
+                  </OpTouch>
+                </XStack>
+              </YStack>
+              <Spacer size={"$lg"} />
+            </ScrollView>
+            {/* Sticky Save Button Footer */}
+            <YStack
+              paddingHorizontal="$lg"
+              backgroundColor={tokens.color.white}
+              borderTopWidth={1}
+              borderTopColor="rgba(203, 213, 225, 0.3)"
+            >
+              <PrimaryButton
+                label={
+                  tempDateSelection
+                    ? `Select ${formatDMY(fromISO(tempDateSelection))}`
+                    : "Select Date"
                 }
-              }}
-              width="100%"
-              isLoading={false}
-            />
+                onPress={() => {
+                  if (tempDateSelection) {
+                    form.setValue("dob", tempDateSelection);
+                    calendarBottomSheetRef.current?.handleClosePress();
+                    setShowMonthPicker(false);
+                    setShowYearPicker(false);
+                  }
+                }}
+                width="100%"
+                isLoading={false}
+              />
+            </YStack>
           </YStack>
-        </YStack>
-      </BottomSheetModalWithView>
-    </YStack>
+        </BottomSheetModalWithView>
+      </YStack>
     </>
   );
 };

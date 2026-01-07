@@ -1,4 +1,4 @@
-import { useCancelOrder, useOrderDetails } from "@/api/hooks/useOrders";
+import { useCancelOrder, useOrderDetails, useRequestOrderHelp } from "@/api/hooks/useOrders";
 import {
   TextMDBold,
   TextMDSemiBold,
@@ -17,6 +17,7 @@ import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
 import OrderLineItem from "@/components/molecules/orders/OrderLineItem";
 import CancelOrderModal from "@/components/organisms/order-details/CancelOrderModal";
+import HelpOrderModal from "@/components/organisms/order-details/HelpOrderModal";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { formatPrice } from "@/utils/formatPrice";
 import { useLocalSearchParams } from "expo-router";
@@ -35,6 +36,9 @@ const ordersDetails = () => {
 
   const { mutate: cancelOrderMutation, isPending: isCancelling } =
     useCancelOrder();
+
+  const { mutate: requestHelpMutation, isPending: isRequestingHelp } =
+    useRequestOrderHelp();
 
   // Calculate total quantity from line items
   const totalQuantity =
@@ -86,6 +90,7 @@ const ordersDetails = () => {
 
   const [open, setOpen] = useState(false);
   const [show, setShow] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
   // Animation refs
   const animatedHeight = useRef(new Animated.Value(0)).current;
   const animatedOpacity = useRef(new Animated.Value(0)).current;
@@ -225,7 +230,9 @@ const ordersDetails = () => {
                 height={14}
               />
               <Spacer size={"$xs"} />
-              <TextSMMedium color={"$white"}>{displayStatus.status}</TextSMMedium>
+              <TextSMMedium color={"$white"}>
+                {displayStatus.status}
+              </TextSMMedium>
             </XStack>
           </XStack>
         </YStack>
@@ -303,7 +310,7 @@ const ordersDetails = () => {
             </YStack>
           </YStack>
           <Spacer size={"$md-lg"} />
-          <SecondaryButton label="Track order" onPress={() => {}} />
+          {/* <SecondaryButton label="Track order" onPress={() => {}} /> */}
           <Spacer size={"$xl"} />
           <TextMDBold>{"Address Info"}</TextMDBold>
           <Spacer size={"$reg"} />
@@ -397,7 +404,9 @@ const ordersDetails = () => {
             <Spacer size={"$reg"} />
             <XStack paddingVertical={"$sm"} justifyContent="space-between">
               <TextSMSemiBold>Subtotal ({totalQuantity} Items)</TextSMSemiBold>
-              <TextSMSemiBold>{formatPrice(order.subtotalPrice, order.currency)}</TextSMSemiBold>
+              <TextSMSemiBold>
+                {formatPrice(order.subtotalPrice, order.currency)}
+              </TextSMSemiBold>
             </XStack>
             {order.discount > 0 && (
               <XStack paddingVertical={"$sm"} justifyContent="space-between">
@@ -409,11 +418,15 @@ const ordersDetails = () => {
             )}
             <XStack paddingVertical={"$sm"} justifyContent="space-between">
               <TextSMRegular color="$secondary">Taxes</TextSMRegular>
-              <TextSMSemiBold>{formatPrice(order.totalTax, order.currency)}</TextSMSemiBold>
+              <TextSMSemiBold>
+                {formatPrice(order.totalTax, order.currency)}
+              </TextSMSemiBold>
             </XStack>
             <XStack paddingVertical={"$sm"} justifyContent="space-between">
               <TextSMRegular color="$secondary">Delivery Fee</TextSMRegular>
-              <TextSMSemiBold>{formatPrice(order.shippingCost, order.currency)}</TextSMSemiBold>
+              <TextSMSemiBold>
+                {formatPrice(order.shippingCost, order.currency)}
+              </TextSMSemiBold>
             </XStack>
             <Spacer size={"$md"} />
           </Animated.View>
@@ -424,7 +437,9 @@ const ordersDetails = () => {
             <XStack justifyContent="space-between">
               <TextSMSemiBold>Grand Total</TextSMSemiBold>
               <XStack alignItems="center">
-                <TextMDBold>{formatPrice(order.totalPrice, order.currency)}</TextMDBold>
+                <TextMDBold>
+                  {formatPrice(order.totalPrice, order.currency)}
+                </TextMDBold>
                 <Spacer size={"$xs"} />
                 <AppImage
                   name="caretRight"
@@ -447,7 +462,7 @@ const ordersDetails = () => {
           <>
             <PrimaryButton
               label={"I need help with this order"}
-              onPress={() => {}}
+              onPress={() => setShowHelpModal(true)}
               isLoading={false}
             />
             <Spacer size={"$reg"} />
@@ -479,6 +494,27 @@ const ordersDetails = () => {
           );
         }}
         onCancel={() => setShow(false)}
+      />
+
+      <HelpOrderModal
+        visible={showHelpModal}
+        loading={isRequestingHelp}
+        onConfirm={(reason, otherText) => {
+          requestHelpMutation(
+            { orderId: orderId as string, reason, otherText },
+            {
+              onSuccess: () => {
+                setShowHelpModal(false);
+                // Order details will auto-refresh due to query invalidation
+              },
+              onError: (error) => {
+                console.error("[Help Request] Error:", error);
+                setShowHelpModal(false);
+              },
+            }
+          );
+        }}
+        onCancel={() => setShowHelpModal(false)}
       />
     </YStack>
   );

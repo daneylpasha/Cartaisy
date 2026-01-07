@@ -177,14 +177,19 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
       const brandLower = brand?.toLowerCase();
       switch (brandLower) {
         case "visa":
-          return "visa";
+          return "visaCard";
         case "mastercard":
-          return "paymentIcon";
+          return "masterCard";
         case "amex":
         case "american express":
+        case "american_express":
+          return "amexCard";
         case "discover":
+          return "discoverCard";
+        case "unionpay":
+          return "unionPayCard";
         default:
-          return "paymentcard"; // Generic fallback for all other cards
+          return "masterCard"; // Generic fallback for all other cards
       }
     };
 

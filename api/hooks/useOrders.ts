@@ -162,3 +162,42 @@ export const useCancelOrder = () => {
     },
   });
 };
+
+// Request help for order
+export const requestOrderHelp = async (
+  orderId: string,
+  reason: string,
+  otherText?: string
+): Promise<{ success: boolean; message: string }> => {
+  const response = await axiosInstance.post<{
+    success: boolean;
+    message: string;
+  }>(`/customer/orders/${orderId}/help`, {
+    reason,
+    otherText,
+  });
+  return response.data;
+};
+
+// React Query mutation hook for order help request
+export const useRequestOrderHelp = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      orderId,
+      reason,
+      otherText,
+    }: {
+      orderId: string;
+      reason: string;
+      otherText?: string;
+    }) => requestOrderHelp(orderId, reason, otherText),
+    onSuccess: (_, variables) => {
+      // Invalidate and refetch orders list
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      // Invalidate specific order details
+      queryClient.invalidateQueries({ queryKey: ["order", variables.orderId] });
+    },
+  });
+};

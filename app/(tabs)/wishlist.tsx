@@ -1,13 +1,8 @@
-import { DynamicStatusBar, HeadingSMBold, TextXLBold } from "@/components/atoms";
+import { DynamicStatusBar, TextXLBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Spacer } from "@/components/atoms/Spacer";
 import { t } from "@/translations";
-import {
-  FlatList,
-  LayoutAnimation,
-  Platform,
-  UIManager,
-} from "react-native";
+import { FlatList, LayoutAnimation, Platform, UIManager } from "react-native";
 
 import { useGetDetailedFavorites } from "@/api/generated/favorites/favorites";
 import { Loader } from "@/components/atoms/Loader";
@@ -172,7 +167,7 @@ const WishlistScreen = () => {
           tintColor={tokens.color.primary}
         />
       </YStack>
-      <Spacer size={"$lg"} />
+      {/* <Spacer size={"$lg"} /> */}
       <TextXLBold>{t("wishlist.title")}</TextXLBold>
       <Spacer size={"$reg"} />
       <ParagraphSM color="$secondary">{t("wishlist.subtitle")}</ParagraphSM>
@@ -206,8 +201,8 @@ const WishlistScreen = () => {
         alignItems="center"
         paddingHorizontal={"$md"}
       >
-        <Spacer size={"$lg"} />
-        <HeadingSMBold>{"My Wishlist"}</HeadingSMBold>
+        {/* <Spacer size={"$lg"} /> */}
+        <TextXLBold>{"My Wishlist"}</TextXLBold>
         <Spacer size={"$lg"} />
       </YStack>
 

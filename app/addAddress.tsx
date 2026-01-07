@@ -27,6 +27,7 @@ import {
   useCustomerUpdateAddress,
 } from "@/api/generated/customer-addresses/customer-addresses";
 import { useAuthenticatedAddresses } from "@/api/hooks/useAddresses";
+import { DynamicStatusBar } from "@/components/atoms";
 import {
   BaseBottomSheetRef,
   BottomSheetModalWithView,
@@ -36,13 +37,9 @@ import { SHADOW_STYLES } from "@/constants/styles";
 import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useUserStore from "@/store/useUserStore";
 import { t } from "@/translations";
-import {
-  KeyboardAvoiderInsets,
-  KeyboardAvoiderView,
-} from "@good-react-native/keyboard-avoider";
+import { KeyboardAvoiderView } from "@good-react-native/keyboard-avoider";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import { DynamicStatusBar } from "@/components/atoms";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { Keyboard, Platform, StyleSheet, TextInput } from "react-native";
@@ -390,11 +387,11 @@ const AddAddress = () => {
       <KeyboardAwareScrollView
         bounces={false}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ flexGrow: 1 }}
+        // contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
         enableAutomaticScroll={true}
-        extraScrollHeight={20}
+        extraScrollHeight={40}
         keyboardOpeningTime={0}
         keyboardDismissMode="interactive"
       >
@@ -433,7 +430,7 @@ const AddAddress = () => {
                     value={field.value}
                     paddingHorizontal={16}
                     onChangeText={field.onChange}
-                    placeholder={"Lily 2, London"}
+                    placeholder={"Enter address name"}
                     width={"90%"}
                     borderWidth={0}
                     editable={true}
@@ -486,7 +483,7 @@ const AddAddress = () => {
                 }}
               />
               <TextMDRegular color="$textgrey">
-                {String(selectedCountry?.name || "Select Country")}
+                {String(selectedCountry.name || "Select your country")}
               </TextMDRegular>
               <XStack
                 alignItems="center"
@@ -495,7 +492,7 @@ const AddAddress = () => {
                 marginLeft={"auto"}
               >
                 <TextMDSemiBold color="$secondary">
-                  {selectedCountry?.cca2 || ""}
+                  {selectedCountry.cca2}
                 </TextMDSemiBold>
                 <AppImage
                   name="arrowDown"
@@ -527,7 +524,7 @@ const AddAddress = () => {
                   value={field.value}
                   onChangeText={field.onChange}
                   paddingHorizontal={16}
-                  placeholder={"E7158 Whitechapel High St"}
+                  placeholder={"Enter street address"}
                   width={"90%"}
                   borderWidth={0}
                   icon={
@@ -567,7 +564,7 @@ const AddAddress = () => {
                 <FormInput
                   value={field.value}
                   onChangeText={field.onChange}
-                  placeholder={"Suite B225 Intermediate"}
+                  placeholder={"Enter apartment or suite number"}
                   paddingHorizontal={16}
                   width={"90%"}
                   borderWidth={0}
@@ -605,7 +602,7 @@ const AddAddress = () => {
                 <FormInput
                   value={field.value}
                   onChangeText={field.onChange}
-                  placeholder={"London"}
+                  placeholder={"Enter city"}
                   paddingHorizontal={16}
                   width={"90%"}
                   borderWidth={0}
@@ -624,7 +621,7 @@ const AddAddress = () => {
             )}
           />
           <Spacer size={"$reg"} />
-          <XStack width={"100%"}>
+          <XStack width={"100%"} paddingBottom={"$xs"}>
             <YStack flex={1}>
               <TextSMSemiBold>{t("addAddress.fieldfifth")}</TextSMSemiBold>
               <Spacer size={"$sm"} />
@@ -638,7 +635,7 @@ const AddAddress = () => {
                   <FormInput
                     value={field.value}
                     onChangeText={field.onChange}
-                    placeholder={"London"}
+                    placeholder={"Enter state"}
                     //   width={"100%"}
                     borderWidth={1}
                     icon={
@@ -669,7 +666,7 @@ const AddAddress = () => {
                   <FormInput
                     value={field.value}
                     onChangeText={field.onChange}
-                    placeholder={"E1 6LT"}
+                    placeholder={"Enter postcode"}
                     //   width={"100%"}
                     borderWidth={1}
                     icon={
@@ -707,9 +704,7 @@ const AddAddress = () => {
                     selectionColor={"black"}
                     value={field.value}
                     onChangeText={field.onChange}
-                    placeholder={
-                      "Please just put the package on the front door. Thanks a lot! 😊"
-                    }
+                    placeholder={"Enter delivery instructions (optional)"}
                     maxLength={300}
                     multiline={true}
                     numberOfLines={8}
@@ -728,9 +723,6 @@ const AddAddress = () => {
             </XStack>
           </YStack>
           <Spacer size={"$lg"} />
-          <KeyboardAvoiderInsets
-            extraSpace={Platform.OS === "android" ? 120 : 80}
-          />
         </YStack>
       </KeyboardAwareScrollView>
       <KeyboardAvoiderView>

@@ -1,5 +1,5 @@
-import { useLogin } from "@/api/hooks/useAuth";
 import { getCart } from "@/api/generated/cart/cart";
+import { useLogin } from "@/api/hooks/useAuth";
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { OpTouch } from "@/components/atoms/OpTouch";
@@ -22,7 +22,7 @@ import { t } from "@/translations";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { getTokenValue, XStack, YStack } from "tamagui";
 type LoginForm = {
@@ -32,21 +32,31 @@ type LoginForm = {
 
 const Login = () => {
   const [isChecked, setIsChecked] = useState(false);
-  const { setToken, setProfileComplete, guestSessionId, clearGuestSession } = useAuthStore();
+  const { setToken, setProfileComplete, guestSessionId, clearGuestSession } =
+    useAuthStore();
   const { setUser } = useUserStore();
 
   const { mutateAsync: loginUser, isPending: isLoggingIn } = useLogin({
     onSuccess: async (data) => {
-      console.log('[DEBUG] ========== LOGIN SUCCESS ==========');
-      console.log('[DEBUG] Full login response:', JSON.stringify(data, null, 2));
-      console.log('[DEBUG] User object:', JSON.stringify(data?.data?.user, null, 2));
-      console.log('[Login] Token from response:', data?.data?.token ? 'EXISTS' : 'NULL');
+      console.log("[DEBUG] ========== LOGIN SUCCESS ==========");
+      console.log(
+        "[DEBUG] Full login response:",
+        JSON.stringify(data, null, 2)
+      );
+      console.log(
+        "[DEBUG] User object:",
+        JSON.stringify(data?.data?.user, null, 2)
+      );
+      console.log(
+        "[Login] Token from response:",
+        data?.data?.token ? "EXISTS" : "NULL"
+      );
 
       if (data?.data?.token) {
-        console.log('[Login] Calling setToken...');
+        console.log("[Login] Calling setToken...");
         setToken(data.data.token, data.data.refreshToken);
       } else {
-        console.log('[Login] WARNING: No token in response!');
+        console.log("[Login] WARNING: No token in response!");
       }
 
       if (data?.data?.user) {
@@ -58,7 +68,9 @@ const Login = () => {
 
       // If there was a guest session, show merge notification and clear it
       if (guestSessionId) {
-        console.log('[Login] Guest session detected, cart will be auto-merged by backend');
+        console.log(
+          "[Login] Guest session detected, cart will be auto-merged by backend"
+        );
         Alert.alert(
           "Welcome back!",
           "Your cart items have been saved to your account.",
@@ -70,11 +82,18 @@ const Login = () => {
 
       // Restore cart if customer has saved shopifyCartId
       const shopifyCartId = (data?.data?.user as any)?.shopifyCartId;
-      console.log('[DEBUG] shopifyCartId from user:', shopifyCartId, 'type:', typeof shopifyCartId);
+      console.log(
+        "[DEBUG] shopifyCartId from user:",
+        shopifyCartId,
+        "type:",
+        typeof shopifyCartId
+      );
 
       if (shopifyCartId) {
         console.log("[DEBUG] Entering cart restoration block...");
-        console.log("[Login] Found saved cartId, attempting to restore cart...");
+        console.log(
+          "[Login] Found saved cartId, attempting to restore cart..."
+        );
         try {
           const { syncWithApiResponse } = useCartStore.getState();
           const cartResponse = await getCart(encodeURIComponent(shopifyCartId));
@@ -83,15 +102,25 @@ const Login = () => {
             // Convert API response to local cart format
             const convertedItems = cartResponse.data.items.map((item: any) => ({
               lineItemId: item.id,
-              productId: item.productId?.replace("gid://shopify/Product/", "") || "",
-              variantId: item.merchandiseId?.replace("gid://shopify/ProductVariant/", "") || "",
+              productId:
+                item.productId?.replace("gid://shopify/Product/", "") || "",
+              variantId:
+                item.merchandiseId?.replace(
+                  "gid://shopify/ProductVariant/",
+                  ""
+                ) || "",
               merchandiseId: item.merchandiseId || "",
               quantity: item.quantity || 1,
               title: item.title || "",
               variantTitle: item.variantTitle || "",
-              price: typeof item.price === "string" ? parseFloat(item.price) : (item.price || 0),
+              price:
+                typeof item.price === "string"
+                  ? parseFloat(item.price)
+                  : item.price || 0,
               compareAtPrice: item.compareAtPrice
-                ? (typeof item.compareAtPrice === "string" ? parseFloat(item.compareAtPrice) : item.compareAtPrice)
+                ? typeof item.compareAtPrice === "string"
+                  ? parseFloat(item.compareAtPrice)
+                  : item.compareAtPrice
                 : null,
               image: item.image || null,
               currency: item.currency || "USD",
@@ -106,20 +135,29 @@ const Login = () => {
               items: convertedItems,
             });
 
-            console.log("[Login] Cart restored successfully:", convertedItems.length, "items");
+            console.log(
+              "[Login] Cart restored successfully:",
+              convertedItems.length,
+              "items"
+            );
           } else {
             console.log("[Login] Saved cart was empty");
           }
         } catch (error) {
           // Cart might be expired in Shopify - that's okay, user starts fresh
-          console.log("[Login] Could not restore cart (may be expired):", error);
+          console.log(
+            "[Login] Could not restore cart (may be expired):",
+            error
+          );
         }
       } else {
-        console.log("[DEBUG] No shopifyCartId in response - skipping cart restoration");
+        console.log(
+          "[DEBUG] No shopifyCartId in response - skipping cart restoration"
+        );
         console.log("[Login] No saved cartId found");
       }
 
-      console.log('[DEBUG] ========== LOGIN COMPLETE ==========');
+      console.log("[DEBUG] ========== LOGIN COMPLETE ==========");
       router.replace("/(tabs)");
     },
     onError: (error) => {
@@ -172,8 +210,8 @@ const Login = () => {
           >
             <AppImage
               tintColor={"$primary"}
-              name={"bagSvg"}
-              width={47}
+              name={"cartaisyColorlogo"}
+              width={107}
               height={53}
             />
           </YStack>
@@ -324,6 +362,34 @@ const Login = () => {
               </TextMDSemiBold>
             </XStack>
           </OpTouch>
+          {Platform.OS === "ios" && (
+            <>
+              <Spacer size={"$md"} />
+              <OpTouch
+                justifyContent="center"
+                alignItems="center"
+                backgroundColor={"white"}
+                shadowColor={"black"}
+                shadowOffset={{ width: 0, height: 8 }}
+                shadowOpacity={0.05}
+                style={{ elevation: 1, ...SHADOW_STYLES }}
+                shadowRadius={16}
+                borderRadius={"full"}
+                paddingHorizontal={"md"}
+                paddingVertical={"reg"}
+                disabled={isLoggingIn}
+                onPress={googleLogin}
+              >
+                <XStack alignItems="center">
+                  <AppImage name="apple" size={23.5} />
+                  <Spacer size={"$reg"} />
+                  <TextMDSemiBold color={"$black"}>
+                    {t("auth.login.signInWithApple")}
+                  </TextMDSemiBold>
+                </XStack>
+              </OpTouch>
+            </>
+          )}
           <Spacer size={"$2xl"} />
           <OpTouch
             justifyContent="center"

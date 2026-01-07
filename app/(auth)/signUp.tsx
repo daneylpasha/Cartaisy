@@ -51,7 +51,9 @@ const SignUp = () => {
       // If there was a guest session, show merge notification
       // Backend automatically merges guest cart when X-Session-ID header is present
       if (guestSessionId) {
-        console.log('[SignUp] Guest session detected, cart will be auto-merged by backend');
+        console.log(
+          "[SignUp] Guest session detected, cart will be auto-merged by backend"
+        );
         Alert.alert(
           "Account Created!",
           "Your cart has been saved to your new account.",
@@ -132,8 +134,8 @@ const SignUp = () => {
           >
             <AppImage
               tintColor={"$primary"}
-              name={"bag"}
-              width={47}
+              name={"cartaisyColorlogo"}
+              width={107}
               height={53}
             />
           </YStack>

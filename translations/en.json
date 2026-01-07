@@ -38,6 +38,7 @@
       "rememberMe": "Remember for 30 days",
       "createNewAccount": "Create New Account",
       "signInWithGoogle": "Sign in with Google",
+      "signInWithApple": "Sign in with Apple",
       "forgotPassword": "Forgot Password?"
     },
     "signup": {

@@ -1,4 +1,7 @@
-import { useAddPaymentMethod } from "@/api/generated/payment-methods/payment-methods";
+import {
+  useAddPaymentMethod,
+  useListPaymentMethods,
+} from "@/api/generated/payment-methods/payment-methods";
 import {
   HeadingSMBold,
   LabelMD,
@@ -49,6 +52,10 @@ const AddNewCardDetails = () => {
   const form = useForm();
   const { createPaymentMethod } = useStripe();
   const calendarBottomSheetRef = useRef<BaseBottomSheetRef>(null);
+
+  // Fetch existing payment methods to check for duplicates
+  const { data: paymentMethodsResponse } = useListPaymentMethods();
+  const existingCards = paymentMethodsResponse?.data?.paymentMethods || [];
 
   // Card state
   const [cardComplete, setCardComplete] = useState(false);
@@ -112,12 +119,43 @@ const AddNewCardDetails = () => {
         return;
       }
 
-      // Step 2: Send payment method ID to backend
+      // Step 2: Check for duplicate card
+      // Stripe SDK returns Card (capital C) in React Native
+      const cardDetails = paymentMethod.Card || paymentMethod.card;
+      const newCardLast4 = cardDetails?.last4;
+      const newCardBrand = cardDetails?.brand?.toLowerCase();
+
+      console.log("[AddCard] Full paymentMethod:", JSON.stringify(paymentMethod, null, 2));
+      console.log("[AddCard] New card details:", { newCardLast4, newCardBrand });
+      console.log("[AddCard] Existing cards:", existingCards.map(c => ({
+        last4: c.card?.last4,
+        brand: c.card?.brand
+      })));
+
+      // Debug: Check if card details are being extracted correctly
+      if (!newCardLast4) {
+        console.log("[AddCard] WARNING: Could not extract last4 from payment method");
+      }
+
+      const isDuplicate = existingCards.some((existingCard) => {
+        const existingLast4 = existingCard.card?.last4;
+        const existingBrand = existingCard.card?.brand?.toLowerCase();
+        return existingLast4 === newCardLast4 && existingBrand === newCardBrand;
+      });
+
+      if (isDuplicate) {
+        console.log("[AddCard] Duplicate card detected!");
+        setShowLoader(false);
+        alert("This card is already added to your account.");
+        return;
+      }
+
+      // Step 3: Send payment method ID to backend
       console.log("[AddCard] Payment method created:", paymentMethod.id);
       addPaymentMethod({
         data: {
           paymentMethodId: paymentMethod.id,
-          setAsDefault: true, // Set first card as default
+          setAsDefault: existingCards.length === 0, // Only set as default if it's the first card
         },
       });
     } catch (err) {
@@ -128,11 +166,17 @@ const AddNewCardDetails = () => {
   };
 
   const handleCardLinkConfirm = () => {
+    // Reset form fields for next card
+    form.reset();
+    setCardComplete(false);
     setShowCardLinkModal(false);
     router.back(); // Go back to payment methods list
   };
 
   const handleCardLinkCancel = () => {
+    // Reset form fields when cancelled too
+    form.reset();
+    setCardComplete(false);
     setShowCardLinkModal(false);
   };
   return (
@@ -179,9 +223,9 @@ const AddNewCardDetails = () => {
                   right={40}
                 >
                   <AppImage
-                    name="bagSvg"
-                    width={24}
-                    height={24}
+                    name="cartaisyColorlogo"
+                    width={70}
+                    // height={24}
                     tintColor={"$primary"}
                   />
                   <AppImage name="waveIcon" width={24} height={24} />
@@ -193,14 +237,14 @@ const AddNewCardDetails = () => {
                     alignItems="center"
                   >
                     <LabelMD color={"$secondary"} marginBottom={2}>
-                      JANE DOE
+                      {"JANE DOE"}
                     </LabelMD>
                     <LabelMD color={"$secondary"} marginBottom={2}>
-                      08/11
+                      {"08/11"}
                     </LabelMD>
                   </XStack>
                   <XStack justifyContent="space-between" alignItems="center">
-                    <TextLGBold>0087 1157 0587 6187</TextLGBold>
+                    <TextLGBold>{"0087 1157 0587 6187"}</TextLGBold>
                     <YStack
                       width={48}
                       height={33}
@@ -211,7 +255,7 @@ const AddNewCardDetails = () => {
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <AppImage name="paymentIcon" width={31} height={18} />
+                      <AppImage name="masterCard" width={31} height={18} />
                     </YStack>
                   </XStack>
                 </YStack>
@@ -287,7 +331,7 @@ const AddNewCardDetails = () => {
                       value={field.value}
                       onChangeText={field.onChange}
                       paddingHorizontal={16}
-                      placeholder={"Canon Street 879b"}
+                      placeholder={"Enter street address"}
                       width={"90%"}
                       borderWidth={0}
                       icon={
@@ -324,7 +368,7 @@ const AddNewCardDetails = () => {
                     <FormInput
                       value={field.value}
                       onChangeText={field.onChange}
-                      placeholder={"Bronx Cube No. 8"}
+                      placeholder={"Enter apartment/suite"}
                       paddingHorizontal={16}
                       width={"90%"}
                       borderWidth={0}
@@ -364,7 +408,7 @@ const AddNewCardDetails = () => {
                     <FormInput
                       value={field.value}
                       onChangeText={field.onChange}
-                      placeholder={"New York"}
+                      placeholder={"Enter state/province"}
                       paddingHorizontal={16}
                       width={"90%"}
                       borderWidth={0}
@@ -404,7 +448,7 @@ const AddNewCardDetails = () => {
                     <FormInput
                       value={field.value}
                       onChangeText={field.onChange}
-                      placeholder={"1122"}
+                      placeholder={"Enter postal code"}
                       paddingHorizontal={16}
                       width={"90%"}
                       borderWidth={0}

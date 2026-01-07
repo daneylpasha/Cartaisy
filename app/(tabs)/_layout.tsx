@@ -1,4 +1,4 @@
-import { TextMDSemiBold, TextSMRegular } from "@/components/atoms";
+import { TextSMRegular, TextXLBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Tabs } from "expo-router";
 import React from "react";
@@ -88,7 +88,7 @@ export default function TabLayout() {
             title: "Cart",
 
             headerShown: true,
-            headerTitle: () => <TextMDSemiBold>{"Cart"}</TextMDSemiBold>,
+            headerTitle: () => <TextXLBold>{"Cart"}</TextXLBold>,
             headerShadowVisible: false,
             headerTitleAlign: "center",
             headerStyle: {
@@ -114,7 +114,7 @@ export default function TabLayout() {
           options={{
             title: "Wishlist",
             // headerShown: true,
-            // headerTitle: () => <TextMDSemiBold>{"Wishlist"}</TextMDSemiBold>,
+            // headerTitle: () => <TextXLBold>{"Wishlist"}</TextXLBold>,
 
             // headerStyle: {
             //   backgroundColor: getTokenValue("$background"),

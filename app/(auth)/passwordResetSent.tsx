@@ -91,7 +91,7 @@ const PasswordRestSent = () => {
           onPress={openEmailApp}
         />
         <Spacer size={"$reg"} />
-        <SecondaryButton label="login" onPress={() => router.push("/login")} />
+        <SecondaryButton label="login" onPress={() => router.dismissAll()} />
         <Spacer size={"$xl"} />
         <YStack alignItems="center">
           <TextSMRegular color={"$secondary"}>

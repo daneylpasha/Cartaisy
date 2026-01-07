@@ -1,6 +1,9 @@
 import { AppImage } from "@/components/atoms/AppImage";
 import useAuthStore from "@/store/useAuthStore";
-import { wasDeepLinkHandled, resetDeepLinkState } from "@/utils/navigationState";
+import {
+  resetDeepLinkState,
+  wasDeepLinkHandled,
+} from "@/utils/navigationState";
 import { router } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { StatusBar } from "react-native";
@@ -22,7 +25,9 @@ const Splash = () => {
       // Check if deep link navigation was already handled (cold start)
       // If so, don't override it with default navigation
       if (wasDeepLinkHandled()) {
-        console.log('[Splash] Deep link already handled, skipping default navigation');
+        console.log(
+          "[Splash] Deep link already handled, skipping default navigation"
+        );
         resetDeepLinkState(); // Reset for next time
         return;
       }
@@ -54,12 +59,12 @@ const Splash = () => {
   return (
     <YStack
       flex={1}
-      backgroundColor="$primary"
+      backgroundColor="$white"
       justifyContent="center"
       alignItems="center"
     >
       <StatusBar hidden={true} />
-      <AppImage width={70} height={79} name={"bagWhite"} />
+      <AppImage width={270} height={79} name={"cartaisyColorlogo"} />
     </YStack>
   );
 };

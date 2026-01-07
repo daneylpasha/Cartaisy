@@ -29,7 +29,7 @@ const OrderCard = ({ item }: { item: OrderItemProps }) => {
       : item.image;
 
   return (
-    <OpTouch onPress={item.onPress}>
+    <OpTouch disabled={true} onPress={item.onPress}>
       <XStack paddingHorizontal={"$md"} paddingTop={"$lg"}>
         <YStack
           overflow="hidden"

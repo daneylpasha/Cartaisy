@@ -8,14 +8,14 @@ import { YStack } from "tamagui";
 
 export const SecurityListItem = () => {
   const DATA = [
-    {
-      id: 1,
-      image: "security" as keyof typeof Icons,
-      title: "Login & Security",
-      subtitle: "Change your password",
-      route: "securitySettings",
-      onPress: () => {},
-    },
+    // {
+    //   id: 1,
+    //   image: "security" as keyof typeof Icons,
+    //   title: "Login & Security",
+    //   subtitle: "Change your password",
+    //   route: "securitySettings",
+    //   onPress: () => {},
+    // },
     {
       id: 2,
       image: "passwordChange" as keyof typeof Icons,

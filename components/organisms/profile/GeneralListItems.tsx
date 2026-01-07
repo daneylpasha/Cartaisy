@@ -31,12 +31,12 @@ export const GeneralListItems = () => {
       onPress: () => {},
     },
 
-    {
-      id: 4,
-      image: "notification" as keyof typeof Icons,
-      title: "Notifications",
-      route: "/notificationSettings",
-    },
+    // {
+    //   id: 4,
+    //   image: "notification" as keyof typeof Icons,
+    //   title: "Notifications",
+    //   route: "/notificationSettings",
+    // },
   ];
   return (
     <YStack paddingHorizontal="$md">

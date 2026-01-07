@@ -133,7 +133,7 @@ const Icons = {
   recommend: require("./images/recommend.png"),
   creditCard: require("./images/credit-Card.png"),
   waveIcon: require("./images/wave-icon.png"),
-  paymentIcon: require("./images/payment-logo.png"),
+  // paymentIcon: require("./images/payment-logo.png"),
   shieldCheck: require("./images/shield-check.png"),
   mobileIcon: require("./images/mobile.png"),
   scanner: require("./images/scanner.png"),
@@ -158,6 +158,14 @@ const Icons = {
   cancelOrderFrame: orderCancel,
   palette: require("./images/palette.png"),
   deliveryBox: require("./images/deliverybox.png"),
+  cartaisyColorlogo: require("./images/cartaisy-color-logo.png"),
+  cartaisyWhitelogo: require("./images/cartaisy-white-logo.png"),
+  // Card brand icons
+  visaCard: require("./images/visacard.png"),
+  masterCard: require("./images/payment-logo.png"),
+  discoverCard: require("./images/discovercard.png"),
+  amexCard: require("./images/americanexpresscard.png"),
+  unionPayCard: require("./images/unionpaycard.png"),
 };
 
 export default Icons;

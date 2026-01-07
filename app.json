@@ -4,12 +4,12 @@
     "slug": "cartaisy",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/cartaisy-color-logo.png",
     "scheme": "cartaisy",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "notification": {
-      "icon": "./assets/images/icon.png",
+      "icon": "./assets/images/cartaisy-color-logo.png",
       "color": "#8B5CF6",
       "androidMode": "default",
       "androidCollapsedTitle": "{{unread_count}} new notifications"
@@ -37,24 +37,24 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/cartaisy-color-logo.png"
     },
     "plugins": [
-      "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#ffffff",
+          "android": {
+            "backgroundColor": "#ffffff"
+          }
         }
       ],
+      "expo-router",
       "expo-mail-composer",
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/icon.png",
+          "icon": "./assets/images/cartaisy-color-logo.png",
           "color": "#8B5CF6",
           "sounds": []
         }

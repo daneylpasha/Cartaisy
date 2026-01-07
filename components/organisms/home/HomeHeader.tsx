@@ -1,8 +1,4 @@
-import {
-  TextMDSemiBold,
-  TextSMSemiBold,
-  TextXSRegular,
-} from "@/components/atoms";
+import { TextSMSemiBold, TextXSRegular } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
@@ -51,15 +47,15 @@ export const HomeHeader = ({
       paddingBottom={"$md"}
     >
       <XStack alignItems="center" paddingVertical={"$xs"} position="relative">
-        <YStack position="absolute" left={0}>
+        {/* <YStack position="absolute" left={0}>
           <TextMDSemiBold color="$white">{"Hello, Lily!"}</TextMDSemiBold>
-        </YStack>
+        </YStack> */}
         <YStack
           position="absolute"
-          left="50%"
-          transform={[{ translateX: -25 }]}
+          left="40%"
+          // transform={[{ translateX: -30 }]}
         >
-          <AppImage name="bagWhite" width={50} height={26} />
+          <AppImage name="cartaisyWhitelogo" width={75} height={26} />
         </YStack>
 
         <YStack position="absolute" right={0}>

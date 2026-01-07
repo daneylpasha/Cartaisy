@@ -1,10 +1,9 @@
 import type { AppConfig } from "@/tamagui/config";
 import { tokens } from "@/tamagui/token";
-import React, { useRef, useCallback } from "react";
+import React, { useCallback, useRef } from "react";
 import {
   DimensionValue,
   GestureResponderEvent,
-  Platform,
   StyleProp,
   TouchableOpacity,
   TouchableOpacityProps,
@@ -40,6 +39,7 @@ type OpTouchProps = TouchableOpacityProps & {
   shadowRadius?: number;
   flex?: number;
   icon?: React.ReactNode;
+  disabled?: boolean;
   iconPosition?: "left" | "right";
 };
 
@@ -67,22 +67,28 @@ const OpTouch = ({
   height,
   flex,
   icon,
+  disabled,
   iconPosition,
   onPress,
   ...props
 }: OpTouchProps) => {
-  // Debounce to prevent double tap navigation
-  const lastPressTime = useRef(0);
-  const DEBOUNCE_DELAY = 400; // ms
+  // Debounce to prevent double tap navigation (especially on Android)
+  const isProcessing = useRef(false);
+  const DEBOUNCE_DELAY = 600; // ms
 
   const handlePress = useCallback(
     (event: GestureResponderEvent) => {
-      const now = Date.now();
-      if (now - lastPressTime.current < DEBOUNCE_DELAY) {
-        return; // Ignore rapid taps
+      if (isProcessing.current) {
+        return; // Ignore if already processing
       }
-      lastPressTime.current = now;
+
+      isProcessing.current = true;
       onPress?.(event);
+
+      // Reset after delay
+      setTimeout(() => {
+        isProcessing.current = false;
+      }, DEBOUNCE_DELAY);
     },
     [onPress]
   );
@@ -119,7 +125,7 @@ const OpTouch = ({
 
   return (
     <TouchableOpacity
-      activeOpacity={Platform.OS === "android" ? 1 : 0.7}
+      // activeOpacity={Platform.OS === "android" ? 1 : 0.7}
       {...props}
       onPress={handlePress}
       style={[customStyle, style]}
