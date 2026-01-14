@@ -25,9 +25,13 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CustomerChangePassword200,
+  CustomerChangePasswordRequest,
   CustomerDeleteAccount200,
   CustomerDeleteAccountRequest,
   CustomerDeviceTokenRequest,
+  CustomerForgotPassword200,
+  CustomerForgotPasswordRequest,
   CustomerGetProfile200,
   CustomerLogin200,
   CustomerLoginRequest,
@@ -37,6 +41,8 @@ import type {
   CustomerRefreshTokenRequest,
   CustomerRegister201,
   CustomerRegisterRequest,
+  CustomerResetPassword200,
+  CustomerResetPasswordRequest,
   CustomerUpdateDeviceToken200,
   CustomerUpdateProfile200,
   CustomerUpdateProfileRequest
@@ -241,6 +247,202 @@ export const useCustomerRefreshToken = <TError = void | void | void | void,
       > => {
 
       const mutationOptions = getCustomerRefreshTokenMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Request password reset - sends email with reset link
+Supports multi-tenant branding based on store configuration
+ * @summary Request password reset
+ */
+export const customerForgotPassword = (
+    customerForgotPasswordRequest: CustomerForgotPasswordRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CustomerForgotPassword200>(
+      {url: `/customer/auth/forgot-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: customerForgotPasswordRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getCustomerForgotPasswordMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof customerForgotPassword>>, TError,{data: CustomerForgotPasswordRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof customerForgotPassword>>, TError,{data: CustomerForgotPasswordRequest}, TContext> => {
+
+const mutationKey = ['customerForgotPassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof customerForgotPassword>>, {data: CustomerForgotPasswordRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  customerForgotPassword(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CustomerForgotPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof customerForgotPassword>>>
+    export type CustomerForgotPasswordMutationBody = CustomerForgotPasswordRequest
+    export type CustomerForgotPasswordMutationError = void
+
+    /**
+ * @summary Request password reset
+ */
+export const useCustomerForgotPassword = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof customerForgotPassword>>, TError,{data: CustomerForgotPasswordRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof customerForgotPassword>>,
+        TError,
+        {data: CustomerForgotPasswordRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getCustomerForgotPasswordMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Reset password using token from email
+ * @summary Reset password with token
+ */
+export const customerResetPassword = (
+    customerResetPasswordRequest: CustomerResetPasswordRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CustomerResetPassword200>(
+      {url: `/customer/auth/reset-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: customerResetPasswordRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getCustomerResetPasswordMutationOptions = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof customerResetPassword>>, TError,{data: CustomerResetPasswordRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof customerResetPassword>>, TError,{data: CustomerResetPasswordRequest}, TContext> => {
+
+const mutationKey = ['customerResetPassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof customerResetPassword>>, {data: CustomerResetPasswordRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  customerResetPassword(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CustomerResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof customerResetPassword>>>
+    export type CustomerResetPasswordMutationBody = CustomerResetPasswordRequest
+    export type CustomerResetPasswordMutationError = void | void
+
+    /**
+ * @summary Reset password with token
+ */
+export const useCustomerResetPassword = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof customerResetPassword>>, TError,{data: CustomerResetPasswordRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof customerResetPassword>>,
+        TError,
+        {data: CustomerResetPasswordRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getCustomerResetPasswordMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Change password for authenticated customer
+ * @summary Change password
+ */
+export const customerChangePassword = (
+    customerChangePasswordRequest: CustomerChangePasswordRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CustomerChangePassword200>(
+      {url: `/customer/auth/change-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: customerChangePasswordRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getCustomerChangePasswordMutationOptions = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof customerChangePassword>>, TError,{data: CustomerChangePasswordRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof customerChangePassword>>, TError,{data: CustomerChangePasswordRequest}, TContext> => {
+
+const mutationKey = ['customerChangePassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof customerChangePassword>>, {data: CustomerChangePasswordRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  customerChangePassword(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CustomerChangePasswordMutationResult = NonNullable<Awaited<ReturnType<typeof customerChangePassword>>>
+    export type CustomerChangePasswordMutationBody = CustomerChangePasswordRequest
+    export type CustomerChangePasswordMutationError = void | void | void | void
+
+    /**
+ * @summary Change password
+ */
+export const useCustomerChangePassword = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof customerChangePassword>>, TError,{data: CustomerChangePasswordRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof customerChangePassword>>,
+        TError,
+        {data: CustomerChangePasswordRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getCustomerChangePasswordMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

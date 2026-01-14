@@ -917,6 +917,25 @@ export interface CustomerRefreshTokenRequest {
   refreshToken: string;
 }
 
+export interface CustomerForgotPasswordRequest {
+  /** Customer email address */
+  email: string;
+}
+
+export interface CustomerResetPasswordRequest {
+  /** Reset token from email */
+  token: string;
+  /** New password (minimum 6 characters) */
+  newPassword: string;
+}
+
+export interface CustomerChangePasswordRequest {
+  /** Current password */
+  currentPassword: string;
+  /** New password (minimum 6 characters) */
+  newPassword: string;
+}
+
 /**
  * Gender
  */
@@ -2420,6 +2439,61 @@ export type CustomerRefreshToken200 = {
   data?: CustomerRefreshToken200Data;
   message: string;
   status: CustomerRefreshToken200Status;
+};
+
+export type CustomerForgotPassword200Status = typeof CustomerForgotPassword200Status[keyof typeof CustomerForgotPassword200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerForgotPassword200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerForgotPassword200 = {
+  message: string;
+  status: CustomerForgotPassword200Status;
+};
+
+export type CustomerResetPassword200Data = {
+  refreshToken: string;
+  token: string;
+  user: CustomerData;
+};
+
+export type CustomerResetPassword200Status = typeof CustomerResetPassword200Status[keyof typeof CustomerResetPassword200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerResetPassword200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerResetPassword200 = {
+  data?: CustomerResetPassword200Data;
+  message: string;
+  status: CustomerResetPassword200Status;
+};
+
+export type CustomerChangePassword200Data = {
+  refreshToken: string;
+  token: string;
+};
+
+export type CustomerChangePassword200Status = typeof CustomerChangePassword200Status[keyof typeof CustomerChangePassword200Status];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomerChangePassword200Status = {
+  success: 'success',
+  error: 'error',
+} as const;
+
+export type CustomerChangePassword200 = {
+  data?: CustomerChangePassword200Data;
+  message: string;
+  status: CustomerChangePassword200Status;
 };
 
 export type CustomerGetProfile200Data = {

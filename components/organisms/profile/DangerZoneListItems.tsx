@@ -54,15 +54,24 @@ export const DangerZoneListItem = () => {
   const handleLogout = () => {
     setIsLoggingOut(true);
     console.log("[SignOut] Logging out...");
+
+    // Clear all local state
     clearAuth();
     clearCart(); // Clear cart to prevent data leakage to next user
     clearUser();
     clearFavorites(); // Clear favorites since guest users can't have favorites
-    queryClient.clear();
+
+    // Reset queries instead of clear to avoid breaking hooks
+    queryClient.resetQueries();
+
     setSignout(false);
-    setIsLoggingOut(false);
-    // Navigate to home screen instead of login
-    router.replace("/(tabs)");
+
+    // Small delay to allow state to settle before navigation
+    setTimeout(() => {
+      setIsLoggingOut(false);
+      // Navigate to home screen instead of login
+      router.replace("/(tabs)");
+    }, 100);
   };
   const DATA = [
     {

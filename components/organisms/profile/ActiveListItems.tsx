@@ -1,50 +1,40 @@
-import Icons from "@/assets/Icons";
 import { ActiveCard } from "@/components/molecules/profile/ActiveCard";
+import { Order } from "@/api/hooks/useOrders";
 import { tokens } from "@/tamagui/token";
+import { router } from "expo-router";
 import { FlatList } from "react-native";
 import { Spacer, YStack } from "tamagui";
 
-export const ActiveListItem = () => {
-  const activeCards = [
-    {
-      id: 1,
-      image: "product1" as keyof typeof Icons,
-      title: "Carvin Pumpkin Each Abbot Stoneware Cereal Bowl",
-      qty: 1,
-      shipping: "Regular Shipping",
-      total: 405.5,
-    },
-    {
-      id: 2,
-      image: "product2" as keyof typeof Icons,
-      title: "Carvin Pumpkin Each Abbot Stoneware Cereal Bowl",
-      qty: 2,
-      shipping: "Regular Shipping",
-      total: 405.5,
-    },
-    {
-      id: 3,
-      image: "product3" as keyof typeof Icons,
-      title: "Carvin Pumpkin Each Abbot Stoneware Cereal Bowl",
-      qty: 1,
-      shipping: "Regular Shipping",
-      total: 405.5,
-    },
-    {
-      id: 4,
-      image: "product3" as keyof typeof Icons,
-      title: "Carvin Pumpkin Each Abbot Stoneware Cereal Bowl",
-      qty: 4,
-      shipping: "Regular Shipping",
-      total: 405.5,
-    },
-  ];
+type ActiveListItemProps = {
+  orders?: Order[];
+};
+
+export const ActiveListItem = ({ orders = [] }: ActiveListItemProps) => {
+  // Filter out fulfilled and cancelled orders
+  const activeOrders = orders.filter(
+    (order) =>
+      order.fulfillmentStatus?.toLowerCase() !== "fulfilled" &&
+      order.fulfillmentStatus?.toLowerCase() !== "cancelled"
+  );
+
+  // If no orders, show empty state
+  if (activeOrders.length === 0) {
+    return null;
+  }
+
   return (
     <YStack>
       <FlatList
-        data={activeCards}
-        renderItem={({ item }) => <ActiveCard item={item} />}
-        keyExtractor={(item) => item.id.toString()}
+        data={activeOrders}
+        renderItem={({ item: order }) => (
+          <ActiveCard
+            order={order}
+            onPress={() => {
+              router.push(`/ordersDetails?orderId=${order._id}`);
+            }}
+          />
+        )}
+        keyExtractor={(item) => item._id.toString()}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <Spacer size={tokens.space.md} />}
         contentContainerStyle={

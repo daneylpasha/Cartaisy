@@ -302,6 +302,27 @@ const CheckoutScreen = () => {
           queryClient.invalidateQueries({ queryKey: ["orders"] });
           console.log("[Checkout] ✅ Orders cache invalidated");
 
+          // Invalidate product-related caches to refresh quantities after order
+          // Use predicate to match all product queries (e.g., /products/abc123)
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey[0];
+              return typeof key === "string" && key.startsWith("/products/");
+            },
+          });
+          // Invalidate homescreen and collections for quantity updates
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey[0];
+              return (
+                typeof key === "string" &&
+                (key.startsWith("/customer/homescreen") ||
+                  key.startsWith("/collections/"))
+              );
+            },
+          });
+          console.log("[Checkout] ✅ Product caches invalidated for quantity refresh");
+
           router.replace("/(tabs)");
 
           setTimeout(() => {

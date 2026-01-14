@@ -101,18 +101,31 @@ const CartScreen = () => {
   const animatedHeight = useRef(new Animated.Value(0)).current;
   const animatedOpacity = useRef(new Animated.Value(0)).current;
 
+  // Track if we've already synced for this focus to prevent infinite loop
+  const hasSyncedRef = useRef(false);
+
   // Sync cart when screen is focused to ensure lineItemIds are populated
   useFocusEffect(
     useCallback(() => {
-      if (cartId && items.length > 0) {
-        // Check if any item is missing lineItemId
+      // Reset sync flag when screen loses focus
+      return () => {
+        hasSyncedRef.current = false;
+      };
+    }, [])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (cartId && items.length > 0 && !hasSyncedRef.current) {
+        // Check if any item is missing lineItemId (needs sync)
         const needsSync = items.some((item) => !item.lineItemId);
         if (needsSync) {
           console.log("[Cart] Items missing lineItemId, syncing with API...");
+          hasSyncedRef.current = true; // Mark as synced BEFORE calling to prevent re-entry
           syncCart();
         }
       }
-    }, [cartId, items, syncCart])
+    }, [cartId, syncCart])
   );
 
   // Auto-open cart summary when items are added

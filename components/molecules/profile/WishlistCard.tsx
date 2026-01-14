@@ -1,4 +1,4 @@
-import { TextMDBold, TextSMSemiBold } from "@/components/atoms";
+import { TextMDBold, TextSMSemiBold, PressableButton } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
@@ -25,23 +25,23 @@ export const SHADOW_STYLES: ViewStyle =
   Platform.select({
     ios: {
       shadowColor: "#000",
-      shadowOpacity: 0.08,
-      shadowRadius: 3,
+      shadowOpacity: 0.04,
+      shadowRadius: 8,
       shadowOffset: { width: 0, height: 2 },
     },
     android: {
       shadowColor: "#000",
       shadowOpacity: 0.08,
-      shadowRadius: 3,
-      shadowOffset: { width: 2, height: 2 },
+      shadowRadius: 2,
+      shadowOffset: { width: 0, height: 2 },
       elevation: 1,
     },
     default: {},
   }) || {};
 
-type Props = { item: WishlistItem; onPress?: () => void };
+type Props = { item: WishlistItem };
 
-export function WishlistCard({ item, onPress }: Props) {
+export function WishlistCard({ item }: Props) {
   // Handle both image formats: array of objects or array of strings
   const productImage = Array.isArray(item?.images)
     ? typeof item.images[0] === "string"
@@ -60,81 +60,94 @@ export function WishlistCard({ item, onPress }: Props) {
 
   const productIdValue = item.productId || item.id || "";
 
-  return (
-    <OpTouch
-      onPress={() =>
-        router.push({
-          pathname: "/products/[id]",
-          params: { id: productIdValue },
-        })
-      }
+  const cardContent = (
+    <YStack
+      height={140}
+      backgroundColor={"$white"}
+      borderRadius={"$md"}
+      padding={"$md"}
+      position="relative"
+      style={{ ...SHADOW_STYLES }}
     >
-      <YStack
-        onPress={onPress}
-        height={128}
-        backgroundColor={"$white"}
-        borderRadius={"$md"}
-        padding={"$reg"}
-        position="relative"
-        style={{ ...SHADOW_STYLES }}
-      >
-        {/* Top Row */}
-        <XStack>
-          <YStack
-            width={64}
-            height={64}
-            borderRadius={"$md"}
-            overflow="hidden"
-            borderWidth={"$xxxs"}
-            borderColor={"$lightgrey"}
-          >
-            {productImage ? (
-              <AppImage
-                resizeMode="cover"
-                source={{ uri: productImage }}
-                width={64}
-                height={64}
-              />
-            ) : null}
-          </YStack>
-          <Spacer size={"$reg"} />
-          <YStack flex={1}>
-            <TextMDBold numberOfLines={2}>
-              {item.title.slice(0, 50) + "..."}
-            </TextMDBold>
-            <Spacer size={"$xs-sm"} />
-            <XStack alignItems="center">
-              <TextMDRegular color="$secondary">
-                Stock: {stockAvailable}
-              </TextMDRegular>
-            </XStack>
-            <Spacer size={"$xs-sm"} />
-            {isOnSale && (
-              <>
-                <XStack alignItems="center" borderRadius={8} gap={6}>
-                  <AppImage
-                    tintColor={getTokenValue("$green")}
-                    name="dealIcon"
-                    width={16}
-                    height={16}
-                  />
-                  <TextSMSemiBold color="$green">
-                    {"Item On Sale"}
-                  </TextSMSemiBold>
-                </XStack>
-              </>
-            )}
-          </YStack>
-          <YStack justifyContent="center">
+      {/* Top Row */}
+      <XStack>
+        <YStack
+          width={64}
+          height={64}
+          borderRadius={"$md"}
+          overflow="hidden"
+          borderWidth={"$xxxs"}
+          borderColor={"$lightgrey"}
+        >
+          {productImage ? (
             <AppImage
-              tintColor={getTokenValue("$secondary")}
-              name="caretRight"
-              width={9}
-              height={16}
+              resizeMode="cover"
+              source={{ uri: productImage }}
+              width={64}
+              height={64}
             />
-          </YStack>
-        </XStack>
-      </YStack>
+          ) : null}
+        </YStack>
+        <Spacer size={"$reg"} />
+        <YStack flex={1}>
+          <TextMDBold numberOfLines={2}>
+            {item.title.slice(0, 50) + "..."}
+          </TextMDBold>
+          <Spacer size={"$xs-sm"} />
+          <XStack alignItems="center">
+            <TextMDRegular color="$secondary">
+              Stock: {stockAvailable}
+            </TextMDRegular>
+          </XStack>
+          <Spacer size={"$xs-sm"} />
+          {isOnSale && (
+            <>
+              <XStack alignItems="center" borderRadius={8} gap={6}>
+                <AppImage
+                  tintColor={getTokenValue("$green")}
+                  name="dealIcon"
+                  width={16}
+                  height={16}
+                />
+                <TextSMSemiBold color="$green">
+                  {"Item On Sale"}
+                </TextSMSemiBold>
+              </XStack>
+            </>
+          )}
+        </YStack>
+        <YStack justifyContent="center">
+          <AppImage
+            tintColor={getTokenValue("$secondary")}
+            name="caretRight"
+            width={9}
+            height={16}
+          />
+        </YStack>
+      </XStack>
+    </YStack>
+  );
+
+  const handlePress = () => {
+    router.push({
+      pathname: "/products/[id]",
+      params: { id: productIdValue },
+    });
+  };
+
+  // Android version with PressableButton
+  if (Platform.OS === "android") {
+    return (
+      <PressableButton onPress={handlePress}>
+        {cardContent}
+      </PressableButton>
+    );
+  }
+
+  // iOS version with OpTouch
+  return (
+    <OpTouch onPress={handlePress}>
+      {cardContent}
     </OpTouch>
   );
 }

@@ -20,9 +20,11 @@ import authApi from "@/api/endpoints/auth";
 import { notificationTracker } from "@/services/notificationTracker";
 import useAuthStore from "@/store/useAuthStore";
 import {
+  handleDeepLink,
   handleNotificationDeepLink,
   NotificationDeepLinkPayload,
 } from "@/utils/deepLinkHandler";
+import * as Linking from "expo-linking";
 import { setDeepLinkHandled } from "@/utils/navigationState";
 import firebase from "@react-native-firebase/app";
 import messaging from "@react-native-firebase/messaging";
@@ -585,6 +587,55 @@ export default function RootLayout() {
 
     sendTokenIfReady();
   }, [_hasHydrated, expoPushToken, authToken]);
+
+  // Effect to handle URL deep links (password reset, etc.)
+  useEffect(() => {
+    const handleURLDeepLink = (event: { url: string }) => {
+      const { url } = event;
+      console.log("[DeepLink] URL received:", url);
+
+      try {
+        const parsed = Linking.parse(url);
+        console.log("[DeepLink] Parsed URL:", JSON.stringify(parsed));
+
+        // Handle password reset deep link
+        // URL formats: cartaisy://reset-password?token=xxx
+        //              https://app.cartaisy.com/reset-password?token=xxx
+        if (
+          parsed.path === "reset-password" ||
+          parsed.hostname === "reset-password"
+        ) {
+          const token = parsed.queryParams?.token as string;
+          if (token) {
+            console.log("[DeepLink] Password reset token found, navigating...");
+            setDeepLinkHandled(true);
+            handleDeepLink(
+              { type: "reset-password", params: { token } },
+              router,
+              { delay: 300 }
+            );
+          } else {
+            console.warn("[DeepLink] Password reset URL missing token");
+          }
+        }
+      } catch (error) {
+        console.error("[DeepLink] Error parsing URL:", error);
+      }
+    };
+
+    // Listen for incoming URL deep links while app is open
+    const subscription = Linking.addEventListener("url", handleURLDeepLink);
+
+    // Check if app was opened via URL deep link (cold start)
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        console.log("[DeepLink] Initial URL on cold start:", url);
+        handleURLDeepLink({ url });
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   // Effect to handle cold start deep linking (app launched from killed state via notification tap)
   useEffect(() => {

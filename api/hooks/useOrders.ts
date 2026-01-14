@@ -67,16 +67,17 @@ export interface OrdersResponse {
 // Fetch orders
 export const fetchOrders = async (
   page = 1,
-  limit = 20
+  limit = 20,
+  status?: "inprogress" | "fulfilled" | "cancelled"
 ): Promise<OrdersResponse> => {
   const response = await axiosInstance.get<OrdersResponse>("/customer/orders", {
-    params: { page, limit },
+    params: { page, limit, ...(status && { status }) },
   });
   return response.data;
 };
 
 // React Query hook
-export const useOrders = (page = 1, limit = 20) => {
+export const useOrders = (page = 1, limit = 20, status?: "inprogress" | "fulfilled" | "cancelled") => {
   // Check if user is authenticated
   const token = useAuthStore((state) => state.token);
   const isGuest = useAuthStore((state) => state.isGuest);
@@ -84,8 +85,8 @@ export const useOrders = (page = 1, limit = 20) => {
   const isAuthenticated = _hasHydrated && !!token && !isGuest;
 
   return useQuery({
-    queryKey: ["orders", page, limit],
-    queryFn: () => fetchOrders(page, limit),
+    queryKey: ["orders", page, limit, status],
+    queryFn: () => fetchOrders(page, limit, status),
     staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: isAuthenticated, // Only fetch if user is authenticated
     retry: (failureCount, error: any) => {

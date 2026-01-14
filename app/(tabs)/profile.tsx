@@ -19,6 +19,7 @@ import { GeneralListItems } from "@/components/organisms/profile/GeneralListItem
 
 import { useCustomerGetProfile } from "@/api/generated/customer-authentication/customer-authentication";
 import { useAuthenticatedAddresses } from "@/api/hooks/useAddresses";
+import { useOrders } from "@/api/hooks/useOrders";
 import { PaymentListItem } from "@/components/organisms/profile/PaymentListItems";
 import { SecurityListItem } from "@/components/organisms/profile/SecurityListItems";
 import { WishlistCarousel } from "@/components/organisms/profile/WishListCarousel";
@@ -31,7 +32,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import React from "react";
-import { FlatList } from "react-native";
+import { FlatList, Platform } from "react-native";
 import { XStack, YStack } from "tamagui";
 
 const ProfileScreen = () => {
@@ -67,6 +68,24 @@ const ProfileScreen = () => {
   });
   const apiUser = (profileApiData as any)?.data?.user;
 
+  // Fetch active orders (inprogress status) - fetch more to account for filtering
+  const { data: activeOrdersData, refetch: refetchOrders } = useOrders(1, 10, "inprogress");
+
+  // Get total active orders count from API
+  const totalActiveOrders =
+    (activeOrdersData as any)?.data?.orders?.length || 0;
+
+  // Calculate filtered active orders (exclude fulfilled and cancelled)
+  const filteredActiveOrders = React.useMemo(() => {
+    return (
+      (activeOrdersData as any)?.data?.orders?.filter(
+        (order: any) =>
+          order.fulfillmentStatus?.toLowerCase() !== "fulfilled" &&
+          order.fulfillmentStatus?.toLowerCase() !== "cancelled"
+      ) || []
+    );
+  }, [activeOrdersData]);
+
   // DEBUG: Check API response
   console.log(
     "[Profile] API Response:",
@@ -81,13 +100,14 @@ const ProfileScreen = () => {
   // Get addresses to find default address (only fetches when authenticated)
   const { addresses } = useAuthenticatedAddresses();
 
-  // Refetch profile when screen comes into focus (to get updated data after login/signup)
+  // Refetch profile and orders when screen comes into focus (to get updated data after login/signup)
   useFocusEffect(
     React.useCallback(() => {
       if (isLoggedIn) {
         refetchProfile();
+        refetchOrders();
       }
-    }, [isLoggedIn, refetchProfile])
+    }, [isLoggedIn, refetchProfile, refetchOrders])
   );
 
   // Check for success message from profile update
@@ -238,9 +258,9 @@ const ProfileScreen = () => {
                       ...SHADOW_STYLES,
                     }}
                   >
-                    <ActiveOrders activeOrders={3} />
+                    <ActiveOrders activeOrders={totalActiveOrders} />
                     <Spacer size="$md" />
-                    <ActiveListItem />
+                    <ActiveListItem orders={filteredActiveOrders} />
                   </YStack>
                 </YStack>
               </>
@@ -392,8 +412,8 @@ const ProfileScreen = () => {
     );
   };
 
-  // Show loading state while auth store is hydrating
-  if (!_hasHydrated) {
+  // Show loading state while auth store is hydrating or while fetching profile for logged-in user
+  if (!_hasHydrated || (isLoggedIn && isLoadingProfile && !profileApiData)) {
     return (
       <ScreenContainer backgroundColor="background">
         <YStack flex={1} justifyContent="center" alignItems="center">
@@ -413,7 +433,9 @@ const ProfileScreen = () => {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          // contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{
+            paddingBottom: Platform.OS === "ios" ? 80 : 0,
+          }}
           ListFooterComponent={() => (
             <YStack alignItems="center" justifyContent="center">
               <AppImage name="cartaisyColorlogo" width={65} height={26} />

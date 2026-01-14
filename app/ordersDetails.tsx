@@ -24,6 +24,7 @@ import { useLocalSearchParams } from "expo-router";
 
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, PanResponder, ScrollView } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
@@ -31,7 +32,7 @@ const ordersDetails = () => {
   const { orderId } = useLocalSearchParams();
 
   // Fetch order details
-  const { data, isLoading, error } = useOrderDetails(orderId as string);
+  const { data, isLoading, error, refetch } = useOrderDetails(orderId as string);
   const order = data?.data?.order;
 
   const { mutate: cancelOrderMutation, isPending: isCancelling } =
@@ -39,6 +40,13 @@ const ordersDetails = () => {
 
   const { mutate: requestHelpMutation, isPending: isRequestingHelp } =
     useRequestOrderHelp();
+
+  // Refetch order details whenever screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   // Calculate total quantity from line items
   const totalQuantity =
@@ -484,7 +492,8 @@ const ordersDetails = () => {
             {
               onSuccess: () => {
                 setShow(false);
-                // Order details will auto-refresh due to query invalidation
+                // Refetch order details to get updated status
+                refetch();
               },
               onError: (error) => {
                 console.error("[Cancel Order] Error:", error);
@@ -505,7 +514,8 @@ const ordersDetails = () => {
             {
               onSuccess: () => {
                 setShowHelpModal(false);
-                // Order details will auto-refresh due to query invalidation
+                // Refetch order details to get updated status
+                refetch();
               },
               onError: (error) => {
                 console.error("[Help Request] Error:", error);

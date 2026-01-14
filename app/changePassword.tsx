@@ -1,42 +1,33 @@
-import { HeadingSMBold, ParagraphLG, TextSMMedium } from "@/components/atoms";
+import { HeadingSMBold, ParagraphLG } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import { t } from "@/translations";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 import { Controller, useForm } from "react-hook-form";
-import { getTokenValue, XStack, YStack } from "tamagui";
+import { getTokenValue, YStack } from "tamagui";
 type ChPasswordForm = {
-  password: string;
+  currentPassword: string;
 };
 const ChangePassword = () => {
-  const [errorBanner, setErrorBanner] = useState<string | null>(null);
-
   const form = useForm<ChPasswordForm>({
     defaultValues: {
-      password: "",
+      currentPassword: "",
     },
   });
 
-  const pwd = form.watch("password");
-
-  useEffect(() => {
-    if (errorBanner && pwd === "1234567") {
-      setErrorBanner(null);
-    }
-  }, [pwd, errorBanner]);
-
   const onSubmit = async (data: ChPasswordForm) => {
-    if (data.password === "1234567") {
-      setErrorBanner(null);
-      router.push("/newPassword");
-    } else {
-      setErrorBanner("ERROR: Password do not match!");
-      setTimeout(() => setErrorBanner(null), 2500);
-    }
+    // Navigate to new password screen with current password
+    router.push({
+      pathname: "/newPassword",
+      params: {
+        currentPassword: data.currentPassword,
+        flow: "change",
+      },
+    });
   };
 
   return (
@@ -56,7 +47,7 @@ const ChangePassword = () => {
       </ParagraphLG>
       <Spacer size={"$xl"} />
       <Controller
-        name="password"
+        name="currentPassword"
         control={form.control}
         rules={{
           required: t("validation.passwordRequired"),
@@ -83,30 +74,7 @@ const ChangePassword = () => {
           />
         )}
       />
-      <Spacer size={"$md"} />
-      {errorBanner && (
-        <YStack
-          alignItems="center"
-          width={"100%"}
-          gap="$xs"
-          borderWidth={1}
-          borderColor="red"
-          padding="$sm"
-          borderRadius="$2xl"
-          backgroundColor="#FFF1F2"
-        >
-          <XStack alignItems="center" justifyContent="center">
-            <AppImage
-              name="warningIcon"
-              size={14}
-              tintColor={getTokenValue("$error")}
-            />
-            <Spacer size={"$sm"} />
-            <TextSMMedium textAlign="center">{errorBanner}</TextSMMedium>
-          </XStack>
-        </YStack>
-      )}
-      <Spacer size={"$md"} />
+      <Spacer size={"$xl"} />
       <PrimaryButton
         label="Change password"
         onPress={form.handleSubmit(onSubmit)}

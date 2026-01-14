@@ -1,3 +1,4 @@
+import authApi from "@/api/endpoints/auth";
 import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { OpTouch } from "@/components/atoms/OpTouch";
@@ -10,7 +11,7 @@ import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
 import { router } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Alert, Linking } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -20,6 +21,7 @@ type ForgotPasswordForm = {
 };
 
 const ForgotPassword = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const form = useForm<ForgotPasswordForm>({
     defaultValues: {
       email: "",
@@ -54,12 +56,33 @@ const ForgotPassword = () => {
       Alert.alert("Couldn't open email", `Please email us at ${to}`);
     }
   };
-  const onSubmit = (data: ForgotPasswordForm) => {
-    console.log(data);
-    router.push({
-      pathname: "/(auth)/passwordResetSent",
-      params: { email: data.email, from: "forgot" },
-    });
+  const onSubmit = async (data: ForgotPasswordForm) => {
+    setIsLoading(true);
+    try {
+      await authApi.forgotPassword({ email: data.email });
+      router.push({
+        pathname: "/(auth)/passwordResetSent",
+        params: { email: data.email, from: "forgot" },
+      });
+    } catch (error: any) {
+      // For security, always navigate to success screen even on error
+      // This prevents email enumeration attacks
+      // Only show error for actual server/network errors
+      if (error?.response?.status >= 500 || !error?.response) {
+        Alert.alert(
+          "Error",
+          error?.response?.data?.message || "Something went wrong. Please try again."
+        );
+      } else {
+        // Backend might return 404 for non-existent email, but we still show success
+        router.push({
+          pathname: "/(auth)/passwordResetSent",
+          params: { email: data.email, from: "forgot" },
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -129,7 +152,7 @@ const ForgotPassword = () => {
             <Spacer size={"$xl"} />
             <PrimaryButton
               onPress={form.handleSubmit(onSubmit)}
-              isLoading={false}
+              isLoading={isLoading}
               label={t("common.continue")}
             />
             <Spacer size={"$xl"} />

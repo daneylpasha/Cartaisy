@@ -14,7 +14,8 @@ export type DeepLinkType =
   | "checkout"
   | "search"
   | "screen"
-  | "home";
+  | "home"
+  | "reset-password";
 
 /**
  * Deep link data structure from notification payload
@@ -185,6 +186,19 @@ export function handleDeepLink(
         } else {
           console.warn("[DeepLink] Screen deep link missing path");
           navigationMethod("/(tabs)");
+        }
+        break;
+
+      case "reset-password":
+        // Handle password reset deep link with token
+        if (deepLink.params?.token) {
+          navigationMethod({
+            pathname: "/newPassword",
+            params: { token: deepLink.params.token, flow: "reset" },
+          });
+        } else {
+          console.warn("[DeepLink] Reset password deep link missing token");
+          navigationMethod("/(auth)/login");
         }
         break;
 
