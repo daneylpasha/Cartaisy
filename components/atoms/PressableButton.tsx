@@ -1,6 +1,6 @@
 import type { AppConfig } from "@/tamagui/config";
 import { tokens } from "@/tamagui/token";
-import React, { useRef } from "react";
+import React, { useRef, useCallback } from "react";
 import {
   Animated,
   DimensionValue,
@@ -74,6 +74,10 @@ export const PressableButton = ({
 }: PressableButtonProps) => {
   const scaleValue = useRef(new Animated.Value(1)).current;
 
+  // Debounce to prevent double tap navigation
+  const isProcessing = useRef(false);
+  const DEBOUNCE_DELAY = 600; // ms
+
   const getTokenValue = (
     token: string | undefined,
     tokenType: "space" | "color" | "radius"
@@ -125,10 +129,23 @@ export const PressableButton = ({
     }
   };
 
-  const handlePress = (event: GestureResponderEvent) => {
-    handlePressOut();
-    onPress?.(event);
-  };
+  const handlePress = useCallback(
+    (event: GestureResponderEvent) => {
+      if (isProcessing.current) {
+        return; // Ignore if already processing
+      }
+
+      isProcessing.current = true;
+      handlePressOut();
+      onPress?.(event);
+
+      // Reset after delay
+      setTimeout(() => {
+        isProcessing.current = false;
+      }, DEBOUNCE_DELAY);
+    },
+    [onPress]
+  );
 
   // Android version - scale animation only
   if (Platform.OS === "android") {

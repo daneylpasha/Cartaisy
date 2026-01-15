@@ -1,11 +1,30 @@
 import { TextSMRegular, TextXLBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Tabs } from "expo-router";
-import React from "react";
+import React, { useRef, useCallback } from "react";
 import { Platform, Pressable } from "react-native";
 import { getTokenValue } from "tamagui";
 
 export default function TabLayout() {
+  // Debounce to prevent double tap navigation
+  const isProcessing = useRef(false);
+  const DEBOUNCE_DELAY = 600; // ms
+
+  const handleTabPress = useCallback((onPress: any) => {
+    return () => {
+      if (isProcessing.current) {
+        return; // Ignore if already processing
+      }
+
+      isProcessing.current = true;
+      onPress?.();
+
+      // Reset after delay
+      setTimeout(() => {
+        isProcessing.current = false;
+      }, DEBOUNCE_DELAY);
+    };
+  }, []);
   // Set Android status bar on every focus
   // useFocusEffect(
   //   useCallback(() => {
@@ -35,7 +54,7 @@ export default function TabLayout() {
             return (
               <Pressable
                 style={style}
-                onPress={onPress}
+                onPress={handleTabPress(onPress)}
                 onLongPress={onLongPress}
                 accessibilityState={accessibilityState}
                 android_ripple={null}
