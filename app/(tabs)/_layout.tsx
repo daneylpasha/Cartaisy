@@ -3,7 +3,6 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { Tabs } from "expo-router";
 import React from "react";
 import { Platform, Pressable } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { getTokenValue } from "tamagui";
 
 export default function TabLayout() {
@@ -19,10 +18,7 @@ export default function TabLayout() {
   // );
 
   return (
-    <GestureHandlerRootView
-      style={{ flex: 1, paddingBottom: Platform.OS === "android" ? 0 : 0 }}
-    >
-      <Tabs
+    <Tabs
         screenOptions={{
           tabBarActiveTintColor: getTokenValue("$primary"),
           headerShown: false,
@@ -155,6 +151,5 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
-    </GestureHandlerRootView>
   );
 }

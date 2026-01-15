@@ -36,6 +36,7 @@ export const AppInitializer = () => {
   // ==================== STARTUP TOKEN REFRESH ====================
   // Proactively refresh token on app startup if user is logged in
   // This handles cases where the access token expired while the app was closed
+  // Deferred to allow navigation to be ready first
   useEffect(() => {
     const refreshTokenOnStartup = async () => {
       // Only attempt once per app session
@@ -82,7 +83,9 @@ export const AppInitializer = () => {
       }
     };
 
-    refreshTokenOnStartup();
+    // Defer token refresh to 1.5 seconds to allow navigation to be ready
+    const timer = setTimeout(refreshTokenOnStartup, 1500);
+    return () => clearTimeout(timer);
   }, [_hasHydrated, token, refreshToken, setToken, clearAuth]);
 
   // ==================== FAVORITES INITIALIZATION ====================
@@ -115,6 +118,7 @@ export const AppInitializer = () => {
 
   // ==================== STORE CONFIG INITIALIZATION ====================
   // Fetch store configuration (currency, timezone, etc.) from backend
+  // Deferred to 500ms to let app UI render first
   const storeConfigFetchedRef = useRef(false);
 
   useEffect(() => {
@@ -136,7 +140,9 @@ export const AppInitializer = () => {
       }
     };
 
-    initializeStoreConfig();
+    // Defer store config initialization to 500ms
+    const timer = setTimeout(initializeStoreConfig, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   // ==================== ADD MORE INITIALIZATIONS BELOW ====================

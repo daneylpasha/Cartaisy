@@ -12,7 +12,7 @@ import { tokens } from "@/tamagui/token";
 import { useQueryClient } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, memo } from "react";
 import { Animated, Platform, StyleSheet, UIManager } from "react-native";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
@@ -59,7 +59,7 @@ type ProductCardProps = {
   onPress?: () => void;
 };
 
-export const ProductCard = ({
+const ProductCardComponent = ({
   product,
   isFavorite = false,
   showFavoriteIcon = false,
@@ -417,6 +417,9 @@ export const ProductCard = ({
     </OpTouch>
   );
 };
+// Memoize ProductCard to prevent unnecessary re-renders when parent re-renders with same props
+export const ProductCard = memo(ProductCardComponent);
+
 export {
   GRID_CARD_WIDTH,
   GRID_COLUMN_GAP,

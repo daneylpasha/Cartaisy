@@ -16,8 +16,8 @@ type ProductsHorizontalScrollerProps = {
 const ProductsHorizontalScroller = ({
   collections,
 }: ProductsHorizontalScrollerProps) => {
-  // Subscribe to both isFavorite function AND favoriteProductIds to trigger re-render when favorites change
-  const isFavorite = useFavoritesStore((state) => state.isFavorite);
+  // Only subscribe to favoriteProductIds (avoid double subscription to isFavorite function)
+  // Use the Set directly for better performance and pass it as extraData
   const favoriteProductIds = useFavoritesStore((state) => state.favoriteProductIds);
   const targetCollection = collections?.find(
     (collectionItem) => collectionItem.type === "large_row"
@@ -27,7 +27,7 @@ const ProductsHorizontalScroller = ({
     return null;
   }
 
-  const handleViewAll = () => {
+  const handleViewAll = React.useCallback(() => {
     router.push({
       pathname: "/products",
       params: {
@@ -35,7 +35,8 @@ const ProductsHorizontalScroller = ({
         collectionId: extractNumericId(targetCollection?.collection.id),
       },
     });
-  };
+  }, [targetCollection]);
+
   return (
     <YStack>
       <SectionHeader
@@ -64,7 +65,7 @@ const ProductsHorizontalScroller = ({
             product={product}
             context="in-line"
             showFavoriteIcon={true}
-            isFavorite={isFavorite(product.productId)}
+            isFavorite={favoriteProductIds.has(product.productId)}
           />
         )}
       />

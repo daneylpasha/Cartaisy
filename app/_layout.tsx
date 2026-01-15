@@ -50,10 +50,12 @@ const isFirebaseInitialized = () => {
 // Configure notification handler
 Notifications.setNotificationHandler({
   handleNotification: async (notification) => {
-    console.log(
-      "🔔 [PUSH] Step 6: Notification RECEIVED in handler:",
-      JSON.stringify(notification.request.content, null, 2)
-    );
+    if (__DEV__) {
+      console.log(
+        "🔔 [PUSH] Step 6: Notification RECEIVED in handler:",
+        JSON.stringify(notification.request.content, null, 2)
+      );
+    }
     return {
       shouldShowAlert: true,
       shouldPlaySound: true,
@@ -72,10 +74,12 @@ let pendingInitialNotification: any = null;
 if (isFirebaseInitialized()) {
   try {
     messaging().setBackgroundMessageHandler(async (remoteMessage) => {
-      console.log(
-        "🔔 [PUSH] Background message received:",
-        JSON.stringify(remoteMessage, null, 2)
-      );
+      if (__DEV__) {
+        console.log(
+          "🔔 [PUSH] Background message received:",
+          JSON.stringify(remoteMessage, null, 2)
+        );
+      }
     });
 
     // Check for initial notification IMMEDIATELY (before component mounts)
@@ -83,10 +87,12 @@ if (isFirebaseInitialized()) {
       .getInitialNotification()
       .then((remoteMessage) => {
         if (remoteMessage) {
-          console.log(
-            "🔔 [PUSH] Killed state: Initial notification captured:",
-            JSON.stringify(remoteMessage.data, null, 2)
-          );
+          if (__DEV__) {
+            console.log(
+              "🔔 [PUSH] Killed state: Initial notification captured:",
+              JSON.stringify(remoteMessage.data, null, 2)
+            );
+          }
           pendingInitialNotification = remoteMessage;
 
           // IMPORTANT: Set deep link flag IMMEDIATELY to prevent splash screen from navigating
