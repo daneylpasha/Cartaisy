@@ -31,11 +31,13 @@ import useUserStore from "@/store/useUserStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
-import React from "react";
+import React, { useRef } from "react";
 import { FlatList, Platform } from "react-native";
 import { XStack, YStack } from "tamagui";
 
 const ProfileScreen = () => {
+  // Track last fetch time to avoid refetching too frequently
+  const lastFetchTimeRef = useRef<number>(0);
   const { showAlert, AlertComponent } = useCustomAlert();
   const { showLoginModal } = useAuthGuard();
 
@@ -86,13 +88,11 @@ const ProfileScreen = () => {
     );
   }, [activeOrdersData]);
 
-  // DEBUG: Check API response
-  console.log(
-    "[Profile] API Response:",
-    JSON.stringify(profileApiData, null, 2)
-  );
-  console.log("[Profile] totalSpent:", apiUser?.totalSpent);
-  console.log("[Profile] totalOrdersCount:", apiUser?.totalOrdersCount);
+  // DEBUG: Check API response (only in dev)
+  if (__DEV__) {
+    console.log("[Profile] totalSpent:", apiUser?.totalSpent);
+    console.log("[Profile] totalOrdersCount:", apiUser?.totalOrdersCount);
+  }
 
   // Combine API user with local user store (local store as fallback for freshly signed up users)
   const user = apiUser || localUser;
@@ -100,12 +100,20 @@ const ProfileScreen = () => {
   // Get addresses to find default address (only fetches when authenticated)
   const { addresses } = useAuthenticatedAddresses();
 
-  // Refetch profile and orders when screen comes into focus (to get updated data after login/signup)
+  // Refetch profile and orders when screen comes into focus (only if data is stale - older than 5 minutes)
   useFocusEffect(
     React.useCallback(() => {
       if (isLoggedIn) {
-        refetchProfile();
-        refetchOrders();
+        const now = Date.now();
+        const timeSinceLastFetch = now - lastFetchTimeRef.current;
+        const STALE_TIME = 5 * 60 * 1000; // 5 minutes
+
+        // Only refetch if data is stale or hasn't been fetched yet
+        if (timeSinceLastFetch > STALE_TIME) {
+          refetchProfile();
+          refetchOrders();
+          lastFetchTimeRef.current = now;
+        }
       }
     }, [isLoggedIn, refetchProfile, refetchOrders])
   );
@@ -137,14 +145,16 @@ const ProfileScreen = () => {
     ? (user as any)?.name || user?.email?.split("@")[0] || "User"
     : "Guest User";
 
-  // Capitalize first letter of each word in username
-  const userName = rawUserName
-    .split(" ")
-    .map(
-      (word: string) =>
-        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-    )
-    .join(" ");
+  // Capitalize first letter of each word in username (memoized)
+  const userName = React.useMemo(() => {
+    return rawUserName
+      .split(" ")
+      .map(
+        (word: string) =>
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      )
+      .join(" ");
+  }, [rawUserName]);
 
   // Use defaultAddress from profile, or find the default address from addresses list
   const defaultAddr = React.useMemo(() => {
@@ -166,25 +176,40 @@ const ProfileScreen = () => {
     return addresses.length > 0 ? addresses[0] : null;
   }, [user, addresses]);
 
-  const location = defaultAddr
-    ? `${defaultAddr.city || ""}, ${defaultAddr.province || ""} ${
-        defaultAddr.zip || ""
-      }`.trim()
-    : "No address added";
+  // Format location string (memoized)
+  const location = React.useMemo(
+    () =>
+      defaultAddr
+        ? `${defaultAddr.city || ""}, ${defaultAddr.province || ""} ${
+            defaultAddr.zip || ""
+          }`.trim()
+        : "No address added",
+    [defaultAddr]
+  );
 
-  const userSince = user?.createdAt
-    ? new Date(user.createdAt).getFullYear().toString()
-    : "2024";
+  // Format user since year (memoized)
+  const userSince = React.useMemo(() => {
+    return user?.createdAt
+      ? new Date(user.createdAt).getFullYear().toString()
+      : "2024";
+  }, [user?.createdAt]);
+
+  // Format total spent (memoized)
   const totalSpent = user?.totalSpent || 0;
-  const formattedTotalSpent = `$${totalSpent.toLocaleString()}`;
+  const formattedTotalSpent = React.useMemo(
+    () => `$${totalSpent.toLocaleString()}`,
+    [totalSpent]
+  );
 
   // Check if wishlist has items
   const favoriteProductIds = useFavoritesStore(
     (state) => state.favoriteProductIds
   );
   const hasWishlistItems = favoriteProductIds.size > 0;
-  // Build profile data based on login state
-  const profileData = [
+
+  // Build profile data based on login state (memoized to prevent array recreation)
+  const profileData = React.useMemo(
+    () => [
     {
       id: "header",
       type: "header",
@@ -401,7 +426,19 @@ const ProfileScreen = () => {
             ),
           },
         ]),
-  ];
+    ],
+    [
+      userName,
+      location,
+      isLoggedIn,
+      userSince,
+      formattedTotalSpent,
+      totalActiveOrders,
+      filteredActiveOrders,
+      hasWishlistItems,
+      addresses,
+    ]
+  );
 
   const renderItem = ({ item }: { item: any }) => {
     return (

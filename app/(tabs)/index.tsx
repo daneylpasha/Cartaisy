@@ -78,6 +78,7 @@ const HomeScreen = () => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [open, setOpen] = useState(false);
   const rotateAnim = useRef(new Animated.Value(0)).current;
+  const addressesFetchTimeRef = useRef<number>(0);
 
   // Use authenticated addresses hook - only fetches when user is logged in
   const {
@@ -89,11 +90,19 @@ const HomeScreen = () => {
     setDefault: setDefaultAddressMutation,
   } = useFormattedAddresses();
 
-  // Refetch addresses when screen comes into focus (only if authenticated)
+  // Refetch addresses when screen comes into focus (only if data is stale - older than 5 minutes)
   useFocusEffect(
     useCallback(() => {
       if (isAuthenticated) {
-        refetchAddresses();
+        const now = Date.now();
+        const timeSinceLastFetch = now - addressesFetchTimeRef.current;
+        const STALE_TIME = 5 * 60 * 1000; // 5 minutes
+
+        // Only refetch if data is stale or hasn't been fetched yet
+        if (timeSinceLastFetch > STALE_TIME) {
+          refetchAddresses();
+          addressesFetchTimeRef.current = now;
+        }
       }
     }, [refetchAddresses, isAuthenticated])
   );

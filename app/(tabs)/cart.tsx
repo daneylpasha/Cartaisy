@@ -168,16 +168,124 @@ const CartScreen = () => {
     }
   }, [open, animatedHeight, animatedOpacity]);
 
-  // Handle open state change with animation delay
-  const toggleCartSummary = () => {
-    if (open) {
-      // Start closing animation
-      setOpen(false);
+  // Handle open state change with animation delay (memoized)
+  const toggleCartSummary = useCallback(() => {
+    setOpen((prev) => !prev);
+  }, []);
+
+  // Memoize cart item event handlers
+  const handleCartItemPress = useCallback((item: any) => {
+    console.log("Cart item pressed:", {
+      handle: item.handle,
+      productId: item.productId,
+    });
+
+    const productIdNumber = item.productId?.split("/").pop();
+
+    if (item.handle) {
+      router.push(`/products/${item.handle}` as any);
+    } else if (productIdNumber) {
+      router.push(`/products/${productIdNumber}` as any);
     } else {
-      // Open immediately
-      setOpen(true);
+      console.log("No handle or productId found for item");
     }
-  };
+  }, []);
+
+  const handleIncreaseQuantity = useCallback(
+    async (item: any) => {
+      if (!item.lineItemId) {
+        console.error("[Cart] No lineItemId found for item:", item);
+        setErrorModal({
+          visible: true,
+          title: "Error",
+          message: "Cannot update cart item. Please try again.",
+        });
+        return;
+      }
+
+      if (item.quantity < item.quantityAvailable) {
+        try {
+          setUpdatingItemId(item.lineItemId);
+          await updateCartQuantity(item.lineItemId, item.quantity + 1);
+        } catch (error) {
+          setErrorModal({
+            visible: true,
+            title: "Error",
+            message: "Failed to update quantity. Please try again.",
+          });
+        } finally {
+          setUpdatingItemId(null);
+        }
+      } else {
+        setErrorModal({
+          visible: true,
+          title: "Maximum Stock Reached",
+          message: `Only ${item.quantityAvailable} items available in stock.`,
+        });
+      }
+    },
+    [updateCartQuantity]
+  );
+
+  const handleDecreaseQuantity = useCallback(
+    async (item: any) => {
+      if (!item.lineItemId) {
+        setErrorModal({
+          visible: true,
+          title: "Error",
+          message: "Cannot update cart item. Please try again.",
+        });
+        return;
+      }
+
+      try {
+        if (item.quantity > 1) {
+          setUpdatingItemId(item.lineItemId);
+          await updateCartQuantity(item.lineItemId, item.quantity - 1);
+        } else {
+          setRemovingItemId(item.lineItemId);
+          await removeCartItem(item.lineItemId);
+        }
+      } catch (error) {
+        setErrorModal({
+          visible: true,
+          title: "Error",
+          message: "Failed to update cart. Please try again.",
+        });
+      } finally {
+        setUpdatingItemId(null);
+        setRemovingItemId(null);
+      }
+    },
+    [updateCartQuantity, removeCartItem]
+  );
+
+  const handleRemoveItem = useCallback(
+    async (item: any) => {
+      if (!item.lineItemId) {
+        setErrorModal({
+          visible: true,
+          title: "Error",
+          message: "Cannot remove item. Please try again.",
+        });
+        return;
+      }
+
+      try {
+        setRemovingItemId(item.lineItemId);
+        await removeCartItem(item.lineItemId);
+      } catch (error) {
+        setErrorModal({
+          visible: true,
+          title: "Error",
+          message: "Failed to remove item. Please try again.",
+        });
+      } finally {
+        setRemovingItemId(null);
+      }
+    },
+    [removeCartItem]
+  );
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gestureState) => {
@@ -200,152 +308,66 @@ const CartScreen = () => {
     })
   ).current;
 
-  // Render cart item
-  const renderCartItem = ({ item }: { item: any }) => {
-    let brandName = undefined;
-    if (item.metafields && Array.isArray(item.metafields)) {
-      const brandMetafield = item.metafields.find((m: any) =>
-        m.key?.toLowerCase().includes("brand")
-      );
-      if (brandMetafield) {
-        brandName = brandMetafield.value;
-        console.log("[Cart] Brand extracted from metafields:", brandName);
+  // Render cart item (memoized to prevent re-creation on every render)
+  const renderCartItem = useCallback(
+    ({ item }: { item: any }) => {
+      let brandName = undefined;
+      if (item.metafields && Array.isArray(item.metafields)) {
+        const brandMetafield = item.metafields.find((m: any) =>
+          m.key?.toLowerCase().includes("brand")
+        );
+        if (brandMetafield) {
+          brandName = brandMetafield.value;
+          if (__DEV__) {
+            console.log("[Cart] Brand extracted from metafields:", brandName);
+          }
+        }
       }
-    }
 
-    // Parse variant options for display
-    const options =
-      item.selectedOptions?.map((opt: any) => ({
-        label: opt.value,
-      })) || [];
+      // Parse variant options for display
+      const options =
+        item.selectedOptions?.map((opt: any) => ({
+          label: opt.value,
+        })) || [];
 
-    return (
-      <YStack>
-        <CartLineItem
-          key={item.variantId}
-          image={item.image || ""}
-          title={`${item.title}${
-            item.variantTitle ? ` - ${item.variantTitle}` : ""
-          }`}
-          currentPrice={item.price}
-          originalPrice={item.compareAtPrice ? item.compareAtPrice : undefined}
-          currency={item.currency}
-          options={options}
-          inStockCount={item.quantityAvailable}
-          quantity={item.quantity}
-          maxQuantity={item.quantityAvailable}
-          isUpdating={updatingItemId === item.lineItemId}
-          isRemoving={removingItemId === item.lineItemId}
-          brandName={brandName}
-          onPressItem={() => {
-            // Navigate to PDP
-            console.log("Cart item pressed:", {
-              handle: item.handle,
-              productId: item.productId,
-            });
-
-            const productIdNumber = item.productId?.split("/").pop(); // Extract ID from gid://shopify/Product/14817102528884
-
-            if (item.handle) {
-              router.push(`/products/${item.handle}` as any);
-            } else if (productIdNumber) {
-              router.push(`/products/${productIdNumber}` as any);
-            } else {
-              console.log("No handle or productId found for item");
-            }
-          }}
-          onIncrease={async () => {
-            if (!item.lineItemId) {
-              console.error("[Cart] No lineItemId found for item:", item);
-              setErrorModal({
-                visible: true,
-                title: "Error",
-                message: "Cannot update cart item. Please try again.",
-              });
-              return;
-            }
-
-            if (item.quantity < item.quantityAvailable) {
-              try {
-                setUpdatingItemId(item.lineItemId);
-                await updateCartQuantity(item.lineItemId, item.quantity + 1);
-              } catch (error) {
-                setErrorModal({
-                  visible: true,
-                  title: "Error",
-                  message: "Failed to update quantity. Please try again.",
-                });
-              } finally {
-                setUpdatingItemId(null);
-              }
-            } else {
-              setErrorModal({
-                visible: true,
-                title: "Maximum Stock Reached",
-                message: `Only ${item.quantityAvailable} items available in stock.`,
-              });
-            }
-          }}
-          onDecrease={async () => {
-            if (!item.lineItemId) {
-              setErrorModal({
-                visible: true,
-                title: "Error",
-                message: "Cannot update cart item. Please try again.",
-              });
-              return;
-            }
-
-            // Decrease or remove if quantity is 1
-            try {
-              if (item.quantity > 1) {
-                setUpdatingItemId(item.lineItemId);
-                await updateCartQuantity(item.lineItemId, item.quantity - 1);
-              } else {
-                setRemovingItemId(item.lineItemId);
-                await removeCartItem(item.lineItemId);
-              }
-            } catch (error) {
-              setErrorModal({
-                visible: true,
-                title: "Error",
-                message: "Failed to update cart. Please try again.",
-              });
-            } finally {
-              setUpdatingItemId(null);
-              setRemovingItemId(null);
-            }
-          }}
-          onSaveForLater={() => {
-            // Handle save for later (future feature)
-          }}
-          onRemove={async () => {
-            if (!item.lineItemId) {
-              setErrorModal({
-                visible: true,
-                title: "Error",
-                message: "Cannot remove item. Please try again.",
-              });
-              return;
-            }
-
-            try {
-              setRemovingItemId(item.lineItemId);
-              await removeCartItem(item.lineItemId);
-            } catch (error) {
-              setErrorModal({
-                visible: true,
-                title: "Error",
-                message: "Failed to remove item. Please try again.",
-              });
-            } finally {
-              setRemovingItemId(null);
-            }
-          }}
-        />
-      </YStack>
-    );
-  };
+      return (
+        <YStack>
+          <CartLineItem
+            key={item.variantId}
+            image={item.image || ""}
+            title={`${item.title}${
+              item.variantTitle ? ` - ${item.variantTitle}` : ""
+            }`}
+            currentPrice={item.price}
+            originalPrice={item.compareAtPrice ? item.compareAtPrice : undefined}
+            currency={item.currency}
+            options={options}
+            inStockCount={item.quantityAvailable}
+            quantity={item.quantity}
+            maxQuantity={item.quantityAvailable}
+            isUpdating={updatingItemId === item.lineItemId}
+            isRemoving={removingItemId === item.lineItemId}
+            brandName={brandName}
+            onPressItem={() => handleCartItemPress(item)}
+            onIncrease={() => handleIncreaseQuantity(item)}
+            onDecrease={() => handleDecreaseQuantity(item)}
+            onSaveForLater={() => {
+              // Handle save for later (future feature)
+            }}
+            onRemove={() => handleRemoveItem(item)}
+          />
+        </YStack>
+      );
+    },
+    [
+      updatingItemId,
+      removingItemId,
+      handleCartItemPress,
+      handleIncreaseQuantity,
+      handleDecreaseQuantity,
+      handleRemoveItem,
+    ]
+  );
 
   const renderEmptyCart = () => (
     <YStack alignItems="center" justifyContent="center" flex={1}>
@@ -478,6 +500,12 @@ const CartScreen = () => {
         )}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1 }}
+        // Performance optimizations
+        maxToRenderPerBatch={5}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={8}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS === "android"}
       />
       {items.length > 0 && (
         <>
