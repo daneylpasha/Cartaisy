@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "notification": {
-      "icon": "./assets/images/cartaisy-color-logo.png",
+      "icon": "./assets/images/icon.png",
       "color": "#8B5CF6",
       "androidMode": "default",
       "androidCollapsedTitle": "{{unread_count}} new notifications"
@@ -67,7 +67,9 @@
           "merchantIdentifier": "merchant.com.cartaisy",
           "enableGooglePay": true
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
