@@ -47,7 +47,7 @@ export default function CartLineItem(props: CartLineItemProps) {
     title,
     currentPrice,
     originalPrice,
-    currency = 'USD',
+    currency,
     couponsCount,
     freeDelivery,
     options = [],

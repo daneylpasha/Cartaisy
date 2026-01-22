@@ -1,11 +1,17 @@
 import { TextSMRegular, TextXLBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
+import useCartStore from "@/store/useCartStore";
 import { Tabs } from "expo-router";
 import React, { useRef, useCallback } from "react";
 import { Platform, Pressable } from "react-native";
 import { getTokenValue } from "tamagui";
 
 export default function TabLayout() {
+  // Get cart items count for badge (total quantity, not unique products)
+  const cartItemsCount = useCartStore((state) =>
+    state.items.reduce((total, item) => total + item.quantity, 0)
+  );
+
   // Debounce to prevent double tap navigation
   const isProcessing = useRef(false);
   const DEBOUNCE_DELAY = 600; // ms
@@ -101,7 +107,13 @@ export default function TabLayout() {
           name="cart"
           options={{
             title: "Cart",
-
+            tabBarBadge: cartItemsCount > 0 ? cartItemsCount : undefined,
+            tabBarBadgeStyle: {
+              backgroundColor: getTokenValue("$primary"),
+              fontSize: 10,
+              minWidth: 16,
+              height: 16,
+            },
             headerShown: true,
             headerTitle: () => <TextXLBold>{"Cart"}</TextXLBold>,
             headerShadowVisible: false,

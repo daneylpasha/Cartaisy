@@ -28,6 +28,7 @@ import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import useUserStore from "@/store/useUserStore";
+import { formatPrice } from "@/utils/formatPrice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
@@ -108,12 +109,13 @@ const ProfileScreen = () => {
         const timeSinceLastFetch = now - lastFetchTimeRef.current;
         const STALE_TIME = 5 * 60 * 1000; // 5 minutes
 
-        // Only refetch if data is stale or hasn't been fetched yet
+        // Only refetch profile if data is stale
         if (timeSinceLastFetch > STALE_TIME) {
           refetchProfile();
-          refetchOrders();
           lastFetchTimeRef.current = now;
         }
+        // Always refetch orders to get latest status (cancelled, fulfilled, etc.)
+        refetchOrders();
       }
     }, [isLoggedIn, refetchProfile, refetchOrders])
   );
@@ -197,7 +199,7 @@ const ProfileScreen = () => {
   // Format total spent (memoized)
   const totalSpent = user?.totalSpent || 0;
   const formattedTotalSpent = React.useMemo(
-    () => `$${totalSpent.toLocaleString()}`,
+    () => formatPrice(totalSpent),
     [totalSpent]
   );
 

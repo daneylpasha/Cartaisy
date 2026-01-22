@@ -185,7 +185,7 @@ const PaymentMethod = () => {
                 data={paymentMethods}
                 keyExtractor={(item) => item.id}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 100 }}
+                contentContainerStyle={{ paddingBottom: 80 }}
                 ListHeaderComponent={
                   defaultCard ? (
                     <YStack marginBottom="$lg">
@@ -323,29 +323,35 @@ const PaymentMethod = () => {
           )}
       </YStack>
 
-      {/* Add New Card Button */}
-      <YStack
-        position="absolute"
-        bottom={bottomSafeAreaInset + 16}
-        left={16}
-        right={16}
-      >
-        <SecondaryButton
-          label={t("paymentMethod.btn")}
-          icon={
-            <AppImage
-              tintColor={getTokenValue("$primary")}
-              name="addIcon"
-              width={16}
-              height={16}
-            />
-          }
-          onPress={() => {
-            router.push("/addNewCardDetails");
-          }}
-          iconPosition="left"
-        />
-      </YStack>
+      {/* Add New Card Button - Sticky at bottom */}
+      {!isLoading && (
+        <YStack
+          position="absolute"
+          bottom={0}
+          left={0}
+          right={0}
+          paddingHorizontal="$md"
+          paddingBottom={bottomSafeAreaInset + 16}
+          paddingTop="$md"
+          backgroundColor="$background"
+        >
+          <SecondaryButton
+            label={t("paymentMethod.btn")}
+            icon={
+              <AppImage
+                tintColor={getTokenValue("$primary")}
+                name="addIcon"
+                width={16}
+                height={16}
+              />
+            }
+            onPress={() => {
+              router.push("/addNewCardDetails");
+            }}
+            iconPosition="left"
+          />
+        </YStack>
+      )}
     </YStack>
   );
 };

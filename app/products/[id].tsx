@@ -38,6 +38,7 @@ import { RatingStar } from "@/components/organisms/home";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import useCartStore from "@/store/useCartStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { t } from "@/translations";
 import { getColorHex } from "@/utils/colorHelper";
 import { formatPrice } from "@/utils/formatPrice";
@@ -99,6 +100,9 @@ const ProductDetailsScreen = () => {
     }
   );
 
+  // Get store currency for fallback
+  const storeCurrency = useStoreConfigStore((state) => state.currency);
+
   // Use Zustand store for favorites
   const isFavoriteInStore = useFavoritesStore((state) => state.isFavorite(id));
   const addFavoriteToStore = useFavoritesStore((state) => state.addFavorite);
@@ -120,7 +124,7 @@ const ProductDetailsScreen = () => {
       images: apiProduct.images || [],
       currentPrice: apiProduct.price || 0,
       originalPrice: apiProduct.compareAtPrice,
-      currency: apiProduct.currency || "USD",
+      currency: apiProduct.currency || storeCurrency,
       discountPercent: apiProduct.badges?.discountPercentage || 0,
       ratingValue: apiProduct.rating || 0,
       totalReviewCount: apiProduct.reviewsCount || 0,
@@ -899,7 +903,7 @@ const ProductDetailsScreen = () => {
                             vendor: product.vendor,
                             price: product.price,
                             compareAtPrice: product.compareAtPrice,
-                            currency: "USD",
+                            currency: storeCurrency,
                             images: product.images?.map((img) => img.url) || [],
                             rating: 0,
                             reviewsCount: 0,

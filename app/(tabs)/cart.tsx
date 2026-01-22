@@ -24,6 +24,7 @@ import { SectionHeader } from "@/components/molecules/SectionHeader";
 import ErrorModal from "@/components/organisms/ErrorModal";
 import useCartStore from "@/store/useCartStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { tokens } from "@/tamagui/token";
 import { formatPrice } from "@/utils/formatPrice";
 import { router, useFocusEffect } from "expo-router";
@@ -340,7 +341,7 @@ const CartScreen = () => {
             }`}
             currentPrice={item.price}
             originalPrice={item.compareAtPrice ? item.compareAtPrice : undefined}
-            currency={item.currency}
+            currency={storeCurrency}
             options={options}
             inStockCount={item.quantityAvailable}
             quantity={item.quantity}
@@ -482,7 +483,8 @@ const CartScreen = () => {
   }, 0);
   const originalTotal = subtotal + savings; // Original total before discount
   const grandTotal = subtotal; // Final amount to pay (after discount)
-  const cartCurrency = items[0]?.currency || 'USD'; // Get currency from first cart item
+  const storeCurrency = useStoreConfigStore((state) => state.currency);
+  const cartCurrency = storeCurrency; // Always use store config currency
 
   return (
     <YStack flex={1} backgroundColor="$background">

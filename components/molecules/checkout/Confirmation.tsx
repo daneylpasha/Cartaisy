@@ -13,6 +13,7 @@ import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import OrderListItems from "@/components/organisms/checkout/OrderListItems";
 import { t } from "@/translations";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Keyboard, TouchableWithoutFeedback } from "react-native";
@@ -28,6 +29,7 @@ interface ConfirmationProps {
 }
 
 const Confirmation = ({ sessionId, onSummaryLoaded, onInputFocus, isKeyboardVisible }: ConfirmationProps) => {
+  const storeCurrency = useStoreConfigStore((state) => state.currency);
   const form = useForm();
   const { showAlert, AlertComponent } = useCustomAlert();
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
@@ -79,7 +81,7 @@ const Confirmation = ({ sessionId, onSummaryLoaded, onInputFocus, isKeyboardVisi
 
     // Use backend values for other fields (they should be correct)
     const pricing = {
-      currency: summary.pricing?.currency || "USD",
+      currency: summary.pricing?.currency || storeCurrency,
       subtotal: subtotal,
       discountAmount: summary.pricing?.discountAmount || 0,
       couponDiscount: summary.pricing?.couponDiscount || 0,
@@ -125,21 +127,43 @@ const Confirmation = ({ sessionId, onSummaryLoaded, onInputFocus, isKeyboardVisi
         setIsApplyingPromo(false);
 
         // Extract error message from different possible paths
-        const errorMessage =
+        const rawErrorMessage =
           error?.response?.data?.error ||
           error?.response?.data?.message ||
           error?.message ||
-          "Invalid promo code. Please try again.";
+          "";
+
+        // Convert technical errors to user-friendly messages
+        let userFriendlyMessage = "Invalid promo code. Please try again.";
+
+        if (rawErrorMessage) {
+          const lowerError = rawErrorMessage.toLowerCase();
+
+          // Check for specific error patterns and provide friendly messages
+          if (lowerError.includes("shopify") || lowerError.includes("api error") || lowerError.includes("nullability")) {
+            userFriendlyMessage = "Unable to apply promo code. Please try again later.";
+          } else if (lowerError.includes("invalid") || lowerError.includes("not found") || lowerError.includes("does not exist")) {
+            userFriendlyMessage = "This promo code is invalid or has expired.";
+          } else if (lowerError.includes("expired")) {
+            userFriendlyMessage = "This promo code has expired.";
+          } else if (lowerError.includes("minimum") || lowerError.includes("not applicable")) {
+            userFriendlyMessage = "This promo code cannot be applied to your order.";
+          } else if (lowerError.includes("already") || lowerError.includes("used")) {
+            userFriendlyMessage = "This promo code has already been used.";
+          } else if (!lowerError.includes("failed to fetch") && rawErrorMessage.length < 100) {
+            // Use the raw message if it's short and doesn't contain technical jargon
+            userFriendlyMessage = rawErrorMessage;
+          }
+        }
+
         showAlert({
           type: "error",
           title: "Error",
-          message:
-            error?.response?.data?.error ||
-            "Failed to save payment selection. Please try again.",
+          message: userFriendlyMessage,
           buttons: [{ text: "OK" }],
         });
         // Set error to show in red banner instead of modal
-        setPromoError(errorMessage);
+        setPromoError(userFriendlyMessage);
       },
     },
   });

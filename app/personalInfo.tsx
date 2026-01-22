@@ -39,6 +39,7 @@ import CountryPicker, {
   Country,
   CountryCode,
 } from "react-native-country-picker-modal";
+import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
@@ -71,7 +72,7 @@ const PersonalInfo = () => {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [pendingAddressId, setPendingAddressId] = useState<string | null>(null);
   const [pendingAddressText, setPendingAddressText] = useState<string | null>(
-    null
+    null,
   );
   const [selectedCountry, setSelectedCountry] = useState<Country>({
     callingCode: ["44"],
@@ -91,7 +92,7 @@ const PersonalInfo = () => {
     "male" | "female" | null
   >(null);
   const [tempDateSelection, setTempDateSelection] = useState<string | null>(
-    null
+    null,
   );
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [showYearPicker, setShowYearPicker] = useState(false);
@@ -136,7 +137,7 @@ const PersonalInfo = () => {
           if (data) {
             console.log(
               "[PersonalInfo] Found pending address in storage:",
-              data
+              data,
             );
             const addressData = JSON.parse(data);
             setPendingAddressId(addressData.id);
@@ -149,10 +150,10 @@ const PersonalInfo = () => {
         .catch((error) => {
           console.error(
             "[PersonalInfo] Failed to read pending address:",
-            error
+            error,
           );
         });
-    }, [refetchProfile])
+    }, [refetchProfile]),
   );
 
   // Check if address was selected from address list
@@ -173,7 +174,7 @@ const PersonalInfo = () => {
       console.log("Available addresses:", addresses);
       if (addresses.length > 0) {
         const found = addresses.find(
-          (addr: any) => addr.id === pendingAddressId
+          (addr: any) => addr.id === pendingAddressId,
         );
         console.log("Found selected address:", found);
       }
@@ -211,7 +212,7 @@ const PersonalInfo = () => {
     if (user) {
       console.log(
         "Prefilling form with user data:",
-        JSON.stringify(user, null, 2)
+        JSON.stringify(user, null, 2),
       );
 
       // Full Name - API returns "name" not "fullName"
@@ -462,7 +463,7 @@ const PersonalInfo = () => {
     if (pendingAddressId && pendingAddressId !== "undefined") {
       console.log(
         "[PersonalInfo] Including address index in profile update:",
-        pendingAddressId
+        pendingAddressId,
       );
 
       // The pendingAddressId is the index (0, 1, 2, etc.) from the address list
@@ -471,7 +472,7 @@ const PersonalInfo = () => {
 
     console.log(
       "[PersonalInfo] Final update data:",
-      JSON.stringify(updateData, null, 2)
+      JSON.stringify(updateData, null, 2),
     );
 
     // Update profile (including address if selected)
@@ -481,7 +482,7 @@ const PersonalInfo = () => {
         onSuccess: async (response) => {
           console.log(
             "[PersonalInfo] Profile update response:",
-            JSON.stringify(response, null, 2)
+            JSON.stringify(response, null, 2),
           );
 
           // Wait a bit for the backend to process the address update
@@ -492,8 +493,8 @@ const PersonalInfo = () => {
             JSON.stringify(
               (refetchResult.data as any)?.data?.user?.defaultAddress,
               null,
-              2
-            )
+              2,
+            ),
           );
 
           // Clear pending state after refetch completes
@@ -509,10 +510,10 @@ const PersonalInfo = () => {
         onError: (error: any) => {
           console.error(
             "[PersonalInfo] Profile update error:",
-            JSON.stringify(error?.response?.data, null, 2)
+            JSON.stringify(error?.response?.data, null, 2),
           );
         },
-      }
+      },
     );
   };
 
@@ -630,8 +631,8 @@ const PersonalInfo = () => {
                   genderValue === "male"
                     ? "Male"
                     : genderValue === "female"
-                    ? "Female"
-                    : "Select Gender";
+                      ? "Female"
+                      : "Select Gender";
 
                 // Sync selectedGender with form value
                 if (selectedGender !== genderValue) {
@@ -930,7 +931,7 @@ const PersonalInfo = () => {
 
                       // Fallback: find address with isDefault: true from addresses list
                       const defaultFromList = addresses.find(
-                        (addr: any) => addr.isDefault === true
+                        (addr: any) => addr.isDefault === true,
                       );
                       if (defaultFromList) {
                         return [
@@ -1359,13 +1360,13 @@ const PersonalInfo = () => {
                             const monthDate = new Date(
                               calendarDate.getFullYear(),
                               monthIdx,
-                              1
+                              1,
                             );
                             const isCurrentMonth =
                               monthIdx === calendarDate.getMonth();
                             const monthName = monthDate.toLocaleString(
                               "default",
-                              { month: "short" }
+                              { month: "short" },
                             );
 
                             return (
@@ -1421,7 +1422,10 @@ const PersonalInfo = () => {
                     borderColor="rgba(203, 213, 225, 0.3)"
                     height={150}
                   >
-                    <ScrollView showsVerticalScrollIndicator={false}>
+                    <GHScrollView
+                      showsVerticalScrollIndicator={true}
+                      nestedScrollEnabled={true}
+                    >
                       <YStack gap="$xs">
                         {Array.from({ length: 125 }, (_, i) => {
                           const year = new Date().getFullYear() - i;
@@ -1463,7 +1467,7 @@ const PersonalInfo = () => {
                           );
                         })}
                       </YStack>
-                    </ScrollView>
+                    </GHScrollView>
                   </YStack>
                 )}
 

@@ -19,6 +19,7 @@ import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useAuthStore from "@/store/useAuthStore";
 
 import useCartStore from "@/store/useCartStore";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { formatPrice } from "@/utils/formatPrice";
 import {
   KeyboardAvoiderInsets,
@@ -59,7 +60,8 @@ const CheckoutScreen = () => {
     getTotalPrice,
     items,
   } = useCartStore();
-  const cartCurrency = items[0]?.currency || "USD"; // Get currency from first cart item
+  const storeCurrency = useStoreConfigStore((state) => state.currency);
+  const cartCurrency = storeCurrency; // Always use store config currency
   const { mutate: clearCartAPI } = useClearCart();
 
   const [sessionId, setSessionId] = useState<string>(initialSessionId || "");
@@ -669,23 +671,6 @@ const CheckoutScreen = () => {
                       -
                       {formatPrice(
                         checkoutSummary?.pricing?.discountAmount,
-                        cartCurrency
-                      )}
-                    </TextSMSemiBold>
-                  </XStack>
-                )}
-                {(checkoutSummary?.pricing?.couponDiscount || 0) > 0 && (
-                  <XStack
-                    paddingVertical={"$sm"}
-                    justifyContent="space-between"
-                  >
-                    <TextSMRegular color="$secondary">
-                      {"Coupon Discount"}
-                    </TextSMRegular>
-                    <TextSMSemiBold color="$green">
-                      -
-                      {formatPrice(
-                        checkoutSummary?.pricing?.couponDiscount,
                         cartCurrency
                       )}
                     </TextSMSemiBold>

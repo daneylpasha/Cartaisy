@@ -15,6 +15,7 @@ import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { formatPrice } from "@/utils/formatPrice";
 import { router, useLocalSearchParams } from "expo-router";
 import { isValidPhoneNumber } from "libphonenumber-js";
@@ -64,7 +65,10 @@ export interface ShippingRef {
 }
 
 const Shipping = forwardRef<ShippingRef, ShippingProps>(
-  ({ sessionId, currency = "USD", onStepComplete, onError }, ref) => {
+  ({ sessionId, currency, onStepComplete, onError }, ref) => {
+    // Get store currency as fallback
+    const storeCurrency = useStoreConfigStore((state) => state.currency);
+    const displayCurrency = currency || storeCurrency;
     const params = useLocalSearchParams();
 
     const { showAlert, AlertComponent } = useCustomAlert();
@@ -177,7 +181,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
         rate.description ||
         "Estimated delivery: Not available",
       image: "deliveryBox" as const,
-      cost: `Cost: ${formatPrice(rate.price, currency)}`,
+      cost: `Cost: ${formatPrice(rate.price, rate.currencyCode || displayCurrency)}`,
       price: rate.price,
     }));
 

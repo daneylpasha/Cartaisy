@@ -13,7 +13,7 @@ interface DiscountBadgeProps {
 export const DiscountBadge: React.FC<DiscountBadgeProps> = ({
   price,
   compareAtPrice,
-  currency = 'USD',
+  currency,
 }) => {
   // Only show if there's a discount
   if (!compareAtPrice || compareAtPrice <= price) {
@@ -49,7 +49,7 @@ interface PriceWithDiscountProps {
 export const PriceWithDiscount: React.FC<PriceWithDiscountProps> = ({
   price,
   compareAtPrice,
-  currency = 'USD',
+  currency,
 }) => {
   const hasDiscount = compareAtPrice && compareAtPrice > price;
 
