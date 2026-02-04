@@ -2,6 +2,7 @@ import type { CarouselItem } from "@/api/generated/cartaisyAPI.schemas";
 import { ParagraphXS } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
+import { PressableButton } from "@/components/atoms/PressableButton";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextLGBold } from "@/components/atoms/texts/TextLGBold";
 import { TextXSRegular } from "@/components/atoms/texts/TextXSRegular";
@@ -11,7 +12,7 @@ import { tokens } from "@/tamagui/token";
 import { extractNumericId } from "@/utils/extractNumericId";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
-import { FlatList } from "react-native";
+import { FlatList, Platform } from "react-native";
 import { XStack, YStack } from "tamagui";
 
 type FeaturedPromotionsCarouselProps = {
@@ -21,11 +22,16 @@ type FeaturedPromotionsCarouselProps = {
 export const FeaturedPromotionsCarousel = ({
   carousels,
 }: FeaturedPromotionsCarouselProps) => {
-  if (!carousels || carousels.length === 0) {
+  const activeCarousels = carousels?.filter((banner) => {
+    if (!banner.endsAt) return true;
+    return new Date(banner.endsAt) >= new Date();
+  });
+
+  if (!activeCarousels || activeCarousels.length === 0) {
     return null;
   }
 
-  const totalBanners = carousels.length;
+  const totalBanners = activeCarousels.length;
   const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
   const carouselRef = useRef<FlatList>(null);
 
@@ -35,12 +41,12 @@ export const FeaturedPromotionsCarousel = ({
   }).current;
 
   React.useEffect(() => {
-    if (carousels.length <= 1) return; // Don't auto-scroll if only one item
+    if (activeCarousels.length <= 1) return; // Don't auto-scroll if only one item
 
     const autoScrollInterval = setInterval(() => {
       setActiveCarouselIndex((prevIndex) => {
         const nextIndex = prevIndex + 1;
-        if (nextIndex >= carousels.length) {
+        if (nextIndex >= activeCarousels.length) {
           // Reset to first card when reaching the end
           setTimeout(() => {
             carouselRef.current?.scrollToIndex({ index: 0, animated: true });
@@ -60,13 +66,13 @@ export const FeaturedPromotionsCarousel = ({
     }, 4000);
 
     return () => clearInterval(autoScrollInterval);
-  }, [carousels.length]);
+  }, [activeCarousels.length]);
 
   return (
     <YStack>
       <FlatList
         ref={carouselRef}
-        data={carousels}
+        data={activeCarousels}
         keyExtractor={(banner, index) =>
           `featured-${banner.collectionId}-${index}`
         }
@@ -82,30 +88,27 @@ export const FeaturedPromotionsCarousel = ({
           waitForInteraction: true,
           minimumViewTime: 300,
         }}
-        renderItem={({ item: banner }) => (
-          <XStack width={SCREEN_WIDTH}>
-            <Spacer size={"$md"} />
-            <OpTouch
-              width={SCREEN_WIDTH - 32}
-              style={{
-                borderTopRightRadius: 16,
-                borderTopLeftRadius: 16,
+        renderItem={({ item: banner }) => {
+          const handlePress = () => {
+            if (banner.collectionId) {
+              router.push({
+                pathname: "/products",
+                params: {
+                  collectionId: extractNumericId(banner.collectionId),
+                  categoryName: banner.title,
+                },
+              });
+            }
+          };
 
-                // elevation:1,
-                paddingVertical: 30,
-              }}
-              onPress={() => {
-                if (banner.collectionId) {
-                  router.push({
-                    pathname: "/products",
-                    params: {
-                      collectionId: extractNumericId(banner.collectionId),
-                      categoryName: banner.title,
-                    },
-                  });
-                }
-              }}
-            >
+          const touchStyle = {
+            borderTopRightRadius: 16,
+            borderTopLeftRadius: 16,
+            paddingVertical: 30,
+          };
+
+          const content = (
+            <>
               <AppImage
                 resizeMode={"cover"}
                 source={banner.imageUrl}
@@ -148,25 +151,30 @@ export const FeaturedPromotionsCarousel = ({
                   width={120}
                   borderColor="$lightgrey"
                   color="$secondary"
-                  onPress={() => {
-                    if (banner.collectionId) {
-                      router.push({
-                        pathname: "/products",
-                        params: {
-                          collectionId: extractNumericId(banner.collectionId),
-                          categoryName: banner.title,
-                        },
-                      });
-                    }
-                  }}
+                  onPress={handlePress}
                   label={banner.ctaText || "Shop Now"}
                 />
                 <Spacer size={"$xl"} />
               </YStack>
-            </OpTouch>
-            <Spacer size={"$md"} />
-          </XStack>
-        )}
+            </>
+          );
+
+          const Touchable = Platform.OS === "android" ? PressableButton : OpTouch;
+
+          return (
+            <XStack width={SCREEN_WIDTH}>
+              <Spacer size={"$md"} />
+              <Touchable
+                width={SCREEN_WIDTH - 32}
+                style={touchStyle}
+                onPress={handlePress}
+              >
+                {content}
+              </Touchable>
+              <Spacer size={"$md"} />
+            </XStack>
+          );
+        }}
       />
 
       {/* Pagination Indicators below carousel */}

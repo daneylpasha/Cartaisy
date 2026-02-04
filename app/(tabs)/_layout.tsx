@@ -63,7 +63,8 @@ export default function TabLayout() {
                 onPress={handleTabPress(onPress)}
                 onLongPress={onLongPress}
                 accessibilityState={accessibilityState}
-                android_ripple={null}
+                android_ripple={{ color: "transparent" }}
+                unstable_pressDelay={0}
               >
                 {children}
               </Pressable>
