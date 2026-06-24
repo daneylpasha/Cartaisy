@@ -10,6 +10,7 @@ These rules apply to the entire repository.
 - Do not make broad refactors, formatting-only sweeps, dependency churn, or unrelated cleanup.
 - Do not change application code for documentation-only issues.
 - Temporary GitHub issue body files such as `issue-*.md` are only for creating GitHub issues locally and must not be committed. Remove them before opening a pull request.
+- If the task refers to a GitHub issue number, the PR description must include a GitHub closing keyword for that exact issue number, such as `Closes #12`, so GitHub automatically closes the issue when the PR is merged.
 
 ## Secrets and environment safety
 
