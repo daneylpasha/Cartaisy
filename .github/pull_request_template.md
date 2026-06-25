@@ -8,7 +8,7 @@
 
 ## Linked issue
 
-Closes #
+Closes #<!-- replace with the exact linked issue number -->
 
 ## Commands run
 
