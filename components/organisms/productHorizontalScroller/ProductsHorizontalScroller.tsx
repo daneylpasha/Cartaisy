@@ -23,10 +23,6 @@ const ProductsHorizontalScroller = ({
     (collectionItem) => collectionItem.type === "large_row"
   );
 
-  if (!targetCollection) {
-    return null;
-  }
-
   const handleViewAll = React.useCallback(() => {
     router.push({
       pathname: "/products",
@@ -36,6 +32,10 @@ const ProductsHorizontalScroller = ({
       },
     });
   }, [targetCollection]);
+
+  if (!targetCollection) {
+    return null;
+  }
 
   return (
     <YStack>

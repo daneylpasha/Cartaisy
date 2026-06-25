@@ -69,7 +69,7 @@ export const slidesData: Slide[] = [
   },
 ];
 
-const onboardingSlides: React.FC = () => {
+const OnboardingSlides: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState<number>(0);
   const onPressNextSlide = () => {
     if (activeIndex === slidesData.length - 1) {
@@ -166,7 +166,7 @@ const onboardingSlides: React.FC = () => {
   );
 };
 
-export default onboardingSlides;
+export default OnboardingSlides;
 
 const Styles = StyleSheet.create({
   container: {

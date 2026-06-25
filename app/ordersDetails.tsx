@@ -28,7 +28,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
-const ordersDetails = () => {
+const OrdersDetails = () => {
   const { orderId } = useLocalSearchParams();
 
   // Fetch order details
@@ -530,4 +530,4 @@ const ordersDetails = () => {
   );
 };
 
-export default ordersDetails;
+export default OrdersDetails;
