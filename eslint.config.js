@@ -20,7 +20,7 @@ module.exports = defineConfig([
       // Keep existing codebase issues non-blocking while still surfacing them in CI.
       "react/no-unescaped-entities": "warn",
       "react/display-name": "warn",
-      "react-hooks/rules-of-hooks": "warn",
+      "react-hooks/rules-of-hooks": "error",
       "import/no-unresolved": "warn",
       "import/export": "warn",
     },

@@ -5,7 +5,7 @@ import { ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { YStack } from "tamagui";
-const orders = () => {
+const Orders = () => {
   const { bottom: bottomSafeAreaInset } = useSafeAreaInsets();
 
   return (
@@ -24,4 +24,4 @@ const orders = () => {
   );
 };
 
-export default orders;
+export default Orders;

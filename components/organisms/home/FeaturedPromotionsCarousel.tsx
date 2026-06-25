@@ -22,14 +22,11 @@ type FeaturedPromotionsCarouselProps = {
 export const FeaturedPromotionsCarousel = ({
   carousels,
 }: FeaturedPromotionsCarouselProps) => {
-  const activeCarousels = carousels?.filter((banner) => {
-    if (!banner.endsAt) return true;
-    return new Date(banner.endsAt) >= new Date();
-  });
-
-  if (!activeCarousels || activeCarousels.length === 0) {
-    return null;
-  }
+  const activeCarousels =
+    carousels?.filter((banner) => {
+      if (!banner.endsAt) return true;
+      return new Date(banner.endsAt) >= new Date();
+    }) ?? [];
 
   const totalBanners = activeCarousels.length;
   const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
@@ -67,6 +64,10 @@ export const FeaturedPromotionsCarousel = ({
 
     return () => clearInterval(autoScrollInterval);
   }, [activeCarousels.length]);
+
+  if (activeCarousels.length === 0) {
+    return null;
+  }
 
   return (
     <YStack>

@@ -67,11 +67,6 @@ const ProductCardComponent = ({
   showProgressBar = false,
   onPress,
 }: ProductCardProps) => {
-  // Return null if product doesn't have required fields
-  if (!product?.productId || !product?.title || product?.price === undefined) {
-    return null;
-  }
-
   const imageHeight =
     context === "grid" ? 163.5 : context === "sales" ? 140 : 200;
   const cardWidth =
@@ -194,6 +189,12 @@ const ProductCardComponent = ({
       },
     },
   });
+
+  // Return null if product doesn't have required fields. Keep this after hooks so
+  // hook order remains stable across renders.
+  if (!product?.productId || !product?.title || product?.price === undefined) {
+    return null;
+  }
 
   const handlePress = () => {
     if (onPress) {
