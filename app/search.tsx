@@ -20,6 +20,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextXSRegular } from "@/components/atoms/texts/TextXSRegular";
+import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import {
   GRID_COLUMN_GAP,
   ProductCard,
@@ -30,6 +31,7 @@ import { EmptySearches } from "@/components/organisms/search/EmptySearches";
 import { SearchesResults } from "@/components/organisms/search/SearchesResults";
 import { useDebounce } from "@/hooks/useDebounce";
 import useCartStore from "@/store/useCartStore";
+import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
@@ -100,11 +102,12 @@ const Search = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { getTotalQuantity } = useCartStore();
   const cartItemCount = getTotalQuantity();
-  const { data: homeData } = useHomeScreenData();
+  const { data: homeData, error: homeDataError } = useHomeScreenData();
 
   // Fetch initial search screen data (trending products and collections)
   const {
     data: initialSearchData,
+    error: initialSearchError,
     isLoading: isLoadingInitialData,
     refetch: refetchInitialData,
   } = useGetInitialSearchScreen(
@@ -148,6 +151,7 @@ const Search = () => {
   // API Hook - Search Context (Recent + Trending Searches) - When input focused and query < 3 chars
   const {
     data: searchContextData,
+    error: searchContextError,
     isLoading: searchContextLoading,
     refetch: refetchSearchContext,
   } = useGetSearchContext(
@@ -251,6 +255,7 @@ const Search = () => {
     data: searchSuggestionsData,
     isFetching: isFetchingSuggestions,
     error: suggestionsError,
+    refetch: refetchSearchSuggestions,
   } = useSearch(
     {
       q: debouncedSearchQuery,
@@ -570,32 +575,60 @@ const Search = () => {
   // Get search results
   const searchResultsData = getSearchResultsData();
   const hasResults = searchResultsData.length > 0;
+  const activeCatalogUnavailableMessage =
+    (shouldShowSuggestions
+      ? getCatalogUnavailableMessage(suggestionsError)
+      : null) ||
+    (shouldShowDefaultContent
+      ? getCatalogUnavailableMessage(initialSearchError) ||
+        getCatalogUnavailableMessage(homeDataError)
+      : null) ||
+    (shouldShowRecentAndTrending
+      ? getCatalogUnavailableMessage(searchContextError) ||
+        getCatalogUnavailableMessage(homeDataError)
+      : null);
+  const catalogUnavailableHeight = SCREEN_HEIGHT - topInset - 60 - bottomInset;
+  const retryCatalogUnavailable = () => {
+    if (shouldShowSuggestions) {
+      refetchSearchSuggestions();
+      return;
+    }
+
+    handleRefresh();
+  };
 
   // Create data for FlatList
   const getFlatListData = () => {
     const data = [];
 
-    // State 1: Show Recent & Trending when focused, no query
+    // State 1: Show loading when typing
+    if (shouldShowSuggestions && isFetchingSuggestions) {
+      data.push({ type: "searching", id: "searching" });
+      return data;
+    }
+
+    // State 2: Show catalog unavailable state for controlled backend errors
+    if (activeCatalogUnavailableMessage) {
+      data.push({ type: "catalogUnavailable", id: "catalogUnavailable" });
+      return data;
+    }
+
+    // State 3: Show Recent & Trending when focused, no query
     if (shouldShowRecentAndTrending) {
       data.push({ type: "recentAndTrending", id: "recentAndTrending" });
     }
 
-    // State 2: Show loading when typing
-    if (shouldShowSuggestions && isFetchingSuggestions) {
-      data.push({ type: "searching", id: "searching" });
-    }
-
-    // State 3: Show search results when available
+    // State 4: Show search results when available
     if (shouldShowSuggestions && !isFetchingSuggestions && hasResults) {
       data.push({ type: "suggestions", id: "suggestions" });
     }
 
-    // State 4: Show empty state when no results
+    // State 5: Show empty state when no results
     if (shouldShowSuggestions && !isFetchingSuggestions && !hasResults) {
       data.push({ type: "emptyState", id: "emptyState" });
     }
 
-    // State 5: Show default content
+    // State 6: Show default content
     if (shouldShowDefaultContent) {
       data.push({ type: "defaultContent", id: "default" });
     }
@@ -826,6 +859,15 @@ const Search = () => {
             searchResults={searchResultsData}
             searchQuery={searchQuery}
             onProductClick={handleSuggestionClick}
+          />
+        );
+
+      case "catalogUnavailable":
+        return (
+          <CatalogUnavailableState
+            minHeight={catalogUnavailableHeight}
+            message={activeCatalogUnavailableMessage ?? undefined}
+            onRetry={retryCatalogUnavailable}
           />
         );
 

@@ -17,6 +17,7 @@ import { extractNumericId } from "@/utils/extractNumericId";
 import { HeadingXSBold, Loader, TextMDSemiBold } from "@/components/atoms";
 import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
+import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import { ProductCard } from "@/components/molecules/ProductCard";
 import {
@@ -25,6 +26,7 @@ import {
 } from "@/components/organisms/product/FilterBottomSheetContant";
 import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
+import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { FlatList, RefreshControl } from "react-native";
@@ -240,6 +242,12 @@ const PlpScreen = () => {
     }
   }, [isFetching, isRefreshing]);
 
+  useEffect(() => {
+    if (!isFetching && error && allProducts.length === 0) {
+      setIsScreenLoading(false);
+    }
+  }, [isFetching, error, allProducts.length]);
+
   // Store initial facets only on first load (no filters applied)
   useEffect(() => {
     if (data?.data?.facets && !initialFacets) {
@@ -343,6 +351,17 @@ const PlpScreen = () => {
 
   // Show error state
   if (error && allProducts.length === 0) {
+    const catalogUnavailableMessage = getCatalogUnavailableMessage(error);
+
+    if (catalogUnavailableMessage) {
+      return (
+        <CatalogUnavailableState
+          message={catalogUnavailableMessage}
+          onRetry={refetch}
+        />
+      );
+    }
+
     return (
       <YStack
         flex={1}
