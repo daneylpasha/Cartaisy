@@ -1,10 +1,11 @@
+import { mobileConfig } from "@/api/config/mobileConfig";
 import axios from "axios";
 
 // Backend URL (from environment variable)
-const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || "";
+const BASE_URL = mobileConfig.apiBaseUrl;
 
 // Store ID for multi-tenancy (from environment variable)
-const STORE_ID = process.env.EXPO_PUBLIC_STORE_ID || "";
+const STORE_ID = mobileConfig.storeId;
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
