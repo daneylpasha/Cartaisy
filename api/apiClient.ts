@@ -1,11 +1,12 @@
+import { mobileConfig } from "@/api/config/mobileConfig";
 import useAuthStore from "@/store/useAuthStore";
 import Axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 
 // Backend URL (from environment variable)
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || "";
+const API_BASE_URL = mobileConfig.apiBaseUrl;
 
 // Store ID for multi-tenancy (from environment variable)
-const STORE_ID = process.env.EXPO_PUBLIC_STORE_ID || "";
+const STORE_ID = mobileConfig.storeId;
 
 // Token refresh state to prevent multiple simultaneous refresh attempts
 let isRefreshing = false;
@@ -43,7 +44,7 @@ axiosInstance.interceptors.request.use(
 
     // Ensure X-Store-ID is always set (in case env var wasn't loaded at module init)
     if (!config.headers["X-Store-ID"]) {
-      config.headers["X-Store-ID"] = process.env.EXPO_PUBLIC_STORE_ID || "";
+      config.headers["X-Store-ID"] = mobileConfig.storeId;
     }
 
     if (__DEV__) {
