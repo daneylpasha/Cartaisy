@@ -17,8 +17,6 @@ These values may be included in branded mobile build configuration when they con
 | `EXPO_PUBLIC_APP_SCHEME` | Public deep-link URL scheme used by client integrations that read it from JavaScript. | Build-time value for the shipped app bundle. |
 | `EXPO_PUBLIC_IOS_BUNDLE_ID` | Public iOS bundle identifier for build/release tracking when used by build tooling. | Build-time value; currently documented for branded build setup. |
 | `EXPO_PUBLIC_ANDROID_PACKAGE` | Public Android application ID for build/release tracking when used by build tooling. | Build-time value; currently documented for branded build setup. |
-| `EXPO_PUBLIC_SHOPIFY_STORE_URL` | Public Shopify storefront domain only, if a build path still needs to identify the storefront from client code. | Build-time public value; does not authorize Shopify access. |
-| `EXPO_PUBLIC_SHOPIFY_API_VERSION` | Public Shopify API version string only, if used by client-side Shopify helpers. | Build-time public value; does not authorize Shopify access. |
 | `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key, if the branded build uses client-side Stripe initialization. | Build-time public value; tenant-specific but not secret. |
 | `EXPO_PUBLIC_STRIPE_MERCHANT_ID` | Apple Pay merchant identifier, if wallet payments are configured for the branded build. | Build-time public value that must match native payment configuration. |
 
@@ -32,8 +30,8 @@ Forbidden examples include:
 
 - Shopify Admin API access tokens.
 - Shopify private app tokens or custom app secrets.
-- Shopify Storefront tokens that are not explicitly approved as public client tokens.
-- `EXPO_PUBLIC_SHOPIFY_ACCESS_TOKEN` when it contains any merchant Admin token, private token, or secret Storefront credential.
+- Shopify Storefront access tokens.
+- `EXPO_PUBLIC_SHOPIFY_ACCESS_TOKEN`; do not define this variable for branded mobile builds.
 - Stripe secret keys, webhook secrets, restricted keys, or account-level credentials.
 - JWT signing secrets, auth refresh secrets, session secrets, or password reset secrets.
 - Database URLs, database passwords, Redis URLs, or queue credentials.
@@ -41,7 +39,7 @@ Forbidden examples include:
 - Firebase private keys, service account JSON, or private push notification credentials.
 - Merchant-specific credentials that grant write, admin, checkout, order, customer, or payment access.
 
-Do not expose Shopify Admin credentials to the mobile app. Mobile requests for Shopify-backed data should go through the backend so the backend can use store-specific credentials and tenant-scoped authorization.
+Do not expose Shopify credentials to the mobile app. Mobile requests for Shopify-backed data should go through the backend so the backend can use store-specific credentials and tenant-scoped authorization. The legacy direct-client Shopify credential path should be retired rather than documented as safe mobile configuration.
 
 ## Build-Time vs Runtime Values
 
