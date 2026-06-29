@@ -5,6 +5,7 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { AddressCard } from "@/components/molecules/AddressCard";
+import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import { CategorySuggestions } from "@/components/molecules/CategorySuggestions";
 import { CollectionsGrid } from "@/components/molecules/home/CollectionsGrid";
 import AlertModal from "@/components/organisms/AlertModal";
@@ -22,6 +23,7 @@ import ProductsHorizontalScroller from "@/components/organisms/productHorizontal
 import ProductsGridScroller from "@/components/organisms/ProductsGridScroller/ProductsGridScroller";
 import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller/SalesHorizontalScroller";
 import useAuthStore from "@/store/useAuthStore";
+import { isCatalogUnavailableError } from "@/utils/catalogUnavailableError";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { router, useFocusEffect } from "expo-router";
 import React, {
@@ -369,6 +371,14 @@ const HomeScreen = () => {
       <YStack backgroundColor={"$background"} flex={1}>
         {isLoading ? (
           <PlaceHolder />
+        ) : isCatalogUnavailableError(error) ? (
+          <CatalogUnavailableState error={error} onRetry={refetch} />
+        ) : error ? (
+          <CatalogUnavailableState
+            message="We couldn't load the catalog. Please try again."
+            onRetry={refetch}
+            title="Unable to load catalog"
+          />
         ) : (
           <FlatList
             data={sections}

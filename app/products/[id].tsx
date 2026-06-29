@@ -23,6 +23,7 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
+import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
 import ProductCarousel from "@/components/molecules/product/pdp/ProductCarousel";
 import ProductSpec from "@/components/molecules/product/pdp/ProductSpec";
@@ -41,6 +42,7 @@ import useFavoritesStore from "@/store/useFavoritesStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { t } from "@/translations";
 import { getColorHex } from "@/utils/colorHelper";
+import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { formatPrice } from "@/utils/formatPrice";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
@@ -83,7 +85,12 @@ const ProductDetailsScreen = () => {
   const { mutate: initializeCheckoutMutation } = useInitializeCheckout();
   const [isBuyingNow, setIsBuyingNow] = useState(false);
 
-  const { data: productDetailData, isLoading: isLoadingProduct } =
+  const {
+    data: productDetailData,
+    error: productDetailError,
+    isLoading: isLoadingProduct,
+    refetch: refetchProductDetail,
+  } =
     useGetProductDetail(id);
 
   // Extract productId from product data (this is the Shopify Product ID)
@@ -140,6 +147,9 @@ const ProductDetailsScreen = () => {
       isBestSeller: apiProduct.badges?.isBestSeller || false,
     };
   }, [productDetailData]);
+  const catalogUnavailableMessage = getCatalogUnavailableMessage(
+    productDetailError
+  );
 
   // Extract brand name from metafields
   const brandName = useMemo(() => {
@@ -1228,7 +1238,7 @@ const ProductDetailsScreen = () => {
         </XStack>
       </YStack>
       {/* <Spacer size={"$md"} /> */}
-      {isLoadingProduct || !product ? (
+      {isLoadingProduct ? (
         <YStack
           flex={1}
           backgroundColor="$background"
@@ -1237,6 +1247,19 @@ const ProductDetailsScreen = () => {
         >
           <Loader size="large" color="$primary" />
         </YStack>
+      ) : productDetailError || !product ? (
+        <CatalogUnavailableState
+          message={
+            catalogUnavailableMessage ||
+            "We couldn't load this product. Please try again."
+          }
+          onRetry={refetchProductDetail}
+          title={
+            catalogUnavailableMessage
+              ? "Catalog unavailable"
+              : "Product unavailable"
+          }
+        />
       ) : (
         <>
           <FlatList
