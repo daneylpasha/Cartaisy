@@ -117,6 +117,11 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
           onError: (error: any) => {
             // Call onError callback to stop loader
             onError?.(error);
+            // Store-unavailable failures surface a full-screen panel via the
+            // parent; don't also fire the generic toast.
+            if (getCatalogUnavailableMessage(error)) {
+              return;
+            }
             showAlert({
               type: "error",
               title: "Error",
