@@ -26,11 +26,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run typecheck if available
-        run: npm run typecheck --if-present
+      - name: Run typecheck
+        run: npm run typecheck
 
-      - name: Run lint if available
-        run: npm run lint --if-present
+      - name: Run lint
+        run: npm run lint
 
-      - name: Run tests if available
-        run: npm test --if-present
+      - name: Run test script
+        run: npm test
