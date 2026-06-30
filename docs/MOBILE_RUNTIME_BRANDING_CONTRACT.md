@@ -88,6 +88,7 @@ Recommended additive shape for `GET /store/config`:
     "currency": "USD",
     "timezone": "UTC",
     "branding": {
+      "shortName": "Merchant",
       "primaryColor": "#A82A50",
       "secondaryColor": "#4B5563",
       "logoUrl": "https://cdn.cartaisy.com/stores/store-id/logo.png",
@@ -141,7 +142,7 @@ Likely mobile implementation files for a follow-up:
 - `store/useStoreConfigStore.ts`: persist validated branding fields and expose fallback-aware selectors.
 - `components/providers/AppInitializer.tsx`: map backend `branding` into the store after validation.
 - `tamagui/token.ts`, `tamagui/theme.ts`, and `tamagui/config.ts`: decide whether dynamic branding is applied through Tamagui theme overrides, a separate branding provider, or component-level selectors.
-- `components/atoms/AppImage.tsx`: reuse existing remote image support, but provide a first-class local fallback path for runtime logos.
+- `components/atoms/AppImage.tsx`: reuse existing remote image support, but add a first-class local fallback path for runtime logos. Note: today the `onError` handler only sets internal `hasError` state, which is never read — a failed remote image currently renders nothing rather than falling back to a bundled asset. A follow-up must add a `fallbackName`/`fallbackSource` prop and render it when `hasError` is true, so the fallback guidance in this contract holds.
 - `app/splash.tsx`: choose between runtime logo and bundled fallback for the React splash route.
 - `components/organisms/home/HomeHeader.tsx`: choose runtime light/dark logo where appropriate.
 - `app/(auth)/login.tsx`, `app/(auth)/signUp.tsx`, and `components/organisms/auth/LoginBottomSheet.tsx`: choose runtime logo for auth branding surfaces.
