@@ -1,4 +1,5 @@
 import { useGetFavorites } from "@/api/generated/favorites/favorites";
+import { mobileConfig } from "@/api/config/mobileConfig";
 import { getStoreConfig } from "@/api/endpoints/storeConfig";
 import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
@@ -6,8 +7,8 @@ import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { useEffect, useRef } from "react";
 import Axios from "axios";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || "";
-const STORE_ID = process.env.EXPO_PUBLIC_STORE_ID || "";
+const API_BASE_URL = mobileConfig.apiBaseUrl;
+const STORE_ID = mobileConfig.storeId;
 
 /**
  * Central initialization component for app-level features
