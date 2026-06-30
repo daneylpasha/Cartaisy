@@ -10,12 +10,14 @@ import { FormInput } from "@/components/atoms/FormInput";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextSMSemiBold } from "@/components/atoms/texts/TextSMSemiBold";
+import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
+import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { formatPrice } from "@/utils/formatPrice";
 import { router, useLocalSearchParams } from "expo-router";
 import { isValidPhoneNumber } from "libphonenumber-js";
@@ -56,7 +58,7 @@ interface ShippingProps {
   sessionId: string;
   currency?: string; // Currency code from cart/checkout
   onStepComplete?: (sessionId: string) => void;
-  onError?: () => void;
+  onError?: (error?: unknown) => void;
 }
 
 export interface ShippingRef {
@@ -89,12 +91,18 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
       addressId: selectedAddressId ?? 0,
     };
 
-    const { data: shippingRatesResponse, isLoading: isLoadingShippingRates } =
-      useGetShippingRates(shippingRatesParams, {
+    const {
+      data: shippingRatesResponse,
+      error: shippingRatesError,
+      isLoading: isLoadingShippingRates,
+      refetch: refetchShippingRates,
+    } = useGetShippingRates(shippingRatesParams, {
         query: {
           enabled: !!sessionId && selectedAddressId !== null && isAuthenticated,
         },
       });
+    const shippingRatesUnavailableMessage =
+      getCatalogUnavailableMessage(shippingRatesError);
 
     // Save shipping mutation
     const { mutate: saveShippingInfo, isPending: isSavingShipping } =
@@ -108,7 +116,12 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
           },
           onError: (error: any) => {
             // Call onError callback to stop loader
-            onError?.();
+            onError?.(error);
+            // Store-unavailable failures surface a full-screen panel via the
+            // parent; don't also fire the generic toast.
+            if (getCatalogUnavailableMessage(error)) {
+              return;
+            }
             showAlert({
               type: "error",
               title: "Error",
@@ -630,6 +643,13 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
                 Loading shipping options...
               </TextSMRegular>
             </YStack>
+          ) : shippingRatesUnavailableMessage ? (
+            <CatalogUnavailableState
+              error={shippingRatesError}
+              minHeight={220}
+              title="Checkout unavailable"
+              onRetry={refetchShippingRates}
+            />
           ) : selectedAddressId === null ? (
             <YStack
               style={{ ...SHADOW_STYLES }}

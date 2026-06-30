@@ -2,8 +2,10 @@ import { useOrders } from "@/api/hooks/useOrders";
 import { TextMDSemiBold } from "@/components/atoms";
 import { Divider } from "@/components/atoms/Divider";
 import { Loader } from "@/components/atoms/Loader";
+import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import OrderCard from "@/components/molecules/orders/OrderCard";
 import { tokens } from "@/tamagui/token";
+import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { router } from "expo-router";
 import React from "react";
 import { FlatList, RefreshControl } from "react-native";
@@ -11,6 +13,7 @@ import { getTokenValue, Spacer, YStack } from "tamagui";
 
 const OrdersListItem = () => {
   const { data, isLoading, error, refetch, isRefetching } = useOrders();
+  const unavailableMessage = getCatalogUnavailableMessage(error);
 
   if (isLoading) {
     return (
@@ -22,6 +25,17 @@ const OrdersListItem = () => {
       >
         <Loader size="large" color="$primary" />
       </YStack>
+    );
+  }
+
+  if (unavailableMessage) {
+    return (
+      <CatalogUnavailableState
+        error={error}
+        minHeight={600}
+        title="Orders unavailable"
+        onRetry={refetch}
+      />
     );
   }
 

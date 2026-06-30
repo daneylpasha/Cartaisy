@@ -8,6 +8,7 @@ import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
+import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import { CheckoutStepper } from "@/components/molecules/checkout/CheckoutStepper";
 import Confirmation from "@/components/molecules/checkout/Confirmation";
 import PaymentStepper, {
@@ -20,6 +21,7 @@ import useAuthStore from "@/store/useAuthStore";
 
 import useCartStore from "@/store/useCartStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
+import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { formatPrice } from "@/utils/formatPrice";
 import {
   KeyboardAvoiderInsets,
@@ -93,6 +95,8 @@ const CheckoutScreen = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [checkoutSummary, setCheckoutSummary] = useState<any>(null);
   const [open, setOpen] = useState(false);
+  const [checkoutUnavailableError, setCheckoutUnavailableError] =
+    useState<unknown>(null);
   const shippingRef = useRef<any>(null);
   const paymentRef = useRef<any>(null);
   const flatListRef = useRef<any>(null);
@@ -341,7 +345,10 @@ const CheckoutScreen = () => {
           setIsProcessing(false);
         }
       },
-      onError: () => {
+      onError: (error) => {
+        if (getCatalogUnavailableMessage(error)) {
+          setCheckoutUnavailableError(error);
+        }
         setIsProcessing(false);
       },
     },
@@ -515,6 +522,13 @@ const CheckoutScreen = () => {
     setCurrentStep("confirmation");
   };
 
+  const handleCheckoutStepError = (error?: unknown) => {
+    if (getCatalogUnavailableMessage(error)) {
+      setCheckoutUnavailableError(error);
+    }
+    setIsProcessing(false);
+  };
+
   const getCurrentStepIndex = () => {
     // Only authenticated users can checkout - 3 steps: shipping, payment, confirmation
     const steps: CheckoutStep[] = ["shipping", "payment", "confirmation"];
@@ -548,7 +562,7 @@ const CheckoutScreen = () => {
             sessionId={sessionId}
             currency={cartCurrency}
             onStepComplete={handleShippingComplete}
-            onError={() => setIsProcessing(false)}
+            onError={handleCheckoutStepError}
           />
         );
 
@@ -558,7 +572,7 @@ const CheckoutScreen = () => {
             ref={paymentRef}
             sessionId={sessionId}
             onStepComplete={handlePaymentComplete}
-            onError={() => setIsProcessing(false)}
+            onError={handleCheckoutStepError}
           />
         );
 
@@ -567,6 +581,7 @@ const CheckoutScreen = () => {
           <Confirmation
             sessionId={sessionId}
             onSummaryLoaded={setCheckoutSummary}
+            onUnavailableError={setCheckoutUnavailableError}
           />
         );
 
@@ -577,183 +592,211 @@ const CheckoutScreen = () => {
 
   return (
     <YStack flex={1} backgroundColor="$background">
-      <CheckoutStepper
-        steps={[
-          { label: "Shipping", status: getStepStatus(0) },
-          { label: "Payment", status: getStepStatus(1) },
-          { label: "Confirmation", status: getStepStatus(2) },
-        ]}
-        currentStep={getCurrentStepIndex()}
-        onStepPress={handleStepPress}
-      />
-      <FlatList
-        ref={flatListRef}
-        style={{ flex: 1 }}
-        data={getSections()}
-        keyExtractor={(item) => item.id}
-        renderItem={renderSection}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="interactive"
-        contentContainerStyle={{
-          paddingBottom: 80,
-        }}
-        ListFooterComponent={<KeyboardAvoiderInsets extraSpace={280} />}
-      />
-      {currentStep !== "confirmation" && (
-        <KeyboardAvoiderView>
-          <YStack
-            paddingHorizontal="$md"
-            paddingBottom={isKeyboardVisible ? 0 : Math.max(bottomSafeAreaInset, 16)}
-            backgroundColor="$background"
-          >
-            <PrimaryButton
-              label="Continue"
-              onPress={handleContinue}
-              isLoading={isProcessing}
-            />
-          </YStack>
-        </KeyboardAvoiderView>
-      )}
+      {checkoutUnavailableError ? (
+        <CatalogUnavailableState
+          error={checkoutUnavailableError}
+          title="Checkout unavailable"
+          onRetry={() => setCheckoutUnavailableError(null)}
+        />
+      ) : (
+        <>
+          <CheckoutStepper
+            steps={[
+              { label: "Shipping", status: getStepStatus(0) },
+              { label: "Payment", status: getStepStatus(1) },
+              { label: "Confirmation", status: getStepStatus(2) },
+            ]}
+            currentStep={getCurrentStepIndex()}
+            onStepPress={handleStepPress}
+          />
+          <FlatList
+            ref={flatListRef}
+            style={{ flex: 1 }}
+            data={getSections()}
+            keyExtractor={(item) => item.id}
+            renderItem={renderSection}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            contentContainerStyle={{
+              paddingBottom: 80,
+            }}
+            ListFooterComponent={<KeyboardAvoiderInsets extraSpace={280} />}
+          />
+          {currentStep !== "confirmation" && (
+            <KeyboardAvoiderView>
+              <YStack
+                paddingHorizontal="$md"
+                paddingBottom={
+                  isKeyboardVisible ? 0 : Math.max(bottomSafeAreaInset, 16)
+                }
+                backgroundColor="$background"
+              >
+                <PrimaryButton
+                  label="Continue"
+                  onPress={handleContinue}
+                  isLoading={isProcessing}
+                />
+              </YStack>
+            </KeyboardAvoiderView>
+          )}
 
-      {currentStep === "confirmation" && (
-        <KeyboardAvoiderView>
-          {!isKeyboardVisible && (
-            <Animated.View
-              style={{
-                opacity: animatedOpacity,
-                maxHeight: animatedHeight.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, 200],
-                }),
-                overflow: "hidden",
-              }}
-            >
-              <Divider />
-              <YStack paddingHorizontal={"$md"}>
-                <Spacer size={"$sm"} />
-                <Animated.View {...panResponder.panHandlers}>
-                  <YStack
-                    justifyContent="center"
-                    alignItems="center"
-                    width={40}
-                    height={20}
-                    alignSelf="center"
-                    paddingVertical={8}
-                  >
-                    <YStack
-                      width={40}
-                      height={4}
-                      backgroundColor={"$icon"}
-                      borderRadius={"$2xl"}
-                    />
+          {currentStep === "confirmation" && (
+            <KeyboardAvoiderView>
+              {!isKeyboardVisible && (
+                <Animated.View
+                  style={{
+                    opacity: animatedOpacity,
+                    maxHeight: animatedHeight.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 200],
+                    }),
+                    overflow: "hidden",
+                  }}
+                >
+                  <Divider />
+                  <YStack paddingHorizontal={"$md"}>
+                    <Spacer size={"$sm"} />
+                    <Animated.View {...panResponder.panHandlers}>
+                      <YStack
+                        justifyContent="center"
+                        alignItems="center"
+                        width={40}
+                        height={20}
+                        alignSelf="center"
+                        paddingVertical={8}
+                      >
+                        <YStack
+                          width={40}
+                          height={4}
+                          backgroundColor={"$icon"}
+                          borderRadius={"$2xl"}
+                        />
+                      </YStack>
+                    </Animated.View>
+                    <Spacer size={"$sm"} />
+                    <XStack
+                      paddingVertical={"$sm"}
+                      justifyContent="space-between"
+                    >
+                      <TextSMSemiBold>
+                        Subtotal ({checkoutSummary?.items?.length || 0} Items)
+                      </TextSMSemiBold>
+                      <TextSMSemiBold>
+                        {formatPrice(
+                          checkoutSummary?.pricing?.subtotal,
+                          cartCurrency
+                        )}
+                      </TextSMSemiBold>
+                    </XStack>
+                    {(checkoutSummary?.pricing?.discountAmount || 0) > 0 && (
+                      <XStack
+                        paddingVertical={"$sm"}
+                        justifyContent="space-between"
+                      >
+                        <TextSMRegular color="$secondary">
+                          Discount
+                        </TextSMRegular>
+                        <TextSMSemiBold color="$green">
+                          -
+                          {formatPrice(
+                            checkoutSummary?.pricing?.discountAmount,
+                            cartCurrency
+                          )}
+                        </TextSMSemiBold>
+                      </XStack>
+                    )}
+                    <XStack
+                      paddingVertical={"$sm"}
+                      justifyContent="space-between"
+                    >
+                      <TextSMRegular color="$secondary">Taxes</TextSMRegular>
+                      <TextSMSemiBold>
+                        {formatPrice(
+                          checkoutSummary?.pricing?.tax,
+                          cartCurrency
+                        )}
+                      </TextSMSemiBold>
+                    </XStack>
+                    <XStack
+                      paddingVertical={"$sm"}
+                      justifyContent="space-between"
+                    >
+                      <TextSMRegular color="$secondary">
+                        {"Delivery Fee"}
+                      </TextSMRegular>
+                      <TextSMSemiBold>
+                        {formatPrice(
+                          checkoutSummary?.pricing?.shippingCost,
+                          cartCurrency
+                        )}
+                      </TextSMSemiBold>
+                    </XStack>
+                    <Spacer size={"$md"} />
                   </YStack>
                 </Animated.View>
+              )}
+              <YStack
+                paddingHorizontal={"$md"}
+                paddingBottom={
+                  isKeyboardVisible ? 0 : Math.max(bottomSafeAreaInset, 16)
+                }
+                paddingTop={"$sm"}
+                backgroundColor="$background"
+              >
+                <Divider />
                 <Spacer size={"$sm"} />
-                <XStack paddingVertical={"$sm"} justifyContent="space-between">
-                  <TextSMSemiBold>
-                    Subtotal ({checkoutSummary?.items?.length || 0} Items)
-                  </TextSMSemiBold>
-                  <TextSMSemiBold>
-                    {formatPrice(
-                      checkoutSummary?.pricing?.subtotal,
-                      cartCurrency
-                    )}
-                  </TextSMSemiBold>
-                </XStack>
-                {(checkoutSummary?.pricing?.discountAmount || 0) > 0 && (
-                  <XStack
-                    paddingVertical={"$sm"}
-                    justifyContent="space-between"
-                  >
-                    <TextSMRegular color="$secondary">Discount</TextSMRegular>
-                    <TextSMSemiBold color="$green">
-                      -
-                      {formatPrice(
-                        checkoutSummary?.pricing?.discountAmount,
-                        cartCurrency
+                <OpTouch
+                  onPress={isKeyboardVisible ? undefined : toggleOrderSummary}
+                >
+                  <XStack justifyContent="space-between">
+                    <TextSMSemiBold>{"GrandTotal"}</TextSMSemiBold>
+                    <XStack alignItems="center">
+                      <TextMDBold>
+                        {formatPrice(
+                          checkoutSummary?.pricing?.grandTotal,
+                          cartCurrency
+                        )}
+                      </TextMDBold>
+                      {!isKeyboardVisible && (
+                        <>
+                          <Spacer size={"$xs"} />
+                          <AppImage
+                            name="caretRight"
+                            width={14}
+                            height={14}
+                            style={{
+                              transform: [
+                                {
+                                  rotate: open ? "-90deg" : "90deg",
+                                },
+                              ],
+                            }}
+                          />
+                        </>
                       )}
-                    </TextSMSemiBold>
+                    </XStack>
                   </XStack>
-                )}
-                <XStack paddingVertical={"$sm"} justifyContent="space-between">
-                  <TextSMRegular color="$secondary">Taxes</TextSMRegular>
-                  <TextSMSemiBold>
-                    {formatPrice(checkoutSummary?.pricing?.tax, cartCurrency)}
-                  </TextSMSemiBold>
-                </XStack>
-                <XStack paddingVertical={"$sm"} justifyContent="space-between">
-                  <TextSMRegular color="$secondary">
-                    {"Delivery Fee"}
-                  </TextSMRegular>
-                  <TextSMSemiBold>
-                    {formatPrice(
-                      checkoutSummary?.pricing?.shippingCost,
-                      cartCurrency
-                    )}
-                  </TextSMSemiBold>
-                </XStack>
+                </OpTouch>
                 <Spacer size={"$md"} />
-              </YStack>
-            </Animated.View>
-          )}
-          <YStack
-            paddingHorizontal={"$md"}
-            paddingBottom={isKeyboardVisible ? 0 : Math.max(bottomSafeAreaInset, 16)}
-            paddingTop={"$sm"}
-            backgroundColor="$background"
-          >
-            <Divider />
-            <Spacer size={"$sm"} />
-            <OpTouch
-              onPress={isKeyboardVisible ? undefined : toggleOrderSummary}
-            >
-              <XStack justifyContent="space-between">
-                <TextSMSemiBold>{"GrandTotal"}</TextSMSemiBold>
-                <XStack alignItems="center">
-                  <TextMDBold>
-                    {formatPrice(
-                      checkoutSummary?.pricing?.grandTotal,
-                      cartCurrency
-                    )}
-                  </TextMDBold>
-                  {!isKeyboardVisible && (
-                    <>
-                      <Spacer size={"$xs"} />
-                      <AppImage
-                        name="caretRight"
-                        width={14}
-                        height={14}
-                        style={{
-                          transform: [
-                            {
-                              rotate: open ? "-90deg" : "90deg",
-                            },
-                          ],
-                        }}
-                      />
-                    </>
-                  )}
-                </XStack>
-              </XStack>
-            </OpTouch>
-            <Spacer size={"$md"} />
-            <PrimaryButton
-              label="Complete Order"
-              onPress={handleContinue}
-              icon={
-                <AppImage
-                  name="shieldCheck"
-                  tintColor={getTokenValue("$white")}
-                  size={16}
+                <PrimaryButton
+                  label="Complete Order"
+                  onPress={handleContinue}
+                  icon={
+                    <AppImage
+                      name="shieldCheck"
+                      tintColor={getTokenValue("$white")}
+                      size={16}
+                    />
+                  }
+                  isLoading={isProcessing}
                 />
-              }
-              isLoading={isProcessing}
-            />
-          </YStack>
-        </KeyboardAvoiderView>
+              </YStack>
+            </KeyboardAvoiderView>
+          )}
+          <AlertComponent />
+        </>
       )}
-      <AlertComponent />
     </YStack>
   );
 };

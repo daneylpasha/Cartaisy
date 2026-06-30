@@ -15,10 +15,12 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
+import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import OrderLineItem from "@/components/molecules/orders/OrderLineItem";
 import CancelOrderModal from "@/components/organisms/order-details/CancelOrderModal";
 import HelpOrderModal from "@/components/organisms/order-details/HelpOrderModal";
 import { SHADOW_STYLES } from "@/constants/styles";
+import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { formatPrice } from "@/utils/formatPrice";
 import { useLocalSearchParams } from "expo-router";
 
@@ -34,6 +36,7 @@ const OrdersDetails = () => {
   // Fetch order details
   const { data, isLoading, error, refetch } = useOrderDetails(orderId as string);
   const order = data?.data?.order;
+  const unavailableMessage = getCatalogUnavailableMessage(error);
 
   const { mutate: cancelOrderMutation, isPending: isCancelling } =
     useCancelOrder();
@@ -183,6 +186,18 @@ const OrdersDetails = () => {
   }
 
   // Error state
+  if (unavailableMessage) {
+    return (
+      <YStack flex={1} backgroundColor="$background">
+        <CatalogUnavailableState
+          error={error}
+          title="Order unavailable"
+          onRetry={refetch}
+        />
+      </YStack>
+    );
+  }
+
   if (error || !order) {
     return (
       <YStack
