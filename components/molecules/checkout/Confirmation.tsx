@@ -69,6 +69,15 @@ const Confirmation = ({
   const summaryUnavailableMessage =
     getCatalogUnavailableMessage(summaryError);
 
+  // Surface store-unavailable summary failures to the parent so the checkout
+  // stepper and "Complete Order" action bar are blocked, matching every other
+  // unavailable path (promo apply/remove, shipping, payment, complete order).
+  React.useEffect(() => {
+    if (summaryUnavailableMessage) {
+      onUnavailableError?.(summaryError);
+    }
+  }, [summaryUnavailableMessage, summaryError, onUnavailableError]);
+
   // Debug: Log API response
   React.useEffect(() => {
     console.log("[Confirmation] API Response:", {
@@ -246,7 +255,10 @@ const Confirmation = ({
     );
   }
 
-  if (summaryUnavailableMessage) {
+  // When wired into checkout, the parent renders the full-screen unavailable
+  // block (via onUnavailableError above) which gates the action bar. Fall back
+  // to a local block only when no parent handler is provided.
+  if (summaryUnavailableMessage && !onUnavailableError) {
     return (
       <CatalogUnavailableState
         error={summaryError}
