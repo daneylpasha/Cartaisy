@@ -10,10 +10,12 @@ import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
+import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import OrderListItems from "@/components/organisms/checkout/OrderListItems";
 import { t } from "@/translations";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
+import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Keyboard, TouchableWithoutFeedback } from "react-native";
@@ -26,9 +28,16 @@ interface ConfirmationProps {
   onSummaryLoaded?: (summary: any) => void;
   onInputFocus?: () => void;
   isKeyboardVisible?: boolean;
+  onUnavailableError?: (error: unknown) => void;
 }
 
-const Confirmation = ({ sessionId, onSummaryLoaded, onInputFocus, isKeyboardVisible }: ConfirmationProps) => {
+const Confirmation = ({
+  sessionId,
+  onSummaryLoaded,
+  onInputFocus,
+  isKeyboardVisible,
+  onUnavailableError,
+}: ConfirmationProps) => {
   const storeCurrency = useStoreConfigStore((state) => state.currency);
   const form = useForm();
   const { showAlert, AlertComponent } = useCustomAlert();
@@ -44,6 +53,7 @@ const Confirmation = ({ sessionId, onSummaryLoaded, onInputFocus, isKeyboardVisi
   // Fetch checkout summary
   const {
     data: summaryResponse,
+    error: summaryError,
     isLoading,
     refetch,
   } = useGetCheckoutSummary(sessionId, {
@@ -56,6 +66,8 @@ const Confirmation = ({ sessionId, onSummaryLoaded, onInputFocus, isKeyboardVisi
   });
 
   const summary = summaryResponse?.data;
+  const summaryUnavailableMessage =
+    getCatalogUnavailableMessage(summaryError);
 
   // Debug: Log API response
   React.useEffect(() => {
@@ -123,9 +135,13 @@ const Confirmation = ({ sessionId, onSummaryLoaded, onInputFocus, isKeyboardVisi
         // No alert modal - green banner will show automatically via summary.promoCode
       },
       onError: (error: any) => {
-        // Don't log to console to avoid triggering global error toasts
         setIsApplyingPromo(false);
+        if (getCatalogUnavailableMessage(error)) {
+          onUnavailableError?.(error);
+          return;
+        }
 
+        // Don't log to console to avoid triggering global error toasts
         // Extract error message from different possible paths
         const rawErrorMessage =
           error?.response?.data?.error ||
@@ -190,6 +206,9 @@ const Confirmation = ({ sessionId, onSummaryLoaded, onInputFocus, isKeyboardVisi
       refetch();
     } catch (error: any) {
       console.error("[Confirmation] Failed to remove promo code:", error);
+      if (getCatalogUnavailableMessage(error)) {
+        onUnavailableError?.(error);
+      }
       setIsRemovingPromo(false);
     }
   };
@@ -226,6 +245,17 @@ const Confirmation = ({ sessionId, onSummaryLoaded, onInputFocus, isKeyboardVisi
       </YStack>
     );
   }
+
+  if (summaryUnavailableMessage) {
+    return (
+      <CatalogUnavailableState
+        error={summaryError}
+        title="Checkout unavailable"
+        onRetry={refetch}
+      />
+    );
+  }
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <YStack>

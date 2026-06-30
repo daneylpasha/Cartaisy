@@ -19,12 +19,14 @@ import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import CartLineItem from "@/components/molecules/cart/CartLineItem";
+import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import { ProductCard } from "@/components/molecules/ProductCard";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import ErrorModal from "@/components/organisms/ErrorModal";
 import useCartStore from "@/store/useCartStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
+import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { tokens } from "@/tamagui/token";
 import { formatPrice } from "@/utils/formatPrice";
 import { router, useFocusEffect } from "expo-router";
@@ -53,6 +55,8 @@ const CartScreen = () => {
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
   const [isInitializingCheckout, setIsInitializingCheckout] = useState(false);
+  const [cartUnavailableError, setCartUnavailableError] =
+    useState<unknown>(null);
 
   // Initialize checkout mutation
   const { mutate: initializeCheckoutMutation } = useInitializeCheckout();
@@ -209,11 +213,16 @@ const CartScreen = () => {
           setUpdatingItemId(item.lineItemId);
           await updateCartQuantity(item.lineItemId, item.quantity + 1);
         } catch (error) {
-          setErrorModal({
-            visible: true,
-            title: "Error",
-            message: "Failed to update quantity. Please try again.",
-          });
+          const unavailableMessage = getCatalogUnavailableMessage(error);
+          if (unavailableMessage) {
+            setCartUnavailableError(error);
+          } else {
+            setErrorModal({
+              visible: true,
+              title: "Error",
+              message: "Failed to update quantity. Please try again.",
+            });
+          }
         } finally {
           setUpdatingItemId(null);
         }
@@ -248,11 +257,16 @@ const CartScreen = () => {
           await removeCartItem(item.lineItemId);
         }
       } catch (error) {
-        setErrorModal({
-          visible: true,
-          title: "Error",
-          message: "Failed to update cart. Please try again.",
-        });
+        const unavailableMessage = getCatalogUnavailableMessage(error);
+        if (unavailableMessage) {
+          setCartUnavailableError(error);
+        } else {
+          setErrorModal({
+            visible: true,
+            title: "Error",
+            message: "Failed to update cart. Please try again.",
+          });
+        }
       } finally {
         setUpdatingItemId(null);
         setRemovingItemId(null);
@@ -276,11 +290,16 @@ const CartScreen = () => {
         setRemovingItemId(item.lineItemId);
         await removeCartItem(item.lineItemId);
       } catch (error) {
-        setErrorModal({
-          visible: true,
-          title: "Error",
-          message: "Failed to remove item. Please try again.",
-        });
+        const unavailableMessage = getCatalogUnavailableMessage(error);
+        if (unavailableMessage) {
+          setCartUnavailableError(error);
+        } else {
+          setErrorModal({
+            visible: true,
+            title: "Error",
+            message: "Failed to remove item. Please try again.",
+          });
+        }
       } finally {
         setRemovingItemId(null);
       }
@@ -486,6 +505,22 @@ const CartScreen = () => {
   const storeCurrency = useStoreConfigStore((state) => state.currency);
   const cartCurrency = storeCurrency; // Always use store config currency
 
+  if (cartUnavailableError) {
+    return (
+      <YStack flex={1} backgroundColor="$background">
+        <DynamicStatusBar backgroundColor="#FFFFFF" />
+        <CatalogUnavailableState
+          error={cartUnavailableError}
+          title="Cart unavailable"
+          onRetry={() => {
+            setCartUnavailableError(null);
+            syncCart();
+          }}
+        />
+      </YStack>
+    );
+  }
+
   return (
     <YStack flex={1} backgroundColor="$background">
       <DynamicStatusBar backgroundColor="#FFFFFF" />
@@ -632,13 +667,19 @@ const CartScreen = () => {
                     },
                     onError: (error: any) => {
                       console.error("[Checkout] Init error:", error);
-                      setErrorModal({
-                        visible: true,
-                        title: "Checkout Error",
-                        message:
-                          error?.response?.data?.error?.message ||
-                          "Failed to initialize checkout. Please try again.",
-                      });
+                      const unavailableMessage =
+                        getCatalogUnavailableMessage(error);
+                      if (unavailableMessage) {
+                        setCartUnavailableError(error);
+                      } else {
+                        setErrorModal({
+                          visible: true,
+                          title: "Checkout Error",
+                          message:
+                            error?.response?.data?.error?.message ||
+                            "Failed to initialize checkout. Please try again.",
+                        });
+                      }
                       setIsInitializingCheckout(false);
                     },
                   }

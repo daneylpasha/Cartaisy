@@ -28,7 +28,7 @@ export type PaymentMethodType = "card" | "apple_pay" | "google_pay";
 interface PaymentStepperProps {
   sessionId: string;
   onStepComplete: (walletPaymentMethodId?: string, paymentType?: PaymentMethodType) => void;
-  onError?: () => void;
+  onError?: (error?: unknown) => void;
 }
 
 export interface PaymentStepperRef {
@@ -73,9 +73,9 @@ const PaymentStepper = forwardRef<PaymentStepperRef, PaymentStepperProps>(
             // Navigate to next step on success
             onStepComplete();
           },
-          onError: () => {
+          onError: (error) => {
             // Call onError callback to stop loader
-            onError?.();
+            onError?.(error);
           },
         },
       });
