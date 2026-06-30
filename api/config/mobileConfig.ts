@@ -83,6 +83,46 @@ const getInvalidRequiredConfig = (
   return invalidConfig;
 };
 
+// Metro/Expo statically replaces individual `process.env.EXPO_PUBLIC_FOO`
+// accesses with their literal values at bundle time, but it never populates the
+// `process.env` object itself. So in the shipped React Native bundle
+// `Object.keys(process.env)` returns at most ["NODE_ENV"], and key enumeration
+// alone would silently pass even when a forbidden value is bundled. To detect
+// these in the actual app we must reference each known sensitive key with a
+// static member access below, so Metro inlines its value. Enumeration is kept
+// as well so any other EXPO_PUBLIC_SHOPIFY_* var is still caught under Node
+// (CI/test runner), where process.env is fully populated.
+const getStaticPublicEnv = (): MobilePublicEnv => ({
+  EXPO_PUBLIC_SHOPIFY_STORE_URL: process.env.EXPO_PUBLIC_SHOPIFY_STORE_URL,
+  EXPO_PUBLIC_SHOPIFY_ACCESS_TOKEN: process.env.EXPO_PUBLIC_SHOPIFY_ACCESS_TOKEN,
+  EXPO_PUBLIC_SHOPIFY_API_VERSION: process.env.EXPO_PUBLIC_SHOPIFY_API_VERSION,
+  EXPO_PUBLIC_SHOPIFY_API_KEY: process.env.EXPO_PUBLIC_SHOPIFY_API_KEY,
+  EXPO_PUBLIC_SHOPIFY_API_SECRET: process.env.EXPO_PUBLIC_SHOPIFY_API_SECRET,
+  EXPO_PUBLIC_SHOPIFY_ADMIN_TOKEN: process.env.EXPO_PUBLIC_SHOPIFY_ADMIN_TOKEN,
+  EXPO_PUBLIC_API_SECRET: process.env.EXPO_PUBLIC_API_SECRET,
+  EXPO_PUBLIC_CLIENT_SECRET: process.env.EXPO_PUBLIC_CLIENT_SECRET,
+  EXPO_PUBLIC_ACCESS_TOKEN: process.env.EXPO_PUBLIC_ACCESS_TOKEN,
+  EXPO_PUBLIC_REFRESH_TOKEN: process.env.EXPO_PUBLIC_REFRESH_TOKEN,
+  EXPO_PUBLIC_ADMIN_TOKEN: process.env.EXPO_PUBLIC_ADMIN_TOKEN,
+  EXPO_PUBLIC_PRIVATE_KEY: process.env.EXPO_PUBLIC_PRIVATE_KEY,
+  EXPO_PUBLIC_PASSWORD: process.env.EXPO_PUBLIC_PASSWORD,
+});
+
+// Merge enumerable env keys (Node/CI) with the statically inlined sensitive
+// keys (Expo bundle). Only keys with a defined value count as "present"; an
+// unset EXPO_PUBLIC_* var inlines to `undefined` and must not be flagged.
+const getInspectablePublicEnv = (env: MobilePublicEnv): MobilePublicEnv => {
+  const merged: MobilePublicEnv = { ...env };
+
+  for (const [key, value] of Object.entries(getStaticPublicEnv())) {
+    if (typeof value === "string" && !(key in merged)) {
+      merged[key] = value;
+    }
+  }
+
+  return merged;
+};
+
 const getForbiddenPublicConfig = (env: MobilePublicEnv): MobileConfigValidationIssue[] =>
   Object.keys(env)
     .filter((key) => /^EXPO_PUBLIC_SHOPIFY_/i.test(key))
@@ -106,10 +146,11 @@ const getSecretLikePublicConfig = (env: MobilePublicEnv): MobileConfigValidation
 
 export const validateMobileConfig = (env: MobilePublicEnv): MobileConfigValidation => {
   const requiredConfig = getRequiredConfig(env);
+  const inspectableEnv = getInspectablePublicEnv(env);
   const missingRequiredConfig = getMissingRequiredConfig(requiredConfig);
   const invalidRequiredConfig = getInvalidRequiredConfig(requiredConfig, missingRequiredConfig);
-  const forbiddenPublicConfig = getForbiddenPublicConfig(env);
-  const secretLikePublicConfig = getSecretLikePublicConfig(env);
+  const forbiddenPublicConfig = getForbiddenPublicConfig(inspectableEnv);
+  const secretLikePublicConfig = getSecretLikePublicConfig(inspectableEnv);
   const errors = [
     ...missingRequiredConfig.map((key) => ({
       key,
