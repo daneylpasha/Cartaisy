@@ -77,6 +77,7 @@ Confirmed risks:
 - iOS bundle identifier mismatch: `app.json` and `GoogleService-Info.plist` use `com.rendernext.cartaisy`, but the checked-in Xcode project uses `com.cartaisy.app`.
 - iOS URL scheme mismatch: `app.json` declares `cartaisy`, while `Info.plist` also includes `com.cartaisy.app`. This may preserve an older identifier and should be deliberately confirmed or removed during migration.
 - Apple Pay entitlement mismatch: `app.json` and the Stripe plugin declare `merchant.com.cartaisy`, but `ios/cartaisy/cartaisy.entitlements` does not include the Apple Pay merchant entitlement.
+- iOS push environment hardcoded to development: `ios/cartaisy/cartaisy.entitlements` sets `aps-environment` to `development`. TestFlight and App Store distribution builds require `production` (or the auto-managed value produced by `expo prebuild`); shipping the `development` value silently breaks push notifications in distribution builds.
 - Static config mismatch: `.env.example` documents app identity variables, but the static `app.json` ignores them, so branded builds can easily diverge from documented values.
 - Firebase iOS mismatch: `GoogleService-Info.plist` is registered for `com.rendernext.cartaisy`; builds using the checked-in Xcode bundle ID `com.cartaisy.app` would not match that Firebase iOS app.
 
@@ -194,6 +195,7 @@ Prefer non-`EXPO_PUBLIC_*` names for native build identity so they are consumed 
 | `APP_NAME` | Expo/iOS/Android display name for the branded build |
 | `APP_SLUG` | Expo slug |
 | `APP_SCHEME` | Native deep link scheme |
+| `APP_VERSION` | Optional marketing version; falls back to `1.0.0` when unset |
 | `APP_ICON_PATH` | Expo app icon asset |
 | `APP_NOTIFICATION_ICON_PATH` | Notification icon asset |
 | `APP_NOTIFICATION_COLOR` | Notification accent color |
@@ -229,12 +231,13 @@ Before merging a future `app.config.ts` implementation:
 2. Run `npx expo prebuild --clean --no-install` in a disposable worktree and confirm generated iOS and Android identifiers match the same branded env inputs.
 3. Confirm `ios/*/Info.plist` URL schemes contain the intended app scheme and no stale bundle ID scheme unless deliberately required for backwards compatibility.
 4. Confirm generated iOS entitlements include the Apple Pay merchant ID only when Apple Pay is in scope for the branded build.
-5. Confirm the iOS Firebase plist `BUNDLE_ID` matches the generated iOS bundle identifier.
-6. Confirm Android Gradle `namespace` and `applicationId` match the Expo Android package.
-7. Confirm Android Firebase `package_name` matches the Expo Android package.
-8. Confirm launcher icons, adaptive icon, notification icon, splash background, and app display name render correctly in simulator/emulator builds.
-9. Confirm no `EXPO_PUBLIC_*` value contains merchant secrets or direct Shopify credentials.
-10. Confirm mobile catalog and store data still flow through the Cartaisy backend rather than direct Shopify API calls.
+5. Confirm the iOS `aps-environment` entitlement resolves to `production` for TestFlight and App Store builds, not the checked-in `development` value.
+6. Confirm the iOS Firebase plist `BUNDLE_ID` matches the generated iOS bundle identifier.
+7. Confirm Android Gradle `namespace` and `applicationId` match the Expo Android package.
+8. Confirm Android Firebase `package_name` matches the Expo Android package.
+9. Confirm launcher icons, adaptive icon, notification icon, splash background, and app display name render correctly in simulator/emulator builds.
+10. Confirm no `EXPO_PUBLIC_*` value contains merchant secrets or direct Shopify credentials.
+11. Confirm mobile catalog and store data still flow through the Cartaisy backend rather than direct Shopify API calls.
 
 ## Follow-Up Implementation Issue
 
