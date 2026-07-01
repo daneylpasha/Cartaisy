@@ -1,0 +1,100 @@
+name: Mobile audit or investigation
+description: Audit-first work before deciding whether implementation is needed.
+title: "[Audit]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when the first deliverable is an audit, diagnosis, inventory, or investigation. If implementation is allowed, say so explicitly.
+
+  - type: textarea
+    id: audit-question
+    attributes:
+      label: Audit question
+      description: What question should the audit answer?
+    validations:
+      required: true
+
+  - type: textarea
+    id: areas-to-inspect
+    attributes:
+      label: Areas/files to inspect
+      placeholder: "- ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: known-concerns
+    attributes:
+      label: Known concerns
+      description: Include high-risk areas, prior incidents, or suspected gaps.
+      placeholder: "Checkout/payment, auth/customer account, tenant config, backend API contract, Shopify credentials/secrets, native identity/build, Firebase/native services, runtime branding, dynamic config, etc."
+    validations:
+      required: true
+
+  - type: textarea
+    id: output-expected
+    attributes:
+      label: Output expected
+      description: What should the audit produce?
+      placeholder: "Audit doc, findings list, risk table, follow-up issue list, or recommendation."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: implementation-allowed
+    attributes:
+      label: Is follow-up implementation allowed in this issue?
+      options:
+        - No, audit only
+        - Yes, only small docs updates
+        - Yes, implementation allowed after audit
+    validations:
+      required: true
+
+  - type: dropdown
+    id: risk-level
+    attributes:
+      label: Risk level
+      options:
+        - Low
+        - Medium
+        - High
+    validations:
+      required: true
+
+  - type: textarea
+    id: docs-to-read
+    attributes:
+      label: Docs to read before work
+      value: |
+        - AGENTS.md
+        - CARTAISY_CONTEXT.md
+        - docs/ARCHITECTURE.md
+        - docs/STATUS.md
+        - docs/DECISIONS.md
+        - docs/TESTING.md
+        - docs/MOBILE_ENV_VARIABLES.md
+        - docs/MOBILE_BRANDED_BUILD_CHECKLIST.md
+        - docs/MOBILE_BRANDING_CONFIG_AUDIT.md
+        - docs/HOME_API_USAGE.md
+        - docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md
+        - docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      placeholder: "- ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: docs-to-update
+    attributes:
+      label: Docs to update
+      placeholder: "None, or list docs."
+    validations:
+      required: true

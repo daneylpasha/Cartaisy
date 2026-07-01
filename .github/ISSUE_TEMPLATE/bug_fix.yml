@@ -1,0 +1,222 @@
+name: Mobile bug fix
+description: Report a Cartaisy mobile defect with risk and validation context.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for mobile defects. Include enough reproduction detail for an agent or human to verify the bug before changing code.
+
+  - type: textarea
+    id: bug-summary
+    attributes:
+      label: Bug summary
+      description: What is broken?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: affected-area
+    attributes:
+      label: Affected area
+      placeholder: "Home, auth, product detail, cart, checkout, profile, notifications, native build, etc."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      multiple: true
+      options:
+        - iOS
+        - Android
+        - Both iOS and Android
+        - Web if applicable
+        - Unknown
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Low
+        - Medium
+        - High
+        - Critical
+    validations:
+      required: true
+
+  - type: dropdown
+    id: risk-level
+    attributes:
+      label: Risk level
+      options:
+        - Low
+        - Medium
+        - High
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: Name files, flows, or behaviors that must not change while fixing this bug.
+      placeholder: "Do not change unrelated UI, checkout/payment, auth refresh, native signing, secrets, package files, or app behavior outside the bug fix."
+    validations:
+      required: true
+
+  - type: textarea
+    id: store-tenant-impact
+    attributes:
+      label: Store/tenant config impact
+      description: Does this involve store ID, tenant scoping, branded config, or runtime store config?
+      placeholder: "None, or describe impact."
+    validations:
+      required: true
+
+  - type: textarea
+    id: backend-api-impact
+    attributes:
+      label: Backend API contract impact
+      description: Does this involve request/response shape, headers, API errors, generated clients, or backend behavior?
+      placeholder: "None, or describe impact."
+    validations:
+      required: true
+
+  - type: textarea
+    id: shopify-secrets-impact
+    attributes:
+      label: Shopify credentials/secrets impact
+      description: Mobile must not expose Shopify Admin/private credentials or merchant secrets.
+      placeholder: "None expected. Confirm no Shopify Admin/private token is added to mobile."
+    validations:
+      required: true
+
+  - type: textarea
+    id: checkout-payment-impact
+    attributes:
+      label: Checkout/payment impact
+      description: Checkout and payment changes are high-risk and need explicit review.
+      placeholder: "None, or describe impact."
+    validations:
+      required: true
+
+  - type: textarea
+    id: native-build-impact
+    attributes:
+      label: Native app identity/build impact
+      description: Does this involve app config, bundle ID, package name, Firebase/native services, EAS, signing, or app identity?
+      placeholder: "None, or describe impact."
+    validations:
+      required: true
+
+  - type: textarea
+    id: ios-android-impact
+    attributes:
+      label: iOS/Android impact
+      description: Note platform-specific behavior, device coverage, or simulator/device requirements.
+      placeholder: "iOS: ... Android: ..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: regression-risk
+    attributes:
+      label: Regression risk
+      options:
+        - Low
+        - Medium
+        - High
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      placeholder: "- ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: tests-required
+    attributes:
+      label: Tests required
+      placeholder: "List tests to add/update or explain why no tests are needed."
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation-commands
+    attributes:
+      label: Validation commands
+      value: |
+        - npm run lint
+        - npm run typecheck
+        - npm test
+      placeholder: "Add reproduction and platform checks."
+    validations:
+      required: true
+
+  - type: textarea
+    id: docs-to-read
+    attributes:
+      label: Docs to read before work
+      value: |
+        - AGENTS.md
+        - CARTAISY_CONTEXT.md
+        - docs/ARCHITECTURE.md
+        - docs/STATUS.md
+        - docs/DECISIONS.md
+        - docs/TESTING.md
+        - docs/MOBILE_ENV_VARIABLES.md
+        - docs/MOBILE_BRANDED_BUILD_CHECKLIST.md
+        - docs/MOBILE_BRANDING_CONFIG_AUDIT.md
+        - docs/HOME_API_USAGE.md
+        - docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md
+        - docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs-screenshots
+    attributes:
+      label: Logs/screenshots if applicable
+      description: Paste non-secret logs, screenshots, videos, or links. Do not include credentials or customer-private data.
+
+  - type: textarea
+    id: docs-to-update
+    attributes:
+      label: Docs to update if behavior changes
+      placeholder: "None, or list docs."
+    validations:
+      required: true

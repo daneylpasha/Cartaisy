@@ -1,0 +1,95 @@
+name: Mobile docs/context update
+description: Documentation-only mobile context or workflow updates.
+title: "[Docs]: "
+labels:
+  - docs
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for documentation or context-only work. Do not modify runtime code, tests, CI behavior, secrets, Shopify implementation, checkout/payment logic, native signing/certificates, package files, or app behavior.
+
+  - type: textarea
+    id: documentation-goal
+    attributes:
+      label: Documentation goal
+      description: What should the docs help future humans or agents understand?
+    validations:
+      required: true
+
+  - type: textarea
+    id: files
+    attributes:
+      label: Files to create/update
+      placeholder: "- ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: confusion
+    attributes:
+      label: Current confusion/problem
+      description: What is unclear, missing, risky, or outdated today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: required-content
+    attributes:
+      label: Required content
+      placeholder: "- ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: state-separation
+    attributes:
+      label: Current state vs target state requirement
+      description: Explain how the doc should separate implemented facts from plans or gaps.
+      value: |
+        Clearly separate:
+        - Current state
+        - Target state
+        - Known gaps
+
+        Do not describe planned features as already implemented.
+    validations:
+      required: true
+
+  - type: textarea
+    id: related-docs
+    attributes:
+      label: Links to related docs
+      value: |
+        - AGENTS.md
+        - CARTAISY_CONTEXT.md
+        - docs/ARCHITECTURE.md
+        - docs/STATUS.md
+        - docs/DECISIONS.md
+        - docs/TESTING.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      value: |
+        - No runtime code changes
+        - No tests or CI behavior changes
+        - No package file changes
+        - No secrets or environment file changes
+        - No Shopify implementation changes
+        - No checkout/payment implementation changes
+        - No native signing/certificate changes
+        - No app behavior changes
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      placeholder: "- ..."
+    validations:
+      required: true

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Start with the mobile context
+    url: https://github.com/daneylpasha/Cartaisy/blob/main/CARTAISY_CONTEXT.md
+    about: Read this before creating mobile issues or asking agents to work in this repo.
+  - name: Review mobile architecture and status
+    url: https://github.com/daneylpasha/Cartaisy/tree/main/docs
+    about: Check architecture, status, decisions, testing, and mobile safety docs before filing broad work.
+  - name: Mobile environment variable safety
+    url: https://github.com/daneylpasha/Cartaisy/blob/main/docs/MOBILE_ENV_VARIABLES.md
+    about: Confirm no Shopify Admin/private credentials or merchant secrets belong in mobile config.
