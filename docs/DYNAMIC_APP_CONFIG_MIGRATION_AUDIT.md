@@ -6,13 +6,13 @@ This is a documentation-only audit. It does not change runtime behavior, native 
 
 ## Current State
 
-The app still uses a static `app.json`; there is no checked-in `app.config.ts` or `app.config.js`. Branded build identity is therefore split across Expo config, generated native projects, Firebase files, JavaScript `EXPO_PUBLIC_*` values, and bundled assets.
+At the time of issue #27, the app still used a static `app.json`; there was no checked-in `app.config.ts` or `app.config.js`. Issue #38 moved the Expo config to `app.config.ts` with Cartaisy defaults and build-time merchant overrides. Branded build identity still needs to stay aligned across Expo config, generated or checked-in native projects, Firebase files, JavaScript `EXPO_PUBLIC_*` values, and bundled assets.
 
 ## Hardcoded Values
 
 ### Expo config
 
-`app.json` hardcodes:
+The former `app.json` hardcoded:
 
 | Field | Value |
 | --- | --- |
@@ -32,7 +32,7 @@ The app still uses a static `app.json`; there is no checked-in `app.config.ts` o
 | `expo.owner` | `rendernext` |
 | `expo.extra.eas.projectId` | `eabf3411-284b-4bd8-88eb-8d89a8a4ee14` |
 
-`.env.example` documents `EXPO_PUBLIC_APP_NAME`, `EXPO_PUBLIC_APP_SCHEME`, `EXPO_PUBLIC_IOS_BUNDLE_ID`, and `EXPO_PUBLIC_ANDROID_PACKAGE`, but those values do not currently drive `app.json`.
+`app.config.ts` now reads non-public native build identity variables with Cartaisy defaults. It also supports compatibility fallbacks for the existing public app identity variables documented in `.env.example`.
 
 ### iOS native project
 
@@ -42,11 +42,11 @@ The checked-in iOS project hardcodes or derives:
 | --- | --- | --- |
 | `ios/cartaisy/Info.plist` | `CFBundleDisplayName` | `cartaisy` |
 | `ios/cartaisy/Info.plist` | `CFBundleURLSchemes` | `cartaisy`, `com.cartaisy.app`, `exp+cartaisy` |
-| `ios/cartaisy.xcodeproj/project.pbxproj` | `PRODUCT_BUNDLE_IDENTIFIER` | `com.cartaisy.app` |
+| `ios/cartaisy.xcodeproj/project.pbxproj` | `PRODUCT_BUNDLE_IDENTIFIER` | `com.rendernext.cartaisy` |
 | `ios/cartaisy.xcodeproj/project.pbxproj` | `PRODUCT_NAME` | `cartaisy` |
 | `ios/cartaisy/cartaisy.entitlements` | `aps-environment` | `development` |
 
-The checked-in entitlement file does not include `com.apple.developer.in-app-payments`, even though `app.json` declares `merchant.com.cartaisy`.
+The checked-in entitlement file does not include `com.apple.developer.in-app-payments`, even though `app.config.ts` declares `merchant.com.cartaisy` by default.
 
 ### Android native project
 
@@ -74,21 +74,21 @@ The root `google-services.json` and `android/app/google-services.json` currently
 
 Confirmed risks:
 
-- iOS bundle identifier mismatch: `app.json` and `GoogleService-Info.plist` use `com.rendernext.cartaisy`, but the checked-in Xcode project uses `com.cartaisy.app`.
-- iOS URL scheme mismatch: `app.json` declares `cartaisy`, while `Info.plist` also includes `com.cartaisy.app`. This may preserve an older identifier and should be deliberately confirmed or removed during migration.
-- Apple Pay entitlement mismatch: `app.json` and the Stripe plugin declare `merchant.com.cartaisy`, but `ios/cartaisy/cartaisy.entitlements` does not include the Apple Pay merchant entitlement.
+- iOS bundle identifier mismatch: issue #38 aligned the checked-in Xcode project with the Cartaisy default `com.rendernext.cartaisy`, matching the Expo config default and `GoogleService-Info.plist`.
+- iOS URL scheme mismatch: `app.config.ts` declares `cartaisy` by default, while `Info.plist` also includes `com.cartaisy.app`. This may preserve an older identifier and should be deliberately confirmed or removed during migration.
+- Apple Pay entitlement mismatch: `app.config.ts` and the Stripe plugin declare `merchant.com.cartaisy` by default, but `ios/cartaisy/cartaisy.entitlements` does not include the Apple Pay merchant entitlement.
 - iOS push environment hardcoded to development: `ios/cartaisy/cartaisy.entitlements` sets `aps-environment` to `development`. TestFlight and App Store distribution builds require `production` (or the auto-managed value produced by `expo prebuild`); shipping the `development` value silently breaks push notifications in distribution builds.
-- Static config mismatch: `.env.example` documents app identity variables, but the static `app.json` ignores them, so branded builds can easily diverge from documented values.
-- Firebase iOS mismatch: `GoogleService-Info.plist` is registered for `com.rendernext.cartaisy`; builds using the checked-in Xcode bundle ID `com.cartaisy.app` would not match that Firebase iOS app.
+- Static config mismatch: issue #38 replaced the static Expo config with `app.config.ts`, so build-time identity values can now be supplied through environment variables.
+- Firebase iOS mismatch: issue #38 aligned the checked-in Cartaisy iOS bundle ID with `GoogleService-Info.plist`; merchant overrides still need matching Firebase plist files.
 
 Ruled out in the current committed files:
 
-- Android package mismatch is not present. `app.json`, `android/app/build.gradle`, `google-services.json`, and `android/app/google-services.json` all use `com.rendernext.cartaisy`.
-- The static Expo config does not introduce direct Shopify API calls or Shopify token exposure by itself.
+- Android package mismatch is not present. `app.config.ts`, `android/app/build.gradle`, `google-services.json`, and `android/app/google-services.json` all use `com.rendernext.cartaisy` by default.
+- The Expo config migration does not introduce direct Shopify API calls or Shopify token exposure by itself.
 
-## Recommended `app.config.ts` Shape
+## Original Recommended `app.config.ts` Shape
 
-Implement the migration as a dedicated follow-up after choosing the source of truth for branded build inputs. Keep the first implementation limited to build-time identity plumbing and do not change runtime API behavior.
+The original follow-up recommendation was to keep the first implementation limited to build-time identity plumbing and avoid runtime API behavior changes.
 
 Recommended shape:
 
@@ -225,7 +225,7 @@ Do not add Shopify Admin tokens, private API keys, signing credentials, store pa
 
 ## Manual Verification Steps
 
-Before merging a future `app.config.ts` implementation:
+For future merchant-specific changes, continue to verify:
 
 1. Run `npx expo config --type public` with a sample branded env file and confirm app name, slug, scheme, icons, notification color, bundle ID, Android package, Firebase file paths, Stripe merchant identifier, EAS project ID, and owner.
 2. Run `npx expo prebuild --clean --no-install` in a disposable worktree and confirm generated iOS and Android identifiers match the same branded env inputs.
@@ -239,13 +239,9 @@ Before merging a future `app.config.ts` implementation:
 10. Confirm no `EXPO_PUBLIC_*` value contains merchant secrets or direct Shopify credentials.
 11. Confirm mobile catalog and store data still flow through the Cartaisy backend rather than direct Shopify API calls.
 
-## Follow-Up Implementation Issue
+## Implementation Scope Resolved By Issue #38
 
-Create a follow-up issue to implement the migration once the branded build source of truth is approved:
-
-Title: `Implement dynamic app.config.ts for branded mobile builds`
-
-Scope:
+Issue #38 implemented the migration scope:
 
 - Replace `app.json` with `app.config.ts`.
 - Load only safe build-time identity values from non-public environment variables.

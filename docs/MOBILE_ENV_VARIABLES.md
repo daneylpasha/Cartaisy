@@ -4,6 +4,34 @@ Cartaisy mobile apps are branded builds for individual Shopify merchants. Any en
 
 Use mobile environment variables only for values that are safe for customers, app reviewers, or reverse engineers to see. Keep private credentials and merchant secrets on the backend.
 
+## Native Build Identity Variables
+
+`app.config.ts` reads these non-public build-time variables to generate merchant-specific Expo config. Each value has the current Cartaisy default, so existing Cartaisy builds continue to work when none of them are set.
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `APP_NAME` | Native and Expo app display name. Falls back to `EXPO_PUBLIC_APP_NAME` when unset. | `cartaisy` |
+| `APP_SLUG` | Expo slug for the branded build. | `cartaisy` |
+| `APP_SCHEME` | Native deep-link URL scheme. Falls back to `EXPO_PUBLIC_APP_SCHEME` when unset. | `cartaisy` |
+| `APP_VERSION` | App marketing version. | `1.0.0` |
+| `IOS_BUILD_NUMBER` | iOS build number. | `1` |
+| `IOS_BUNDLE_IDENTIFIER` | iOS bundle identifier. Falls back to `EXPO_PUBLIC_IOS_BUNDLE_ID` when unset. | `com.rendernext.cartaisy` |
+| `IOS_GOOGLE_SERVICES_FILE` | iOS Firebase plist used by Expo config. | `./GoogleService-Info.plist` |
+| `IOS_APPLE_PAY_MERCHANT_ID` | Apple Pay merchant identifier used by iOS entitlements and the Stripe config plugin. Falls back to `EXPO_PUBLIC_STRIPE_MERCHANT_ID` when unset. | `merchant.com.cartaisy` |
+| `ANDROID_PACKAGE` | Android package/application ID. Falls back to `EXPO_PUBLIC_ANDROID_PACKAGE` when unset. | `com.rendernext.cartaisy` |
+| `ANDROID_VERSION_CODE` | Android version code. | `1` |
+| `ANDROID_GOOGLE_SERVICES_FILE` | Android Firebase JSON used by Expo config. | `./google-services.json` |
+| `APP_ICON_PATH` | App icon and web favicon path. | `./assets/images/cartaisy-color-logo.png` |
+| `APP_NOTIFICATION_ICON_PATH` | Notification icon path. Falls back to `APP_ICON_PATH` when unset. | `./assets/images/cartaisy-color-logo.png` |
+| `APP_NOTIFICATION_COLOR` | Android notification accent color. | `#8B5CF6` |
+| `ANDROID_ADAPTIVE_ICON_PATH` | Android adaptive icon foreground path. | `./assets/images/adaptive-icon.png` |
+| `ANDROID_ADAPTIVE_ICON_BACKGROUND` | Android adaptive icon background color. | `#ffffff` |
+| `SPLASH_BACKGROUND_COLOR` | Native splash screen background color. | `#ffffff` |
+| `EAS_PROJECT_ID` | EAS project ID for the branded app. | Cartaisy project ID |
+| `EXPO_OWNER` | Expo account owner. | `rendernext` |
+
+For the checked-in Cartaisy native project, the iOS bundle identifier, Android package, and Firebase files are aligned to the Cartaisy defaults. Merchant builds that override native identity should use matching Firebase files and regenerate or update native projects as part of the release workflow.
+
 ## Safe Public Build Variables
 
 These values may be included in branded mobile build configuration when they contain only public, non-sensitive data.
@@ -13,10 +41,10 @@ These values may be included in branded mobile build configuration when they con
 | `EXPO_PUBLIC_API_BASE_URL` | Public URL for the Cartaisy backend API used by the app. | Build-time value for the shipped app bundle. |
 | `EXPO_PUBLIC_STORE_ID` | Store identifier sent to the backend so requests are scoped to the branded merchant build. | Build-time value for the shipped app bundle. |
 | `EXPO_PUBLIC_APP_VARIANT` | Public build variant name, if used by release tooling to distinguish merchant, staging, preview, or production builds. | Build-time value for the shipped app bundle. |
-| `EXPO_PUBLIC_APP_NAME` | Public app or merchant display name used in supported client-side labels. | Build-time value for the shipped app bundle. |
-| `EXPO_PUBLIC_APP_SCHEME` | Public deep-link URL scheme used by client integrations that read it from JavaScript. | Build-time value for the shipped app bundle. |
-| `EXPO_PUBLIC_IOS_BUNDLE_ID` | Public iOS bundle identifier for build/release tracking when used by build tooling. | Build-time value; currently documented for branded build setup. |
-| `EXPO_PUBLIC_ANDROID_PACKAGE` | Public Android application ID for build/release tracking when used by build tooling. | Build-time value; currently documented for branded build setup. |
+| `EXPO_PUBLIC_APP_NAME` | Public app or merchant display name used in supported client-side labels. Also used as an `APP_NAME` compatibility fallback by `app.config.ts`. | Build-time value for the shipped app bundle. |
+| `EXPO_PUBLIC_APP_SCHEME` | Public deep-link URL scheme used by client integrations that read it from JavaScript. Also used as an `APP_SCHEME` compatibility fallback by `app.config.ts`. | Build-time value for the shipped app bundle. |
+| `EXPO_PUBLIC_IOS_BUNDLE_ID` | Public iOS bundle identifier for build/release tracking when used by build tooling. Also used as an `IOS_BUNDLE_IDENTIFIER` compatibility fallback by `app.config.ts`. | Build-time value for the shipped app bundle. |
+| `EXPO_PUBLIC_ANDROID_PACKAGE` | Public Android application ID for build/release tracking when used by build tooling. Also used as an `ANDROID_PACKAGE` compatibility fallback by `app.config.ts`. | Build-time value for the shipped app bundle. |
 | `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key, if the branded build uses client-side Stripe initialization. | Build-time public value; tenant-specific but not secret. |
 | `EXPO_PUBLIC_STRIPE_MERCHANT_ID` | Apple Pay merchant identifier, if wallet payments are configured for the branded build. | Build-time public value that must match native payment configuration. |
 
@@ -43,7 +71,7 @@ Do not expose Shopify credentials to the mobile app. Mobile requests for Shopify
 
 ## Build-Time vs Runtime Values
 
-`EXPO_PUBLIC_*` values are build-time inputs for the JavaScript bundle. Changing them requires a new build or republished JavaScript bundle, depending on the release path. They are appropriate for stable public identifiers such as API base URL, store ID, app variant/name, URL scheme, and public publishable payment keys.
+`EXPO_PUBLIC_*` values are build-time inputs for the JavaScript bundle. Changing them requires a new build or republished JavaScript bundle, depending on the release path. They are appropriate for stable public identifiers such as API base URL, store ID, app variant/name, URL scheme, and public publishable payment keys. Prefer the non-public native build identity variables above for values that only `app.config.ts` needs.
 
 Runtime or backend-driven values should be loaded from tenant-scoped backend responses instead of mobile environment variables. Examples include:
 
