@@ -1,0 +1,69 @@
+# Mobile Architecture
+
+This document describes the mobile repo as inspected for GitHub issue #40. Verify code before relying on any detail for implementation work.
+
+## Current State
+
+Current state: The app is an Expo SDK 53 / React Native 0.79 app using Expo Router (`app/`), TypeScript, Tamagui, React Query, Zustand, Axios, Orval-generated API hooks, Firebase messaging, and Stripe React Native.
+
+Current state: Main module boundaries include:
+
+- `app/`: file-based routes for auth, tabs, product detail/listing, cart, checkout, account, orders, notifications, and settings.
+- `components/`: reusable atoms, molecules, organisms, providers, checkout components, home components, product components, and auth UI.
+- `api/`: shared Axios clients, public mobile config validation, generated API hooks, handwritten endpoint wrappers, and React Query setup.
+- `store/`: Zustand stores for auth, cart, products, favorites, home screen data, user state, and store config.
+- `tamagui/` and `assets/`: static theme tokens, fonts, colors, logos, icons, images, and bundled visual assets.
+- `android/` and `ios/`: checked-in native projects.
+
+Current state: API flow is centered on `api/apiClient.ts`, which creates a shared Axios instance from `mobileConfig.apiBaseUrl`. Orval-generated clients call `customInstance`, which uses that shared Axios instance. A smaller `api/config/axios.ts` instance also uses the same public API base URL and store ID.
+
+Current state: Store identity is resolved from `EXPO_PUBLIC_STORE_ID` through `api/config/mobileConfig.ts`. `mobileConfig` validates that `EXPO_PUBLIC_API_BASE_URL` and `EXPO_PUBLIC_STORE_ID` are present and shaped correctly, and it blocks known forbidden or secret-looking public config names.
+
+Current state: Requests sent through the shared API clients include `X-Store-ID` from `mobileConfig.storeId`. The request interceptor also ensures `X-Store-ID` is present when possible. Guest sessions use `X-Session-ID`, logged-in users use `Authorization: Bearer ...`, and device tracking can use `X-Device-ID`.
+
+Current state: Build-time configuration currently lives in static `app.json`, `.env.example`, native project files, Firebase config files, and bundled assets. There is no checked-in `app.config.ts` or `app.config.js` in the mobile repo.
+
+Current state: Runtime store configuration is limited to `GET /store/config` returning `currency`, `timezone`, and `name`. `components/providers/AppInitializer.tsx` loads those fields into `store/useStoreConfigStore.ts`, which defaults to `USD`, `UTC`, and an empty store name.
+
+Current state: Branding/theme is mostly static. `tamagui/token.ts`, `tamagui/theme.ts`, `tamagui/config.ts`, `assets/colors.ts`, `assets/Icons.ts`, and bundled logo files provide current colors and brand assets. Runtime branding is documented as a desired contract, but color/logo runtime wiring is not currently proven as implemented.
+
+Current state: Home screen content is loaded from the backend through the generated `GET /customer/homescreen` client and rendered by `app/(tabs)/index.tsx` using layout types such as carousel, promo banners, callout banners, category grid, collection displays, collection showcases, and category collection grid.
+
+Current state: Product detail and related catalog flows use generated backend clients such as `/products/{productId}`, recommendations, search, and collection endpoints. Shopify IDs appear in data models and route handling, but catalog calls should continue to flow through the Cartaisy backend.
+
+Current state: Cart state is persisted in `store/useCartStore.ts`; unified cart API calls live in `api/endpoints/unifiedCart.ts`; checkout initialization and completion use generated checkout clients. Checkout is auth-gated in `app/checkout.tsx`, and the screen starts at shipping with no guest checkout path in the inspected code.
+
+Current state: Customer account/auth flows include auth routes under `app/(auth)/`, `api/endpoints/auth.ts`, `api/hooks/useAuth.ts`, `store/useAuthStore.ts`, and startup refresh logic in `api/apiClient.ts` and `components/providers/AppInitializer.tsx`. Auth refresh is high-risk and should not be changed for docs-only work.
+
+Current state: Native identity is static and build-time. `app.json` defines the Expo name, slug, scheme, iOS bundle identifier, Android package, icons, notification config, Stripe plugin, Firebase plugins, and EAS project metadata. Existing audits note mismatches between some iOS native project identifiers, Expo config, Firebase config, and Apple Pay entitlements.
+
+## Target State
+
+Target state: Mobile should remain a branded merchant app engine that consumes tenant-scoped Cartaisy backend APIs rather than embedding private Shopify or tenant credentials in the app.
+
+Target state: Build-time app identity should be handled deliberately for merchant apps, with app name, slug, bundle ID, Android package, schemes, icons, splash assets, Firebase files, Stripe/native payment identifiers, EAS ownership, and signing handled as native/release concerns.
+
+Target state: Runtime configuration can safely expand only for public display metadata, such as store name, currency, timezone, and validated branding fields, through a backend/mobile contract.
+
+Target state: Dynamic app config is desirable for branded build repeatability, but should be implemented in a separate issue and verified by generated Expo/native configuration checks.
+
+## Known Gaps
+
+Known gap: Dynamic `app.config.ts` is not implemented in the inspected repo. The target shape is documented in `docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md`.
+
+Known gap: Runtime branding is not fully implemented in inspected code. The desired contract is documented in `docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md`.
+
+Known gap: Existing audits identify native identity risks, including iOS bundle identifier mismatch, Firebase iOS mismatch, Apple Pay entitlement mismatch, and iOS push entitlement concerns. Do not modify signing, certificates, payment capabilities, or native identity unless a dedicated issue explicitly asks for it.
+
+Known gap: Shopify credential exposure must remain blocked. Historical docs mention legacy direct-client Shopify config; current guidance is to retire direct mobile Shopify credential paths and keep Shopify credentials server-side.
+
+## Related Docs And Issues
+
+- `CARTAISY_CONTEXT.md`
+- `AGENTS.md`
+- `docs/MOBILE_ENV_VARIABLES.md`
+- `docs/MOBILE_BRANDING_CONFIG_AUDIT.md`
+- `docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md`
+- `docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md`
+- `docs/HOME_API_USAGE.md`
+- GitHub issue #40
