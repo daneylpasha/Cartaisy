@@ -59,7 +59,7 @@ const SelectAddressScreen = () => {
   );
 
   // Map to expected format
-  const addressData: AddressDataItem[] = formattedAddresses.map((addr) => ({
+  const addressData: AddressDataItem[] = formattedAddresses.map((addr: any) => ({
     id: addr.id,
     addressId: addr.addressId,
     name: addr.name,

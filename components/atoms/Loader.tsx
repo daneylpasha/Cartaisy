@@ -26,7 +26,7 @@ export const Loader = ({
   height,
 }: LoaderProps) => {
   // If color starts with $, resolve it from tokens, otherwise use as-is
-  const resolvedColor = color.startsWith("$") ? getTokenValue(color) : color;
+  const resolvedColor = color.startsWith("$") ? getTokenValue(color as any) : color;
 
   // Map size prop to dimensions (only used if width/height not provided)
   const defaultSize = 22;

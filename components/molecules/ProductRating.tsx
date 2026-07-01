@@ -31,7 +31,7 @@ export const ProductRating: React.FC<ProductRatingProps> = ({
         {Array.from({ length: fullStars }).map((_, index) => (
           <AppImage
             key={`full-${index}`}
-            name="starFilled"
+            name="star"
             width={starSize}
             height={starSize}
             tintColor="#FDB022"

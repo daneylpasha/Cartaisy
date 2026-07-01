@@ -54,6 +54,14 @@ type PhoneNumberForm = {
   deliveryinstructions?: string;
 };
 
+type AddressDataItem = {
+  id: number;
+  name: string;
+  address: string;
+  shipping: string;
+  isDefault?: boolean;
+};
+
 interface ShippingProps {
   sessionId: string;
   currency?: string; // Currency code from cart/checkout
@@ -163,7 +171,7 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
       } else if (addressData.length > 0 && selectedAddressId === null) {
         // Otherwise, auto-select default or first address
         const defaultAddr =
-          addressData.find((a) => a.isDefault) || addressData[0];
+          addressData.find((a: AddressDataItem) => a.isDefault) || addressData[0];
         handleAddressSelect(defaultAddr.id);
       }
     }, [addressData.length, params.selectedAddressId]);
@@ -383,8 +391,8 @@ const Shipping = forwardRef<ShippingRef, ShippingProps>(
               <>
                 <YStack paddingVertical={"$md"}>
                   {addressData
-                    .filter((item) => item.id === selectedAddressId)
-                    .map((item) => (
+                    .filter((item: AddressDataItem) => item.id === selectedAddressId)
+                    .map((item: AddressDataItem) => (
                       <AddressCard
                         key={item.id}
                         item={item}

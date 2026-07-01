@@ -134,7 +134,7 @@ export const HEADER_CONFIGS = {
     headerBackVisible: false,
     headerTitle: "Checkout",
     headerShown: true,
-    headerTitleAlign: "center",
+    headerTitleAlign: "center" as const,
     // headerLeft: () => (
     //   <OpTouch onPress={() => router.back()}>
     //     <AppImage name={"arrowBack"} size={16} />
@@ -152,7 +152,7 @@ export const HEADER_CONFIGS = {
     headerTitle: "Orders",
     headerShown: true,
 
-    headerTitleAlign: "center",
+    headerTitleAlign: "center" as const,
     headerLeft: () => (
       <OpTouch onPress={() => router.back()}>
         <AppImage name={"arrowBack"} size={16} />
@@ -167,7 +167,7 @@ export const HEADER_CONFIGS = {
   ordersDetails: {
     headerBackVisible: false,
     headerTitle: "Orders Details",
-    headerTitleAlign: "center",
+    headerTitleAlign: "center" as const,
     headerShown: true,
     headerLeft: () => (
       <OpTouch onPress={() => router.back()}>

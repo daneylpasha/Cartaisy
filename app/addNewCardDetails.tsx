@@ -99,18 +99,20 @@ const AddNewCardDetails = () => {
 
     try {
       // Step 1: Create payment method with Stripe SDK
-      const { paymentMethod, error } = await createPaymentMethod({
-        paymentMethodType: "Card",
-        billingDetails: {
-          address: {
-            line1: data.streetAddress,
-            line2: data.apartmentnumber,
-            state: data.province,
-            postalCode: data.postalcode,
-            country: "US", // You can make this dynamic
+      const { paymentMethod, error } = await createPaymentMethod(
+        {
+          paymentMethodType: "Card",
+          billingDetails: {
+            address: {
+              line1: data.streetAddress,
+              line2: data.apartmentnumber,
+              state: data.province,
+              postalCode: data.postalcode,
+              country: "US", // You can make this dynamic
+            },
           },
-        },
-      });
+        } as unknown as Parameters<typeof createPaymentMethod>[0]
+      );
 
       if (error) {
         console.error("[AddCard] Stripe error:", error);
@@ -121,7 +123,9 @@ const AddNewCardDetails = () => {
 
       // Step 2: Check for duplicate card
       // Stripe SDK returns Card (capital C) in React Native
-      const cardDetails = paymentMethod.Card || paymentMethod.card;
+      const cardDetails =
+        paymentMethod.Card ||
+        (paymentMethod as { card?: typeof paymentMethod.Card }).card;
       const newCardLast4 = cardDetails?.last4;
       const newCardBrand = cardDetails?.brand?.toLowerCase();
 
