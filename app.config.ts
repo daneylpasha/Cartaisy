@@ -49,7 +49,6 @@ const iosGoogleServicesFile = readEnv(
 const applePayMerchantId = readEnv(
   [
     "IOS_APPLE_PAY_MERCHANT_ID",
-    "STRIPE_MERCHANT_ID",
     "EXPO_PUBLIC_STRIPE_MERCHANT_ID",
   ],
   "merchant.com.cartaisy"

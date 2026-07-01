@@ -17,7 +17,7 @@ Use mobile environment variables only for values that are safe for customers, ap
 | `IOS_BUILD_NUMBER` | iOS build number. | `1` |
 | `IOS_BUNDLE_IDENTIFIER` | iOS bundle identifier. Falls back to `EXPO_PUBLIC_IOS_BUNDLE_ID` when unset. | `com.rendernext.cartaisy` |
 | `IOS_GOOGLE_SERVICES_FILE` | iOS Firebase plist used by Expo config. | `./GoogleService-Info.plist` |
-| `IOS_APPLE_PAY_MERCHANT_ID` | Apple Pay merchant identifier used by iOS entitlements and the Stripe config plugin. Falls back to `STRIPE_MERCHANT_ID` or `EXPO_PUBLIC_STRIPE_MERCHANT_ID` when unset. | `merchant.com.cartaisy` |
+| `IOS_APPLE_PAY_MERCHANT_ID` | Apple Pay merchant identifier used by iOS entitlements and the Stripe config plugin. Falls back to `EXPO_PUBLIC_STRIPE_MERCHANT_ID` when unset. | `merchant.com.cartaisy` |
 | `ANDROID_PACKAGE` | Android package/application ID. Falls back to `EXPO_PUBLIC_ANDROID_PACKAGE` when unset. | `com.rendernext.cartaisy` |
 | `ANDROID_VERSION_CODE` | Android version code. | `1` |
 | `ANDROID_GOOGLE_SERVICES_FILE` | Android Firebase JSON used by Expo config. | `./google-services.json` |
