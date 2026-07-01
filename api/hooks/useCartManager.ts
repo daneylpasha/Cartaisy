@@ -4,6 +4,7 @@ import useCartStore, { CartItem } from '@/store/useCartStore';
 import useAuthStore from '@/store/useAuthStore';
 import { saveCartToProfile, clearSavedCart } from '../endpoints/cart';
 import type { CartLineItem } from '../generated/cartaisyAPI.schemas';
+import { getCatalogUnavailableMessage } from '@/utils/catalogUnavailableError';
 
 interface AddToCartParams {
   productId: string;
@@ -328,7 +329,12 @@ export const useCartManager = (): UseCartManagerReturn => {
       if (__DEV__) {
         console.log('[useCartManager] Cart sync error:', err?.response?.data || err?.message);
       }
-      // Don't throw - this is a background sync operation
+      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to sync cart';
+      setError(errorMessage);
+
+      if (getCatalogUnavailableMessage(err)) {
+        throw err;
+      }
     }
   };
 

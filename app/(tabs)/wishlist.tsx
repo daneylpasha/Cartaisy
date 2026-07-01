@@ -9,6 +9,7 @@ import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
+import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import { ProductCard } from "@/components/molecules/ProductCard";
 import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
@@ -17,6 +18,7 @@ import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
+import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 
 // Enable LayoutAnimation on Android
 if (
@@ -63,6 +65,7 @@ const WishlistScreen = () => {
   // Get detailed favorites with complete product data (only if authenticated)
   const {
     data: favoritesData,
+    error: favoritesError,
     isLoading,
     refetch,
   } = useGetDetailedFavorites(
@@ -182,6 +185,8 @@ const WishlistScreen = () => {
     </YStack>
   );
 
+  const unavailableMessage = getCatalogUnavailableMessage(favoritesError);
+
   // Show loading state
   if (isLoading) {
     return (
@@ -189,6 +194,21 @@ const WishlistScreen = () => {
         <YStack flex={1} justifyContent="center" alignItems="center">
           <Loader size="large" color="$primary" />
         </YStack>
+      </ScreenContainer>
+    );
+  }
+
+  if (unavailableMessage) {
+    return (
+      <ScreenContainer backgroundColor="$background">
+        <DynamicStatusBar backgroundColor="#FFFFFF" />
+        <CatalogUnavailableState
+          error={favoritesError}
+          title="Wishlist unavailable"
+          onRetry={() => {
+            refetch();
+          }}
+        />
       </ScreenContainer>
     );
   }

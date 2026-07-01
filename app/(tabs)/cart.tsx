@@ -119,18 +119,26 @@ const CartScreen = () => {
     }, [])
   );
 
+  const handlePassiveCartSync = useCallback(async () => {
+    try {
+      await syncCart();
+      setCartUnavailableError(null);
+    } catch (error) {
+      const unavailableMessage = getCatalogUnavailableMessage(error);
+      if (unavailableMessage) {
+        setCartUnavailableError(error);
+      }
+    }
+  }, [syncCart]);
+
   useFocusEffect(
     useCallback(() => {
       if (cartId && items.length > 0 && !hasSyncedRef.current) {
-        // Check if any item is missing lineItemId (needs sync)
-        const needsSync = items.some((item) => !item.lineItemId);
-        if (needsSync) {
-          console.log("[Cart] Items missing lineItemId, syncing with API...");
-          hasSyncedRef.current = true; // Mark as synced BEFORE calling to prevent re-entry
-          syncCart();
-        }
+        console.log("[Cart] Syncing cart with API on focus...");
+        hasSyncedRef.current = true; // Mark as synced BEFORE calling to prevent re-entry
+        handlePassiveCartSync();
       }
-    }, [cartId, syncCart])
+    }, [cartId, handlePassiveCartSync, items.length])
   );
 
   // Auto-open cart summary when items are added
@@ -513,8 +521,7 @@ const CartScreen = () => {
           error={cartUnavailableError}
           title="Cart unavailable"
           onRetry={() => {
-            setCartUnavailableError(null);
-            syncCart();
+            handlePassiveCartSync();
           }}
         />
       </YStack>
