@@ -4,7 +4,7 @@ This is the mobile repo entrypoint for Cartaisy agents. Read this file before mo
 
 ## Current State
 
-Current state: Cartaisy is a Shopify-powered SaaS for merchant-branded shopping apps. The shared product context currently lives in the backend repo at `docs/cartaisy/README.md`; in this workspace it was inspected at `/Users/daniyalpasha/Documents/cartaisy-backend/docs/cartaisy/README.md`.
+Current state: Cartaisy is a Shopify-powered SaaS for merchant-branded shopping apps. The shared product context lives in the backend repo at `docs/cartaisy/README.md`.
 
 Current state: This repo owns the Expo/React Native mobile app engine for iOS and Android shopping experiences. It contains screens, navigation, API clients, generated API hooks, local state, static assets, native projects, and mobile release documentation.
 
@@ -25,8 +25,6 @@ Target state: Branded mobile app work should keep a clear boundary between build
 Known gap: Do not assume planned features exist unless verified in code. Dynamic app config, runtime branding, automated branded build flows, and backend-driven app configuration are documented as target or partial work in existing audits, not guaranteed implemented behavior.
 
 Known gap: Some docs describe migration plans and release checklists. Do not treat checklist items or recommended contracts as shipped functionality unless code confirms them.
-
-Known gap: Do not assume this exists unless verified in code.
 
 ## Related Docs And Issues
 

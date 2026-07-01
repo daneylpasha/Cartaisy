@@ -57,8 +57,6 @@ Known gap: Existing audits identify native identity risks, including iOS bundle 
 
 Known gap: Shopify credential exposure must remain blocked. Historical docs mention legacy direct-client Shopify config; current guidance is to retire direct mobile Shopify credential paths and keep Shopify credentials server-side.
 
-Known gap: Do not assume this exists unless verified in code.
-
 ## Related Docs And Issues
 
 - `CARTAISY_CONTEXT.md`
