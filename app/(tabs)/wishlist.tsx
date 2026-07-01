@@ -66,6 +66,7 @@ const WishlistScreen = () => {
   const {
     data: favoritesData,
     error: favoritesError,
+    isFetching,
     isLoading,
     refetch,
   } = useGetDetailedFavorites(
@@ -186,9 +187,10 @@ const WishlistScreen = () => {
   );
 
   const unavailableMessage = getCatalogUnavailableMessage(favoritesError);
+  const isRetryingUnavailable = isFetching && !!unavailableMessage;
 
   // Show loading state
-  if (isLoading) {
+  if (isLoading || isRetryingUnavailable) {
     return (
       <ScreenContainer backgroundColor="$background">
         <YStack flex={1} justifyContent="center" alignItems="center">

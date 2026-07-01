@@ -25,7 +25,7 @@ interface UseCartManagerReturn {
   addToCart: (item: AddToCartParams) => Promise<void>;
   updateQuantity: (lineItemId: string, quantity: number) => Promise<void>;
   removeItem: (lineItemId: string) => Promise<void>;
-  syncCart: () => Promise<void>;
+  syncCart: () => Promise<boolean>;
   isLoading: boolean;
   error: string | null;
 }
@@ -305,16 +305,16 @@ export const useCartManager = (): UseCartManagerReturn => {
    * Sync cart with API to ensure lineItemIds are populated
    * Call this on app load if cartId exists
    */
-  const syncCart = async (): Promise<void> => {
+  const syncCart = async (): Promise<boolean> => {
     if (!cartId) {
-      return;
+      return true;
     }
 
     try {
       const cartResponse = await getCart(encodeURIComponent(cartId));
 
       if (!cartResponse?.success) {
-        return;
+        return false;
       }
 
       // Convert API items to Zustand format
@@ -325,6 +325,9 @@ export const useCartManager = (): UseCartManagerReturn => {
         cartId: cartResponse.data.cartId,
         items: convertedItems,
       });
+
+      setError(null);
+      return true;
     } catch (err: any) {
       if (__DEV__) {
         console.log('[useCartManager] Cart sync error:', err?.response?.data || err?.message);
@@ -335,6 +338,8 @@ export const useCartManager = (): UseCartManagerReturn => {
       if (getCatalogUnavailableMessage(err)) {
         throw err;
       }
+
+      return false;
     }
   };
 
