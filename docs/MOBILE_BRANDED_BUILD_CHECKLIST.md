@@ -62,8 +62,27 @@ These values are packaged into the binary or native project. Changing them requi
 - [ ] Confirm native permissions, associated domains, and background modes needed by the merchant app.
 - [ ] Confirm wallet/payment native capabilities only if they are explicitly in scope for the release.
 
-### Public Build Environment Values
+### Build Environment Values
 
+- [ ] `APP_NAME`
+- [ ] `APP_SLUG`
+- [ ] `APP_SCHEME`
+- [ ] `APP_VERSION`
+- [ ] `IOS_BUNDLE_IDENTIFIER`
+- [ ] `IOS_BUILD_NUMBER`
+- [ ] `IOS_GOOGLE_SERVICES_FILE`
+- [ ] `IOS_APPLE_PAY_MERCHANT_ID`
+- [ ] `ANDROID_PACKAGE`
+- [ ] `ANDROID_VERSION_CODE`
+- [ ] `ANDROID_GOOGLE_SERVICES_FILE`
+- [ ] `APP_ICON_PATH`
+- [ ] `APP_NOTIFICATION_ICON_PATH`
+- [ ] `APP_NOTIFICATION_COLOR`
+- [ ] `ANDROID_ADAPTIVE_ICON_PATH`
+- [ ] `ANDROID_ADAPTIVE_ICON_BACKGROUND`
+- [ ] `SPLASH_BACKGROUND_COLOR`
+- [ ] `EAS_PROJECT_ID`
+- [ ] `EXPO_OWNER`
 - [ ] `EXPO_PUBLIC_API_BASE_URL`
 - [ ] `EXPO_PUBLIC_STORE_ID`
 - [ ] `EXPO_PUBLIC_APP_NAME`
@@ -71,7 +90,7 @@ These values are packaged into the binary or native project. Changing them requi
 - [ ] `EXPO_PUBLIC_IOS_BUNDLE_ID`
 - [ ] `EXPO_PUBLIC_ANDROID_PACKAGE`
 
-Treat all `EXPO_PUBLIC_*` values as public. Do not put Shopify Admin tokens, Stripe secret keys, Firebase private credentials, or any merchant secret in mobile build configuration.
+Treat all values used by mobile build tooling as non-secret, and treat all `EXPO_PUBLIC_*` values as public. Do not put Shopify Admin tokens, Stripe secret keys, Firebase private credentials, or any merchant secret in mobile build configuration.
 
 ## Runtime Configuration
 
@@ -117,6 +136,7 @@ These values should be loaded from the backend at runtime through the existing s
 - [ ] Merchant identity values are recorded.
 - [ ] Required assets are approved and committed or supplied through the build pipeline.
 - [ ] Firebase files match the merchant bundle ID/package name.
+- [ ] `app.config.ts` resolves to the intended merchant app name, scheme, bundle ID, Android package, Firebase file paths, and payment merchant ID.
 - [ ] Build-time public environment values are set for the target environment.
 - [ ] Runtime backend configuration is present for the merchant store.
 - [ ] Backend tenant-scoped Shopify Storefront access is confirmed.
