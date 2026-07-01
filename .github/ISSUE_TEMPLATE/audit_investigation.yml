@@ -1,6 +1,9 @@
 name: Mobile audit or investigation
 description: Audit-first work before deciding whether implementation is needed.
 title: "[Audit]: "
+labels:
+  - docs
+  - mobile
 body:
   - type: markdown
     attributes:

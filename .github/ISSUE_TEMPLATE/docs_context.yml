@@ -3,6 +3,7 @@ description: Documentation-only mobile context or workflow updates.
 title: "[Docs]: "
 labels:
   - docs
+  - mobile
 body:
   - type: markdown
     attributes:
