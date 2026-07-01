@@ -52,7 +52,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
           <Loader size="small" color="#FF6B6B" />
         ) : (
           <AppImage
-            name={isFavorite ? 'heartFilled' : 'heart'}
+            name={isFavorite ? 'wishlistIcon' : 'heart'}
             width={size}
             height={size}
             tintColor={isFavorite ? '#FF6B6B' : '#6B7280'}

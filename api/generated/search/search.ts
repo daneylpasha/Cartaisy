@@ -47,6 +47,7 @@ import type {
   SearchParams,
   SearchProductsParams,
   SearchProductsResponse,
+  SearchResponse,
   ShopifyGetPopularSearchesParams,
   ShopifyGetSearchSuggestionsParams,
   TrackCollectionView200,
@@ -747,7 +748,7 @@ export const search = (
 ) => {
       
       
-      return customInstance<unknown>(
+      return customInstance<SearchResponse>(
       {url: `/customer/search`, method: 'GET',
         params, signal
     },
@@ -1704,4 +1705,3 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
-    

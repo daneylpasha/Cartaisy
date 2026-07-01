@@ -10,7 +10,6 @@ const BagSvg = ({ color, fill, ...props }: SvgProps) => {
       height={53}
       viewBox="0 0 47 53"
       fill="none"
-      xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
       <Path
@@ -24,4 +23,3 @@ const BagSvg = ({ color, fill, ...props }: SvgProps) => {
 };
 
 export default BagSvg;
-

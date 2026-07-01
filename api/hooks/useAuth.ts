@@ -15,8 +15,13 @@ export const useLogin = (
     {
       mutationFn: (data: LoginCredentials) => authApi.login(data),
       onMutate: async (variables) => {
-        if (options?.onMutate) {
-          return await options.onMutate(variables);
+        const onMutate = options?.onMutate;
+        if (onMutate) {
+          return await (
+            onMutate as (
+              variables: LoginCredentials
+            ) => unknown
+          )(variables);
         }
       },
       onSuccess: (data, variables, context,onMutateResult) => {
@@ -69,8 +74,13 @@ export const useSignUp = (
   const mutation = useMutation<AuthResponse, AxiosError<any>, SignUpData>({
     mutationFn: (data: SignUpData) => authApi.signUp(data),
     onMutate: async (variables) => {
-      if (options?.onMutate) {
-        return await options.onMutate(variables);
+      const onMutate = options?.onMutate;
+      if (onMutate) {
+        return await (
+          onMutate as (
+            variables: SignUpData
+          ) => unknown
+        )(variables);
       }
     },
     onSuccess: (data, variables, context,onMutateResult) => {
