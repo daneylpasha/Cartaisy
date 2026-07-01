@@ -1,0 +1,186 @@
+name: Mobile feature task
+description: Scoped Cartaisy mobile implementation work.
+title: "[Feature]: "
+labels:
+  - enhancement
+  - mobile
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for mobile implementation work. Keep scope tight, verify current behavior in code, and do not treat planned features as implemented.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What should change?
+      placeholder: Add a concise summary of the mobile feature task.
+    validations:
+      required: true
+
+  - type: textarea
+    id: cartaisy-context
+    attributes:
+      label: Cartaisy context
+      description: How does this fit the Cartaisy SaaS/mobile repo context?
+      placeholder: Mention the store, tenant, branded app, or workflow context.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user, merchant, or agent problem is this solving?
+    validations:
+      required: true
+
+  - type: textarea
+    id: required-changes
+    attributes:
+      label: Required changes
+      description: List the specific changes requested.
+      placeholder: "- ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: What must be true for this issue to be complete?
+      placeholder: "- ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: Name files, flows, or behaviors that must not change.
+      placeholder: "Do not change checkout/payment, auth refresh, native signing, secrets, unrelated UI, or package files unless explicitly required."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: risk-level
+    attributes:
+      label: Risk level
+      options:
+        - Low
+        - Medium
+        - High
+    validations:
+      required: true
+
+  - type: textarea
+    id: store-tenant-impact
+    attributes:
+      label: Store/tenant config impact
+      description: Does this touch store ID, tenant scoping, public app config, runtime config, or branded build selection?
+      placeholder: "None, or describe the impact and validation needed."
+    validations:
+      required: true
+
+  - type: textarea
+    id: api-contract-impact
+    attributes:
+      label: Backend API contract impact
+      description: Does this change request/response shapes, headers, endpoints, or generated clients?
+      placeholder: "None, or describe the backend/mobile contract impact."
+    validations:
+      required: true
+
+  - type: textarea
+    id: shopify-secrets-impact
+    attributes:
+      label: Shopify credentials/secrets impact
+      description: Mobile must not expose Shopify Admin/private credentials or merchant secrets.
+      placeholder: "None expected. Confirm no Shopify Admin/private token is added to mobile."
+    validations:
+      required: true
+
+  - type: textarea
+    id: checkout-payment-impact
+    attributes:
+      label: Checkout/payment impact
+      description: Checkout and payment changes are high-risk and need explicit review.
+      placeholder: "None, or describe the exact checkout/payment impact."
+    validations:
+      required: true
+
+  - type: textarea
+    id: native-build-impact
+    attributes:
+      label: Native app identity/build impact
+      description: Does this touch bundle ID, package name, app config, Firebase/native service config, EAS, signing, or app identity?
+      placeholder: "None, or describe native build/config impact."
+    validations:
+      required: true
+
+  - type: textarea
+    id: platform-impact
+    attributes:
+      label: iOS/Android impact
+      description: Which platforms are affected, and what platform validation is needed?
+      placeholder: "iOS: ... Android: ... Web if applicable: ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: tests-required
+    attributes:
+      label: Tests required
+      description: List tests to add/update or explain why no tests are needed.
+      placeholder: "- ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation-commands
+    attributes:
+      label: Validation commands
+      description: Commands the implementer should run.
+      value: |
+        - npm run lint
+        - npm run typecheck
+        - npm test
+    validations:
+      required: true
+
+  - type: textarea
+    id: docs-to-read
+    attributes:
+      label: Docs to read before work
+      description: Keep only relevant docs if this issue is very narrow.
+      value: |
+        - AGENTS.md
+        - CARTAISY_CONTEXT.md
+        - docs/ARCHITECTURE.md
+        - docs/STATUS.md
+        - docs/DECISIONS.md
+        - docs/TESTING.md
+        - docs/MOBILE_ENV_VARIABLES.md
+        - docs/MOBILE_BRANDED_BUILD_CHECKLIST.md
+        - docs/MOBILE_BRANDING_CONFIG_AUDIT.md
+        - docs/HOME_API_USAGE.md
+        - docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md
+        - docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: docs-to-update
+    attributes:
+      label: Docs to update
+      description: Which docs should change if behavior changes?
+      placeholder: "None, or list docs."
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional notes
+      description: Links, screenshots, designs, constraints, or open questions.
