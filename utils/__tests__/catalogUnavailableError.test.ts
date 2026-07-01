@@ -18,6 +18,8 @@ describe("catalog unavailable error classification", () => {
     "STORE_INACTIVE",
     "STORE_UNAVAILABLE",
     "STORE_NOT_FOUND",
+    "STORE_CONFIGURATION_ERROR",
+    "STORE_CONFIG_MISSING",
   ])("classifies %s as a catalog unavailable error", (code) => {
     const error = apiError(403, { code });
 
@@ -28,6 +30,9 @@ describe("catalog unavailable error classification", () => {
   it.each([
     "SHOPIFY_CONFIG_MISSING",
     "SHOPIFY_CREDENTIALS_MISSING",
+    "SHOPIFY_CONFIGURATION_ERROR",
+    "SHOPIFY_UNAVAILABLE",
+    "CATALOG_UNAVAILABLE",
   ])("classifies %s as a catalog unavailable error", (code) => {
     const error = apiError(503, { code });
 

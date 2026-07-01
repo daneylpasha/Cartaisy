@@ -20,6 +20,15 @@ afterEach(() => {
 });
 
 describe("validateMobileConfig", () => {
+  it("accepts a fully valid mobile config", () => {
+    const validateMobileConfig = loadValidateMobileConfig();
+
+    const result = validateMobileConfig(validEnv);
+
+    expect(result.errors).toEqual([]);
+    expect(result.isValid).toBe(true);
+  });
+
   it("reports a missing API base URL", () => {
     const validateMobileConfig = loadValidateMobileConfig();
 
