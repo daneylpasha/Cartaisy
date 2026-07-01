@@ -89,6 +89,10 @@ const CartScreen = () => {
       })
       .filter((id) => id !== "");
   }, [items]);
+  const hasMissingLineItemId = React.useMemo(
+    () => items.some((item) => !item.lineItemId),
+    [items]
+  );
 
   // Fetch recommendations when cart items change
   useEffect(() => {
@@ -106,8 +110,9 @@ const CartScreen = () => {
   const animatedHeight = useRef(new Animated.Value(0)).current;
   const animatedOpacity = useRef(new Animated.Value(0)).current;
 
-  // Track if we've already synced for this focus to prevent infinite loop
+  // Track sync attempts to prevent infinite loops and repeated tab-focus fetches
   const hasSyncedRef = useRef(false);
+  const initialSyncCartIdRef = useRef<string | null>(null);
 
   // Sync cart when screen is focused to ensure lineItemIds are populated
   useFocusEffect(
@@ -119,18 +124,36 @@ const CartScreen = () => {
     }, [])
   );
 
+  const handlePassiveCartSync = useCallback(async () => {
+    try {
+      const didSync = await syncCart();
+      if (didSync) {
+        setCartUnavailableError(null);
+      }
+    } catch (error) {
+      const unavailableMessage = getCatalogUnavailableMessage(error);
+      if (unavailableMessage) {
+        setCartUnavailableError(error);
+      }
+    }
+  }, [syncCart]);
+
   useFocusEffect(
     useCallback(() => {
       if (cartId && items.length > 0 && !hasSyncedRef.current) {
-        // Check if any item is missing lineItemId (needs sync)
-        const needsSync = items.some((item) => !item.lineItemId);
-        if (needsSync) {
-          console.log("[Cart] Items missing lineItemId, syncing with API...");
-          hasSyncedRef.current = true; // Mark as synced BEFORE calling to prevent re-entry
-          syncCart();
+        const needsInitialSync = initialSyncCartIdRef.current !== cartId;
+        const needsLineItemSync = hasMissingLineItemId;
+
+        if (!needsInitialSync && !needsLineItemSync) {
+          return;
         }
+
+        console.log("[Cart] Syncing cart with API on focus...");
+        hasSyncedRef.current = true; // Mark as synced BEFORE calling to prevent re-entry
+        initialSyncCartIdRef.current = cartId;
+        handlePassiveCartSync();
       }
-    }, [cartId, syncCart])
+    }, [cartId, handlePassiveCartSync, hasMissingLineItemId, items.length])
   );
 
   // Auto-open cart summary when items are added
@@ -513,8 +536,7 @@ const CartScreen = () => {
           error={cartUnavailableError}
           title="Cart unavailable"
           onRetry={() => {
-            setCartUnavailableError(null);
-            syncCart();
+            handlePassiveCartSync();
           }}
         />
       </YStack>
