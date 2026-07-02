@@ -4,6 +4,8 @@ Audit source: GitHub issue #6, "Audit mobile branding and configuration boundari
 
 This is a documentation-only audit. It does not change app behavior.
 
+Status update (2026-07-02): This audit was written against static `app.json`, which has since been replaced by dynamic `app.config.ts` (static `app.json` was removed). References to `app.json` values below correspond to `app.config.ts` defaults, and app identity env values (`APP_NAME`, `IOS_BUNDLE_IDENTIFIER`, `ANDROID_PACKAGE`, and their `EXPO_PUBLIC_*` fallbacks) now do drive Expo config — see `docs/MOBILE_ENV_VARIABLES.md`. The native identity mismatch risks flagged below (checked-in iOS project, Firebase iOS config, Apple Pay entitlements) still require verification before release. Migration details: `docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md`.
+
 ## Executive Summary
 
 Cartaisy is currently configured as a branded Expo/React Native mobile app with native iOS and Android projects checked in. Most app identity and launch-surface branding is build-time only: app name, icons, splash assets, bundle IDs/package names, notification icons/colors, Firebase app files, Apple Pay merchant entitlement, and Android package metadata all require a native rebuild and store submission.

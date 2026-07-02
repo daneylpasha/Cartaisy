@@ -82,17 +82,41 @@ Impact: Runtime branding should not include native app identity, checkout/paymen
 
 Related docs: `docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md`, `docs/MOBILE_BRANDING_CONFIG_AUDIT.md`.
 
-### Dynamic App Config Is Planned Or Partial, Not Current Shipped Behavior
+### Dynamic App Config Is Implemented Via app.config.ts
 
-Date: unknown / historical.
+Date: 2026-07-01 (implemented; originally recorded as planned with date unknown / historical).
 
-Decision: Dynamic Expo app config is a target migration for branded builds, but the inspected repo currently uses static `app.json`.
+Decision: Dynamic Expo app config is implemented. `app.config.ts` generates app identity (name, slug, scheme, version, icons, iOS bundle identifier, Android package, Firebase file paths, Apple Pay merchant ID, EAS project metadata) from environment variables with cartaisy defaults. Static `app.json` was removed.
 
-Reason: Merchant app builds need repeatable build-time identity plumbing, and static config can drift from documented environment values.
+Reason: Merchant app builds need repeatable build-time identity plumbing, and static config drifted from documented environment values.
 
-Impact: Do not claim `app.config.ts` exists or that public app identity env vars drive native config unless code verifies it. Implement migration only in a scoped follow-up issue.
+Impact: Branded builds set identity through environment values at build time. Merchant-branded build output is not yet proven end-to-end; verify `npx expo config --type public` and EAS output with per-merchant values before release.
 
-Related docs: `docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md`, `app.json`.
+Related docs: `docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md`, `docs/MOBILE_ENV_VARIABLES.md`, `app.config.ts`.
+
+### Jest Is The Mobile Test Runner
+
+Date: 2026-07-01.
+
+Decision: Jest with the `jest-expo` preset (`jest.config.js`) is the mobile test runner, invoked by `npm test`. Test files live under `**/__tests__/**/*.test.ts`.
+
+Reason: Reproducible validation requires a real test suite instead of a placeholder `test` script, starting with pure logic modules.
+
+Impact: Current coverage is limited to `utils/__tests__/` and `api/config/__tests__/`. Extend coverage when backend/mobile behavior changes; do not claim broader automated coverage than exists.
+
+Related docs: `docs/TESTING.md`, `jest.config.js`.
+
+### npm Is The Authoritative Package Manager
+
+Date: 2026-07-02.
+
+Decision: npm is the authoritative package manager. `package.json` declares `"packageManager": "npm@10.8.2"`, `package-lock.json` is the only committed lockfile, and `yarn.lock` was removed and gitignored.
+
+Reason: A stale `yarn.lock` alongside `package-lock.json` made local validation irreproducible and inconsistent with CI, which installs with `npm ci`.
+
+Impact: Use `npm ci` for clean installs and `npm install` only for intentional dependency changes. Do not reintroduce yarn or pnpm lockfiles.
+
+Related docs: `docs/TESTING.md`, `.github/workflows/ci.yml`.
 
 ### Checkout And Payment Changes Are High-Risk
 

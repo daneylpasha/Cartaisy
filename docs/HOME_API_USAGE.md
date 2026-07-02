@@ -1,195 +1,37 @@
-# HomeScreen API Usage Guide
+# Home Screen API Usage
 
-## Setup Complete ✅
+This document describes how the mobile home screen loads backend data. Verify against code before relying on any detail. An earlier version of this document described a `useHomeScreen` hook family (`useHomeBanners`, `useHomeCategories`, `useHomeCollections`, `useHomeCalloutBanners`, `useRefreshHomeScreen`) that does not exist in the codebase; that content was removed.
 
-### 1. **Zustand Store** (`/store/useHomeScreenStore.ts`)
-Global state for all homescreen data with types for:
-- Banners
-- Categories
-- Products
-- Collections
-- Callout Banners
+## Current State
 
-### 2. **React Query Hooks** (`/api/hooks/useHomeScreen.ts`)
-Multiple hooks for different use cases:
+Current state: Home screen data comes from the Cartaisy backend endpoint `GET /customer/homescreen` through the Orval-generated client in `api/generated/customer-homescreen/`.
 
-## How to Use in Components
+Current state: `api/hooks/useHomeScreenData.ts` is a thin re-export of the generated hook and response type:
 
-### Main HomeScreen Hook (All Data)
 ```typescript
-import { useHomeScreen } from "@/api/hooks/useHomeScreen";
-
-const HomeScreen = () => {
-  const { data, isLoading, error, refetch } = useHomeScreen();
-
-  if (isLoading) return <Loading />;
-  if (error) return <Error />;
-
-  return (
-    <ScrollView>
-      {/* All data available in 'data' */}
-      <Banners data={data.banners} />
-      <Categories data={data.categories} />
-      <Products data={data.products} />
-    </ScrollView>
-  );
-};
+export { useGetHomescreenData as useHomeScreenData } from "@/api/generated/customer-homescreen/customer-homescreen";
+export type { HomescreenDataResponse as HomeScreenData } from "@/api/generated/cartaisyAPI.schemas";
 ```
 
-### Individual Component Hooks
+Current state: `app/(tabs)/index.tsx` calls `useHomeScreenData()` and builds its sections dynamically from the response's `layout` array. Supported layout types include carousel, promo banners, callout banners, category grid, collection displays, collection showcases, and category collection grid. If the backend returns no layout, the screen falls back to a default section order, and sections without data are skipped.
 
-#### For Banners Component
-```typescript
-import { useHomeBanners } from "@/api/hooks/useHomeScreen";
+Current state: Pull-to-refresh uses the hook's `refetch`; there is no separate refresh mutation hook.
 
-const BannersComponent = () => {
-  const { banners, isLoading } = useHomeBanners();
+Current state: Requests go through the shared Axios client, so they include store scoping (`X-Store-ID`) and session/auth headers like other backend calls.
 
-  if (isLoading) return <Skeleton />;
+## Known Gaps
 
-  return (
-    <FlatList
-      data={banners}
-      keyExtractor={(item) => item._id}
-      renderItem={({ item }) => (
-        <Image source={{ uri: item.imageUrl }} />
-      )}
-    />
-  );
-};
-```
+Known gap: `store/useHomeScreenStore.ts` exists but is not imported by any screen or component. Home screen data flows through React Query, not Zustand.
 
-#### For Categories Grid
-```typescript
-import { useHomeCategories } from "@/api/hooks/useHomeScreen";
+Known gap: Exact section content depends on tenant data returned by the backend. Do not assume every layout type has data for every store.
 
-const CategoriesGrid = () => {
-  const { categories, isLoading } = useHomeCategories();
+## Unknowns
 
-  return (
-    <FlatList
-      data={categories}
-      numColumns={4}
-      keyExtractor={(item) => item._id}
-      renderItem={({ item }) => (
-        <CategoryCard
-          title={item.name}
-          image={item.imageUrl}
-        />
-      )}
-    />
-  );
-};
-```
+Unknown: Backend API contract freshness. The generated client comes from `api-spec/swagger.json`; verify the spec matches the deployed backend before extending home surfaces.
 
-#### For Products Horizontal Scroller
-```typescript
-import { useHomeScreenProducts } from "@/api/hooks/useHomeScreen";
+## Related Docs And Issues
 
-const ProductsHorizontalScroller = () => {
-  const { products, isLoading, error } = useHomeScreenProducts();
-
-  return (
-    <FlatList
-      data={products}
-      horizontal
-      keyExtractor={(item) => item._id}
-      renderItem={({ item }) => (
-        <ProductCard product={item} />
-      )}
-    />
-  );
-};
-```
-
-#### For Collections
-```typescript
-import { useHomeCollections } from "@/api/hooks/useHomeScreen";
-
-const CollectionsSection = () => {
-  const { collections, isLoading } = useHomeCollections();
-
-  return (
-    <FlatList
-      data={collections}
-      renderItem={({ item }) => (
-        <CollectionCard
-          title={item.title}
-          image={item.imageUrl}
-        />
-      )}
-    />
-  );
-};
-```
-
-#### For Callout Banners (Free Shipping Card)
-```typescript
-import { useHomeCalloutBanners } from "@/api/hooks/useHomeScreen";
-
-const FreeShippingCard = () => {
-  const { calloutBanners, isLoading } = useHomeCalloutBanners();
-
-  const activeCallout = calloutBanners[0]; // First active banner
-
-  if (!activeCallout) return null;
-
-  return (
-    <Card backgroundColor={activeCallout.backgroundColor}>
-      <Text color={activeCallout.textColor}>
-        {activeCallout.title}
-      </Text>
-      <Button onPress={() => navigate(activeCallout.action.navigateTo)}>
-        {activeCallout.buttonText}
-      </Button>
-    </Card>
-  );
-};
-```
-
-### Pull to Refresh
-```typescript
-import { useRefreshHomeScreen } from "@/api/hooks/useHomeScreen";
-
-const HomeScreen = () => {
-  const { mutate: refresh, isLoading } = useRefreshHomeScreen();
-
-  return (
-    <ScrollView
-      refreshControl={
-        <RefreshControl
-          refreshing={isLoading}
-          onRefresh={() => refresh()}
-        />
-      }
-    >
-      {/* Content */}
-    </ScrollView>
-  );
-};
-```
-
-## Benefits
-
-1. **Single API Call**: All home data in one request
-2. **Cached Data**: 2 minutes cache for better performance
-3. **Global State**: Access data anywhere via Zustand
-4. **Type Safe**: Full TypeScript support
-5. **Individual Hooks**: Use only what you need
-6. **Auto Refresh**: Built-in refresh functionality
-7. **Error Handling**: Proper error states
-8. **Loading States**: Component-level loading
-
-## API Response Structure
-```json
-{
-  "success": true,
-  "data": {
-    "banners": [...],
-    "categories": [...],
-    "products": [...],
-    "collections": [...],
-    "calloutBanners": [...]
-  }
-}
-```
+- `api/hooks/useHomeScreenData.ts`
+- `app/(tabs)/index.tsx`
+- `docs/ARCHITECTURE.md`
+- `docs/STATUS.md`
