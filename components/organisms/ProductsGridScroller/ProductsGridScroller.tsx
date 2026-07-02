@@ -1,4 +1,4 @@
-import { CollectionDisplay } from "@/api/generated/cartaisyAPI.schemas";
+import { CollectionDisplay } from "@/api/types";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import { extractNumericId } from "@/utils/extractNumericId";
 import { router } from "expo-router";

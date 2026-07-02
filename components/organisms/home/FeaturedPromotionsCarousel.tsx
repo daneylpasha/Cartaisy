@@ -1,4 +1,4 @@
-import type { CarouselItem } from "@/api/generated/cartaisyAPI.schemas";
+import type { CarouselItem } from "@/api/types";
 import { ParagraphXS } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";

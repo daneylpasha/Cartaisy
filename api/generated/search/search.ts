@@ -47,7 +47,6 @@ import type {
   SearchParams,
   SearchProductsParams,
   SearchProductsResponse,
-  SearchResponse,
   ShopifyGetPopularSearchesParams,
   ShopifyGetSearchSuggestionsParams,
   TrackCollectionView200,
@@ -317,7 +316,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     }
     /**
  * Get Popular Searches
-Returns most frequently searched terms
+Returns most frequently searched terms, scoped to the requesting store
  */
 export const shopifyGetPopularSearches = (
     params?: ShopifyGetPopularSearchesParams,
@@ -748,7 +747,7 @@ export const search = (
 ) => {
       
       
-      return customInstance<SearchResponse>(
+      return customInstance<unknown>(
       {url: `/customer/search`, method: 'GET',
         params, signal
     },
@@ -1705,3 +1704,4 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
+    

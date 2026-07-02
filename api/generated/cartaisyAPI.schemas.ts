@@ -217,10 +217,6 @@ export interface EnrichedProduct {
   reviewsCount: number;
 }
 
-export type Product = Omit<EnrichedProduct, 'compareAtPrice'> & {
-  compareAtPrice?: number;
-};
-
 /**
  * Collection with products (matches homescreen categoryCollectionGrid format)
  */
@@ -335,18 +331,6 @@ Returns personalized search context including recent searches, trending searches
 export interface SearchContextResponse {
   success: boolean;
   data: SearchContextResponseData;
-}
-
-export type SearchResponseData = {
-  totalResults: number;
-  products: EnrichedProduct[];
-  collections: CollectionWithProducts[];
-  query: string;
-};
-
-export interface SearchResponse {
-  success: boolean;
-  data: SearchResponseData;
 }
 
 /**
@@ -670,8 +654,6 @@ export interface CarouselItemResponse {
   isActive: boolean;
 }
 
-export type CarouselItem = CarouselItemResponse;
-
 /**
  * Category grid item
  */
@@ -681,18 +663,9 @@ export interface CategoryGridItemResponse {
   collectionId: string;
 }
 
-export type CategoryGridItem = CategoryGridItemResponse & {
-  id?: string | number;
-};
-
 export type CalloutBannerItemResponseAction = {
   value: string;
   type: string;
-};
-
-export type CalloutBannerItemAction = CalloutBannerItemResponseAction & {
-  collectionId?: string | number;
-  navigateTo?: string;
 };
 
 /**
@@ -709,11 +682,6 @@ export interface CalloutBannerItemResponse {
   buttonColor?: string;
 }
 
-export type CalloutBannerItem = Omit<CalloutBannerItemResponse, 'action'> & {
-  action: CalloutBannerItemAction;
-  position?: number;
-};
-
 /**
  * Promo banner item
  */
@@ -727,8 +695,6 @@ export interface PromoBannerItemResponse {
   textColor?: string;
   buttonColor?: string;
 }
-
-export type PromoBannerItem = PromoBannerItemResponse;
 
 export type CollectionDisplayResponseType = typeof CollectionDisplayResponseType[keyof typeof CollectionDisplayResponseType];
 
@@ -749,16 +715,6 @@ export interface CollectionDisplayResponse {
   collection: unknown;
 }
 
-export type CollectionDisplayCollection = {
-  id: string;
-  title: string;
-  products: Product[];
-};
-
-export type CollectionDisplay = Omit<CollectionDisplayResponse, 'collection'> & {
-  collection: CollectionDisplayCollection;
-};
-
 export type CategoryCollectionGridResponseCollectionsItem = {
   collectionId: string;
   title: string;
@@ -773,8 +729,6 @@ export interface CategoryCollectionGridResponse {
   subtitle: string;
   collections: CategoryCollectionGridResponseCollectionsItem[];
 }
-
-export type CategoryCollectionGridItem = CategoryCollectionGridResponse;
 
 export type CollectionShowcaseResponseType = typeof CollectionShowcaseResponseType[keyof typeof CollectionShowcaseResponseType];
 
@@ -800,8 +754,6 @@ export interface CollectionShowcaseResponse {
   icon?: string;
   collections: CollectionShowcaseResponseCollectionsItem[];
 }
-
-export type CollectionShowcaseItem = CollectionShowcaseResponse;
 
 export type LayoutSectionResponseType = typeof LayoutSectionResponseType[keyof typeof LayoutSectionResponseType];
 
@@ -1322,7 +1274,7 @@ export interface ShippingRate {
   handle: string;
   title: string;
   price: number;
-  currencyCode?: string;
+  currencyCode: string;
   description?: string;
   estimatedDelivery?: string;
   deliveryMethodType?: string;
@@ -2759,11 +2711,27 @@ export type GetCartParams = {
 country?: string;
 };
 
+export type AddItemsParams = {
+country?: string;
+};
+
+export type UpdateItemQuantityParams = {
+country?: string;
+};
+
+export type RemoveItemParams = {
+country?: string;
+};
+
 /**
  * - Object containing cartId
  */
 export type SaveCartToProfileBodyBody = {
   cartId: string;
+};
+
+export type AssociateWithCustomerParams = {
+country?: string;
 };
 
 export type GetAddresses200Data = {
@@ -2878,3 +2846,4 @@ export type GetDefaultAddress200 = {
   data: GetDefaultAddress200Data;
   success: boolean;
 };
+

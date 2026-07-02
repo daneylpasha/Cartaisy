@@ -1,4 +1,4 @@
-import { Product } from "@/api/generated/cartaisyAPI.schemas";
+import { Product } from "@/api/types";
 import { formatPrice } from "@/utils/formatPrice";
 import {
   useAddFavorite,

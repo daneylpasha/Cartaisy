@@ -11,7 +11,7 @@ import React, { useState } from "react";
 import { FlatList } from "react-native";
 import { XStack, YStack } from "tamagui";
 
-import type { CalloutBannerItem } from "@/api/generated/cartaisyAPI.schemas";
+import type { CalloutBannerItem } from "@/api/types";
 import { tokens } from "@/tamagui/token";
 import { extractNumericId } from "@/utils/extractNumericId";
 

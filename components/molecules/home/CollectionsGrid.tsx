@@ -1,4 +1,4 @@
-import { CategoryGridItem } from "@/api/generated/cartaisyAPI.schemas";
+import { CategoryGridItem } from "@/api/types";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { PressableButton } from "@/components/atoms/PressableButton";

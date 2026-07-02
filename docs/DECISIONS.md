@@ -118,6 +118,18 @@ Impact: Use `npm ci` for clean installs and `npm install` only for intentional d
 
 Related docs: `docs/TESTING.md`, `.github/workflows/ci.yml`.
 
+### Generated API Client Syncs From A Committed Backend Spec Snapshot
+
+Date: 2026-07-02.
+
+Decision: The Orval-generated API client (`api/generated/`) is produced only by `npm run generate:api` from the committed spec snapshot `api-spec/swagger.json`. That snapshot is refreshed from the backend repo (`cartaisy-backend`, `npm run generate:spec` / `tsoa spec` output in `public/swagger.json`), and the spec and regenerated client are committed together. Generated files must never be edited by hand; `clean: true` deletes manual additions on the next run. Mobile-side view types the spec cannot express yet live in `api/types.ts`, and untyped endpoint responses (currently `GET /customer/search`) are narrowed at the consuming call site.
+
+Reason: Orval previously read a now-dead production URL, `api-spec/swagger.json` was stale, and generated files carried hand-edits that any regeneration would silently destroy, reintroducing type errors and contract drift.
+
+Impact: Regeneration is deterministic and repeatable offline. To sync after a backend API change: regenerate the backend spec, copy it to `api-spec/swagger.json`, run `npm run generate:api`, run `npm run typecheck` and `npm test`, and commit spec plus generated output in the same change. Fix type gaps in the backend spec or `api/types.ts`, never in `api/generated/`.
+
+Related docs: `orval.config.ts`, `api-spec/swagger.json`, `api/types.ts`, backend repo `tsoa.json`.
+
 ### Checkout And Payment Changes Are High-Risk
 
 Date: unknown / historical.

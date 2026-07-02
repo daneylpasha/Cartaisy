@@ -9,8 +9,8 @@ import {
 import type {
   CollectionWithProducts,
   EnrichedProduct,
-  Product,
 } from "@/api/generated/cartaisyAPI.schemas";
+import type { Product, SearchResponse } from "@/api/types";
 import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
 import { TextMDSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
@@ -264,6 +264,10 @@ const Search = () => {
     {
       query: {
         enabled: debouncedSearchQuery.length >= 3,
+        // GET /customer/search is untyped in the backend OpenAPI spec, so the
+        // generated client returns `unknown`; narrow it here instead of
+        // hand-editing the generated code.
+        select: (data) => data as SearchResponse,
       },
     }
   );

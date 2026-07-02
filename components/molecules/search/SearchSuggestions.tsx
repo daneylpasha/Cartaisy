@@ -5,7 +5,8 @@ import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
-import type { EnrichedProduct, CollectionWithProducts, Product } from "@/api/generated/cartaisyAPI.schemas";
+import type { EnrichedProduct, CollectionWithProducts } from "@/api/generated/cartaisyAPI.schemas";
+import type { Product } from "@/api/types";
 import { FlatList } from "react-native";
 import { XStack, YStack } from "tamagui";
 

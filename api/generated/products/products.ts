@@ -60,7 +60,7 @@ export const getGetProductDetailQueryKey = (productId?: string,
     }
 
     
-export const getGetProductDetailQueryOptions = <TData = Awaited<ReturnType<typeof getProductDetail>>, TError = void | void>(productId: string,
+export const getGetProductDetailQueryOptions = <TData = Awaited<ReturnType<typeof getProductDetail>>, TError = void | void | void>(productId: string,
     params?: GetProductDetailParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductDetail>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
@@ -80,10 +80,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetProductDetailQueryResult = NonNullable<Awaited<ReturnType<typeof getProductDetail>>>
-export type GetProductDetailQueryError = void | void
+export type GetProductDetailQueryError = void | void | void
 
 
-export function useGetProductDetail<TData = Awaited<ReturnType<typeof getProductDetail>>, TError = void | void>(
+export function useGetProductDetail<TData = Awaited<ReturnType<typeof getProductDetail>>, TError = void | void | void>(
  productId: string,
     params: undefined |  GetProductDetailParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductDetail>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -94,7 +94,7 @@ export function useGetProductDetail<TData = Awaited<ReturnType<typeof getProduct
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetProductDetail<TData = Awaited<ReturnType<typeof getProductDetail>>, TError = void | void>(
+export function useGetProductDetail<TData = Awaited<ReturnType<typeof getProductDetail>>, TError = void | void | void>(
  productId: string,
     params?: GetProductDetailParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductDetail>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -105,13 +105,13 @@ export function useGetProductDetail<TData = Awaited<ReturnType<typeof getProduct
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetProductDetail<TData = Awaited<ReturnType<typeof getProductDetail>>, TError = void | void>(
+export function useGetProductDetail<TData = Awaited<ReturnType<typeof getProductDetail>>, TError = void | void | void>(
  productId: string,
     params?: GetProductDetailParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductDetail>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetProductDetail<TData = Awaited<ReturnType<typeof getProductDetail>>, TError = void | void>(
+export function useGetProductDetail<TData = Awaited<ReturnType<typeof getProductDetail>>, TError = void | void | void>(
  productId: string,
     params?: GetProductDetailParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductDetail>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient 

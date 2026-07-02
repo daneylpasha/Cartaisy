@@ -9,9 +9,9 @@ import {
 import {
   CollectionFacets,
   CollectionProduct,
-  Product,
   ProductCollectionSortKey,
 } from "@/api/generated/cartaisyAPI.schemas";
+import { Product } from "@/api/types";
 import { useGetCollectionProducts } from "@/api/generated/collections/collections";
 import { extractNumericId } from "@/utils/extractNumericId";
 import { HeadingXSBold, Loader, TextMDSemiBold } from "@/components/atoms";
