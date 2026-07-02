@@ -28,6 +28,10 @@ describe("useCartStore", () => {
     jest.spyOn(console, "log").mockImplementation(() => {});
   });
 
+  afterAll(() => {
+    jest.restoreAllMocks();
+  });
+
   beforeEach(() => {
     useCartStore.setState({ cartId: null, items: [] });
   });

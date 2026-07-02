@@ -15,6 +15,14 @@ let failedQueue: Array<{
   reject: (error: any) => void;
 }> = [];
 
+// Test-only escape hatch: lets Jest suites reset the module-level refresh
+// state between tests in case a test is interrupted before the refresh
+// flow's own cleanup runs. Never called by app code.
+export const __resetAuthRefreshStateForTests = () => {
+  isRefreshing = false;
+  failedQueue = [];
+};
+
 // Process queued requests after token refresh
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((prom) => {

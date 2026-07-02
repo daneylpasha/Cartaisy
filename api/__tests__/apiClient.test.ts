@@ -19,7 +19,10 @@ jest.mock("@/api/config/mobileConfig", () => ({
   },
 }));
 
-import { axiosInstance } from "@/api/apiClient";
+import {
+  __resetAuthRefreshStateForTests,
+  axiosInstance,
+} from "@/api/apiClient";
 import useAuthStore from "@/store/useAuthStore";
 import { isCatalogUnavailableError } from "@/utils/catalogUnavailableError";
 
@@ -101,11 +104,17 @@ describe("apiClient auth refresh", () => {
 
   afterAll(async () => {
     // useAuthStore.setToken schedules a 100ms debug log; let pending timers
-    // drain so nothing logs after the suite is torn down.
+    // drain so nothing logs after the suite is torn down, then restore the
+    // console spy.
     await new Promise((resolve) => setTimeout(resolve, 120));
+    jest.restoreAllMocks();
   });
 
   beforeEach(() => {
+    // Defensive isolation: if a test ever dies before the refresh flow's
+    // own `finally`/processQueue cleanup runs, don't let stale in-flight
+    // state leak into the next test as a hang.
+    __resetAuthRefreshStateForTests();
     useAuthStore.setState({ ...loggedInState });
     postSpy = jest.spyOn(axios, "post");
   });
@@ -191,7 +200,14 @@ describe("apiClient auth refresh", () => {
     const first = axiosInstance.get("/customer/profile");
     const second = axiosInstance.get("/customer/orders");
 
-    // Let both 401s reach the response interceptor while refresh is in flight
+    // Let both 401s reach the response interceptor while refresh is in
+    // flight. One macrotask tick (setTimeout 0) is sufficient because the
+    // interceptor chains for both requests are pure microtask work: the
+    // event loop drains ALL pending microtasks — however deeply chained —
+    // before running the next macrotask. The refresh POST itself is the
+    // only pending non-microtask (our deferred), so by the time flushAsync
+    // resolves, request one holds the refresh lock and request two is
+    // parked in the queue.
     await flushAsync();
     resolveRefresh(refreshSuccessPayload);
 

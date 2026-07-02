@@ -24,8 +24,9 @@ describe("useAuthStore", () => {
 
   afterAll(async () => {
     // setToken schedules a 100ms debug log; let pending timers drain so
-    // nothing logs after the suite is torn down.
+    // nothing logs after the suite is torn down, then restore the console spy.
     await new Promise((resolve) => setTimeout(resolve, 120));
+    jest.restoreAllMocks();
   });
 
   beforeEach(() => {
