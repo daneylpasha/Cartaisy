@@ -4,7 +4,7 @@ Use this checklist for mobile release/build readiness. It complements `docs/MOBI
 
 ## Current State
 
-Current state: The repo includes a static `app.json`, checked-in iOS and Android native projects, Firebase config files, EAS profiles, Stripe/native payment plugin config, and public mobile environment examples.
+Current state: The repo includes a dynamic `app.config.ts` (env-driven app identity with cartaisy defaults; static `app.json` was removed), checked-in iOS and Android native projects, Firebase config files, EAS profiles, Stripe/native payment plugin config, and public mobile environment examples.
 
 Current state: Existing release-oriented docs include `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`, `docs/MOBILE_ENV_VARIABLES.md`, `docs/MOBILE_BRANDING_CONFIG_AUDIT.md`, `docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md`, and `docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md`.
 
@@ -32,6 +32,7 @@ Target state: Checkout/payment behavior, native payment capabilities, signing, c
 ### App Identity Checks
 
 - Confirm Expo app name, slug, scheme, iOS bundle identifier, Android package/application ID, and app store listing names.
+- Run `npx expo config --type public` with the merchant's environment values set and confirm the generated identity matches the intended merchant.
 - Confirm checked-in native iOS and Android identifiers match the intended build path.
 - Confirm any known mismatches from `docs/MOBILE_BRANDING_CONFIG_AUDIT.md` and `docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md` are resolved or explicitly accepted for the release.
 
@@ -86,9 +87,9 @@ Target state: Checkout/payment behavior, native payment capabilities, signing, c
 
 ## Known Gaps
 
-Known gap: Dynamic app config is not implemented in the inspected repo; static `app.json` remains the current config source.
+Known gap: Dynamic app config is implemented via `app.config.ts`, but merchant-branded build output has not been proven end-to-end. Verify `npx expo config --type public` and EAS build output with per-merchant environment values before release.
 
-Known gap: Runtime branding is documented as a desired contract but not fully implemented.
+Known gap: Runtime branding is documented as a desired contract but not implemented.
 
 Known gap: Existing audits identify iOS bundle identifier, Firebase iOS, Apple Pay entitlement, and push entitlement risks that must be verified before production release.
 
