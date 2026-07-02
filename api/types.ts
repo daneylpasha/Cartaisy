@@ -38,7 +38,7 @@ export type Product = Omit<EnrichedProduct, 'compareAtPrice'> & {
  */
 export type SearchResponseData = {
   totalResults: number;
-  products: EnrichedProduct[];
+  products: Product[];
   collections: CollectionWithProducts[];
   query: string;
 };
@@ -46,6 +46,31 @@ export type SearchResponseData = {
 export interface SearchResponse {
   success: boolean;
   data: SearchResponseData;
+}
+
+/**
+ * Runtime guard for the `SearchResponse` narrowing above. Checks the
+ * essential shape so a backend contract change surfaces as a query error
+ * instead of silently empty search results.
+ */
+export function isSearchResponse(value: unknown): value is SearchResponse {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const data = (value as { data?: unknown }).data;
+  if (typeof data !== 'object' || data === null) {
+    return false;
+  }
+  const { totalResults, products, collections } = data as {
+    totalResults?: unknown;
+    products?: unknown;
+    collections?: unknown;
+  };
+  return (
+    typeof totalResults === 'number' &&
+    Array.isArray(products) &&
+    Array.isArray(collections)
+  );
 }
 
 export type CarouselItem = CarouselItemResponse;
