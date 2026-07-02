@@ -1,4 +1,4 @@
-import { CategoryCollectionGridItem } from "@/api/generated/cartaisyAPI.schemas";
+import { CategoryCollectionGridItem } from "@/api/types";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
 import { extractNumericId } from "@/utils/extractNumericId";

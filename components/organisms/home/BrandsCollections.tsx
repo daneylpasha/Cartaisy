@@ -1,4 +1,4 @@
-import { CollectionShowcaseItem } from "@/api/generated/cartaisyAPI.schemas";
+import { CollectionShowcaseItem } from "@/api/types";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";

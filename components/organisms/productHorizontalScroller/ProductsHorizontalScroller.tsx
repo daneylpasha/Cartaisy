@@ -1,4 +1,4 @@
-import { CollectionDisplay } from "@/api/generated/cartaisyAPI.schemas";
+import { CollectionDisplay } from "@/api/types";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import { tokens } from "@/tamagui/token";

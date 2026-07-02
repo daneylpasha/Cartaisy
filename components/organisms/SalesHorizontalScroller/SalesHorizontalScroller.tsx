@@ -3,7 +3,7 @@ import React from "react";
 import { FlatList } from "react-native";
 import { Spacer, YStack } from "tamagui";
 
-import { CollectionDisplay } from "@/api/generated/cartaisyAPI.schemas";
+import { CollectionDisplay } from "@/api/types";
 import { extractNumericId } from "@/utils/extractNumericId";
 import { router } from "expo-router";
 import { ProductCard } from "../../molecules/ProductCard";

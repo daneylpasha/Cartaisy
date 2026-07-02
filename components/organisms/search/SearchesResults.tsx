@@ -1,9 +1,8 @@
 import type {
-  CategoryCollectionGridItem,
   CollectionWithProducts,
   EnrichedProduct,
-  Product,
 } from "@/api/generated/cartaisyAPI.schemas";
+import type { CategoryCollectionGridItem, Product } from "@/api/types";
 import { Loader } from "@/components/atoms";
 import { Spacer } from "@/components/atoms/Spacer";
 import { CategoriesSearches } from "@/components/molecules/search";

@@ -11,7 +11,7 @@ import { useState } from "react";
 import { FlatList, StyleSheet } from "react-native";
 import { getTokenValue, Spacer, XStack, YStack } from "tamagui";
 
-import type { PromoBannerItem as ApiPromoBannerItem } from "@/api/generated/cartaisyAPI.schemas";
+import type { PromoBannerItem as ApiPromoBannerItem } from "@/api/types";
 
 // Note: API uses ctaText instead of buttonText
 type PromoBannerItem = ApiPromoBannerItem;

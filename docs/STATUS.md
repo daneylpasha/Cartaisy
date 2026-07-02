@@ -66,7 +66,7 @@ Known gap: CI and build readiness should be verified before release; do not assu
 
 ## Unknowns
 
-Unknown: Backend API contract freshness. Generated clients come from `api-spec/swagger.json` via Orval, and whether that spec matches the deployed backend has not been verified recently.
+Unknown: Deployed backend contract freshness over time. On 2026-07-02, `api-spec/swagger.json` was refreshed from the `cartaisy-backend` repo's `tsoa spec` output and the Orval client was regenerated from that snapshot (see `docs/DECISIONS.md`), but the previously configured production backend URL is dead, so the snapshot tracks the backend source repo rather than a verified deployment.
 
 Unknown: Whether real EAS/signed merchant builds succeed end-to-end (signing, store submission, on-device identity). Config evaluation and local prebuild output were verified with a sample merchant on 2026-07-02, but no EAS build was run.
 

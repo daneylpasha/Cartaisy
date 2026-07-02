@@ -6,11 +6,8 @@ import {
   useSearch,
 } from "@/api/generated/search/search";
 
-import type {
-  CollectionWithProducts,
-  EnrichedProduct,
-  Product,
-} from "@/api/generated/cartaisyAPI.schemas";
+import type { CollectionWithProducts } from "@/api/generated/cartaisyAPI.schemas";
+import { isSearchResponse, type Product, type SearchResponse } from "@/api/types";
 import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
 import { TextMDSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
@@ -66,7 +63,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
  * EnrichedProduct already matches Product format, so this is mostly a type cast with validation
  */
 const transformEnrichedProduct = (
-  product: EnrichedProduct | undefined
+  product: Product | undefined
 ): Product | null => {
   if (!product) {
     console.warn("⚠️ transformEnrichedProduct: product is undefined");
@@ -264,6 +261,17 @@ const Search = () => {
     {
       query: {
         enabled: debouncedSearchQuery.length >= 3,
+        // GET /customer/search is untyped in the backend OpenAPI spec, so the
+        // generated client returns `unknown`; narrow it here instead of
+        // hand-editing the generated code.
+        select: (data): SearchResponse => {
+          if (!isSearchResponse(data)) {
+            throw new Error(
+              "Unexpected GET /customer/search response shape; the backend contract may have changed"
+            );
+          }
+          return data;
+        },
       },
     }
   );
@@ -441,7 +449,7 @@ const Search = () => {
     const collections = searchSuggestionsData?.data?.collections || [];
 
     // Add products - already in EnrichedProduct format
-    products.forEach((enrichedProduct: EnrichedProduct) => {
+    products.forEach((enrichedProduct: Product) => {
       const product = transformEnrichedProduct(enrichedProduct);
       if (product) {
         results.push({

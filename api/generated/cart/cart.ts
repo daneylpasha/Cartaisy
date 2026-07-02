@@ -25,14 +25,18 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AddItemsParams,
   AddItemsRequest,
+  AssociateWithCustomerParams,
   CartCreateRequest,
   CartResponse,
   ClearCartResponse,
   CreateCartParams,
   GetCartParams,
+  RemoveItemParams,
   SaveCartResponse,
   SaveCartToProfileBodyBody,
+  UpdateItemQuantityParams,
   UpdateItemQuantityRequest
 } from '../cartaisyAPI.schemas';
 
@@ -64,7 +68,7 @@ export const createCart = (
   
 
 
-export const getCreateCartMutationOptions = <TError = void | void,
+export const getCreateCartMutationOptions = <TError = void | void | void | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCart>>, TError,{data: CartCreateRequest;params?: CreateCartParams}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createCart>>, TError,{data: CartCreateRequest;params?: CreateCartParams}, TContext> => {
 
@@ -91,9 +95,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateCartMutationResult = NonNullable<Awaited<ReturnType<typeof createCart>>>
     export type CreateCartMutationBody = CartCreateRequest
-    export type CreateCartMutationError = void | void
+    export type CreateCartMutationError = void | void | void | void
 
-    export const useCreateCart = <TError = void | void,
+    export const useCreateCart = <TError = void | void | void | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCart>>, TError,{data: CartCreateRequest;params?: CreateCartParams}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createCart>>,
@@ -134,7 +138,7 @@ export const getGetCartQueryKey = (cartId?: string,
     }
 
     
-export const getGetCartQueryOptions = <TData = Awaited<ReturnType<typeof getCart>>, TError = void | void>(cartId: string,
+export const getGetCartQueryOptions = <TData = Awaited<ReturnType<typeof getCart>>, TError = void | void | void | void>(cartId: string,
     params?: GetCartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCart>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
@@ -154,10 +158,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetCartQueryResult = NonNullable<Awaited<ReturnType<typeof getCart>>>
-export type GetCartQueryError = void | void
+export type GetCartQueryError = void | void | void | void
 
 
-export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError = void | void>(
+export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError = void | void | void | void>(
  cartId: string,
     params: undefined |  GetCartParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCart>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -168,7 +172,7 @@ export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError =
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError = void | void>(
+export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError = void | void | void | void>(
  cartId: string,
     params?: GetCartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCart>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -179,13 +183,13 @@ export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError =
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError = void | void>(
+export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError = void | void | void | void>(
  cartId: string,
     params?: GetCartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCart>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError = void | void>(
+export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError = void | void | void | void>(
  cartId: string,
     params?: GetCartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCart>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient 
@@ -218,7 +222,7 @@ export const clearCart = (
   
 
 
-export const getClearCartMutationOptions = <TError = void | void,
+export const getClearCartMutationOptions = <TError = void | void | void | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearCart>>, TError,{cartId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof clearCart>>, TError,{cartId: string}, TContext> => {
 
@@ -245,9 +249,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type ClearCartMutationResult = NonNullable<Awaited<ReturnType<typeof clearCart>>>
     
-    export type ClearCartMutationError = void | void
+    export type ClearCartMutationError = void | void | void | void
 
-    export const useClearCart = <TError = void | void,
+    export const useClearCart = <TError = void | void | void | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearCart>>, TError,{cartId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof clearCart>>,
@@ -266,6 +270,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 export const addItems = (
     cartId: string,
     addItemsRequest: AddItemsRequest,
+    params?: AddItemsParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
@@ -273,16 +278,17 @@ export const addItems = (
       return customInstance<CartResponse>(
       {url: `/cart/${cartId}/items`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: addItemsRequest, signal
+      data: addItemsRequest,
+        params, signal
     },
       options);
     }
   
 
 
-export const getAddItemsMutationOptions = <TError = void | void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addItems>>, TError,{cartId: string;data: AddItemsRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof addItems>>, TError,{cartId: string;data: AddItemsRequest}, TContext> => {
+export const getAddItemsMutationOptions = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addItems>>, TError,{cartId: string;data: AddItemsRequest;params?: AddItemsParams}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof addItems>>, TError,{cartId: string;data: AddItemsRequest;params?: AddItemsParams}, TContext> => {
 
 const mutationKey = ['addItems'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -294,10 +300,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addItems>>, {cartId: string;data: AddItemsRequest}> = (props) => {
-          const {cartId,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addItems>>, {cartId: string;data: AddItemsRequest;params?: AddItemsParams}> = (props) => {
+          const {cartId,data,params} = props ?? {};
 
-          return  addItems(cartId,data,requestOptions)
+          return  addItems(cartId,data,params,requestOptions)
         }
 
         
@@ -307,14 +313,14 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AddItemsMutationResult = NonNullable<Awaited<ReturnType<typeof addItems>>>
     export type AddItemsMutationBody = AddItemsRequest
-    export type AddItemsMutationError = void | void | void
+    export type AddItemsMutationError = void | void | void | void
 
-    export const useAddItems = <TError = void | void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addItems>>, TError,{cartId: string;data: AddItemsRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+    export const useAddItems = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addItems>>, TError,{cartId: string;data: AddItemsRequest;params?: AddItemsParams}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof addItems>>,
         TError,
-        {cartId: string;data: AddItemsRequest},
+        {cartId: string;data: AddItemsRequest;params?: AddItemsParams},
         TContext
       > => {
 
@@ -329,22 +335,24 @@ export const updateItemQuantity = (
     cartId: string,
     lineItemId: string,
     updateItemQuantityRequest: UpdateItemQuantityRequest,
+    params?: UpdateItemQuantityParams,
  options?: SecondParameter<typeof customInstance>,) => {
       
       
       return customInstance<CartResponse>(
       {url: `/cart/${cartId}/items/${lineItemId}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
-      data: updateItemQuantityRequest
+      data: updateItemQuantityRequest,
+        params
     },
       options);
     }
   
 
 
-export const getUpdateItemQuantityMutationOptions = <TError = void | void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItemQuantity>>, TError,{cartId: string;lineItemId: string;data: UpdateItemQuantityRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateItemQuantity>>, TError,{cartId: string;lineItemId: string;data: UpdateItemQuantityRequest}, TContext> => {
+export const getUpdateItemQuantityMutationOptions = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItemQuantity>>, TError,{cartId: string;lineItemId: string;data: UpdateItemQuantityRequest;params?: UpdateItemQuantityParams}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateItemQuantity>>, TError,{cartId: string;lineItemId: string;data: UpdateItemQuantityRequest;params?: UpdateItemQuantityParams}, TContext> => {
 
 const mutationKey = ['updateItemQuantity'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -356,10 +364,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateItemQuantity>>, {cartId: string;lineItemId: string;data: UpdateItemQuantityRequest}> = (props) => {
-          const {cartId,lineItemId,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateItemQuantity>>, {cartId: string;lineItemId: string;data: UpdateItemQuantityRequest;params?: UpdateItemQuantityParams}> = (props) => {
+          const {cartId,lineItemId,data,params} = props ?? {};
 
-          return  updateItemQuantity(cartId,lineItemId,data,requestOptions)
+          return  updateItemQuantity(cartId,lineItemId,data,params,requestOptions)
         }
 
         
@@ -369,14 +377,14 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateItemQuantityMutationResult = NonNullable<Awaited<ReturnType<typeof updateItemQuantity>>>
     export type UpdateItemQuantityMutationBody = UpdateItemQuantityRequest
-    export type UpdateItemQuantityMutationError = void | void | void
+    export type UpdateItemQuantityMutationError = void | void | void | void
 
-    export const useUpdateItemQuantity = <TError = void | void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItemQuantity>>, TError,{cartId: string;lineItemId: string;data: UpdateItemQuantityRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+    export const useUpdateItemQuantity = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItemQuantity>>, TError,{cartId: string;lineItemId: string;data: UpdateItemQuantityRequest;params?: UpdateItemQuantityParams}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateItemQuantity>>,
         TError,
-        {cartId: string;lineItemId: string;data: UpdateItemQuantityRequest},
+        {cartId: string;lineItemId: string;data: UpdateItemQuantityRequest;params?: UpdateItemQuantityParams},
         TContext
       > => {
 
@@ -390,20 +398,22 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 export const removeItem = (
     cartId: string,
     lineItemId: string,
+    params?: RemoveItemParams,
  options?: SecondParameter<typeof customInstance>,) => {
       
       
       return customInstance<CartResponse>(
-      {url: `/cart/${cartId}/items/${lineItemId}`, method: 'DELETE'
+      {url: `/cart/${cartId}/items/${lineItemId}`, method: 'DELETE',
+        params
     },
       options);
     }
   
 
 
-export const getRemoveItemMutationOptions = <TError = void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeItem>>, TError,{cartId: string;lineItemId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof removeItem>>, TError,{cartId: string;lineItemId: string}, TContext> => {
+export const getRemoveItemMutationOptions = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeItem>>, TError,{cartId: string;lineItemId: string;params?: RemoveItemParams}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeItem>>, TError,{cartId: string;lineItemId: string;params?: RemoveItemParams}, TContext> => {
 
 const mutationKey = ['removeItem'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -415,10 +425,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeItem>>, {cartId: string;lineItemId: string}> = (props) => {
-          const {cartId,lineItemId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeItem>>, {cartId: string;lineItemId: string;params?: RemoveItemParams}> = (props) => {
+          const {cartId,lineItemId,params} = props ?? {};
 
-          return  removeItem(cartId,lineItemId,requestOptions)
+          return  removeItem(cartId,lineItemId,params,requestOptions)
         }
 
         
@@ -428,14 +438,14 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RemoveItemMutationResult = NonNullable<Awaited<ReturnType<typeof removeItem>>>
     
-    export type RemoveItemMutationError = void | void
+    export type RemoveItemMutationError = void | void | void | void
 
-    export const useRemoveItem = <TError = void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeItem>>, TError,{cartId: string;lineItemId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+    export const useRemoveItem = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeItem>>, TError,{cartId: string;lineItemId: string;params?: RemoveItemParams}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof removeItem>>,
         TError,
-        {cartId: string;lineItemId: string},
+        {cartId: string;lineItemId: string;params?: RemoveItemParams},
         TContext
       > => {
 
@@ -578,21 +588,23 @@ Call this when user logs in to merge guest cart with their account
  */
 export const associateWithCustomer = (
     cartId: string,
+    params?: AssociateWithCustomerParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<CartResponse>(
-      {url: `/cart/${cartId}/associate`, method: 'POST', signal
+      {url: `/cart/${cartId}/associate`, method: 'POST',
+        params, signal
     },
       options);
     }
   
 
 
-export const getAssociateWithCustomerMutationOptions = <TError = void | void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof associateWithCustomer>>, TError,{cartId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof associateWithCustomer>>, TError,{cartId: string}, TContext> => {
+export const getAssociateWithCustomerMutationOptions = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof associateWithCustomer>>, TError,{cartId: string;params?: AssociateWithCustomerParams}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof associateWithCustomer>>, TError,{cartId: string;params?: AssociateWithCustomerParams}, TContext> => {
 
 const mutationKey = ['associateWithCustomer'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -604,10 +616,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof associateWithCustomer>>, {cartId: string}> = (props) => {
-          const {cartId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof associateWithCustomer>>, {cartId: string;params?: AssociateWithCustomerParams}> = (props) => {
+          const {cartId,params} = props ?? {};
 
-          return  associateWithCustomer(cartId,requestOptions)
+          return  associateWithCustomer(cartId,params,requestOptions)
         }
 
         
@@ -617,14 +629,14 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AssociateWithCustomerMutationResult = NonNullable<Awaited<ReturnType<typeof associateWithCustomer>>>
     
-    export type AssociateWithCustomerMutationError = void | void | void
+    export type AssociateWithCustomerMutationError = void | void | void | void
 
-    export const useAssociateWithCustomer = <TError = void | void | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof associateWithCustomer>>, TError,{cartId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+    export const useAssociateWithCustomer = <TError = void | void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof associateWithCustomer>>, TError,{cartId: string;params?: AssociateWithCustomerParams}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof associateWithCustomer>>,
         TError,
-        {cartId: string},
+        {cartId: string;params?: AssociateWithCustomerParams},
         TContext
       > => {
 

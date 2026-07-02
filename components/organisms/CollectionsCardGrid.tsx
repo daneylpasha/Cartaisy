@@ -1,4 +1,4 @@
-import { CollectionShowcaseItem } from "@/api/generated/cartaisyAPI.schemas";
+import { CollectionShowcaseItem } from "@/api/types";
 import React from "react";
 import { FlatList } from "react-native";
 import { Spacer, YStack } from "tamagui";
