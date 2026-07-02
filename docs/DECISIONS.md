@@ -102,7 +102,7 @@ Decision: Jest with the `jest-expo` preset (`jest.config.js`) is the mobile test
 
 Reason: Reproducible validation requires a real test suite instead of a placeholder `test` script, starting with pure logic modules.
 
-Impact: Current coverage is limited to `utils/__tests__/` and `api/config/__tests__/`. Extend coverage when backend/mobile behavior changes; do not claim broader automated coverage than exists.
+Impact: Current coverage spans `utils/__tests__/`, `api/config/__tests__/`, `api/__tests__/` (auth refresh interceptor behavior), and `store/__tests__/` (cart/auth store state). Extend coverage when backend/mobile behavior changes; do not claim broader automated coverage than exists.
 
 Related docs: `docs/TESTING.md`, `jest.config.js`.
 
