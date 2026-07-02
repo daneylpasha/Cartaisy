@@ -4,6 +4,32 @@ Use this checklist when preparing a merchant-specific Cartaisy mobile app build.
 
 This is a release checklist only. Do not change application behavior, API response shapes, checkout, auth, orders, cart mutations, dashboard logic, or credential handling as part of completing it.
 
+## Sample Merchant Verification (2026-07-02)
+
+A fictional sample merchant ("Acme Outfitters", `docs/examples/sample-merchant.env`) was verified against dynamic `app.config.ts` for GitHub issue #52. Method: `npx expo config --type public`, `npx expo config --type introspect`, and `npx expo prebuild --no-install` for both platforms in a disposable copy of the repo (the checked-in `ios/` and `android/` projects were not touched). No EAS or signed build was run.
+
+### Verified Working
+
+Verified: All scoped values resolve from environment variables through `app.config.ts` into Expo config output: app name, slug, scheme, version, iOS bundle identifier and build number, Android package and version code, Firebase file paths, icon/splash/adaptive-icon/notification references, Apple Pay merchant ID (entitlements and Stripe plugin), EAS project ID, and Expo owner. `EXPO_PUBLIC_API_BASE_URL` and `EXPO_PUBLIC_STORE_ID` are consumed by app JavaScript (validated by `api/config/mobileConfig.ts`, which requires a 24-character Mongo ObjectId store ID), not by Expo config.
+
+Verified: `npx expo prebuild` generates merchant-correct native projects from the sample env: Android `applicationId`/`namespace`, `app_name`, and manifest deep-link scheme; iOS `PRODUCT_BUNDLE_IDENTIFIER` and entitlements including `com.apple.developer.in-app-payments` with the merchant ID.
+
+### Release Blockers Found
+
+Blocker: The checked-in `ios/` and `android/` projects bypass dynamic config. Because native directories exist in the repo (and there is no `.easignore`), EAS builds and `expo run:*` use the checked-in Cartaisy-identity projects and ignore `app.config.ts` identity values. Merchant-branded builds must run `npx expo prebuild` (regenerating native projects from `app.config.ts`) as part of the build flow, or the build pipeline must exclude the checked-in native directories. This process decision is unowned and must be made before any merchant release.
+
+Blocker: Firebase files must match the merchant identity, and the mismatch fails concretely. Prebuild copies the env-referenced Firebase files as-is; with the Cartaisy defaults, the generated Android project contained a `google-services.json` whose `package_name` (`com.rendernext.cartaisy`) does not match the merchant `applicationId`, which fails the Google Services Gradle step at build time. The iOS plist has the same mismatch, which breaks Firebase/push registration at runtime. Each merchant needs Firebase apps registered for their bundle ID/package and their own config files supplied via `IOS_GOOGLE_SERVICES_FILE`/`ANDROID_GOOGLE_SERVICES_FILE`.
+
+Blocker: Per-merchant EAS ownership is undecided. The defaults point at the Cartaisy `rendernext` EAS project; a branded build with a different slug/owner needs its own EAS project ID, and the sample's placeholder project ID would fail an actual EAS build. Signing certificates, provisioning profiles, and store accounts per merchant are similarly undecided and out of scope for this verification.
+
+### Risks To Verify At Release Time
+
+Risk: The checked-in iOS entitlements (`ios/cartaisy/cartaisy.entitlements`) contain only `aps-environment: development` and no Apple Pay entitlement, while `app.config.ts` declares one. Any build path that uses the checked-in iOS project ships without the Apple Pay entitlement. Prebuild-generated entitlements also carry `aps-environment: development`; confirm EAS/signing replaces this correctly for production distribution.
+
+Risk: Push (APNs/FCM), Apple Pay merchant registration with Apple, and Stripe account configuration are external registrations that config plumbing cannot verify. They must be confirmed per merchant during release validation.
+
+Risk: An EAS or signed device build has not been run for a sample merchant, so store-submission behavior, signing, and on-device identity remain unproven.
+
 ## Merchant Build Record
 
 - [ ] Merchant name:
@@ -121,6 +147,8 @@ These values should be loaded from the backend at runtime through the existing s
 
 ## Release Verification
 
+- [ ] Confirm the build flow regenerates native projects from `app.config.ts` (`npx expo prebuild`) or otherwise does not use the checked-in Cartaisy `ios/`/`android/` projects; builds from the checked-in projects ignore merchant identity values.
+- [ ] Run `npx expo config --type public` with the merchant environment set and verify name, slug, scheme, bundle ID, package, Firebase file paths, and payment merchant ID.
 - [ ] Build iOS with the merchant bundle identifier and Firebase file.
 - [ ] Build Android with the merchant package name and Firebase file.
 - [ ] Install each build on a clean device or simulator.

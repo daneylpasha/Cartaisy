@@ -54,7 +54,7 @@ Target state: Testing should include lint, typecheck, meaningful unit/integratio
 
 ## Known Gaps
 
-Known gap: Dynamic app config is implemented via `app.config.ts`, but merchant-branded build output (per-merchant env values through `npx expo config` and EAS builds) has not been proven end-to-end.
+Known gap: Dynamic app config is implemented via `app.config.ts` and verified through `npx expo config` and `npx expo prebuild` with a sample merchant env (2026-07-02, see `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`), but no EAS or signed merchant build has been produced. Key blockers: the checked-in `ios/`/`android/` projects bypass dynamic config unless the build flow runs prebuild, merchants need matching Firebase files, and per-merchant EAS ownership is undecided.
 
 Known gap: Runtime branding contract is documented but not implemented.
 
@@ -68,7 +68,7 @@ Known gap: CI and build readiness should be verified before release; do not assu
 
 Unknown: Backend API contract freshness. Generated clients come from `api-spec/swagger.json` via Orval, and whether that spec matches the deployed backend has not been verified recently.
 
-Unknown: Whether per-merchant environment values produce correct native build output (app identity, Firebase files, Apple Pay entitlements) in real EAS builds.
+Unknown: Whether real EAS/signed merchant builds succeed end-to-end (signing, store submission, on-device identity). Config evaluation and local prebuild output were verified with a sample merchant on 2026-07-02, but no EAS build was run.
 
 ## Current Priority Areas
 
