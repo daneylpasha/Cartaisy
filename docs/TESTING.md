@@ -36,7 +36,7 @@ Current state: `npm run lint` maps to `expo lint`.
 
 Current state: `npm run typecheck` maps to `tsc --noEmit`.
 
-Current state: `npm test` maps to `jest` using the `jest-expo` preset (`jest.config.js`). It runs real test suites matched by `**/__tests__/**/*.test.ts` (currently `utils/__tests__/` and `api/config/__tests__/`).
+Current state: `npm test` maps to `jest` using the `jest-expo` preset (`jest.config.js`). It runs real test suites matched by `**/__tests__/**/*.test.ts` (currently `utils/__tests__/`, `api/config/__tests__/`, `api/__tests__/` for auth refresh interceptor behavior, and `store/__tests__/` for cart and auth store state).
 
 Current state: `npm run android` maps to `expo run:android`, and `npm run ios` maps to `expo run:ios`.
 
@@ -54,7 +54,7 @@ Target state: Release/build work should validate iOS and Android behavior on cle
 
 ## Known Gaps
 
-Known gap: Jest coverage is limited to pure logic modules (`utils`, `api/config`). Component/screen behavior is not covered by automated tests.
+Known gap: Jest coverage spans pure logic modules (`utils`, `api/config`), the API client auth refresh interceptors (`api/__tests__/`), and cart/auth store state (`store/__tests__/`). Component/screen behavior — including the checkout/cart unavailable-state UI blocking in `app/checkout.tsx` and `app/(tabs)/cart.tsx` — is not covered by automated tests; `testMatch` only picks up `.test.ts` files and no React Native testing library is installed.
 
 Known gap: Expo/EAS builds were not run as part of this docs-only context update. Build behavior must be verified before release work.
 

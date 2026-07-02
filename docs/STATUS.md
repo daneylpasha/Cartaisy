@@ -14,7 +14,7 @@ Current state: Public API base URL and store ID configuration are validated in `
 
 Current state: Store config currently loads `currency`, `timezone`, and `name` from `/store/config` with local fallbacks.
 
-Current state: `package.json` exposes `start`, `android`, `ios`, `web`, `lint`, `typecheck`, `test`, and `generate:api` scripts. `npm test` runs Jest (`jest-expo` preset via `jest.config.js`) with real suites in `utils/__tests__/` and `api/config/__tests__/`.
+Current state: `package.json` exposes `start`, `android`, `ios`, `web`, `lint`, `typecheck`, `test`, and `generate:api` scripts. `npm test` runs Jest (`jest-expo` preset via `jest.config.js`) with real suites in `utils/__tests__/`, `api/config/__tests__/`, `api/__tests__/` (auth refresh), and `store/__tests__/` (cart/auth stores).
 
 Current state: npm is the authoritative package manager. `package.json` declares `"packageManager": "npm@10.8.2"`, `package-lock.json` is the only committed lockfile, and `yarn.lock` was removed and gitignored. As of 2026-07-02, a clean checkout validates with `npm ci`, `npm run lint`, `npm run typecheck`, and `npm test`, matching CI.
 
@@ -60,7 +60,7 @@ Known gap: Runtime branding contract is documented but not implemented.
 
 Known gap: Native identity, Firebase, Apple Pay, and push notification mismatches identified in audits need dedicated release or implementation work.
 
-Known gap: Jest coverage is limited to pure logic modules; component, screen, navigation, and integration behavior is not covered by automated tests.
+Known gap: Jest coverage includes pure logic modules, API client auth refresh interceptors, and cart/auth store state, but component, screen, navigation, and integration behavior is not covered by automated tests.
 
 Known gap: CI and build readiness should be verified before release; do not assume this exists unless verified in code and pipeline results.
 
