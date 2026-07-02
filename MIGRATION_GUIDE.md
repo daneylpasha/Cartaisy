@@ -235,7 +235,7 @@ function EnhancedProductCard({ product }: { product: Product }) {
 Whenever the backend API changes, regenerate the client:
 
 ```bash
-yarn generate:api
+npm run generate:api
 ```
 
 This will:
@@ -276,7 +276,7 @@ This will:
 ## 🐛 Troubleshooting
 
 ### "Cannot find module '@/api/generated/...'"
-Run: `yarn generate:api`
+Run: `npm run generate:api`
 
 ### 401 Errors on All API Calls
 - User needs to re-login (JWT secret changed)

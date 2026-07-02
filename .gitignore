@@ -100,7 +100,8 @@ yarn-error.*
 # Testing
 /coverage
 
-# Yarn
+# Yarn (this repo uses npm; see docs/TESTING.md)
+yarn.lock
 yarn-error.log
 
 # Expo

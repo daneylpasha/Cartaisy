@@ -2,14 +2,26 @@
 
 This document explains current mobile validation commands and expectations. Verify commands from `package.json` before using them.
 
-## Current State
+## Package Manager
 
-Current state: The package manager is npm as implied by existing README commands and `package-lock.json` in the repo.
+Current state: The authoritative package manager for this repo is npm. `package.json` declares `"packageManager": "npm@10.8.2"`, CI installs with `npm ci`, and `package-lock.json` is the only committed lockfile. Do not use yarn or pnpm, and do not commit `yarn.lock` or `pnpm-lock.yaml` (`yarn.lock` is gitignored).
+
+Current state: `.npmrc` sets `legacy-peer-deps=true`, which is required for dependency resolution during install. It applies automatically to local installs and CI.
+
+Current state: For a reproducible clean install (what CI does), run:
+
+```bash
+npm ci
+```
+
+Use `npm install` only when intentionally changing dependencies, and commit the resulting `package-lock.json` update.
+
+## Current State
 
 Current state: Common commands from `package.json` are:
 
 ```bash
-npm install
+npm ci
 npm start
 npm run android
 npm run ios
@@ -24,7 +36,7 @@ Current state: `npm run lint` maps to `expo lint`.
 
 Current state: `npm run typecheck` maps to `tsc --noEmit`.
 
-Current state: `npm test` currently prints `No mobile test runner configured yet`; it does not run a real test suite.
+Current state: `npm test` maps to `jest` using the `jest-expo` preset (`jest.config.js`). It runs real test suites matched by `**/__tests__/**/*.test.ts` (currently `utils/__tests__/` and `api/config/__tests__/`).
 
 Current state: `npm run android` maps to `expo run:android`, and `npm run ios` maps to `expo run:ios`.
 
@@ -42,7 +54,7 @@ Target state: Release/build work should validate iOS and Android behavior on cle
 
 ## Known Gaps
 
-Known gap: No real mobile test runner is configured by the current `test` script. Do not claim automated test coverage exists unless verified in code or CI.
+Known gap: Jest coverage is limited to pure logic modules (`utils`, `api/config`). Component/screen behavior is not covered by automated tests.
 
 Known gap: Expo/EAS builds were not run as part of this docs-only context update. Build behavior must be verified before release work.
 
