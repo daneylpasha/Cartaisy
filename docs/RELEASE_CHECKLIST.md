@@ -87,7 +87,7 @@ Target state: Checkout/payment behavior, native payment capabilities, signing, c
 
 ## Known Gaps
 
-Known gap: Dynamic app config is implemented via `app.config.ts`, but merchant-branded build output has not been proven end-to-end. Verify `npx expo config --type public` and EAS build output with per-merchant environment values before release.
+Known gap: Dynamic app config output was verified with a sample merchant through `npx expo config` and `npx expo prebuild` (2026-07-02, findings in `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`), but no EAS or signed merchant build has been produced. The checked-in `ios/`/`android/` projects bypass `app.config.ts` identity unless the build flow regenerates them with prebuild, and merchant builds need matching Firebase files and their own EAS project.
 
 Known gap: Runtime branding is documented as a desired contract but not implemented.
 
