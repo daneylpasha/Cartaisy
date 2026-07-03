@@ -8,7 +8,7 @@ Current state: The repo includes a dynamic `app.config.ts` (env-driven app ident
 
 Current state: As of 2026-07-03 (GitHub issue #60), `.easignore` excludes the checked-in `ios/` and `android/` projects from EAS build archives, so every EAS build regenerates native projects from `app.config.ts` (Continuous Native Generation) using the env values configured on the build. Local development (`npx expo run:*`) still uses the checked-in Cartaisy projects. The flow is documented in `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md` ("Branded Build Flow") and `docs/DECISIONS.md`.
 
-Current state: Existing release-oriented docs include `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`, `docs/MOBILE_ENV_VARIABLES.md`, `docs/MOBILE_BRANDING_CONFIG_AUDIT.md`, `docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md`, and `docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md`.
+Current state: Existing release-oriented docs include `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md`, `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`, `docs/MOBILE_ENV_VARIABLES.md`, `docs/MOBILE_BRANDING_CONFIG_AUDIT.md`, `docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md`, and `docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md`.
 
 Current state: Public build-time values such as API URL, store ID, app name/scheme, Stripe publishable key, and native identity placeholders are documented in `.env.example` and `docs/MOBILE_ENV_VARIABLES.md`.
 
@@ -27,6 +27,7 @@ Target state: Checkout/payment behavior, native payment capabilities, signing, c
 ### Branded Merchant App Build Checks
 
 - Confirm the merchant, store ID, backend API base URL, target environment, target platforms, build owner, and release target.
+- Confirm the merchant was provisioned per `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md` (Firebase apps, EAS project, signing, push, payment identity).
 - Link or complete `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`.
 - Confirm the build is for the intended store and backend environment only.
 - Confirm backend tenant isolation remains authoritative; mobile store ID is public client configuration.
@@ -100,6 +101,7 @@ Known gap: Do not assume this exists unless verified in code, local build output
 
 ## Related Docs And Issues
 
+- `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md`
 - `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`
 - `docs/MOBILE_ENV_VARIABLES.md`
 - `docs/MOBILE_BRANDING_CONFIG_AUDIT.md`

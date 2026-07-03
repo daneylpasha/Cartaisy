@@ -2,6 +2,8 @@
 
 Use this checklist when preparing a merchant-specific Cartaisy mobile app build. It separates values that must be baked into the native build from values that should continue to come from backend runtime configuration.
 
+To produce the inputs this checklist verifies — Firebase apps and config files, the merchant EAS project, signing credentials, push registration, and payment/native identity — follow `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md` first.
+
 This is a release checklist only. Do not change application behavior, API response shapes, checkout, auth, orders, cart mutations, dashboard logic, or credential handling as part of completing it.
 
 ## Branded Build Flow (decided 2026-07-03)
