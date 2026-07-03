@@ -72,6 +72,7 @@ Target state: Checkout/payment behavior, native payment capabilities, signing, c
 
 ### Checkout / Payment Checks
 
+- Run the checkout/payment/orders smoke process in `docs/CHECKOUT_ORDERS_SMOKE_TEST.md` (automated suite plus its manual UI checklist) against a seeded sandbox and resolve or explicitly accept every blocked/mismatch row before release.
 - Confirm checkout and payment flows are in scope for the release validation.
 - Confirm Stripe publishable key, Apple Pay merchant ID, Google Pay enablement, and native entitlements/capabilities match the signed build.
 - Confirm no checkout/payment implementation changes are included unless the release issue explicitly asks for them.
@@ -102,6 +103,7 @@ Known gap: Do not assume this exists unless verified in code, local build output
 ## Related Docs And Issues
 
 - `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md`
+- `docs/CHECKOUT_ORDERS_SMOKE_TEST.md`
 - `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`
 - `docs/MOBILE_ENV_VARIABLES.md`
 - `docs/MOBILE_BRANDING_CONFIG_AUDIT.md`
