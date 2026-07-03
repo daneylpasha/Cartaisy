@@ -6,6 +6,8 @@ Use this checklist for mobile release/build readiness. It complements `docs/MOBI
 
 Current state: The repo includes a dynamic `app.config.ts` (env-driven app identity with cartaisy defaults; static `app.json` was removed), checked-in iOS and Android native projects, Firebase config files, EAS profiles, Stripe/native payment plugin config, and public mobile environment examples.
 
+Current state: As of 2026-07-03 (GitHub issue #60), `.easignore` excludes the checked-in `ios/` and `android/` projects from EAS build archives, so every EAS build regenerates native projects from `app.config.ts` (Continuous Native Generation) using the env values configured on the build. Local development (`npx expo run:*`) still uses the checked-in Cartaisy projects. The flow is documented in `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md` ("Branded Build Flow") and `docs/DECISIONS.md`.
+
 Current state: Existing release-oriented docs include `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`, `docs/MOBILE_ENV_VARIABLES.md`, `docs/MOBILE_BRANDING_CONFIG_AUDIT.md`, `docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md`, and `docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md`.
 
 Current state: Public build-time values such as API URL, store ID, app name/scheme, Stripe publishable key, and native identity placeholders are documented in `.env.example` and `docs/MOBILE_ENV_VARIABLES.md`.
@@ -33,7 +35,8 @@ Target state: Checkout/payment behavior, native payment capabilities, signing, c
 
 - Confirm Expo app name, slug, scheme, iOS bundle identifier, Android package/application ID, and app store listing names.
 - Run `npx expo config --type public` with the merchant's environment values set and confirm the generated identity matches the intended merchant.
-- Confirm checked-in native iOS and Android identifiers match the intended build path.
+- Confirm `.easignore` still excludes `/ios` and `/android` so the EAS build regenerates native projects from `app.config.ts`, and confirm merchant identity env values are configured on the EAS build itself (EAS environment variables or `eas.json` profile `env`).
+- Confirm checked-in native iOS and Android identifiers match the intended build path for local (`expo run:*`) builds; merchant builds must not use the checked-in projects.
 - Confirm any known mismatches from `docs/MOBILE_BRANDING_CONFIG_AUDIT.md` and `docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md` are resolved or explicitly accepted for the release.
 
 ### Bundle ID / Package Name Checks
@@ -87,7 +90,7 @@ Target state: Checkout/payment behavior, native payment capabilities, signing, c
 
 ## Known Gaps
 
-Known gap: Dynamic app config output was verified with a sample merchant through `npx expo config` and `npx expo prebuild` (2026-07-02, findings in `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`), but no EAS or signed merchant build has been produced. The checked-in `ios/`/`android/` projects bypass `app.config.ts` identity unless the build flow regenerates them with prebuild, and merchant builds need matching Firebase files and their own EAS project.
+Known gap: Dynamic app config output was verified with a sample merchant through `npx expo config` and `npx expo prebuild` (2026-07-02, findings in `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`), but no EAS or signed merchant build has been produced. The checked-in-native-projects bypass was resolved on 2026-07-03 (`.easignore`, GitHub issue #60), but merchant builds still need matching Firebase files, their own EAS project/owner, and signing credentials before a real EAS merchant build can run end-to-end.
 
 Known gap: Runtime branding is documented as a desired contract but not implemented.
 

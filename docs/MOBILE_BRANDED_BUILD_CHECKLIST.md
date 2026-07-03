@@ -4,6 +4,24 @@ Use this checklist when preparing a merchant-specific Cartaisy mobile app build.
 
 This is a release checklist only. Do not change application behavior, API response shapes, checkout, auth, orders, cart mutations, dashboard logic, or credential handling as part of completing it.
 
+## Branded Build Flow (decided 2026-07-03)
+
+Decision for GitHub issue #60 (recorded in `docs/DECISIONS.md`): every EAS build regenerates native projects from `app.config.ts` (Continuous Native Generation). `.easignore` excludes the checked-in `ios/` and `android/` directories from the EAS build archive, so the EAS worker always runs `npx expo prebuild` and applies the identity env values configured for that build. Merchant identity can no longer be silently overridden by the checked-in Cartaisy native projects.
+
+The Cartaisy default development flow is unchanged locally: `npx expo start`, `npx expo run:ios`, and `npx expo run:android` still use the checked-in Cartaisy native projects. Cartaisy default EAS builds are prebuild-generated and resolve to the same Cartaisy identity through the `app.config.ts` defaults when no identity env values are set.
+
+Merchant development/internal build flow:
+
+1. Create or select the merchant's own EAS project and Expo owner; set `EAS_PROJECT_ID` and `EXPO_OWNER` to match. Do not reuse the Cartaisy `rendernext` EAS project for merchant builds.
+2. Configure the merchant identity values from "Build Environment Values" below as EAS environment variables on the merchant EAS project (plain visibility is acceptable — they are non-secret), or in an `eas.json` build profile `env` block. Locally exported shell variables are not forwarded to EAS build workers.
+3. Supply merchant Firebase config files matching the merchant bundle ID/package as EAS file-type environment variables for `IOS_GOOGLE_SERVICES_FILE` and `ANDROID_GOOGLE_SERVICES_FILE`. Do not commit real merchant Firebase files.
+4. Verify identity locally before building: export the merchant env in a shell (see `docs/examples/sample-merchant.env` for the pattern) and run `npx expo config --type public`.
+5. Run `eas build --profile development` (or `preview`) for the target platform.
+
+`.easignore` replaces `.gitignore` for EAS archive filtering, so it mirrors the `.gitignore` rules; keep the two in sync (guarded by `scripts/__tests__/easignore.test.ts`).
+
+Verification (2026-07-03): `eas build:inspect --platform android --profile development --stage archive` confirmed the EAS build archive excludes `ios/`, `android/`, `node_modules/`, and `.env` while keeping the committed default Firebase files, so the EAS worker will prebuild from `app.config.ts`. `npx expo config --type public` resolves Cartaisy defaults with no env set and full sample-merchant identity with `docs/examples/sample-merchant.env` exported. A real EAS cloud build was not run: the sample merchant's EAS project ID is a deliberate placeholder, per-merchant EAS ownership and signing credentials remain undecided (see Release Blockers below), and generating signing credentials on the Cartaisy EAS project is outside the scope of this build-flow decision.
+
 ## Sample Merchant Verification (2026-07-02)
 
 A fictional sample merchant ("Acme Outfitters", `docs/examples/sample-merchant.env`) was verified against dynamic `app.config.ts` for GitHub issue #52. Method: `npx expo config --type public`, `npx expo config --type introspect`, and `npx expo prebuild --no-install` for both platforms in a disposable copy of the repo (the checked-in `ios/` and `android/` projects were not touched). No EAS or signed build was run.
@@ -16,7 +34,7 @@ Verified: `npx expo prebuild` generates merchant-correct native projects from th
 
 ### Release Blockers Found
 
-Blocker: The checked-in `ios/` and `android/` projects bypass dynamic config. Because native directories exist in the repo (and there is no `.easignore`), EAS builds and `expo run:*` use the checked-in Cartaisy-identity projects and ignore `app.config.ts` identity values. Merchant-branded builds must run `npx expo prebuild` (regenerating native projects from `app.config.ts`) as part of the build flow, or the build pipeline must exclude the checked-in native directories. This process decision is unowned and must be made before any merchant release.
+Blocker (resolved 2026-07-03, GitHub issue #60): The checked-in `ios/` and `android/` projects bypassed dynamic config. Because native directories existed in the repo (and there was no `.easignore`), EAS builds and `expo run:*` used the checked-in Cartaisy-identity projects and ignored `app.config.ts` identity values. Resolution: `.easignore` now excludes `ios/` and `android/` from EAS build archives, so every EAS build regenerates native projects from `app.config.ts`; see "Branded Build Flow" above. Local `expo run:*` still uses the checked-in Cartaisy projects by design and must not be used for merchant builds.
 
 Blocker: Firebase files must match the merchant identity, and the mismatch fails concretely. Prebuild copies the env-referenced Firebase files as-is; with the Cartaisy defaults, the generated Android project contained a `google-services.json` whose `package_name` (`com.rendernext.cartaisy`) does not match the merchant `applicationId`, which fails the Google Services Gradle step at build time. The iOS plist has the same mismatch, which breaks Firebase/push registration at runtime. Each merchant needs Firebase apps registered for their bundle ID/package and their own config files supplied via `IOS_GOOGLE_SERVICES_FILE`/`ANDROID_GOOGLE_SERVICES_FILE`.
 
@@ -147,7 +165,8 @@ These values should be loaded from the backend at runtime through the existing s
 
 ## Release Verification
 
-- [ ] Confirm the build flow regenerates native projects from `app.config.ts` (`npx expo prebuild`) or otherwise does not use the checked-in Cartaisy `ios/`/`android/` projects; builds from the checked-in projects ignore merchant identity values.
+- [ ] Confirm `.easignore` still excludes `/ios` and `/android` so the EAS build regenerates native projects from `app.config.ts`; builds from the checked-in Cartaisy projects (including local `expo run:*`) ignore merchant identity values.
+- [ ] Confirm the merchant identity env values are set on the EAS build (EAS environment variables or `eas.json` profile `env`), not only in a local shell.
 - [ ] Run `npx expo config --type public` with the merchant environment set and verify name, slug, scheme, bundle ID, package, Firebase file paths, and payment merchant ID.
 - [ ] Build iOS with the merchant bundle identifier and Firebase file.
 - [ ] Build Android with the merchant package name and Firebase file.
