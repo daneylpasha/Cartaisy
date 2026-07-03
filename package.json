@@ -76,6 +76,7 @@
     "@babel/core": "^7.25.2",
     "@tamagui/babel-plugin": "^1.132.11",
     "@tanstack/eslint-plugin-query": "^5.89.0",
+    "@testing-library/react-native": "^13.3.3",
     "@types/jest": "^29.5.14",
     "@types/react": "~19.0.10",
     "eslint": "^9.25.0",
@@ -84,6 +85,7 @@
     "jest-expo": "~53.0.9",
     "orval": "^7.13.0",
     "react-native-svg-transformer": "^1.5.1",
+    "react-test-renderer": "19.0.0",
     "typescript": "~5.8.3"
   },
   "private": true,

@@ -36,7 +36,9 @@ Current state: `npm run lint` maps to `expo lint`.
 
 Current state: `npm run typecheck` maps to `tsc --noEmit`.
 
-Current state: `npm test` maps to `jest` using the `jest-expo` preset (`jest.config.js`). It runs real test suites matched by `**/__tests__/**/*.test.ts` (currently `utils/__tests__/`, `api/config/__tests__/`, `api/__tests__/` for auth refresh interceptor behavior, and `store/__tests__/` for cart and auth store state).
+Current state: `npm test` maps to `jest` using the `jest-expo` preset (`jest.config.js`). It runs real test suites matched by `**/__tests__/**/*.test.ts` and `**/__tests__/**/*.test.tsx` (currently `utils/__tests__/`, `api/config/__tests__/`, `api/__tests__/` for auth refresh interceptor behavior, `store/__tests__/` for cart and auth store state, plus the component/screen suites below).
+
+Current state: Component/screen tests use `@testing-library/react-native` (with `react-test-renderer` pinned to the React version) on top of `jest-expo`. The approach (added for GitHub issue #65): render real components inside the app's `TamaguiProvider` via `test-utils/renderWithTamagui.tsx`; mock heavy leaf children (checkout steps, cart line items, bottom sheets), storage, and generated API hooks at module boundaries; drive behavior through visible text and testIDs rather than snapshots. Screen tests live in the root `__tests__/` directory — never inside `app/`, which expo-router treats as the route tree. Current coverage: shared `CatalogUnavailableState` UI, the `AuthGuardContext` gate mechanism, checkout screen (guest auth gate; unavailable state replacing steps and blocking Continue), cart screen (unavailable state hiding checkout, retry recovery), wishlist screen (unavailable state, retry refetch), and `CollectionsGrid` home-module resilience to missing/malformed payloads.
 
 Current state: `scripts/smoke/` holds manual smoke suites that drive the real mobile API client against a live backend sandbox. They are deliberately outside the CI `testMatch` pattern and run only via an explicit `npx jest --testMatch '**/scripts/smoke/<suite>.smoke.test.ts'` with `EXPO_PUBLIC_API_BASE_URL`/`EXPO_PUBLIC_STORE_ID` pointed at a seeded sandbox — never a real merchant backend. `backend-api.smoke.test.ts` covers the cross-repo API/tenant contract (recipe and results in `docs/CROSS_REPO_SMOKE_TEST.md`); `checkout-orders.smoke.test.ts` covers the cart/checkout/payment/orders private-beta scenarios, including a manual UI checklist for the flows currently blocked by backend issues (recipe and results in `docs/CHECKOUT_ORDERS_SMOKE_TEST.md`).
 
@@ -74,7 +76,7 @@ Target state: Release/build work should validate iOS and Android behavior on cle
 
 ## Known Gaps
 
-Known gap: Jest coverage spans pure logic modules (`utils`, `api/config`), the API client auth refresh interceptors (`api/__tests__/`), and cart/auth store state (`store/__tests__/`). Component/screen behavior — including the checkout/cart unavailable-state UI blocking in `app/checkout.tsx` and `app/(tabs)/cart.tsx` — is not covered by automated tests; `testMatch` only picks up `.test.ts` files and no React Native testing library is installed.
+Known gap: Jest coverage spans pure logic modules (`utils`, `api/config`), the API client auth refresh interceptors (`api/__tests__/`), cart/auth store state (`store/__tests__/`), and the focused component/screen suites listed above (checkout/cart/wishlist unavailable states, checkout auth gate, one home module renderer). Broader screen behavior — navigation flows, checkout step internals (shipping form, payment sheet), PDP/PLP rendering — is still untested; there is no E2E setup.
 
 Known gap: Expo/EAS builds were not run as part of this docs-only context update. Build behavior must be verified before release work.
 
