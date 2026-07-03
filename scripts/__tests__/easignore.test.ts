@@ -15,6 +15,40 @@ const readIgnoreRules = (fileName: string) =>
     .map((line) => line.trim())
     .filter((line) => line.length > 0 && !line.startsWith("#"));
 
+// Returns true when a gitignore-style rule would exclude a file that lives at
+// the repo root, including glob rules such as "*.plist". Negated ("!") rules
+// re-include rather than exclude, and directory-only rules (trailing "/")
+// cannot match a file, so both return false.
+const ruleExcludesRootFile = (rule: string, fileName: string) => {
+  if (rule.startsWith("!") || rule.endsWith("/")) {
+    return false;
+  }
+
+  // For a root-level file, an anchored rule ("/name"), a basename rule
+  // ("name"), and a "**/name" rule all reduce to matching the file name.
+  const pattern = rule.replace(/^\//, "").replace(/^\*\*\//, "");
+
+  if (pattern.includes("/")) {
+    return false;
+  }
+
+  // "**" goes through a placeholder so the single-"*" replacement cannot
+  // corrupt the ".*" it expands to.
+  const regex = new RegExp(
+    "^" +
+      pattern
+        .replace(/\\([^*?])/g, "$1")
+        .replace(/[.+^${}()|[\]]/g, "\\$&")
+        .replace(/\*\*/g, "\u0000")
+        .replace(/\*/g, "[^/]*")
+        .replace(/\?/g, "[^/]")
+        .replace(/\u0000/g, ".*") +
+      "$"
+  );
+
+  return regex.test(fileName);
+};
+
 describe(".easignore EAS build archive rules", () => {
   const rules = readIgnoreRules(".easignore");
 
@@ -39,11 +73,19 @@ describe(".easignore EAS build archive rules", () => {
   });
 
   it("does not exclude the committed Cartaisy default Firebase config files", () => {
-    expect(rules).not.toContain("GoogleService-Info.plist");
-    expect(rules).not.toContain("google-services.json");
+    // Cartaisy default EAS builds prebuild on the worker and need these files
+    // in the archive. Check every rule as a glob, not just exact names, so a
+    // pattern like "*.plist" or "*.json" cannot slip in unnoticed.
+    for (const fileName of ["GoogleService-Info.plist", "google-services.json"]) {
+      const excludingRules = rules.filter((rule) => ruleExcludesRootFile(rule, fileName));
+      expect(excludingRules).toEqual([]);
+    }
   });
 
   it("mirrors every .gitignore rule so replacing .gitignore for EAS uploads loses nothing", () => {
+    // Intentionally one-directional: .easignore is a superset of .gitignore
+    // (it adds /ios and /android). New security-relevant patterns must be
+    // added to .gitignore first, which this test then forces into .easignore.
     const gitignoreRules = readIgnoreRules(".gitignore");
     const missing = gitignoreRules.filter((rule) => !rules.includes(rule));
     expect(missing).toEqual([]);
