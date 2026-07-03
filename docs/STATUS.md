@@ -8,7 +8,7 @@ This file is a human/agent-maintained snapshot. It is not an automatically guara
 
 Current state: The mobile app engine is an Expo/React Native app with routed shopping, auth, account, cart, checkout, home, catalog, notification, and profile surfaces.
 
-Current state: The repo has useful mobile docs for environment variables, branded builds, branding/config boundaries, dynamic app config migration, home API usage, and runtime branding contracts.
+Current state: The repo has useful mobile docs for environment variables, branded builds, per-merchant provisioning (`docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md`), branding/config boundaries, dynamic app config migration, home API usage, and runtime branding contracts.
 
 Current state: Public API base URL and store ID configuration are validated in `api/config/mobileConfig.ts`, and backend API calls include `X-Store-ID`.
 
