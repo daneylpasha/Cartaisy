@@ -38,7 +38,7 @@ Current state: `npm run typecheck` maps to `tsc --noEmit`.
 
 Current state: `npm test` maps to `jest` using the `jest-expo` preset (`jest.config.js`). It runs real test suites matched by `**/__tests__/**/*.test.ts` (currently `utils/__tests__/`, `api/config/__tests__/`, `api/__tests__/` for auth refresh interceptor behavior, and `store/__tests__/` for cart and auth store state).
 
-Current state: `scripts/smoke/backend-api.smoke.test.ts` is a manual cross-repo smoke suite that drives the real mobile API client against a live backend sandbox. It is deliberately outside the CI `testMatch` pattern and runs only via an explicit `npx jest --testMatch '**/scripts/smoke/*.smoke.test.ts'` with `EXPO_PUBLIC_API_BASE_URL`/`EXPO_PUBLIC_STORE_ID` pointed at a seeded sandbox — never a real merchant backend. Sandbox recipe and the latest results are in `docs/CROSS_REPO_SMOKE_TEST.md`.
+Current state: `scripts/smoke/` holds manual smoke suites that drive the real mobile API client against a live backend sandbox. They are deliberately outside the CI `testMatch` pattern and run only via an explicit `npx jest --testMatch '**/scripts/smoke/<suite>.smoke.test.ts'` with `EXPO_PUBLIC_API_BASE_URL`/`EXPO_PUBLIC_STORE_ID` pointed at a seeded sandbox — never a real merchant backend. `backend-api.smoke.test.ts` covers the cross-repo API/tenant contract (recipe and results in `docs/CROSS_REPO_SMOKE_TEST.md`); `checkout-orders.smoke.test.ts` covers the cart/checkout/payment/orders private-beta scenarios, including a manual UI checklist for the flows currently blocked by backend issues (recipe and results in `docs/CHECKOUT_ORDERS_SMOKE_TEST.md`).
 
 Current state: `npm run android` maps to `expo run:android`, and `npm run ios` maps to `expo run:ios`.
 
