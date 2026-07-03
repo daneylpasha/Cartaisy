@@ -130,6 +130,18 @@ Impact: Regeneration is deterministic and repeatable offline. To sync after a ba
 
 Related docs: `orval.config.ts`, `api-spec/swagger.json`, `api/types.ts`, backend repo `tsoa.json`.
 
+### EAS Builds Regenerate Native Projects From app.config.ts
+
+Date: 2026-07-03.
+
+Decision: All EAS builds use Continuous Native Generation. `.easignore` excludes the checked-in `ios/` and `android/` projects from the EAS build archive, so the EAS build worker runs `npx expo prebuild` and generates native projects from `app.config.ts` with the environment values configured for that build. The checked-in native projects remain in the repo for local Cartaisy development (`npx expo run:ios` / `npx expo run:android`).
+
+Reason: With native directories present in the build archive, EAS treats the app as bare workflow and ignores `app.config.ts` identity values, so merchant builds would silently ship Cartaisy identity (GitHub issue #60; blocker recorded in `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md` on 2026-07-02). Excluding them at archive time removes that bypass for every EAS build path without deleting the local development projects.
+
+Impact: Merchant builds must deliver identity env values (and merchant Firebase files) to the EAS worker through EAS environment variables or an `eas.json` profile `env` block on the merchant's own EAS project; locally exported shell variables are not forwarded to EAS build workers. Cartaisy default EAS builds are also prebuild-generated now and resolve to Cartaisy identity through `app.config.ts` defaults. Because `.easignore` replaces `.gitignore` for EAS archive filtering, the `.gitignore` rules are mirrored in `.easignore` and the two files must stay in sync (guarded by `scripts/__tests__/easignore.test.ts`). Native customizations made by hand-editing `ios/`/`android/` will not appear in EAS builds; express them through `app.config.ts` or config plugins instead.
+
+Related docs: `.easignore`, `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`, `docs/RELEASE_CHECKLIST.md`, GitHub issue #60.
+
 ### Checkout And Payment Changes Are High-Risk
 
 Date: unknown / historical.

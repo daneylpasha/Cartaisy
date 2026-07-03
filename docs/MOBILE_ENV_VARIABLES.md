@@ -30,7 +30,7 @@ Use mobile environment variables only for values that are safe for customers, ap
 | `EAS_PROJECT_ID` | EAS project ID for the branded app. | Cartaisy project ID |
 | `EXPO_OWNER` | Expo account owner. | `rendernext` |
 
-For the checked-in Cartaisy native project, the iOS bundle identifier, Android package, and Firebase files are aligned to the Cartaisy defaults. Merchant builds that override native identity should use matching Firebase files and regenerate or update native projects as part of the release workflow.
+For the checked-in Cartaisy native project, the iOS bundle identifier, Android package, and Firebase files are aligned to the Cartaisy defaults. EAS builds regenerate native projects from `app.config.ts` because `.easignore` excludes the checked-in `ios/` and `android/` directories from the build archive (see `docs/DECISIONS.md`); merchant builds must set these variables on the EAS build itself (EAS environment variables or `eas.json` profile `env` — locally exported shell values are not forwarded to EAS workers) and supply matching Firebase files.
 
 ## Safe Public Build Variables
 

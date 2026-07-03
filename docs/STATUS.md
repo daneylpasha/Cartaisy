@@ -1,6 +1,6 @@
 # Mobile Status
 
-Last updated: 2026-07-02.
+Last updated: 2026-07-03.
 
 This file is a human/agent-maintained snapshot. It is not an automatically guaranteed source of truth. Verify current behavior in code before implementation work.
 
@@ -34,7 +34,7 @@ Current state: Cart/checkout is partial and high-risk. Cart state, unified cart 
 
 Current state: Customer account/auth is partial to implemented. Login, signup, password reset, profile, token refresh, guest session, and persisted auth state exist. Auth refresh changes are high-risk.
 
-Current state: Native app identity/builds are partial. Dynamic `app.config.ts` (env-driven identity; static `app.json` removed), checked-in iOS/Android projects, Firebase files, EAS config, and native plugins exist. Merchant identity resolution was verified through `npx expo config` and `npx expo prebuild` with a sample merchant (2026-07-02), but no EAS or signed merchant build has been produced, and existing audits list native identity mismatches and production readiness gaps.
+Current state: Native app identity/builds are partial. Dynamic `app.config.ts` (env-driven identity; static `app.json` removed), checked-in iOS/Android projects, Firebase files, EAS config, and native plugins exist. Merchant identity resolution was verified through `npx expo config` and `npx expo prebuild` with a sample merchant (2026-07-02). As of 2026-07-03 (GitHub issue #60), `.easignore` excludes the checked-in native projects from EAS build archives, so EAS builds regenerate native projects from `app.config.ts` and can no longer silently ship Cartaisy identity; local `expo run:*` still uses the checked-in projects. No EAS or signed merchant build has been produced, and existing audits list native identity mismatches and production readiness gaps.
 
 Current state: Environment variable/secrets safety is partial to strong. `MOBILE_ENV_VARIABLES.md` documents safe/forbidden values, and `mobileConfig` validates required public values and known forbidden public Shopify/secret-looking keys.
 
@@ -54,7 +54,7 @@ Target state: Testing should include lint, typecheck, meaningful unit/integratio
 
 ## Known Gaps
 
-Known gap: Dynamic app config is implemented via `app.config.ts` and verified through `npx expo config` and `npx expo prebuild` with a sample merchant env (2026-07-02, see `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`), but no EAS or signed merchant build has been produced. Key blockers: the checked-in `ios/`/`android/` projects bypass dynamic config unless the build flow runs prebuild, merchants need matching Firebase files, and per-merchant EAS ownership is undecided.
+Known gap: Dynamic app config is implemented via `app.config.ts` and verified through `npx expo config` and `npx expo prebuild` with a sample merchant env (2026-07-02, see `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`), but no EAS or signed merchant build has been produced. The checked-in-native-projects bypass was resolved on 2026-07-03 via `.easignore` (GitHub issue #60). Remaining blockers: merchants need matching Firebase files, their own EAS project/owner, and signing credentials.
 
 Known gap: Runtime branding contract is documented but not implemented.
 
