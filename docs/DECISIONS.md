@@ -142,6 +142,18 @@ Impact: Merchant builds must deliver identity env values (and merchant Firebase 
 
 Related docs: `.easignore`, `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`, `docs/RELEASE_CHECKLIST.md`, GitHub issue #60.
 
+### Cross-Repo Smoke Tests Run Against An Ephemeral Local Backend Sandbox
+
+Date: 2026-07-03.
+
+Decision: Cross-repo mobile/backend runtime verification uses `scripts/smoke/backend-api.smoke.test.ts`, a manual Jest suite (outside CI `testMatch`) that drives the real mobile API client against a disposable local backend sandbox: backend source at a pinned commit, `mongodb-memory-server` for storage, fabricated stores/products/customers, no Shopify/Stripe credentials and no real merchant data. Each row asserts observed behavior and flags contract mismatches, so reruns detect backend behavior changes. Results are documented in `docs/CROSS_REPO_SMOKE_TEST.md`.
+
+Reason: No deployed backend is reachable (both configured Railway URLs are dead as of 2026-07-03), and the 2026-07-03 run for GitHub issue #62 proved spec-level sync does not imply runtime compatibility — backend HEAD fails to register its tsoa routes at startup, so spec-described search/product-detail/cart/checkout endpoints 404 while express-only routes work.
+
+Impact: Mobile client compatibility claims must distinguish spec sync (verified by `npm run generate:api` against the snapshot) from runtime availability (verified only by this smoke suite or a live sandbox). Point the suite only at seeded sandboxes, never at a real merchant backend. Re-run after backend route/spec fixes and before relying on search/product-detail/cart/checkout flows.
+
+Related docs: `docs/CROSS_REPO_SMOKE_TEST.md`, `docs/TESTING.md`, `scripts/smoke/backend-api.smoke.test.ts`, GitHub issue #62.
+
 ### Checkout And Payment Changes Are High-Risk
 
 Date: unknown / historical.
