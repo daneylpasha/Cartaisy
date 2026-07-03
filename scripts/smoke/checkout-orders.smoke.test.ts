@@ -152,7 +152,25 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
   // Unified cart — the working Mongo-backed cart the app currently uses
   // only for guest checkout info. Exercised as the functioning cart
   // surface; response-shape divergence from the mobile types is flagged.
+  //
+  // The rows in this block (and the session-dependent store-unavailable
+  // rows below) build on the add-to-cart row: it creates the item AND
+  // makes the apiClient response interceptor capture the guest
+  // X-Session-ID that all later requests carry. requireCartSession()
+  // short-circuits dependent rows with the root cause when it failed
+  // (e.g. seed missing the Aurora Tee fixture).
   // ---------------------------------------------------------------------
+
+  let cartSessionReady = false;
+
+  const requireCartSession = () => {
+    if (!cartSessionReady) {
+      throw new Error(
+        "no guest cart session — the 'add to cart (unified cart)' row must pass first; " +
+          "check the sandbox seed (Aurora Tee fixture 507f1f77bcf86cd799439a01)"
+      );
+    }
+  };
 
   it("unified cart: add to cart works for a guest (response shape diverges from mobile types)", async () => {
     const res: any = await unifiedCartApi
@@ -176,9 +194,11 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
       mismatch: true,
       pass: res?.status === "success" && items?.length === 1,
     });
+    cartSessionReady = true; // record() throws on fail, so this only runs on pass
   });
 
   it("unified cart: update quantity works (item keyed by productId)", async () => {
+    requireCartSession();
     const res: any = await unifiedCartApi
       .updateCartItem(PRODUCT_AURORA, { quantity: 3 })
       .then((r) => r.data)
@@ -197,6 +217,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
   });
 
   it("unified cart: cart recovery — session persists across a fresh GET", async () => {
+    requireCartSession();
     const res: any = await unifiedCartApi
       .getCart()
       .then((r) => r.data)
@@ -214,6 +235,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
   });
 
   it("unified cart: guest checkout info saves (the app's real unified-cart usage)", async () => {
+    requireCartSession();
     const actual = await unifiedCartApi
       .saveGuestCheckoutInfo({
         email: "smoke-guest@sandbox.invalid",
@@ -234,6 +256,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
   });
 
   it("unified cart: remove item works", async () => {
+    requireCartSession();
     const res: any = await unifiedCartApi
       .removeFromCart(PRODUCT_AURORA)
       .then((r) => r.data)
@@ -255,6 +278,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
   // ---------------------------------------------------------------------
 
   it("KNOWN MISMATCH: unified cart accepts an inactive store", async () => {
+    requireCartSession(); // the asserted 500 only occurs with a cross-store session attached
     const actual = await axiosInstance
       .get("/unified-cart", storeHeader(STORE_C_INACTIVE))
       .then((r) => `200 ${JSON.stringify(r.data)?.slice(0, 80)}`)
@@ -272,6 +296,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
   });
 
   it("KNOWN MISMATCH: unified cart accepts a nonexistent store", async () => {
+    requireCartSession(); // the asserted 500 only occurs with a cross-store session attached
     const actual = await axiosInstance
       .get("/unified-cart", storeHeader(STORE_MISSING))
       .then((r) => `200 ${JSON.stringify(r.data)?.slice(0, 80)}`)
