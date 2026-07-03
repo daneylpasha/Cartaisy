@@ -66,7 +66,7 @@ Ownership model: one EAS project per merchant app. The Cartaisy `rendernext` EAS
 Open decision (flag to the build owner if unresolved): whether merchant EAS projects live under a Cartaisy-managed Expo organization or under an Expo account the merchant owns. Until decided, provision sample/internal merchants under a Cartaisy-managed Expo account so work can proceed; real merchant releases need this decision recorded in `docs/DECISIONS.md` first.
 
 1. Log in to the owning Expo account: `eas login` / verify with `eas whoami`.
-2. Create the project (Expo dashboard, or `eas project:init` run with `APP_SLUG`/`EXPO_OWNER` exported so it initializes against the merchant identity, from a checkout you do not commit).
+2. Create the project (Expo dashboard, or `eas project:init` run with `APP_SLUG`/`EXPO_OWNER` exported so it initializes against the merchant identity, from a checkout you do not commit). Use a disposable checkout because `eas project:init` may write the generated project ID into an `app.json`; this repo reads `EAS_PROJECT_ID` from the environment via `app.config.ts`, and a committed `app.json` carrying one merchant's project ID would silently override that for anyone building without the merchant env exported.
 3. Record the generated project ID as `EAS_PROJECT_ID` and the owning account as `EXPO_OWNER`.
 4. Set every identity variable from Step 0 as an EAS environment variable on the merchant project (plain visibility is fine — they are non-secret). Locally exported shell values are NOT forwarded to EAS build workers; only EAS environment variables or an `eas.json` profile `env` block reach the worker where `app.config.ts` is re-evaluated during prebuild.
 
