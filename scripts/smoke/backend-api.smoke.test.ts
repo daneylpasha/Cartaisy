@@ -65,7 +65,16 @@ const record = (row: MatrixRow) => {
 };
 
 const status = (err: any): number | undefined => err?.response?.status;
-const errText = (e: any) => `${status(e)} ${JSON.stringify(e.response?.data)?.slice(0, 160)}`;
+// Distinguish an API error (has a response) from a transport failure
+// (timeout, refused connection), so the matrix never logs "undefined undefined".
+const errText = (e: any) =>
+  e?.response
+    ? `${status(e)} ${JSON.stringify(e.response.data)?.slice(0, 160)}`
+    : `no response (${e?.code ?? e?.message ?? "unknown transport error"})`;
+// Per-request headers win over the instance defaults: the apiClient request
+// interceptor only fills X-Store-ID when the request has none. The wrong-store
+// rows below double as a live check of that precedence — they could not
+// return 404/400/403/401 if the default store A header had been sent instead.
 const storeHeader = (storeId: string) => ({ headers: { "X-Store-ID": storeId } });
 
 // Fabricated per-run identity so reruns against the same sandbox don't collide.
@@ -258,6 +267,17 @@ describe("cross-repo backend smoke (issue #62)", () => {
 
   let token: string | undefined;
 
+  // Fail token-dependent rows with an explicit cause instead of a cryptic
+  // 401 when the registration/login rows above did not produce a token.
+  const requireToken = (): string => {
+    if (!token) {
+      throw new Error(
+        "no auth token — the registration/login rows must pass before token-dependent rows"
+      );
+    }
+    return token;
+  };
+
   it("customer registration succeeds against store A", async () => {
     const res: any = await customerRegister({
       email: testEmail,
@@ -314,7 +334,7 @@ describe("cross-repo backend smoke (issue #62)", () => {
   it("authenticated profile resolves for store A customer", async () => {
     const actual = await axiosInstance
       .get("/customer/auth/profile", {
-        headers: { Authorization: `Bearer ${token}`, "X-Store-ID": STORE_A },
+        headers: { Authorization: `Bearer ${requireToken()}`, "X-Store-ID": STORE_A },
       })
       .then((r) => `200 email=${(r.data as any)?.data?.user?.email ?? (r.data as any)?.data?.email}`)
       .catch(errText);
@@ -332,7 +352,7 @@ describe("cross-repo backend smoke (issue #62)", () => {
   it("KNOWN MISMATCH: store A token with store B header is NOT rejected", async () => {
     const actual = await axiosInstance
       .get("/customer/auth/profile", {
-        headers: { Authorization: `Bearer ${token}`, "X-Store-ID": STORE_B },
+        headers: { Authorization: `Bearer ${requireToken()}`, "X-Store-ID": STORE_B },
       })
       .then((r) => {
         const email = (r.data as any)?.data?.user?.email ?? (r.data as any)?.data?.email;
@@ -354,7 +374,7 @@ describe("cross-repo backend smoke (issue #62)", () => {
   it("customer orders list is store-scoped and empty for new customer", async () => {
     const actual = await axiosInstance
       .get("/customer/orders", {
-        headers: { Authorization: `Bearer ${token}`, "X-Store-ID": STORE_A },
+        headers: { Authorization: `Bearer ${requireToken()}`, "X-Store-ID": STORE_A },
       })
       .then((r) => {
         const data: any = r.data;
