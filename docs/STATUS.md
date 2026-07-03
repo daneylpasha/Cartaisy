@@ -1,6 +1,6 @@
 # Mobile Status
 
-Last updated: 2026-07-03.
+Last updated: 2026-07-03 (cross-repo smoke test findings added; see `docs/CROSS_REPO_SMOKE_TEST.md`).
 
 This file is a human/agent-maintained snapshot. It is not an automatically guaranteed source of truth. Verify current behavior in code before implementation work.
 
@@ -28,9 +28,9 @@ Current state: Branding/theme is partial. App identity is generated at build tim
 
 Current state: Home modules/content are partial to implemented. The app uses `GET /customer/homescreen` generated hooks and renders backend-driven layout sections, but exact backend content availability depends on tenant data.
 
-Current state: Product listing/detail is partial to implemented. Generated product, search, recommendation, and collection clients exist, with catalog behavior dependent on backend responses.
+Current state: Product listing/detail is partial to implemented on the mobile side, but a 2026-07-03 cross-repo smoke test (`docs/CROSS_REPO_SMOKE_TEST.md`) found that at backend HEAD the tsoa-generated routes these clients target — `/customer/search`, `/products/{id}`, plus `/cart/*`, `/checkout/*`, `/favorites` — fail to register at backend startup and return 404, and the express `GET /products` listing 500s. Catalog/search/checkout flows are not servable by backend HEAD until that is fixed.
 
-Current state: Cart/checkout is partial and high-risk. Cart state, unified cart calls, checkout initialization, and checkout completion clients exist. Checkout/payment changes require human review.
+Current state: Cart/checkout is partial and high-risk. Cart state, unified cart calls, checkout initialization, and checkout completion clients exist. The hand-written `/unified-cart` guest flow works against backend HEAD; the generated `/cart/*` and `/checkout/*` clients target routes backend HEAD does not serve (see above). Checkout/payment changes require human review.
 
 Current state: Customer account/auth is partial to implemented. Login, signup, password reset, profile, token refresh, guest session, and persisted auth state exist. Auth refresh changes are high-risk.
 
@@ -66,12 +66,13 @@ Known gap: CI and build readiness should be verified before release; do not assu
 
 ## Unknowns
 
-Unknown: Deployed backend contract freshness over time. On 2026-07-02, `api-spec/swagger.json` was refreshed from the `cartaisy-backend` repo's `tsoa spec` output and the Orval client was regenerated from that snapshot (see `docs/DECISIONS.md`), but the previously configured production backend URL is dead, so the snapshot tracks the backend source repo rather than a verified deployment.
+Unknown: Deployed backend availability. As of 2026-07-03 both configured Railway backend URLs return platform-level "Application not found" — no deployed backend is reachable. The spec snapshot tracks the backend source repo; the 2026-07-03 cross-repo smoke test (`docs/CROSS_REPO_SMOKE_TEST.md`) verified the snapshot is an exact additive subset of a fresh backend-source spec (missing only the new `POST /checkout/handoff`), but also proved spec-level sync does not imply runtime availability: backend HEAD fails to register its tsoa routes at startup, so the spec-described search/product-detail/cart/checkout endpoints all 404 while express-only routes (store config, homescreen, unified cart, orders) work.
 
 Unknown: Whether real EAS/signed merchant builds succeed end-to-end (signing, store submission, on-device identity). Config evaluation and local prebuild output were verified with a sample merchant on 2026-07-02, but no EAS build was run.
 
 ## Current Priority Areas
 
+- Backend (critical, cross-repo): fix tsoa route registration at backend HEAD so search, product detail, cart, and checkout endpoints actually serve; the mobile search and checkout screens currently target dead routes (`docs/CROSS_REPO_SMOKE_TEST.md`).
 - Keep mobile secrets safety strict, especially around Shopify Admin/private credentials.
 - Preserve backend-owned tenant isolation and store-scoped API usage.
 - Resolve native identity/build mismatches before production branded releases.
