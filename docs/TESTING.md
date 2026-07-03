@@ -44,6 +44,24 @@ Current state: `npm run android` maps to `expo run:android`, and `npm run ios` m
 
 Current state: `eas.json` includes `development`, `preview`, and `production` build profiles. The development and preview Android profiles build APKs; production uses default EAS settings unless configured elsewhere.
 
+## Dependency Audit (2026-07-03, GitHub issue #64)
+
+Current state: `npm audit` reported 58 vulnerabilities (13 critical, 19 high, 25 moderate, 1 low). After triage, 21 moderate remain; 0 critical/high/low.
+
+Actions taken:
+
+- Removed stray production dependencies with no imports anywhere in the app: `@anthropic-ai/claude-code` (a development CLI that also carried its own high advisories; it does not belong in app dependencies) and `init` (unused, almost certainly an accidental install).
+- Applied `npm audit fix` (semver-compatible, lockfile-only; no `--force`). Runtime-relevant fix: `axios` 1.12.x → 1.18.1 — the only vulnerable dependency actually shipped in the app bundle (SSRF via NO_PROXY normalization bypass; auth bypass via prototype-pollution gadget in `validateStatus`). Dev-tooling fixes included `orval` 7.13.2 → 7.21.0 (critical code-injection advisories in codegen), `protobufjs`, `tar`, `ws`, `form-data`, `node-forge`, `minimatch`, `picomatch`, and others.
+- The `orval` bump changes generated-client output, so `npm run generate:api` was re-run and the regenerated client committed in the same change (per `docs/DECISIONS.md`); the diff is type-level only (error-type unions and version headers — no URL, method, payload, or runtime changes).
+- Added a scoped `overrides` entry forcing `lodash@^4.18.1` under `@stoplight/spectral-functions` (dev-only orval codegen chain): its parent `@ibm-cloud/openapi-ruleset` pins `spectral-functions` to exactly 1.10.1 even at its latest release, which pins a lodash version with a high code-injection advisory, so no update path exists without the override.
+
+Remaining accepted/deferred risks (all moderate severity, none in shipped app JS):
+
+- 19 findings in the Expo SDK 53 family (`expo`, `expo-constants`, `expo-dev-client`, `expo-linking`, `expo-notifications`, `expo-splash-screen`, `jest-expo`, and their `@expo/*`/`ajv`/`postcss`/`uuid`/`xcode` transitives). The only fix npm offers is the Expo SDK 57 major upgrade, which is explicitly out of scope for dependency triage ("no broad Expo/React Native upgrades"). The advisories sit in build/config tooling chains (`@expo/config`, `@expo/cli`, prebuild/metro config), not in runtime bundle code. Deferred to a dedicated, scoped Expo SDK upgrade issue.
+- `orval` → `js-yaml` (quadratic-complexity DoS in merge keys): dev-only codegen path; npm's proposed "fix" is an orval downgrade to 7.11.2, which is not sensible. Deferred until orval ships with a patched js-yaml.
+
+Re-triage cadence: re-run `npm audit` whenever dependencies change and before each release (`docs/RELEASE_CHECKLIST.md`); update this section when the remaining items are fixed or the Expo SDK upgrade lands.
+
 ## Target State
 
 Target state: Before mobile PRs, run the most relevant available checks for the changed surface and document any skipped checks in the PR.

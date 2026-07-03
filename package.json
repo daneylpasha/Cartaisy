@@ -15,7 +15,6 @@
     "generate:api": "orval"
   },
   "dependencies": {
-    "@anthropic-ai/claude-code": "^1.0.98",
     "@expo/vector-icons": "^14.1.0",
     "@good-react-native/keyboard-avoider": "^1.1.4",
     "@gorhom/bottom-sheet": "^5",
@@ -50,7 +49,6 @@
     "expo-symbols": "~0.4.5",
     "expo-system-ui": "~5.0.10",
     "expo-web-browser": "~14.2.0",
-    "init": "^0.1.2",
     "libphonenumber-js": "^1.12.15",
     "react": "19.0.0",
     "react-dom": "19.0.0",
@@ -89,6 +87,11 @@
     "typescript": "~5.8.3"
   },
   "private": true,
+  "overrides": {
+    "@stoplight/spectral-functions": {
+      "lodash": "^4.18.1"
+    }
+  },
   "bundleDependencies": [
     "react-native-reanimated",
     "react-native-svg"
