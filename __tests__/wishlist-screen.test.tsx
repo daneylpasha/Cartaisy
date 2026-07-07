@@ -6,7 +6,7 @@
  * Lives outside app/ on purpose: expo-router treats app/ as the route
  * tree, so test files must not be added there.
  */
-import { fireEvent, waitFor } from "@testing-library/react-native";
+import { fireEvent } from "@testing-library/react-native";
 import React from "react";
 
 jest.mock("@react-native-async-storage/async-storage", () =>
@@ -17,8 +17,11 @@ jest.mock("expo-router", () => {
   const ReactActual = require("react");
   return {
     router: { back: jest.fn(), push: jest.fn(), replace: jest.fn() },
+    // Simulate exactly one focus event per mount ([] deps) so changing
+    // callback references cannot re-fire the screen's focus effect mid-test.
     useFocusEffect: (callback: () => void | (() => void)) => {
-      ReactActual.useEffect(callback, [callback]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      ReactActual.useEffect(callback, []);
     },
   };
 });
@@ -60,14 +63,16 @@ describe("wishlist screen unavailable state", () => {
     mockFavoritesQuery.isFetching = false;
   });
 
-  it("renders the unavailable state with retry when favorites fail with a controlled error", async () => {
+  it("renders the unavailable state with retry when favorites fail with a controlled error", () => {
     mockFavoritesQuery.error = {
       response: { status: 403, data: { code: "STORE_INACTIVE" } },
     };
 
     const { getByText } = renderWithTamagui(<WishlistScreen />);
 
-    await waitFor(() => expect(getByText("Wishlist unavailable")).toBeTruthy());
+    // The mocked query exposes the error synchronously, so the unavailable
+    // state is present on first paint — no async step is involved.
+    expect(getByText("Wishlist unavailable")).toBeTruthy();
     expect(getByText(controlledMessage)).toBeTruthy();
 
     // The screen also refetches on focus, so assert the retry press adds a call.

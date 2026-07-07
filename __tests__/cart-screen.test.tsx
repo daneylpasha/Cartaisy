@@ -7,7 +7,7 @@
  * Lives outside app/ on purpose: expo-router treats app/ as the route
  * tree, so test files must not be added there.
  */
-import { fireEvent, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, waitFor } from "@testing-library/react-native";
 import React from "react";
 
 jest.mock("@react-native-async-storage/async-storage", () =>
@@ -18,10 +18,11 @@ jest.mock("expo-router", () => {
   const ReactActual = require("react");
   return {
     router: { back: jest.fn(), push: jest.fn(), replace: jest.fn() },
-    // Run focus effects like mount effects so the screen's on-focus cart
-    // sync executes in tests.
+    // Simulate exactly one focus event per mount ([] deps) so mid-test
+    // store updates cannot re-fire the screen's on-focus cart sync.
     useFocusEffect: (callback: () => void | (() => void)) => {
-      ReactActual.useEffect(callback, [callback]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      ReactActual.useEffect(callback, []);
     },
   };
 });
@@ -96,9 +97,16 @@ describe("cart screen unavailable state", () => {
 
     const { getByText, queryByText } = renderWithTamagui(<CartScreen />);
 
+    // Let the rejected sync and its catch block fully settle before
+    // asserting, so this observes the final state rather than the moment
+    // syncCart happened to be called.
     await waitFor(() => expect(mockSyncCart).toHaveBeenCalled());
-    expect(queryByText("Cart unavailable")).toBeNull();
-    expect(getByText(/Proceed to Checkout/)).toBeTruthy();
+    await act(async () => {});
+
+    await waitFor(() => {
+      expect(queryByText("Cart unavailable")).toBeNull();
+      expect(getByText(/Proceed to Checkout/)).toBeTruthy();
+    });
   });
 
   it("retries from the unavailable state and restores the cart when sync recovers", async () => {
