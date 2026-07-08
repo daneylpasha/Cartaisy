@@ -30,7 +30,9 @@ jest.mock("@react-native-async-storage/async-storage", () =>
 jest.setTimeout(30000);
 
 import { axiosInstance } from "@/api/apiClient";
-import unifiedCartApi from "@/api/endpoints/unifiedCart";
+import unifiedCartApi, {
+  isUnifiedCartResponse,
+} from "@/api/endpoints/unifiedCart";
 import type { UnifiedCartResponse } from "@/api/endpoints/unifiedCart";
 import { createCart } from "@/api/generated/cart/cart";
 import {
@@ -76,13 +78,14 @@ const errText = (e: any) =>
     : `no response (${e?.code ?? e?.message ?? "unknown transport error"})`;
 const storeHeader = (storeId: string) => ({ headers: { "X-Store-ID": storeId } });
 type UnifiedCartSmokeResult = UnifiedCartResponse | { error: string };
-const isUnifiedCartResponse = (
-  result: UnifiedCartSmokeResult
-): result is UnifiedCartResponse => "status" in result;
 const smokeCart = (result: UnifiedCartSmokeResult) =>
   isUnifiedCartResponse(result) ? result.data.cart : undefined;
 const smokeStatus = (result: UnifiedCartSmokeResult) =>
-  isUnifiedCartResponse(result) ? result.status : result.error;
+  isUnifiedCartResponse(result)
+    ? result.status
+    : "error" in result
+      ? result.error
+      : "invalid unified-cart response";
 
 afterAll(() => {
   // eslint-disable-next-line no-console

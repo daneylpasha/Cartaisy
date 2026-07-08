@@ -3,7 +3,10 @@ jest.mock("../../apiClient", () => ({
 }));
 
 import type { UnifiedCartResponse } from "../unifiedCart";
-import { getUnifiedCartFromResponse } from "../unifiedCart";
+import {
+  getUnifiedCartFromResponse,
+  isUnifiedCartResponse,
+} from "../unifiedCart";
 
 describe("unifiedCart response mapping", () => {
   it("reads the backend cart from the observed status/data.cart/itemCount response shape", () => {
@@ -36,5 +39,10 @@ describe("unifiedCart response mapping", () => {
       })
     );
     expect(cart.items[0]).not.toHaveProperty("_id");
+  });
+
+  it("rejects partial status-shaped objects without data.cart", () => {
+    expect(isUnifiedCartResponse({ status: "error" })).toBe(false);
+    expect(isUnifiedCartResponse({ status: "success", data: {} })).toBe(false);
   });
 });

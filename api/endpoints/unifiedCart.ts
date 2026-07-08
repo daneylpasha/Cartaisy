@@ -74,6 +74,23 @@ export interface SessionInfoResponse {
   };
 }
 
+export const isUnifiedCartResponse = (
+  response: unknown
+): response is UnifiedCartResponse => {
+  if (!response || typeof response !== "object") {
+    return false;
+  }
+
+  const candidate = response as Partial<UnifiedCartResponse>;
+  const cart = candidate.data?.cart;
+  return (
+    typeof candidate.status === "string" &&
+    Boolean(cart) &&
+    Array.isArray(cart?.items) &&
+    typeof cart?.itemCount === "number"
+  );
+};
+
 export const getUnifiedCartFromResponse = (
   response: UnifiedCartResponse
 ): UnifiedCart => response.data.cart;
