@@ -1,6 +1,6 @@
 # Mobile Status
 
-Last updated: 2026-07-08 (sample merchant EAS build attempt recorded; see `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`).
+Last updated: 2026-07-08 (post-PR #71 mobile test baseline synced; sample merchant EAS build attempt recorded in `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`; cross-repo smoke test findings remain in `docs/CROSS_REPO_SMOKE_TEST.md`).
 
 This file is a human/agent-maintained snapshot. It is not an automatically guaranteed source of truth. Verify current behavior in code before implementation work.
 
@@ -14,7 +14,7 @@ Current state: Public API base URL and store ID configuration are validated in `
 
 Current state: Store config currently loads `currency`, `timezone`, and `name` from `/store/config` with local fallbacks.
 
-Current state: `package.json` exposes `start`, `android`, `ios`, `web`, `lint`, `typecheck`, `test`, and `generate:api` scripts. `npm test` runs Jest (`jest-expo` preset via `jest.config.js`) with real suites in `utils/__tests__/`, `api/config/__tests__/`, `api/__tests__/` (auth refresh), and `store/__tests__/` (cart/auth stores).
+Current state: `package.json` exposes `start`, `android`, `ios`, `web`, `lint`, `typecheck`, `test`, and `generate:api` scripts. `npm test` runs Jest (`jest-expo` preset via `jest.config.js`) with a current baseline of 12 test suites / 73 tests. Coverage includes real suites in `utils/__tests__/`, `api/config/__tests__/`, `api/__tests__/` (auth refresh), `store/__tests__/` (cart/auth stores), and focused component/screen tests for unavailable states, auth gating, and home module resilience.
 
 Current state: npm is the authoritative package manager. `package.json` declares `"packageManager": "npm@10.8.2"`, `package-lock.json` is the only committed lockfile, and `yarn.lock` was removed and gitignored. As of 2026-07-02, a clean checkout validates with `npm ci`, `npm run lint`, `npm run typecheck`, and `npm test`, matching CI.
 
@@ -38,7 +38,7 @@ Current state: Native app identity/builds are partial. Dynamic `app.config.ts` (
 
 Current state: Environment variable/secrets safety is partial to strong. `MOBILE_ENV_VARIABLES.md` documents safe/forbidden values, and `mobileConfig` validates required public values and known forbidden public Shopify/secret-looking keys.
 
-Current state: Testing/CI is partial. Lint, TypeScript, and Jest scripts exist, with Jest coverage limited to pure logic modules (`utils`, `api/config`). CI (`.github/workflows/ci.yml`) runs `npm ci`, typecheck, lint, and tests on pull requests against `main`.
+Current state: Testing/CI is partial. Lint, TypeScript, and Jest scripts exist, with Jest coverage now spanning pure logic modules, auth refresh interceptors, cart/auth store state, and focused component/screen behavior. CI (`.github/workflows/ci.yml`) runs `npm ci`, typecheck, lint, and tests on pull requests against `main`.
 
 Current state: Release readiness is partial. A branded build checklist exists, but release readiness still depends on merchant identity, native assets, Firebase config, store-scoped backend setup, validation, and store submission checks.
 
@@ -60,7 +60,7 @@ Known gap: Runtime branding contract is documented but not implemented.
 
 Known gap: Native identity, Firebase, Apple Pay, and push notification mismatches identified in audits need dedicated release or implementation work.
 
-Known gap: Jest coverage includes pure logic modules, API client auth refresh interceptors, and cart/auth store state, but component, screen, navigation, and integration behavior is not covered by automated tests.
+Known gap: Jest coverage includes pure logic modules, API client auth refresh interceptors, cart/auth store state, and focused component/screen suites, but it remains incomplete. There is no E2E setup, no device build CI, no payment success/failure E2E coverage, and no full navigation coverage; broader screen behavior and checkout step internals still need dedicated tests.
 
 Known gap: CI and build readiness should be verified before release; do not assume this exists unless verified in code and pipeline results.
 
