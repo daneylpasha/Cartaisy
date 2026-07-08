@@ -40,6 +40,14 @@ The app has two cart surfaces: the **primary pipeline** (`useCartManager` + `app
 
 Automated harness result: 18/18 rows pass asserting the observed behavior above (7 rows flagged as contract mismatches).
 
+## Mobile Decision Update (2026-07-08, GitHub issue #72)
+
+Mobile private beta now uses the generated `/cart/*` Storefront cart client as the primary cart surface and generated `POST /checkout/handoff` as the cart-to-checkout transition. The handoff route returns a Shopify-hosted checkout URL, so cart and Buy Now actions open that URL instead of entering the legacy native `/checkout/init` flow.
+
+This supersedes the "decision needed" mobile follow-up below. `/unified-cart` remains a real backend surface with the response shape recorded in this smoke run, but it is not the private-beta cart-to-checkout surface because it does not expose the Shopify Storefront cart ID required by `/checkout/handoff`.
+
+Re-run this smoke process against a reachable sandbox with store-scoped Shopify Storefront credentials before release. The 2026-07-03 automated results above remain historical results for the backend commit and environment listed in this document; no new sandbox run is recorded here.
+
 ## Blockers
 
 1. **Root blocker (backend, critical):** tsoa route registration fails at backend startup and is swallowed, so the app's entire primary cart → checkout → payment → order pipeline 404s at the first call. Found and documented in issue #62 (`docs/CROSS_REPO_SMOKE_TEST.md`); until fixed, payment and order-success scenarios cannot be smoke tested by any means.
@@ -68,7 +76,7 @@ Automated harness result: 18/18 rows pass asserting the observed behavior above 
 - Backend: add store existence/active validation to `/unified-cart` routes (200 for nonexistent/inactive stores today), and return a clean 4xx instead of 500 "Authentication failed" when a session bound to another store is presented.
 - Backend: enforce the store-mismatch check on `/customer/orders` (cross-store header currently ignored), same class as the `/customer/auth/profile` finding in issue #62.
 - Mobile: align `api/endpoints/unifiedCart.ts` types with the real backend response shape (`status`/`data.cart`/`itemCount`, items keyed by `productId` with no `_id`) — the current types describe a response the backend never returns.
-- Mobile (decision needed): the app's cart manager runs on the dead generated `/cart` client while a working `/unified-cart` exists — decide whether to migrate `useCartManager`/checkout to unified cart or restore the backend tsoa cart; today the two surfaces are inconsistent.
+- Mobile: decision made in issue #72 — private beta uses generated `/cart/*` plus `/checkout/handoff`. Re-run this suite against a reachable sandbox with store-scoped Shopify Storefront credentials to record the first passing hosted-checkout handoff result.
 - Backend/env: provision Stripe test-mode keys for the sandbox so payment success/failure paths become smokeable; then run the manual UI checklist end-to-end.
 
 ## Related Docs

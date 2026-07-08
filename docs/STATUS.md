@@ -1,6 +1,6 @@
 # Mobile Status
 
-Last updated: 2026-07-08 (post-PR #71 mobile test baseline synced; sample merchant EAS build attempt recorded in `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`; cross-repo smoke test findings remain in `docs/CROSS_REPO_SMOKE_TEST.md`).
+Last updated: 2026-07-08 (GitHub issue #72 cart-to-checkout surface consolidated on generated `/cart/*` plus Shopify-hosted `/checkout/handoff`; sample merchant EAS build attempt remains recorded in `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`; historical cross-repo smoke test findings remain in `docs/CROSS_REPO_SMOKE_TEST.md`).
 
 This file is a human/agent-maintained snapshot. It is not an automatically guaranteed source of truth. Verify current behavior in code before implementation work.
 
@@ -14,7 +14,7 @@ Current state: Public API base URL and store ID configuration are validated in `
 
 Current state: Store config currently loads `currency`, `timezone`, and `name` from `/store/config` with local fallbacks.
 
-Current state: `package.json` exposes `start`, `android`, `ios`, `web`, `lint`, `typecheck`, `test`, and `generate:api` scripts. `npm test` runs Jest (`jest-expo` preset via `jest.config.js`) with a current baseline of 12 test suites / 73 tests. Coverage includes real suites in `utils/__tests__/`, `api/config/__tests__/`, `api/__tests__/` (auth refresh), `store/__tests__/` (cart/auth stores), and focused component/screen tests for unavailable states, auth gating, and home module resilience.
+Current state: `package.json` exposes `start`, `android`, `ios`, `web`, `lint`, `typecheck`, `test`, and `generate:api` scripts. `npm test` runs Jest (`jest-expo` preset via `jest.config.js`) with a current baseline of 12 test suites / 75 tests. Coverage includes real suites in `utils/__tests__/`, `api/config/__tests__/`, `api/__tests__/` (auth refresh), `store/__tests__/` (cart/auth stores), and focused component/screen tests for unavailable states, auth gating, cart checkout handoff, and home module resilience.
 
 Current state: npm is the authoritative package manager. `package.json` declares `"packageManager": "npm@10.8.2"`, `package-lock.json` is the only committed lockfile, and `yarn.lock` was removed and gitignored. As of 2026-07-02, a clean checkout validates with `npm ci`, `npm run lint`, `npm run typecheck`, and `npm test`, matching CI.
 
@@ -28,9 +28,9 @@ Current state: Branding/theme is partial. App identity is generated at build tim
 
 Current state: Home modules/content are partial to implemented. The app uses `GET /customer/homescreen` generated hooks and renders backend-driven layout sections, but exact backend content availability depends on tenant data.
 
-Current state: Product listing/detail is partial to implemented on the mobile side, but a 2026-07-03 cross-repo smoke test (`docs/CROSS_REPO_SMOKE_TEST.md`) found that at backend HEAD the tsoa-generated routes these clients target — `/customer/search`, `/products/{id}`, plus `/cart/*`, `/checkout/*`, `/favorites` — fail to register at backend startup and return 404, and the express `GET /products` listing 500s. Catalog/search/checkout flows are not servable by backend HEAD until that is fixed.
+Current state: Product listing/detail is partial to implemented on the mobile side, but a 2026-07-03 cross-repo smoke test (`docs/CROSS_REPO_SMOKE_TEST.md`) found that at the tested backend commit the tsoa-generated routes these clients target — `/customer/search`, `/products/{id}`, plus `/cart/*`, `/checkout/*`, `/favorites` — failed to register at backend startup and returned 404, and the express `GET /products` listing 500ed. Catalog/search/checkout runtime availability still needs fresh sandbox validation beyond spec sync.
 
-Current state: Cart/checkout is partial and high-risk. Cart state, unified cart calls, checkout initialization, and checkout completion clients exist. The hand-written `/unified-cart` guest flow works against backend HEAD; the generated `/cart/*` and `/checkout/*` clients target routes backend HEAD does not serve (see above). Checkout/payment changes require human review.
+Current state: Cart/checkout is partial and high-risk. For private beta, the chosen mobile cart-to-checkout pipeline is the generated `/cart/*` Storefront cart surface plus generated `POST /checkout/handoff`, which returns a Shopify-hosted checkout URL. Add/update/remove/recovery in `useCartManager` stay on the generated cart client so the cart ID is a Shopify Storefront cart ID that handoff can use. The hand-written `/unified-cart` surface remains available for its existing local guest/customer cart uses, but it is not the primary cart-to-checkout surface because its real response is a local product cart (`status`, `data.cart`, `itemCount`) and does not expose a Shopify cart ID for hosted checkout. Native checkout/payment changes remain high-risk and require human review.
 
 Current state: Customer account/auth is partial to implemented. Login, signup, password reset, profile, token refresh, guest session, and persisted auth state exist. Auth refresh changes are high-risk.
 
@@ -66,13 +66,13 @@ Known gap: CI and build readiness should be verified before release; do not assu
 
 ## Unknowns
 
-Unknown: Deployed backend availability. As of 2026-07-03 both configured Railway backend URLs return platform-level "Application not found" — no deployed backend is reachable. The spec snapshot tracks the backend source repo; the 2026-07-03 cross-repo smoke test (`docs/CROSS_REPO_SMOKE_TEST.md`) verified the snapshot is an exact additive subset of a fresh backend-source spec (missing only the new `POST /checkout/handoff`), but also proved spec-level sync does not imply runtime availability: backend HEAD fails to register its tsoa routes at startup, so the spec-described search/product-detail/cart/checkout endpoints all 404 while express-only routes (store config, homescreen, unified cart, orders) work.
+Unknown: Deployed backend availability. As of 2026-07-03 both configured Railway backend URLs returned platform-level "Application not found" — no deployed backend was reachable. The 2026-07-03 cross-repo smoke test (`docs/CROSS_REPO_SMOKE_TEST.md`) proved spec-level sync does not imply runtime availability: the backend commit tested there failed to register its tsoa routes at startup, so the spec-described search/product-detail/cart/checkout endpoints all 404 while express-only routes (store config, homescreen, unified cart, orders) worked. As of GitHub issue #72, the mobile spec snapshot has been refreshed to include backend `POST /checkout/handoff`; runtime validation still needs a reachable sandbox with store-scoped Shopify Storefront credentials.
 
 Unknown: Whether real EAS/signed merchant builds succeed end-to-end (signing, store submission, on-device identity). Config evaluation and local prebuild output were verified with a sample merchant on 2026-07-02, config output was re-verified on 2026-07-08, and an Android EAS development build command was attempted on 2026-07-08 but blocked before archive upload to Expo. No installable artifact exists yet.
 
 ## Current Priority Areas
 
-- Backend (critical, cross-repo): fix tsoa route registration at backend HEAD so search, product detail, cart, and checkout endpoints actually serve; the mobile search and checkout screens currently target dead routes (`docs/CROSS_REPO_SMOKE_TEST.md`).
+- Backend/mobile runtime validation: re-run the cart-to-hosted-checkout smoke path against a reachable sandbox with store-scoped Shopify Storefront credentials so generated `/cart/*` and `/checkout/handoff` are verified beyond spec sync.
 - Keep mobile secrets safety strict, especially around Shopify Admin/private credentials.
 - Preserve backend-owned tenant isolation and store-scoped API usage.
 - Resolve native identity/build mismatches before production branded releases.

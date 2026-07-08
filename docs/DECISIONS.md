@@ -130,6 +130,18 @@ Impact: Regeneration is deterministic and repeatable offline. To sync after a ba
 
 Related docs: `orval.config.ts`, `api-spec/swagger.json`, `api/types.ts`, backend repo `tsoa.json`.
 
+### Private Beta Cart Uses Generated Storefront Cart And Hosted Checkout Handoff
+
+Date: 2026-07-08.
+
+Decision: The private-beta mobile cart-to-checkout pipeline uses the generated `/cart/*` Storefront cart client as the primary cart surface, then calls generated `POST /checkout/handoff` to receive and open the Shopify-hosted checkout URL.
+
+Reason: Backend checkout handoff expects a Shopify Storefront cart ID and uses store-scoped Storefront credentials. The generated cart client returns that cart ID and line item IDs, while the hand-written `/unified-cart` response is a local product-cart shape (`status`, `data.cart`, `itemCount`) and does not expose the Shopify cart ID required for hosted checkout.
+
+Impact: `useCartManager` remains on generated `/cart/*` for add to cart, quantity updates, remove item, saved-cart recovery, and local store sync. Cart and Buy Now actions use `/checkout/handoff` instead of native `/checkout/init`. `/unified-cart` is not the private-beta cart-to-checkout surface unless a future backend/mobile contract adds a Shopify cart conversion or cart ID. Mobile still sends only public store context and must not expose Shopify credentials.
+
+Related docs: `docs/STATUS.md`, `docs/CHECKOUT_ORDERS_SMOKE_TEST.md`, `api-spec/swagger.json`, `api/generated/checkout/checkout.ts`, backend repo `docs/DECISIONS.md`.
+
 ### EAS Builds Regenerate Native Projects From app.config.ts
 
 Date: 2026-07-03.

@@ -70,8 +70,12 @@ Re-run: start a sandbox as above, seed it, then
 - Backend: fix `GET /products` 500 (`populate('category')`).
 - Backend: enforce store-mismatch rejection on `/customer/auth/profile` (and audit other authenticated express routes for the same gap).
 - Backend/mobile: bring `/store/config`, `/unified-cart`, and `/customer/orders` into the tsoa spec so the mobile client can be generated for them, or explicitly document them as out-of-spec surfaces.
-- Mobile: refresh `api-spec/swagger.json` and regenerate the client to pick up `POST /checkout/handoff` once the backend actually serves it (blocked on the tsoa registration fix).
+- Mobile: refresh `api-spec/swagger.json` and regenerate the client to pick up `POST /checkout/handoff` once the backend actually serves it (completed in mobile issue #72; runtime validation still needs a reachable sandbox with store-scoped Shopify Storefront credentials).
 - Cross-repo: once a deployed staging sandbox exists, re-run this suite against it (the harness only needs the two env vars).
+
+## Mobile Snapshot Update (2026-07-08, GitHub issue #72)
+
+The mobile spec snapshot now includes `POST /checkout/handoff`, and the generated checkout client exposes `checkoutHandoff` / `useCheckoutHandoff`. The 2026-07-03 matrix above remains the historical smoke result for backend commit `60caa017`; it should be rerun before release against a reachable sandbox that can create Storefront carts and return Shopify-hosted checkout URLs.
 
 ## Related Docs
 
