@@ -1,38 +1,35 @@
 import { axiosInstance } from "../apiClient";
 
-// Types for unified cart API
+// Types for the express-served unified cart API.
 export interface UnifiedCartItem {
-  _id: string;
   productId: string;
   variantId?: string;
-  merchandiseId: string;
+  merchandiseId?: string;
   title: string;
   variantTitle?: string;
-  image: string | null;
+  image?: string | null;
   price: number;
   compareAtPrice?: number;
-  currency: string;
+  currency?: string;
   quantity: number;
-  quantityAvailable: number;
+  quantityAvailable?: number;
 }
 
 export interface UnifiedCart {
-  _id: string;
   sessionId?: string;
   customerId?: string;
   items: UnifiedCartItem[];
-  totalQuantity: number;
-  subtotal: number;
-  currency: string;
-  isGuest: boolean;
+  itemCount: number;
+  currency?: string;
+  isGuest?: boolean;
   guestCheckoutInfo?: {
     email: string;
     phone: string;
     fullName: string;
   };
   expiresAt?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AddToCartRequest {
@@ -60,13 +57,15 @@ export interface GuestCheckoutInfoRequest {
 }
 
 export interface UnifiedCartResponse {
-  success: boolean;
-  data: UnifiedCart;
+  status: "success" | "error";
+  data: {
+    cart: UnifiedCart;
+  };
   message?: string;
 }
 
 export interface SessionInfoResponse {
-  success: boolean;
+  status: "success" | "error";
   data: {
     sessionId: string;
     isGuest: boolean;
@@ -74,6 +73,10 @@ export interface SessionInfoResponse {
     expiresAt?: string;
   };
 }
+
+export const getUnifiedCartFromResponse = (
+  response: UnifiedCartResponse
+): UnifiedCart => response.data.cart;
 
 // Unified Cart API endpoints (work for both guest and authenticated users)
 const unifiedCartApi = {
