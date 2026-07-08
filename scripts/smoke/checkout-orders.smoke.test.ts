@@ -30,7 +30,10 @@ jest.mock("@react-native-async-storage/async-storage", () =>
 jest.setTimeout(30000);
 
 import { axiosInstance } from "@/api/apiClient";
-import unifiedCartApi from "@/api/endpoints/unifiedCart";
+import unifiedCartApi, {
+  isUnifiedCartResponse,
+} from "@/api/endpoints/unifiedCart";
+import type { UnifiedCartResponse } from "@/api/endpoints/unifiedCart";
 import { createCart } from "@/api/generated/cart/cart";
 import {
   completeCheckout,
@@ -74,6 +77,15 @@ const errText = (e: any) =>
     ? `${status(e)} ${JSON.stringify(e.response.data)?.slice(0, 160)}`
     : `no response (${e?.code ?? e?.message ?? "unknown transport error"})`;
 const storeHeader = (storeId: string) => ({ headers: { "X-Store-ID": storeId } });
+type UnifiedCartSmokeResult = UnifiedCartResponse | { error: string };
+const smokeCart = (result: UnifiedCartSmokeResult) =>
+  isUnifiedCartResponse(result) ? result.data.cart : undefined;
+const smokeStatus = (result: UnifiedCartSmokeResult) =>
+  isUnifiedCartResponse(result)
+    ? result.status
+    : "error" in result
+      ? result.error
+      : "invalid unified-cart response";
 
 afterAll(() => {
   // eslint-disable-next-line no-console
@@ -172,8 +184,8 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     }
   };
 
-  it("unified cart: add to cart works for a guest (response shape diverges from mobile types)", async () => {
-    const res: any = await unifiedCartApi
+  it("unified cart: add to cart works for a guest", async () => {
+    const res: UnifiedCartSmokeResult = await unifiedCartApi
       .addToCart({
         productId: PRODUCT_AURORA,
         merchandiseId: "aurora-tee-v1",
@@ -183,54 +195,54 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
       })
       .then((r) => r.data)
       .catch((e) => ({ error: errText(e) }));
-    const items = res?.data?.cart?.items;
+    const cart = smokeCart(res);
     record({
       flow: "add to cart (unified cart)",
       endpoint: "POST /unified-cart",
       testData: `guest, seeded Aurora Tee ${PRODUCT_AURORA}`,
       expected:
-        "item added, guest session issued. Mobile UnifiedCartResponse expects {success, data:{items,totalQuantity,subtotal,_id}}; backend returns {status, data:{cart:{items,itemCount}}} with no per-item _id",
-      actual: `status=${res?.status} items=${items?.length} itemCount=${res?.data?.cart?.itemCount} keys=${Object.keys(res?.data ?? {}).join(",")}`,
-      mismatch: true,
-      pass: res?.status === "success" && items?.length === 1,
+        "item added, guest session issued. Backend returns {status, data:{cart:{items,itemCount}}} with no per-item _id",
+      actual: `status=${smokeStatus(res)} items=${cart?.items?.length} itemCount=${cart?.itemCount} keys=${isUnifiedCartResponse(res) ? Object.keys(res.data).join(",") : "error"}`,
+      mismatch: false,
+      pass: isUnifiedCartResponse(res) && res.status === "success" && cart?.items?.length === 1,
     });
     cartSessionReady = true; // record() throws on fail, so this only runs on pass
   });
 
   it("unified cart: update quantity works (item keyed by productId)", async () => {
     requireCartSession();
-    const res: any = await unifiedCartApi
+    const res: UnifiedCartSmokeResult = await unifiedCartApi
       .updateCartItem(PRODUCT_AURORA, { quantity: 3 })
       .then((r) => r.data)
       .catch((e) => ({ error: errText(e) }));
-    const qty = res?.data?.cart?.items?.[0]?.quantity;
+    const qty = smokeCart(res)?.items?.[0]?.quantity;
     record({
       flow: "update quantity (unified cart)",
       endpoint: "PATCH /unified-cart/{itemId}",
       testData: "same guest session (auto-captured by apiClient interceptor), quantity 1 -> 3",
       expected:
-        "200, quantity 3. Note: the item key is the productId — items carry no _id, though the mobile UnifiedCartItem type declares one",
-      actual: `status=${res?.status ?? res?.error} quantity=${qty}`,
+        "200, quantity 3. Note: the item key is the productId and items carry no _id",
+      actual: `status=${smokeStatus(res)} quantity=${qty}`,
       mismatch: false,
-      pass: res?.status === "success" && qty === 3,
+      pass: isUnifiedCartResponse(res) && res.status === "success" && qty === 3,
     });
   });
 
   it("unified cart: cart recovery — session persists across a fresh GET", async () => {
     requireCartSession();
-    const res: any = await unifiedCartApi
+    const res: UnifiedCartSmokeResult = await unifiedCartApi
       .getCart()
       .then((r) => r.data)
       .catch((e) => ({ error: errText(e) }));
-    const items = res?.data?.cart?.items;
+    const items = smokeCart(res)?.items;
     record({
       flow: "cart recovery/refresh (unified cart)",
       endpoint: "GET /unified-cart",
       testData: "same guest session; re-fetch after add + update",
       expected: "200, cart still has Aurora Tee at quantity 3",
-      actual: `status=${res?.status ?? res?.error} items=${items?.length} qty=${items?.[0]?.quantity}`,
+      actual: `status=${smokeStatus(res)} items=${items?.length} qty=${items?.[0]?.quantity}`,
       mismatch: false,
-      pass: res?.status === "success" && items?.length === 1 && items?.[0]?.quantity === 3,
+      pass: isUnifiedCartResponse(res) && res.status === "success" && items?.length === 1 && items?.[0]?.quantity === 3,
     });
   });
 
@@ -257,19 +269,19 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
 
   it("unified cart: remove item works", async () => {
     requireCartSession();
-    const res: any = await unifiedCartApi
+    const res: UnifiedCartSmokeResult = await unifiedCartApi
       .removeFromCart(PRODUCT_AURORA)
       .then((r) => r.data)
       .catch((e) => ({ error: errText(e) }));
-    const items = res?.data?.cart?.items;
+    const items = smokeCart(res)?.items;
     record({
       flow: "remove item (unified cart)",
       endpoint: "DELETE /unified-cart/{itemId}",
       testData: "same guest session, remove Aurora Tee",
       expected: "200, cart empty",
-      actual: `status=${res?.status ?? res?.error} items=${items?.length}`,
+      actual: `status=${smokeStatus(res)} items=${items?.length}`,
       mismatch: false,
-      pass: res?.status === "success" && items?.length === 0,
+      pass: isUnifiedCartResponse(res) && res.status === "success" && items?.length === 0,
     });
   });
 

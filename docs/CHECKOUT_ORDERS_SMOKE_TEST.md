@@ -24,7 +24,7 @@ The app has two cart surfaces: the **primary pipeline** (`useCartManager` + `app
 | # | Scenario | Surface tested | Result | Notes |
 | --- | --- | --- | --- | --- |
 | 1 | Add to cart | App primary (`POST /cart/create`) | **BLOCKED** | 404 — tsoa routes never register at backend HEAD (root blocker, issue #62). The entire `useCartManager` pipeline is dead. |
-| 1b | Add to cart | Unified cart (`POST /unified-cart`) | **PASS** (with mismatch) | Works for guests; guest session issued. Response shape diverges from mobile `UnifiedCartResponse` types (`{status, data:{cart:{items,itemCount}}}` vs expected `{success, data:{items,totalQuantity,subtotal,_id}}`; items carry no `_id`). |
+| 1b | Add to cart | Unified cart (`POST /unified-cart`) | **PASS** | Works for guests; guest session issued. Response shape is `{status, data:{cart:{items,itemCount}}}`; items are keyed by `productId` and carry no `_id`. |
 | 2 | Update quantity | Unified cart (`PATCH /unified-cart/{itemId}`) | **PASS** | Item key is the `productId`. |
 | 3 | Remove item | Unified cart (`DELETE /unified-cart/{itemId}`) | **PASS** | Cart empties correctly. |
 | 4 | Cart recovery/refresh | Unified cart (`GET /unified-cart` + session header) | **PASS** | The apiClient interceptor auto-captures `X-Session-ID`; cart state (item + quantity) persists across fresh requests — the app's real recovery mechanism. |
@@ -75,7 +75,7 @@ Re-run this smoke process against a reachable sandbox with store-scoped Shopify 
 - Backend (critical, already recommended in issue #62): fix tsoa route registration; this unblocks scenarios 1, 5–10.
 - Backend: add store existence/active validation to `/unified-cart` routes (200 for nonexistent/inactive stores today), and return a clean 4xx instead of 500 "Authentication failed" when a session bound to another store is presented.
 - Backend: enforce the store-mismatch check on `/customer/orders` (cross-store header currently ignored), same class as the `/customer/auth/profile` finding in issue #62.
-- Mobile: align `api/endpoints/unifiedCart.ts` types with the real backend response shape (`status`/`data.cart`/`itemCount`, items keyed by `productId` with no `_id`) — the current types describe a response the backend never returns.
+- Mobile: align `api/endpoints/unifiedCart.ts` types with the real backend response shape (`status`/`data.cart`/`itemCount`, items keyed by `productId` with no `_id`) — completed in mobile issue #74.
 - Mobile: decision made in issue #72 — private beta uses generated `/cart/*` plus `/checkout/handoff`. Re-run this suite against a reachable sandbox with store-scoped Shopify Storefront credentials to record the first passing hosted-checkout handoff result.
 - Backend/env: provision Stripe test-mode keys for the sandbox so payment success/failure paths become smokeable; then run the manual UI checklist end-to-end.
 
