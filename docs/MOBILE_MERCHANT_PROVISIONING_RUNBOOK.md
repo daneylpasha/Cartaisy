@@ -173,8 +173,8 @@ A dry run of this runbook using the fictional merchant in `docs/examples/sample-
 - [ ] Step 4: Firebase apps created, files stored as EAS file env vars — *simulated* (sample points at the committed Cartaisy files only so config evaluation works; a real merchant must use their own files or Android builds fail at the Google Services Gradle step).
 - [ ] Step 5: push registration — *simulated*.
 - [ ] Step 6: Apple Pay/Stripe — *simulated* (sample uses `pk_test_sample_placeholder` and a fictional merchant ID).
-- [ ] Step 7: `npx expo config --type public` with the sample env exported resolves the full Acme identity — runnable today; last verified 2026-07-03 (see `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`).
-- [ ] Step 8: EAS development build — *simulated* (blocked by the placeholder EAS project and undecided ownership; recorded as a known gap in `docs/RELEASE_CHECKLIST.md`).
+- [ ] Step 7: `npx expo config --type public` with the sample env exported resolves the full Acme identity — runnable today; last verified 2026-07-08 (see `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`).
+- [ ] Step 8: EAS development build — attempted 2026-07-08 for Android, but no artifact was produced because the workspace blocked archive upload to Expo and the sample EAS project ID remains a placeholder; recorded as a known gap in `docs/RELEASE_CHECKLIST.md`.
 
 ## Manual Steps Today vs Automation Opportunities
 

@@ -1,6 +1,6 @@
 # Mobile Status
 
-Last updated: 2026-07-03 (cross-repo smoke test findings added; see `docs/CROSS_REPO_SMOKE_TEST.md`).
+Last updated: 2026-07-08 (sample merchant EAS build attempt recorded; see `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`).
 
 This file is a human/agent-maintained snapshot. It is not an automatically guaranteed source of truth. Verify current behavior in code before implementation work.
 
@@ -34,7 +34,7 @@ Current state: Cart/checkout is partial and high-risk. Cart state, unified cart 
 
 Current state: Customer account/auth is partial to implemented. Login, signup, password reset, profile, token refresh, guest session, and persisted auth state exist. Auth refresh changes are high-risk.
 
-Current state: Native app identity/builds are partial. Dynamic `app.config.ts` (env-driven identity; static `app.json` removed), checked-in iOS/Android projects, Firebase files, EAS config, and native plugins exist. Merchant identity resolution was verified through `npx expo config` and `npx expo prebuild` with a sample merchant (2026-07-02). As of 2026-07-03 (GitHub issue #60), `.easignore` excludes the checked-in native projects from EAS build archives, so EAS builds regenerate native projects from `app.config.ts` and can no longer silently ship Cartaisy identity; local `expo run:*` still uses the checked-in projects. No EAS or signed merchant build has been produced, and existing audits list native identity mismatches and production readiness gaps.
+Current state: Native app identity/builds are partial. Dynamic `app.config.ts` (env-driven identity; static `app.json` removed), checked-in iOS/Android projects, Firebase files, EAS config, and native plugins exist. Merchant identity resolution was verified through `npx expo config` and `npx expo prebuild` with a sample merchant (2026-07-02), and re-verified through `npx expo config --type public --json` on 2026-07-08. As of 2026-07-03 (GitHub issue #60), `.easignore` excludes the checked-in native projects from EAS build archives, so EAS builds regenerate native projects from `app.config.ts` and can no longer silently ship Cartaisy identity; local `expo run:*` still uses the checked-in projects. As of 2026-07-08 (GitHub issue #73), `eas.json` includes a non-secret `sample-merchant-development` profile, but no EAS or signed merchant build artifact has been produced because the sample EAS project ID is placeholder-only and the attempted remote build was blocked before archive upload to Expo.
 
 Current state: Environment variable/secrets safety is partial to strong. `MOBILE_ENV_VARIABLES.md` documents safe/forbidden values, and `mobileConfig` validates required public values and known forbidden public Shopify/secret-looking keys.
 
@@ -54,7 +54,7 @@ Target state: Testing should include lint, typecheck, meaningful unit/integratio
 
 ## Known Gaps
 
-Known gap: Dynamic app config is implemented via `app.config.ts` and verified through `npx expo config` and `npx expo prebuild` with a sample merchant env (2026-07-02, see `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`), but no EAS or signed merchant build has been produced. The checked-in-native-projects bypass was resolved on 2026-07-03 via `.easignore` (GitHub issue #60). Remaining blockers: merchants need matching Firebase files, their own EAS project/owner, and signing credentials.
+Known gap: Dynamic app config is implemented via `app.config.ts` and verified through `npx expo config` and `npx expo prebuild` with a sample merchant env (2026-07-02, see `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`), with public config re-verified on 2026-07-08. No EAS or signed merchant build artifact has been produced. The checked-in-native-projects bypass was resolved on 2026-07-03 via `.easignore` (GitHub issue #60). Remaining blockers: merchants need matching Firebase files, their own EAS project/owner, remote credentials/signing setup, and an approved EAS upload environment.
 
 Known gap: Runtime branding contract is documented but not implemented.
 
@@ -68,7 +68,7 @@ Known gap: CI and build readiness should be verified before release; do not assu
 
 Unknown: Deployed backend availability. As of 2026-07-03 both configured Railway backend URLs return platform-level "Application not found" — no deployed backend is reachable. The spec snapshot tracks the backend source repo; the 2026-07-03 cross-repo smoke test (`docs/CROSS_REPO_SMOKE_TEST.md`) verified the snapshot is an exact additive subset of a fresh backend-source spec (missing only the new `POST /checkout/handoff`), but also proved spec-level sync does not imply runtime availability: backend HEAD fails to register its tsoa routes at startup, so the spec-described search/product-detail/cart/checkout endpoints all 404 while express-only routes (store config, homescreen, unified cart, orders) work.
 
-Unknown: Whether real EAS/signed merchant builds succeed end-to-end (signing, store submission, on-device identity). Config evaluation and local prebuild output were verified with a sample merchant on 2026-07-02, but no EAS build was run.
+Unknown: Whether real EAS/signed merchant builds succeed end-to-end (signing, store submission, on-device identity). Config evaluation and local prebuild output were verified with a sample merchant on 2026-07-02, config output was re-verified on 2026-07-08, and an Android EAS development build command was attempted on 2026-07-08 but blocked before archive upload to Expo. No installable artifact exists yet.
 
 ## Current Priority Areas
 

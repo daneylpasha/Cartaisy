@@ -10,6 +10,36 @@
         "buildType": "apk"
       }
     },
+    "sample-merchant-development": {
+      "extends": "development",
+      "env": {
+        "APP_NAME": "Acme Outfitters",
+        "APP_SLUG": "acme-outfitters",
+        "APP_SCHEME": "acmeoutfitters",
+        "APP_VERSION": "1.2.0",
+        "IOS_BUNDLE_IDENTIFIER": "com.example.acmeoutfitters",
+        "IOS_BUILD_NUMBER": "12",
+        "IOS_APPLE_PAY_MERCHANT_ID": "merchant.com.example.acmeoutfitters",
+        "ANDROID_PACKAGE": "com.example.acmeoutfitters",
+        "ANDROID_VERSION_CODE": "12",
+        "IOS_GOOGLE_SERVICES_FILE": "./GoogleService-Info.plist",
+        "ANDROID_GOOGLE_SERVICES_FILE": "./google-services.json",
+        "APP_ICON_PATH": "./assets/images/cartaisy-color-logo.png",
+        "APP_NOTIFICATION_ICON_PATH": "./assets/images/cartaisy-color-logo.png",
+        "APP_NOTIFICATION_COLOR": "#1E90FF",
+        "ANDROID_ADAPTIVE_ICON_PATH": "./assets/images/adaptive-icon.png",
+        "ANDROID_ADAPTIVE_ICON_BACKGROUND": "#0A2540",
+        "SPLASH_BACKGROUND_COLOR": "#0A2540",
+        "EAS_PROJECT_ID": "00000000-0000-0000-0000-000000000000",
+        "EXPO_OWNER": "example-merchant-owner",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.staging.example.com/api/v1",
+        "EXPO_PUBLIC_STORE_ID": "507f1f77bcf86cd799439011",
+        "EXPO_PUBLIC_APP_NAME": "Acme Outfitters",
+        "EXPO_PUBLIC_APP_SCHEME": "acmeoutfitters",
+        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_sample_placeholder",
+        "EXPO_PUBLIC_STRIPE_MERCHANT_ID": "merchant.com.example.acmeoutfitters"
+      }
+    },
     "preview": {
       "distribution": "internal",
       "android": {
