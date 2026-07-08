@@ -10,9 +10,15 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { Spacer } from "@/components/atoms/Spacer";
 import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
-import { FlatList, PanResponder, Platform } from "react-native";
+import {
+  Animated,
+  FlatList,
+  Linking,
+  PanResponder,
+  Platform,
+} from "react-native";
 
-import { useInitializeCheckout } from "@/api/generated/checkout/checkout";
+import { useCheckoutHandoff } from "@/api/generated/checkout/checkout";
 import { useGetCartRecommendations } from "@/api/generated/recommendations/recommendations";
 import { useCartManager } from "@/api/hooks/useCartManager";
 import { Divider } from "@/components/atoms/Divider";
@@ -23,6 +29,7 @@ import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailab
 import { ProductCard } from "@/components/molecules/ProductCard";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import ErrorModal from "@/components/organisms/ErrorModal";
+import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useCartStore from "@/store/useCartStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
@@ -31,7 +38,6 @@ import { tokens } from "@/tamagui/token";
 import { formatPrice } from "@/utils/formatPrice";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, Text, XStack, YStack } from "tamagui";
 
@@ -52,14 +58,14 @@ const CartScreen = () => {
     syncCart,
   } = useCartManager();
   const totalQuantity = getTotalQuantity();
+  const { requireAuth } = useAuthGuard();
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
   const [isInitializingCheckout, setIsInitializingCheckout] = useState(false);
   const [cartUnavailableError, setCartUnavailableError] =
     useState<unknown>(null);
 
-  // Initialize checkout mutation
-  const { mutate: initializeCheckoutMutation } = useInitializeCheckout();
+  const { mutate: checkoutHandoffMutation } = useCheckoutHandoff();
 
   // Fetch cart recommendations
   const { mutate: fetchRecommendations, data: recommendationsData } =
@@ -329,6 +335,86 @@ const CartScreen = () => {
     },
     [removeCartItem]
   );
+
+  const startCheckoutHandoff = useCallback(() => {
+    if (!cartId) {
+      setErrorModal({
+        visible: true,
+        title: "Error",
+        message: "Cart ID not found. Please try again.",
+      });
+      return;
+    }
+
+    console.log("[CHECKOUT] Requesting hosted checkout handoff with cartId:", cartId);
+    console.log("[CHECKOUT] Cart items count:", items.length);
+    console.log(
+      "[CHECKOUT] Cart items:",
+      items.map((i) => ({ id: i.lineItemId, title: i.title, qty: i.quantity }))
+    );
+
+    setIsInitializingCheckout(true);
+    checkoutHandoffMutation(
+      { data: { cartId } },
+      {
+        onSuccess: (response) => {
+          const checkoutUrl = response.data.checkoutUrl;
+
+          if (!checkoutUrl) {
+            setErrorModal({
+              visible: true,
+              title: "Checkout Error",
+              message: "Checkout URL not found. Please try again.",
+            });
+            setIsInitializingCheckout(false);
+            return;
+          }
+
+          Linking.openURL(checkoutUrl)
+            .catch((error) => {
+              console.error("[Checkout] Failed to open checkout URL:", error);
+              setErrorModal({
+                visible: true,
+                title: "Checkout Error",
+                message: "Failed to open checkout. Please try again.",
+              });
+            })
+            .finally(() => {
+              setIsInitializingCheckout(false);
+            });
+        },
+        onError: (error: any) => {
+          console.error("[Checkout] Handoff error:", error);
+          const unavailableMessage = getCatalogUnavailableMessage(error);
+          if (unavailableMessage) {
+            setCartUnavailableError(error);
+          } else {
+            setErrorModal({
+              visible: true,
+              title: "Checkout Error",
+              message:
+                error?.response?.data?.error?.message ||
+                error?.response?.data?.message ||
+                "Failed to initialize checkout. Please try again.",
+            });
+          }
+          setIsInitializingCheckout(false);
+        },
+      }
+    );
+  }, [cartId, checkoutHandoffMutation, items]);
+
+  const handleProceedToCheckout = useCallback(() => {
+    const canProceed = requireAuth({
+      type: "checkout",
+      callback: startCheckoutHandoff,
+    });
+
+    if (canProceed) {
+      startCheckoutHandoff();
+    }
+  }, [requireAuth, startCheckoutHandoff]);
+
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gestureState) => {
@@ -661,52 +747,7 @@ const CartScreen = () => {
             </OpTouch>
             <Spacer size={"$md"} />
             <PrimaryButton
-              onPress={() => {
-                if (!cartId) {
-                  setErrorModal({
-                    visible: true,
-                    title: "Error",
-                    message: "Cart ID not found. Please try again.",
-                  });
-                  return;
-                }
-
-                console.log("[CHECKOUT] Initializing checkout with cartId:", cartId);
-                console.log("[CHECKOUT] Cart items count:", items.length);
-                console.log("[CHECKOUT] Cart items:", items.map(i => ({ id: i.lineItemId, title: i.title, qty: i.quantity })));
-
-                setIsInitializingCheckout(true);
-                initializeCheckoutMutation(
-                  { data: { cartId } },
-                  {
-                    onSuccess: (response) => {
-                      console.log("[CHECKOUT] Init success - sessionId:", response.data.sessionId);
-                      // Store sessionId in cart store or pass to checkout screen
-                      router.push(
-                        `/checkout?sessionId=${response.data.sessionId}`
-                      );
-                      setIsInitializingCheckout(false);
-                    },
-                    onError: (error: any) => {
-                      console.error("[Checkout] Init error:", error);
-                      const unavailableMessage =
-                        getCatalogUnavailableMessage(error);
-                      if (unavailableMessage) {
-                        setCartUnavailableError(error);
-                      } else {
-                        setErrorModal({
-                          visible: true,
-                          title: "Checkout Error",
-                          message:
-                            error?.response?.data?.error?.message ||
-                            "Failed to initialize checkout. Please try again.",
-                        });
-                      }
-                      setIsInitializingCheckout(false);
-                    },
-                  }
-                );
-              }}
+              onPress={handleProceedToCheckout}
               isLoading={isInitializingCheckout}
               label={`Proceed to Checkout (${totalQuantity})`}
             />

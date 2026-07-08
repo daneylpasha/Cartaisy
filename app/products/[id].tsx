@@ -4,7 +4,7 @@ import {
 } from "@/api/generated/favorites/favorites";
 import { useGetProductDetail } from "@/api/generated/products/products";
 import { useGetProductRecommendations } from "@/api/generated/recommendations/recommendations";
-import { useInitializeCheckout } from "@/api/generated/checkout/checkout";
+import { useCheckoutHandoff } from "@/api/generated/checkout/checkout";
 import { useCartManager } from "@/api/hooks/useCartManager";
 import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import {
@@ -49,6 +49,7 @@ import React, { useMemo, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
+  Linking,
   LayoutAnimation,
   Platform,
   UIManager,
@@ -81,8 +82,7 @@ const ProductDetailsScreen = () => {
     error: addToCartError,
   } = useCartManager();
 
-  // Initialize checkout mutation for Buy Now
-  const { mutate: initializeCheckoutMutation } = useInitializeCheckout();
+  const { mutate: checkoutHandoffMutation } = useCheckoutHandoff();
   const [isBuyingNow, setIsBuyingNow] = useState(false);
 
   const {
@@ -1156,22 +1156,46 @@ const ProductDetailsScreen = () => {
         throw new Error("Cart ID not found");
       }
 
-      // Initialize checkout to get sessionId
-      initializeCheckoutMutation(
+      checkoutHandoffMutation(
         { data: { cartId: currentCartId } },
         {
           onSuccess: (response) => {
-            console.log("[BuyNow] Checkout initialized, sessionId:", response.data.sessionId);
-            setIsBuyingNow(false);
-            router.push(`/checkout?sessionId=${response.data.sessionId}`);
+            const checkoutUrl = response.data.checkoutUrl;
+
+            if (!checkoutUrl) {
+              setIsBuyingNow(false);
+              setErrorModal({
+                visible: true,
+                title: "Checkout Error",
+                message: "Checkout URL not found. Please try again.",
+              });
+              return;
+            }
+
+            console.log("[BuyNow] Opening hosted checkout URL");
+            Linking.openURL(checkoutUrl)
+              .catch((error) => {
+                console.error("[BuyNow] Failed to open checkout URL:", error);
+                setErrorModal({
+                  visible: true,
+                  title: "Checkout Error",
+                  message: "Failed to open checkout. Please try again.",
+                });
+              })
+              .finally(() => {
+                setIsBuyingNow(false);
+              });
           },
           onError: (error: any) => {
-            console.error("[BuyNow] Failed to initialize checkout:", error);
+            console.error("[BuyNow] Failed to create checkout handoff:", error);
             setIsBuyingNow(false);
             setErrorModal({
               visible: true,
               title: "Checkout Error",
-              message: error?.response?.data?.error?.message || "Failed to proceed to checkout. Please try again.",
+              message:
+                error?.response?.data?.error?.message ||
+                error?.response?.data?.message ||
+                "Failed to proceed to checkout. Please try again.",
             });
           },
         }

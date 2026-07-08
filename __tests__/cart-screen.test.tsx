@@ -9,6 +9,7 @@
  */
 import { act, fireEvent, waitFor } from "@testing-library/react-native";
 import React from "react";
+import { Linking } from "react-native";
 
 jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock")
@@ -40,11 +41,17 @@ jest.mock("@/api/hooks/useCartManager", () => ({
   }),
 }));
 
+const mockCheckoutHandoffMutation = jest.fn();
 jest.mock("@/api/generated/checkout/checkout", () => ({
-  useInitializeCheckout: () => ({ mutate: jest.fn() }),
+  useCheckoutHandoff: () => ({ mutate: mockCheckoutHandoffMutation }),
 }));
 jest.mock("@/api/generated/recommendations/recommendations", () => ({
   useGetCartRecommendations: () => ({ mutate: jest.fn(), data: undefined }),
+}));
+
+const mockAuthGuard = { requireAuth: jest.fn(() => true) };
+jest.mock("@/contexts/AuthGuardContext", () => ({
+  useAuthGuard: () => mockAuthGuard,
 }));
 
 // Heavy child components not under test here.
@@ -79,7 +86,13 @@ const cartItem = {
 describe("cart screen unavailable state", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAuthGuard.requireAuth.mockReturnValue(true);
+    jest.spyOn(Linking, "openURL").mockResolvedValue(undefined as any);
     useCartStore.setState({ cartId: "cart-1", items: [cartItem] });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it("replaces the cart and hides checkout when sync reports catalog unavailable", async () => {
@@ -120,5 +133,36 @@ describe("cart screen unavailable state", () => {
 
     await waitFor(() => expect(queryByText("Cart unavailable")).toBeNull());
     expect(getByText(/Proceed to Checkout/)).toBeTruthy();
+  });
+
+  it("starts Shopify-hosted checkout handoff from the generated cart", async () => {
+    mockSyncCart.mockResolvedValue(true);
+    mockCheckoutHandoffMutation.mockImplementation((_variables, options) => {
+      options.onSuccess({
+        success: true,
+        data: {
+          checkoutUrl: "https://store.example.com/checkouts/abc",
+          cartId: "cart-1",
+          storeId: "store-1",
+        },
+      });
+    });
+
+    const { getByText } = renderWithTamagui(<CartScreen />);
+
+    fireEvent.press(getByText(/Proceed to Checkout/));
+
+    expect(mockAuthGuard.requireAuth).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "checkout" })
+    );
+    expect(mockCheckoutHandoffMutation).toHaveBeenCalledWith(
+      { data: { cartId: "cart-1" } },
+      expect.any(Object)
+    );
+    await waitFor(() =>
+      expect(Linking.openURL).toHaveBeenCalledWith(
+        "https://store.example.com/checkouts/abc"
+      )
+    );
   });
 });

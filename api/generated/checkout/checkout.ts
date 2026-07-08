@@ -27,6 +27,8 @@ import type {
 import type {
   ApplyPromoRequest,
   ApplyPromoResponse,
+  CheckoutHandoffRequest,
+  CheckoutHandoffResponse,
   CheckoutSummaryResponse,
   CompleteCheckout200,
   CompleteCheckoutRequest,
@@ -50,6 +52,74 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
+ * Shopify-hosted checkout handoff (SaaS checkout v1)
+
+Returns the Shopify-hosted checkout URL for a tenant store's cart.
+Store context comes from the authenticated customer record (loaded from
+the database by optionalCustomerAuth when a Bearer token is present) or,
+for guest carts, the validated public x-store-id header - the cart is
+only ever read through that store's own Storefront credentials, so a
+cart ID can never resolve against another store's shop.
+ */
+export const checkoutHandoff = (
+    checkoutHandoffRequest: CheckoutHandoffRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<CheckoutHandoffResponse>(
+      {url: `/checkout/handoff`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: checkoutHandoffRequest, signal
+    },
+      options);
+    }
+
+
+
+export const getCheckoutHandoffMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkoutHandoff>>, TError,{data: CheckoutHandoffRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkoutHandoff>>, TError,{data: CheckoutHandoffRequest}, TContext> => {
+
+const mutationKey = ['checkoutHandoff'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkoutHandoff>>, {data: CheckoutHandoffRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  checkoutHandoff(data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CheckoutHandoffMutationResult = NonNullable<Awaited<ReturnType<typeof checkoutHandoff>>>
+    export type CheckoutHandoffMutationBody = CheckoutHandoffRequest
+    export type CheckoutHandoffMutationError = void
+
+    export const useCheckoutHandoff = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkoutHandoff>>, TError,{data: CheckoutHandoffRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof checkoutHandoff>>,
+        TError,
+        {data: CheckoutHandoffRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getCheckoutHandoffMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Initialize checkout session from cart
 
 Creates a checkout session linked to the user's Shopify cart
@@ -615,4 +685,3 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
-    
