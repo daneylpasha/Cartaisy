@@ -337,7 +337,9 @@ const CartScreen = () => {
   );
 
   const startCheckoutHandoff = useCallback(() => {
-    if (!cartId) {
+    const { cartId: latestCartId, items: latestItems } = useCartStore.getState();
+
+    if (!latestCartId) {
       setErrorModal({
         visible: true,
         title: "Error",
@@ -346,16 +348,20 @@ const CartScreen = () => {
       return;
     }
 
-    console.log("[CHECKOUT] Requesting hosted checkout handoff with cartId:", cartId);
-    console.log("[CHECKOUT] Cart items count:", items.length);
+    console.log("[CHECKOUT] Requesting hosted checkout handoff with cartId:", latestCartId);
+    console.log("[CHECKOUT] Cart items count:", latestItems.length);
     console.log(
       "[CHECKOUT] Cart items:",
-      items.map((i) => ({ id: i.lineItemId, title: i.title, qty: i.quantity }))
+      latestItems.map((i) => ({
+        id: i.lineItemId,
+        title: i.title,
+        qty: i.quantity,
+      }))
     );
 
     setIsInitializingCheckout(true);
     checkoutHandoffMutation(
-      { data: { cartId } },
+      { data: { cartId: latestCartId } },
       {
         onSuccess: (response) => {
           const checkoutUrl = response.data.checkoutUrl;
@@ -370,6 +376,7 @@ const CartScreen = () => {
             return;
           }
 
+          setIsInitializingCheckout(false);
           Linking.openURL(checkoutUrl)
             .catch((error) => {
               console.error("[Checkout] Failed to open checkout URL:", error);
@@ -378,9 +385,6 @@ const CartScreen = () => {
                 title: "Checkout Error",
                 message: "Failed to open checkout. Please try again.",
               });
-            })
-            .finally(() => {
-              setIsInitializingCheckout(false);
             });
         },
         onError: (error: any) => {
@@ -402,7 +406,7 @@ const CartScreen = () => {
         },
       }
     );
-  }, [cartId, checkoutHandoffMutation, items]);
+  }, [checkoutHandoffMutation]);
 
   const handleProceedToCheckout = useCallback(() => {
     const canProceed = requireAuth({

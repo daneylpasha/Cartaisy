@@ -49,7 +49,10 @@ jest.mock("@/api/generated/recommendations/recommendations", () => ({
   useGetCartRecommendations: () => ({ mutate: jest.fn(), data: undefined }),
 }));
 
-const mockAuthGuard = { requireAuth: jest.fn(() => true) };
+type MockAuthAction = { type: string; callback?: () => void };
+const mockAuthGuard: { requireAuth: jest.Mock<boolean, [MockAuthAction]> } = {
+  requireAuth: jest.fn((_action: MockAuthAction) => true),
+};
 jest.mock("@/contexts/AuthGuardContext", () => ({
   useAuthGuard: () => mockAuthGuard,
 }));
@@ -163,6 +166,42 @@ describe("cart screen unavailable state", () => {
       expect(Linking.openURL).toHaveBeenCalledWith(
         "https://store.example.com/checkouts/abc"
       )
+    );
+  });
+
+  it("uses the latest cart ID when the deferred auth callback runs", () => {
+    let pendingCheckoutCallback: (() => void) | undefined;
+    mockSyncCart.mockResolvedValue(true);
+    mockAuthGuard.requireAuth.mockImplementation((action) => {
+      pendingCheckoutCallback = action.callback;
+      return false;
+    });
+
+    const { getByText } = renderWithTamagui(<CartScreen />);
+
+    fireEvent.press(getByText(/Proceed to Checkout/));
+    expect(mockCheckoutHandoffMutation).not.toHaveBeenCalled();
+
+    act(() => {
+      useCartStore.setState({
+        cartId: "cart-after-login",
+        items: [
+          {
+            ...cartItem,
+            lineItemId: "line-after-login",
+            title: "Merged Aurora Tee",
+          },
+        ],
+      });
+    });
+
+    act(() => {
+      pendingCheckoutCallback?.();
+    });
+
+    expect(mockCheckoutHandoffMutation).toHaveBeenCalledWith(
+      { data: { cartId: "cart-after-login" } },
+      expect.any(Object)
     );
   });
 });

@@ -1173,6 +1173,7 @@ const ProductDetailsScreen = () => {
             }
 
             console.log("[BuyNow] Opening hosted checkout URL");
+            setIsBuyingNow(false);
             Linking.openURL(checkoutUrl)
               .catch((error) => {
                 console.error("[BuyNow] Failed to open checkout URL:", error);
@@ -1181,9 +1182,6 @@ const ProductDetailsScreen = () => {
                   title: "Checkout Error",
                   message: "Failed to open checkout. Please try again.",
                 });
-              })
-              .finally(() => {
-                setIsBuyingNow(false);
               });
           },
           onError: (error: any) => {
