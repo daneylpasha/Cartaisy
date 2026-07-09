@@ -1,10 +1,48 @@
 # Checkout, Payment, and Orders Private-Beta Smoke Suite
 
-Latest run date: 2026-07-09 (GitHub issue #80).
+Latest run date: 2026-07-09 (GitHub issue #82).
+
+Previous run date: 2026-07-09 (GitHub issue #80).
 
 Historical run date: 2026-07-03 (GitHub issue #63).
 
 This is the repeatable smoke checklist for cart, checkout, payment, and orders on mobile, plus the results of its first run. The automated harness is `scripts/smoke/checkout-orders.smoke.test.ts`; scenarios it cannot reach are listed as manual/blocked checklist items with the exact blocker.
+
+## Tenant-Mismatch Cart/Checkout/Orders Rerun (2026-07-09, GitHub issue #82)
+
+Goal: verify cart, checkout handoff, and orders behavior for correct store, wrong store, inactive/nonexistent/malformed store, guest-session mismatch, and authenticated Store A token with Store B header where practical.
+
+Environment:
+
+- Backend target: `https://cartaisy-backend-production.up.railway.app/api/v1` from the current mobile public config.
+- Backend response identity: Railway platform fallback, `server: railway-hikari`, `x-railway-fallback: true`.
+- Backend commit: unavailable because no Cartaisy backend application is mounted at the configured Railway URL.
+- Store ID: configured public mobile store ID `6926c642b33c580ada05d8d0`; no Shopify credentials, Storefront tokens, Stripe secrets, customer data, production secrets, or real merchant data were used or recorded.
+- Local seeded backend: unavailable in this workspace, so Store A/Store B authenticated and guest-session mismatch rows could not be exercised against real seeded state.
+
+Command:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=https://cartaisy-backend-production.up.railway.app/api/v1 EXPO_PUBLIC_STORE_ID=6926c642b33c580ada05d8d0 npx jest --testMatch '**/scripts/smoke/checkout-orders.smoke.test.ts' --runInBand
+```
+
+Result: **FAIL / BLOCKED**. The suite reached Railway with network access, but every probed backend route returned platform-level `404 Application not found`. The generated cart and checkout-handoff rows passed only because the historical harness expected a 404 from the older local-backend route-registration bug; in this run the 404 came from Railway before Cartaisy backend code executed. That is not a valid cart, checkout, or tenant-validation pass.
+
+Fresh cart/checkout/orders mismatch matrix:
+
+| Scenario | Surface tested | Expected backend behavior | Actual 2026-07-09 result | Status | Follow-up |
+| --- | --- | --- | --- | --- | --- |
+| Add to cart, configured store | Generated `POST /cart/create` | Store-scoped cart response or clean 4xx | Railway 404 `Application not found` | **Blocked** | Provide reachable backend with Storefront credentials. |
+| Update quantity, configured store | Generated `PUT /cart/{cartId}/items/{lineItemId}` | Store-scoped cart response or clean 4xx | Railway 404 `Application not found` | **Blocked** | Re-test against reachable backend. |
+| Remove item, configured store | Generated `DELETE /cart/{cartId}/items/{lineItemId}` | Store-scoped cart response or clean 4xx | Railway 404 `Application not found` | **Blocked** | Re-test against reachable backend. |
+| Hosted checkout handoff | Generated `POST /checkout/handoff` | Hosted checkout URL or clean 4xx for fabricated cart ID | Railway 404 `Application not found`; no checkout URL | **Blocked** | Re-test with reachable backend and store-scoped Storefront credentials. |
+| Malformed store during cart flow | `GET /unified-cart` with malformed `X-Store-ID` | 400 invalid store ID format | Railway 404 `Application not found` | **Blocked** | Re-test against Cartaisy backend code. |
+| Inactive/nonexistent store during cart flow | `/unified-cart` with inactive/nonexistent store IDs | Clean 403/404 store-unavailable signal | Could not exercise seeded inactive/nonexistent state; Railway 404 | **Blocked** | Re-test against seeded backend. |
+| Guest session Store A vs Store B | Guest cart session from Store A with Store B header | Clean store/session mismatch rejection | Could not create guest session; Railway 404 | **Blocked** | Re-test against seeded backend. |
+| Orders, configured store | `/customer/orders` with authenticated customer token | Store/customer-scoped order list | Could not login; Railway 404 | **Blocked** | Re-test against seeded backend. |
+| Orders, Store A token with Store B header | `/customer/orders` with Store A token and Store B header | Clean store-mismatch rejection | Could not login or seed two stores; Railway 404 | **Blocked** | Re-test against seeded backend. |
+
+Conclusion: no new cart, checkout handoff, guest-session, or orders tenant behavior was confirmed in issue #82 because the configured backend is not mounted. The historical local-sandbox findings below still describe the last confirmed backend-code behavior: generated cart/checkout routes were unavailable, `/unified-cart` had store-unavailable mismatch gaps, and `/customer/orders` ignored a mismatched store header. Those remain backend follow-up items until a fresh reachable sandbox proves otherwise.
 
 ## Latest Cart-to-Hosted-Checkout Rerun (2026-07-09, GitHub issue #80)
 

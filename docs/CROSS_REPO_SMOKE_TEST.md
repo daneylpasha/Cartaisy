@@ -1,10 +1,54 @@
 # Cross-Repo Backend API and Tenant Smoke Test
 
-Latest run date: 2026-07-09 (GitHub issue #80).
+Latest run date: 2026-07-09 (GitHub issue #82).
+
+Previous run date: 2026-07-09 (GitHub issue #80).
 
 Historical run date: 2026-07-03 (GitHub issue #62).
 
 This report records a cross-repo smoke test of the mobile API surface (generated Orval client plus the hand-written axios endpoints the app uses at runtime) against the Cartaisy backend, including tenant/wrong-store behavior. The repeatable test harness is `scripts/smoke/backend-api.smoke.test.ts`.
+
+## Tenant-Mismatch Rerun (2026-07-09, GitHub issue #82)
+
+Goal: verify the backend tenant-mismatch and store-unavailable behavior consumed by mobile-used endpoints, using the current configured backend because no local `cartaisy-backend` checkout or seeded backend sandbox was available under `/Users/Daniyal/Desktop`.
+
+Environment:
+
+- Backend target: `https://cartaisy-backend-production.up.railway.app/api/v1` from the current mobile public config.
+- Backend response identity: Railway platform fallback, `server: railway-hikari`, `x-railway-fallback: true`.
+- Backend commit: unavailable because no Cartaisy backend application is mounted at the configured Railway URL.
+- Store ID: configured public mobile store ID `6926c642b33c580ada05d8d0`; no Shopify credentials, customer data, production secrets, or real merchant data were used or recorded.
+- Local backend sandbox: unavailable in this workspace, so inactive-store, second-store, authenticated cross-store, and guest-session cross-store rows could not be verified against a seeded backend.
+
+Commands:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=https://cartaisy-backend-production.up.railway.app/api/v1 EXPO_PUBLIC_STORE_ID=6926c642b33c580ada05d8d0 npx jest --testMatch '**/scripts/smoke/backend-api.smoke.test.ts' --runInBand
+EXPO_PUBLIC_API_BASE_URL=https://cartaisy-backend-production.up.railway.app/api/v1 EXPO_PUBLIC_STORE_ID=6926c642b33c580ada05d8d0 npx jest --testMatch '**/scripts/smoke/checkout-orders.smoke.test.ts' --runInBand
+```
+
+Result: **FAIL / BLOCKED**. With network access allowed, both suites reached Railway, but the target returned platform-level `404 Application not found` for every probed backend route. This means the run did not exercise Cartaisy backend tenant validation, store validation, auth/profile, orders, cart, checkout handoff, product/search, or home behavior. The first `GET /store/config` row fell back to local mobile defaults (`USD`, `UTC`, empty name), which is a mobile fallback after backend failure, not a backend pass.
+
+Fresh tenant-mismatch matrix:
+
+| Endpoint / flow | Test data | Expected backend behavior | Actual 2026-07-09 result | Status | Follow-up |
+| --- | --- | --- | --- | --- | --- |
+| Store config, correct store | `X-Store-ID=6926c642b33c580ada05d8d0` | 200 with store config | Railway 404; mobile fallback returned default config with empty store name | **Blocked** | Backend/env: provide a mounted backend sandbox. |
+| Store config, nonexistent store | `X-Store-ID=507f1f77bcf86cd799439099` | 404 store not found | Railway 404 `Application not found`; not backend validation | **Blocked** | Re-test against seeded backend. |
+| Store config, malformed store | `X-Store-ID=not-a-valid-object-id` | 400 invalid store ID format | Railway 404 `Application not found` | **Blocked** | Re-test against seeded backend. |
+| Store config, inactive store | `X-Store-ID=507f1f77bcf86cd799439033` | 403 store inactive | Railway 404 `Application not found` | **Blocked** | Re-test against seeded backend with inactive store. |
+| Home | `GET /customer/homescreen`, configured store | 200 success envelope scoped to store | Railway 404 `Application not found` | **Blocked** | Re-test against seeded backend. |
+| Product/search | `GET /customer/search`, `GET /products/{id}`, `GET /products` | Store-scoped product/search responses or clean 4xx | Railway 404 `Application not found` | **Blocked** | Re-test against seeded backend. |
+| Cart, generated Storefront cart | `POST /cart/create`, update, remove | Store-scoped cart response or clean 4xx | Railway 404 `Application not found` | **Blocked** | Re-test against reachable backend with store-scoped Storefront credentials. |
+| Checkout handoff | `POST /checkout/handoff` with fabricated cart ID | Hosted checkout URL or clean 4xx | Railway 404 `Application not found` | **Blocked** | Re-test after backend sandbox is reachable. |
+| Unified cart, guest | `GET /unified-cart`, configured store | 200 guest cart or clean unavailable state | Railway 404 `Application not found` | **Blocked** | Re-test against seeded backend. |
+| Auth/profile | Register/login/profile, configured store | Token issued; profile scoped to authenticated customer/store | Register/login returned Railway 404; profile rows could not run without token | **Blocked** | Re-test against seeded backend. |
+| Auth, Store A customer with Store B header | Store A customer credentials/token with Store B header | Clean rejection of store mismatch where practical | Could not run: no seeded two-store backend and auth failed at Railway 404 | **Blocked** | Re-test against seeded backend with two stores. |
+| Orders | `GET /customer/orders`, customer token | Store/customer-scoped order list | Could not run: login failed at Railway 404 | **Blocked** | Re-test against seeded backend. |
+| Orders, Store A token with Store B header | Customer A token with Store B header | Clean store-mismatch rejection | Could not run: no auth token and no two-store sandbox | **Blocked** | Re-test against seeded backend. |
+| Guest session Store A vs Store B | Guest cart session from Store A with Store B header | Clean store-mismatch or session-store rejection | Could not run: no seeded guest cart session; Railway 404 | **Blocked** | Re-test against seeded backend. |
+
+Conclusion: issue #82 did not confirm any new backend tenant behavior because the only available configured backend is not serving the Cartaisy app. The current mobile risk remains the historical confirmed local-sandbox findings below: `/store/config` had clean store validation, while `/customer/auth/profile`, `/customer/orders`, and `/unified-cart` had store-mismatch hardening gaps. Those backend defects remain recommended backend follow-ups, but they were not freshly re-confirmed in this deployed-backend run.
 
 ## Backend Spec Source and Version
 
