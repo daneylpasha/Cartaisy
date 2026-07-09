@@ -10,7 +10,7 @@ This report records a cross-repo smoke test of the mobile API surface (generated
 
 ## Tenant-Mismatch Rerun (2026-07-09, GitHub issue #82)
 
-Goal: verify the backend tenant-mismatch and store-unavailable behavior consumed by mobile-used endpoints, using the current configured backend because no local `cartaisy-backend` checkout or seeded backend sandbox was available under `/Users/Daniyal/Desktop`.
+Goal: verify the backend tenant-mismatch and store-unavailable behavior consumed by mobile-used endpoints, using the current configured backend because no local `cartaisy-backend` checkout or seeded backend sandbox was available in this workspace.
 
 Environment:
 
