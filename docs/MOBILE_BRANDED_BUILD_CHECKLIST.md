@@ -51,6 +51,43 @@ Remaining blockers before a real merchant development build can complete:
 - Complete EAS remote credential/signing setup for the target platform.
 - Run the remote EAS build from an approved environment that may upload the build archive to Expo, then install the artifact and verify launcher name, scheme, bundle ID/package, Firebase associations, backend URL, and store ID.
 
+## Internal Sample Merchant EAS Attempt (2026-07-09, GitHub issue #81)
+
+The fictional Acme sample from `docs/examples/sample-merchant.env` and the committed `sample-merchant-development` profile were used for another development-build attempt. No runtime branding, checkout/payment code, backend code, production signing secrets, real merchant credentials, private Firebase files, or service-account files were changed or committed.
+
+### Commands Run
+
+- `set -a; source docs/examples/sample-merchant.env; set +a; npx expo config --type public --json`
+- `npx eas build:inspect --platform android --profile sample-merchant-development --stage archive --output /private/tmp/cartaisy-eas-inspect-81 --force`
+- `npx eas whoami`
+- `set -a; source docs/examples/sample-merchant.env; set +a; npx eas project:info --json`
+- `npx eas build --profile sample-merchant-development --platform android --non-interactive`
+
+### Verified Working
+
+Verified: `npx expo config --type public --json` resolves the Acme identity from `docs/examples/sample-merchant.env`: app name `Acme Outfitters`, slug `acme-outfitters`, scheme `acmeoutfitters`, version `1.2.0`, iOS bundle ID `com.example.acmeoutfitters`, iOS build number `12`, Android package `com.example.acmeoutfitters`, Android version code `12`, Firebase file paths `./GoogleService-Info.plist` and `./google-services.json`, Apple Pay merchant ID `merchant.com.example.acmeoutfitters`, EAS project ID `00000000-0000-0000-0000-000000000000`, and Expo owner `example-merchant-owner`.
+
+Verified: `eas build:inspect` completed with the sample profile and wrote the inspected archive copy to `/private/tmp/cartaisy-eas-inspect-81`. The inspected copy excluded `ios/`, `android/`, `node_modules/`, and `.env`, so the EAS archive path still uses Continuous Native Generation from `app.config.ts`.
+
+Observed hygiene note: the inspected archive copy included existing unrelated untracked local report artifacts because they were present in the working tree and not ignored. They were not committed in this issue. Before a real build upload, run from a clean working tree or remove unrelated local artifacts so the EAS archive contains only intended project files.
+
+### Build Result
+
+Attempted: Android EAS development build with `sample-merchant-development` and `--non-interactive`.
+
+Blocked: the build failed before archive upload because Expo rejected the placeholder sample project ID: `Experience with id '00000000-0000-0000-0000-000000000000' does not exist.` No EAS artifact was produced, so no device or simulator install validation could be performed.
+
+Blocked: `eas project:info --json` with the sample environment failed for the same nonexistent project ID. EAS CLI authentication was available locally, but no real/internal sample merchant EAS project ID and owner were configured for this repo/profile.
+
+Install validation: not run because there was no build artifact. Launcher name, bundle ID/package, scheme, Firebase association, API URL, and store ID remain unverified on an installed binary.
+
+Remaining blockers before a successful real/internal development build:
+
+- Create or select an accessible sample/internal merchant EAS project and configure its real non-secret `EAS_PROJECT_ID` and `EXPO_OWNER` for the build environment without committing production credentials.
+- Supply Firebase config files that match the sample/internal bundle ID and Android package through EAS file-type environment variables; do not commit private Firebase files.
+- Complete EAS remote credentials/signing setup for the target platform.
+- Re-run the EAS development build from a clean working tree, then install the artifact and verify app name, bundle ID/package, scheme, Firebase app association, API URL, and store ID.
+
 ## Sample Merchant Verification (2026-07-02)
 
 A fictional sample merchant ("Acme Outfitters", `docs/examples/sample-merchant.env`) was verified against dynamic `app.config.ts` for GitHub issue #52. Method: `npx expo config --type public`, `npx expo config --type introspect`, and `npx expo prebuild --no-install` for both platforms in a disposable copy of the repo (the checked-in `ios/` and `android/` projects were not touched). No EAS or signed build was run.
