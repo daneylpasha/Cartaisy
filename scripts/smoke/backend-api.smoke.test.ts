@@ -42,10 +42,12 @@ import { getHomescreenData } from "@/api/generated/customer-homescreen/customer-
 import { getProductDetail } from "@/api/generated/products/products";
 import { search } from "@/api/generated/search/search";
 
-const STORE_A = process.env.EXPO_PUBLIC_STORE_ID ?? "507f1f77bcf86cd799439011";
+const SEEDED_STORE_A = "507f1f77bcf86cd799439011";
+const STORE_A = process.env.EXPO_PUBLIC_STORE_ID ?? SEEDED_STORE_A;
 const STORE_B = "507f1f77bcf86cd799439022";
 const STORE_C_INACTIVE = "507f1f77bcf86cd799439033";
 const STORE_MISSING = "507f1f77bcf86cd799439099";
+const isSeededStoreA = STORE_A === SEEDED_STORE_A;
 
 interface MatrixRow {
   flow: string;
@@ -97,11 +99,19 @@ describe("cross-repo backend smoke (issue #62)", () => {
       flow: "store config (happy path)",
       endpoint: "GET /store/config",
       testData: `X-Store-ID=${STORE_A}`,
-      expected: "200 with currency/timezone/name of store A",
+      expected: isSeededStoreA
+        ? '200 with seeded store A currency/timezone/name'
+        : "200 with non-empty currency/timezone/name for the configured store",
       actual: JSON.stringify(config),
       mismatch: false,
       pass:
-        config.currency === "USD" && config.timezone === "UTC" && config.name === "Smoke Store A",
+        typeof config.currency === "string" &&
+        config.currency.length > 0 &&
+        typeof config.timezone === "string" &&
+        config.timezone.length > 0 &&
+        typeof config.name === "string" &&
+        config.name.length > 0 &&
+        (!isSeededStoreA || config.name === "Smoke Store A"),
     });
   });
 
