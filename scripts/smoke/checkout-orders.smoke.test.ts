@@ -34,15 +34,16 @@ import unifiedCartApi, {
   isUnifiedCartResponse,
 } from "@/api/endpoints/unifiedCart";
 import type { UnifiedCartResponse } from "@/api/endpoints/unifiedCart";
-import { createCart } from "@/api/generated/cart/cart";
+import { createCart, removeItem, updateItemQuantity } from "@/api/generated/cart/cart";
 import {
+  checkoutHandoff,
   completeCheckout,
   getShippingRates,
   initializeCheckout,
 } from "@/api/generated/checkout/checkout";
 import { customerLogin } from "@/api/generated/customer-authentication/customer-authentication";
 
-const STORE_A = "507f1f77bcf86cd799439011";
+const STORE_A = process.env.EXPO_PUBLIC_STORE_ID ?? "507f1f77bcf86cd799439011";
 const STORE_B = "507f1f77bcf86cd799439022";
 const STORE_C_INACTIVE = "507f1f77bcf86cd799439033";
 const STORE_MISSING = "507f1f77bcf86cd799439099";
@@ -114,6 +115,45 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     });
   });
 
+  it("KNOWN MISMATCH: app's primary update-quantity path targets an unregistered route", async () => {
+    const actual = await updateItemQuantity(
+      "gid://shopify/Cart/fabricated",
+      "gid://shopify/CartLine/fabricated",
+      { quantity: 2 }
+    )
+      .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
+      .catch(errText);
+    record({
+      flow: "update quantity (app primary path, generated client)",
+      endpoint: "PUT /cart/{cartId}/items/{lineItemId}",
+      testData: "fabricated Shopify cart ID + line item ID",
+      expected:
+        "cart response or clean 4xx per spec; backend HEAD returns 404 (tsoa routes never register)",
+      actual,
+      mismatch: true,
+      pass: actual.startsWith("404"),
+    });
+  });
+
+  it("KNOWN MISMATCH: app's primary remove-item path targets an unregistered route", async () => {
+    const actual = await removeItem(
+      "gid://shopify/Cart/fabricated",
+      "gid://shopify/CartLine/fabricated"
+    )
+      .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
+      .catch(errText);
+    record({
+      flow: "remove item (app primary path, generated client)",
+      endpoint: "DELETE /cart/{cartId}/items/{lineItemId}",
+      testData: "fabricated Shopify cart ID + line item ID",
+      expected:
+        "cart response or clean 4xx per spec; backend HEAD returns 404 (tsoa routes never register)",
+      actual,
+      mismatch: true,
+      pass: actual.startsWith("404"),
+    });
+  });
+
   it("KNOWN MISMATCH: checkout init targets an unregistered route", async () => {
     const actual = await initializeCheckout({ cartId: "gid://shopify/Cart/fabricated" })
       .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
@@ -123,6 +163,22 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
       endpoint: "POST /checkout/init",
       testData: "fabricated Shopify cart ID",
       expected: "checkout session per spec; backend HEAD returns 404",
+      actual,
+      mismatch: true,
+      pass: actual.startsWith("404"),
+    });
+  });
+
+  it("KNOWN MISMATCH: hosted checkout handoff targets an unregistered route", async () => {
+    const actual = await checkoutHandoff({ cartId: "gid://shopify/Cart/fabricated", country: "US" })
+      .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
+      .catch(errText);
+    record({
+      flow: "hosted checkout handoff (app primary path, generated client)",
+      endpoint: "POST /checkout/handoff",
+      testData: "fabricated Shopify cart ID, country=US",
+      expected:
+        "hosted checkout URL or clean 4xx per spec; backend HEAD returns 404 (tsoa routes never register)",
       actual,
       mismatch: true,
       pass: actual.startsWith("404"),

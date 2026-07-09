@@ -29,8 +29,11 @@ jest.setTimeout(30000);
 import { axiosInstance } from "@/api/apiClient";
 import { getStoreConfig } from "@/api/endpoints/storeConfig";
 import unifiedCartApi from "@/api/endpoints/unifiedCart";
-import { createCart } from "@/api/generated/cart/cart";
-import { initializeCheckout } from "@/api/generated/checkout/checkout";
+import { createCart, removeItem, updateItemQuantity } from "@/api/generated/cart/cart";
+import {
+  checkoutHandoff,
+  initializeCheckout,
+} from "@/api/generated/checkout/checkout";
 import {
   customerLogin,
   customerRegister,
@@ -39,7 +42,7 @@ import { getHomescreenData } from "@/api/generated/customer-homescreen/customer-
 import { getProductDetail } from "@/api/generated/products/products";
 import { search } from "@/api/generated/search/search";
 
-const STORE_A = "507f1f77bcf86cd799439011";
+const STORE_A = process.env.EXPO_PUBLIC_STORE_ID ?? "507f1f77bcf86cd799439011";
 const STORE_B = "507f1f77bcf86cd799439022";
 const STORE_C_INACTIVE = "507f1f77bcf86cd799439033";
 const STORE_MISSING = "507f1f77bcf86cd799439099";
@@ -230,6 +233,45 @@ describe("cross-repo backend smoke (issue #62)", () => {
     });
   });
 
+  it("KNOWN MISMATCH: generated cart update targets an unregistered route", async () => {
+    const actual = await updateItemQuantity(
+      "gid://shopify/Cart/fabricated",
+      "gid://shopify/CartLine/fabricated",
+      { quantity: 2 }
+    )
+      .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
+      .catch(errText);
+    record({
+      flow: "cart update quantity (generated client)",
+      endpoint: "PUT /cart/{cartId}/items/{lineItemId}",
+      testData: "fabricated Shopify cart ID + line item ID",
+      expected:
+        "spec/client say cart response or clean 4xx; backend HEAD returns 404 (tsoa route registration fails at startup)",
+      actual,
+      mismatch: true,
+      pass: actual.startsWith("404"),
+    });
+  });
+
+  it("KNOWN MISMATCH: generated cart remove targets an unregistered route", async () => {
+    const actual = await removeItem(
+      "gid://shopify/Cart/fabricated",
+      "gid://shopify/CartLine/fabricated"
+    )
+      .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
+      .catch(errText);
+    record({
+      flow: "cart remove item (generated client)",
+      endpoint: "DELETE /cart/{cartId}/items/{lineItemId}",
+      testData: "fabricated Shopify cart ID + line item ID",
+      expected:
+        "spec/client say cart response or clean 4xx; backend HEAD returns 404 (tsoa route registration fails at startup)",
+      actual,
+      mismatch: true,
+      pass: actual.startsWith("404"),
+    });
+  });
+
   it("KNOWN MISMATCH: generated checkout client targets an unregistered route", async () => {
     const actual = await initializeCheckout({ cartId: "gid://shopify/Cart/fabricated" })
       .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
@@ -240,6 +282,22 @@ describe("cross-repo backend smoke (issue #62)", () => {
       testData: "fabricated Shopify cart ID",
       expected:
         "spec/client say checkout session; backend HEAD returns 404 (tsoa route registration fails at startup)",
+      actual,
+      mismatch: true,
+      pass: actual.startsWith("404"),
+    });
+  });
+
+  it("KNOWN MISMATCH: generated checkout handoff targets an unregistered route", async () => {
+    const actual = await checkoutHandoff({ cartId: "gid://shopify/Cart/fabricated", country: "US" })
+      .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
+      .catch(errText);
+    record({
+      flow: "checkout handoff (generated client)",
+      endpoint: "POST /checkout/handoff",
+      testData: "fabricated Shopify cart ID, country=US",
+      expected:
+        "spec/client say hosted checkout URL or clean 4xx; backend HEAD returns 404 (tsoa route registration fails at startup)",
       actual,
       mismatch: true,
       pass: actual.startsWith("404"),

@@ -1,6 +1,8 @@
 # Cross-Repo Backend API and Tenant Smoke Test
 
-Run date: 2026-07-03 (GitHub issue #62).
+Latest run date: 2026-07-09 (GitHub issue #80).
+
+Historical run date: 2026-07-03 (GitHub issue #62).
 
 This report records a cross-repo smoke test of the mobile API surface (generated Orval client plus the hand-written axios endpoints the app uses at runtime) against the Cartaisy backend, including tenant/wrong-store behavior. The repeatable test harness is `scripts/smoke/backend-api.smoke.test.ts`.
 
@@ -10,6 +12,42 @@ This report records a cross-repo smoke test of the mobile API surface (generated
 - Backend spec freshness: verified — regenerating with `npx tsoa spec` in a clean worktree of commit `60caa017` produces a spec identical to the committed one.
 - Mobile snapshot (`api-spec/swagger.json`): an exact subset of the backend spec. The only difference is additive — the backend added `POST /checkout/handoff` (plus `CheckoutHandoff*` schemas) after the mobile snapshot was refreshed on 2026-07-02.
 - Mobile generated client: `npm run generate:api` against the committed snapshot produces zero diff — the generated client is in sync with the snapshot.
+
+## Latest Sandbox Rerun (2026-07-09, GitHub issue #80)
+
+Goal: re-run the mobile/backend smoke suite against the currently configured backend sandbox and prove the mobile-used cart-to-hosted-checkout path.
+
+Environment:
+
+- Backend target: `https://cartaisy-backend-production.up.railway.app/api/v1` from the current mobile public env.
+- Backend response identity: Railway platform fallback, `server: railway-hikari`, `x-railway-fallback: true`.
+- Backend commit: unavailable from the deployed endpoint because the Railway application is not mounted/reachable.
+- Store ID: configured public mobile store ID `6926c642b33c580ada05d8d0`; no Shopify credentials or private values were exposed in this repo.
+- Mobile branch: `codex/issue-80-smoke-checkout-sandbox`.
+- Smoke harness update: `scripts/smoke/backend-api.smoke.test.ts` now records generated cart update/remove and `POST /checkout/handoff` rows so the issue #80 acceptance criteria are explicitly represented.
+
+Command:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=https://cartaisy-backend-production.up.railway.app/api/v1 EXPO_PUBLIC_STORE_ID=6926c642b33c580ada05d8d0 npx jest --testMatch '**/scripts/smoke/backend-api.smoke.test.ts' --runInBand
+```
+
+Result: **FAIL / BLOCKED**. The suite reached Railway with network access, but every backend API request returned the platform-level body `{"status":"error","code":404,"message":"Application not found", ...}`. The first `GET /store/config` call therefore fell back to local default config (`USD`, `UTC`, empty name), which is not a valid backend pass.
+
+Fresh pass/fail summary:
+
+| Flow | Result | Owner | Notes |
+| --- | --- | --- | --- |
+| Store config | **Blocked** | Backend / environment | `GET /store/config` returned Railway `404 Application not found`; no store config was served for the configured store ID. |
+| Store unavailable / invalid store behavior | **Blocked** | Backend / environment | Malformed, inactive, and missing store probes also hit Railway fallback 404, not backend store validation. |
+| Homescreen | **Blocked** | Backend / environment | `GET /customer/homescreen` returned Railway fallback 404. |
+| Search/product detail | **Blocked** | Backend / environment | Generated search and product-detail probes returned Railway fallback 404, so route/runtime behavior could not be distinguished. |
+| Cart create | **Blocked** | Backend / environment | `POST /cart/create` returned Railway fallback 404. |
+| Cart update/remove | **Blocked** | Backend / environment | `PUT` and `DELETE /cart/{cartId}/items/{lineItemId}` returned Railway fallback 404. |
+| Checkout handoff | **Blocked** | Backend / environment | `POST /checkout/handoff` returned Railway fallback 404; no Shopify-hosted checkout URL was produced. |
+| Unified cart / auth / orders | **Blocked** | Backend / environment | Express/hand-written surfaces and auth-dependent rows also returned Railway fallback 404 or could not proceed after auth failed. |
+
+Conclusion: the fresh smoke run did **not** verify `/cart/*` or `/checkout/handoff` against a functioning backend. The blocker is assigned to backend/environment: provide a reachable current backend sandbox or local backend with a valid store record and store-scoped Shopify Storefront credentials, then rerun this suite. No mobile runtime code was changed.
 
 ## Deployed Sandbox Availability
 
