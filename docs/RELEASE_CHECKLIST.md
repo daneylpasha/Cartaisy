@@ -12,7 +12,7 @@ Current state: Existing release-oriented docs include `docs/MOBILE_MERCHANT_PROV
 
 Current state: Public build-time values such as API URL, store ID, app name/scheme, Stripe publishable key, and native identity placeholders are documented in `.env.example` and `docs/MOBILE_ENV_VARIABLES.md`.
 
-Current state: As of 2026-07-09 (GitHub issue #81), `eas.json` includes a non-secret `sample-merchant-development` profile for the fictional Acme sample in `docs/examples/sample-merchant.env`. Local Expo config verification resolves the Acme app identity, and `eas build:inspect` confirms the Android sample profile archive excludes the checked-in native projects. No remote EAS artifact exists yet: the sample EAS project ID is still a placeholder, and the attempted Android development build was blocked before uploading the build archive to Expo because Expo could not find that project ID.
+Current state: As of 2026-07-08 (GitHub issue #73), `eas.json` includes a non-secret `sample-merchant-development` profile for the fictional Acme sample in `docs/examples/sample-merchant.env`. Local Expo config verification resolves the Acme app identity, and as of 2026-07-09 (GitHub issue #81), `eas build:inspect` confirms the Android sample profile archive excludes the checked-in native projects. No remote EAS artifact exists yet: the sample EAS project ID is still a placeholder, and the attempted Android development build was blocked before uploading the build archive to Expo because Expo could not find that project ID.
 
 Current state: Existing audits identify native identity and payment/push readiness risks. Verify them before release.
 
