@@ -1,6 +1,6 @@
 # Mobile Status
 
-Last updated: 2026-07-09 (GitHub issue #80 re-ran the mobile/backend smoke suites against the configured Railway backend and found platform-level `404 Application not found`; GitHub issue #81 recorded a real Android EAS development build attempt for the sample merchant profile, but no artifact was produced because the sample EAS project ID is still placeholder-only).
+Last updated: 2026-07-09 (GitHub issue #82 re-ran tenant-mismatch smoke probes against the configured Railway backend and again found platform-level `404 Application not found`; no fresh backend tenant behavior could be verified. GitHub issue #81 recorded a real Android EAS development build attempt for the sample merchant profile, but no artifact was produced because the sample EAS project ID is still placeholder-only).
 
 This file is a human/agent-maintained snapshot. It is not an automatically guaranteed source of truth. Verify current behavior in code before implementation work.
 
@@ -23,6 +23,8 @@ Current state: npm is the authoritative package manager. `package.json` declares
 Current state: App engine readiness is partial. Core Expo Router, Tamagui, React Query, Zustand, Orval, Firebase messaging, and Stripe dependencies are present.
 
 Current state: Store/tenant config is partial. `EXPO_PUBLIC_STORE_ID` and `X-Store-ID` behavior are present, but the store ID is public client configuration and backend tenant checks remain authoritative.
+
+Current state: Tenant-mismatch verification is blocked on backend sandbox availability. A 2026-07-09 issue #82 rerun of the backend and checkout/orders smoke suites reached the configured Railway backend with network access, but every route returned Railway `404 Application not found`, so correct-store, wrong-store, inactive-store, nonexistent/malformed-store, authenticated cross-store, guest-session cross-store, cart, checkout handoff, orders, product/search, and home behavior could not be freshly verified. The last backend-code run remains the historical local sandbox result in `docs/CROSS_REPO_SMOKE_TEST.md` and `docs/CHECKOUT_ORDERS_SMOKE_TEST.md`: `/store/config` enforced clean store validation, while `/customer/auth/profile`, `/customer/orders`, and `/unified-cart` still need backend tenant-mismatch hardening follow-up.
 
 Current state: Branding/theme is partial. App identity is generated at build time by dynamic `app.config.ts` from environment variables with cartaisy defaults; bundled logos and Tamagui colors are static. Runtime branding is documented as a contract but not implemented.
 
@@ -67,6 +69,8 @@ Known gap: CI and build readiness should be verified before release; do not assu
 ## Unknowns
 
 Unknown: Deployed backend availability. As of 2026-07-09, the currently configured Railway backend `https://cartaisy-backend-production.up.railway.app/api/v1` returns platform-level `404 Application not found`; no deployed backend sandbox is reachable from the mobile repo configuration. The 2026-07-03 cross-repo smoke test (`docs/CROSS_REPO_SMOKE_TEST.md`) proved spec-level sync does not imply runtime availability: the backend commit tested there failed to register its tsoa routes at startup, so the spec-described search/product-detail/cart/checkout endpoints all 404 while express-only routes (store config, homescreen, unified cart, orders) worked. As of GitHub issue #72, the mobile spec snapshot has been refreshed to include backend `POST /checkout/handoff`; issue #80 re-ran the smoke suites, but runtime validation still needs a reachable sandbox with store-scoped Shopify Storefront credentials.
+
+Unknown: Current backend tenant-mismatch behavior. GitHub issue #82 attempted fresh tenant-mismatch verification on 2026-07-09, but without a reachable deployed or local seeded backend, the run could only confirm that the configured Railway target is not serving the Cartaisy app. Treat tenant-mismatch behavior as unverified for the current backend until a seeded sandbox with at least two test stores is available.
 
 Unknown: Whether real EAS/signed merchant builds succeed end-to-end (signing, store submission, on-device identity). Config evaluation and local prebuild output were verified with a sample merchant on 2026-07-02, config output was re-verified on 2026-07-08 and 2026-07-09, and Android EAS development build commands were attempted on 2026-07-08 and 2026-07-09 but blocked before archive upload to Expo. No installable artifact exists yet.
 
