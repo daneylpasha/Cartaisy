@@ -1,8 +1,45 @@
 # Checkout, Payment, and Orders Private-Beta Smoke Suite
 
-Run date: 2026-07-03 (GitHub issue #63).
+Latest run date: 2026-07-09 (GitHub issue #80).
+
+Historical run date: 2026-07-03 (GitHub issue #63).
 
 This is the repeatable smoke checklist for cart, checkout, payment, and orders on mobile, plus the results of its first run. The automated harness is `scripts/smoke/checkout-orders.smoke.test.ts`; scenarios it cannot reach are listed as manual/blocked checklist items with the exact blocker.
+
+## Latest Cart-to-Hosted-Checkout Rerun (2026-07-09, GitHub issue #80)
+
+Goal: prove the current private-beta mobile cart-to-hosted-checkout path: generated `/cart/*` Storefront cart APIs plus generated `POST /checkout/handoff`.
+
+Environment:
+
+- Backend target: `https://cartaisy-backend-production.up.railway.app/api/v1` from the current mobile public env.
+- Backend response identity: Railway platform fallback, `server: railway-hikari`, `x-railway-fallback: true`.
+- Backend commit: unavailable from the deployed endpoint because the Railway application is not mounted/reachable.
+- Store ID: configured public mobile store ID `6926c642b33c580ada05d8d0`; no Shopify credentials, Storefront tokens, or private values were exposed in this repo.
+- Mobile branch: `codex/issue-80-smoke-checkout-sandbox`.
+- Smoke harness update: `scripts/smoke/checkout-orders.smoke.test.ts` now records generated cart update/remove and hosted checkout handoff rows.
+
+Command:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=https://cartaisy-backend-production.up.railway.app/api/v1 EXPO_PUBLIC_STORE_ID=6926c642b33c580ada05d8d0 npx jest --testMatch '**/scripts/smoke/checkout-orders.smoke.test.ts' --runInBand
+```
+
+Result: **FAIL / BLOCKED**. The suite reached Railway with network access, but every backend API request returned platform-level `404 Application not found`.
+
+Fresh scenario summary:
+
+| Scenario | Surface tested | Result | Owner | Notes |
+| --- | --- | --- | --- | --- |
+| Add to cart | Generated `POST /cart/create` | **Blocked** | Backend / environment | Railway fallback 404. No Storefront cart was created. |
+| Update quantity | Generated `PUT /cart/{cartId}/items/{lineItemId}` | **Blocked** | Backend / environment | Railway fallback 404. |
+| Remove item | Generated `DELETE /cart/{cartId}/items/{lineItemId}` | **Blocked** | Backend / environment | Railway fallback 404. |
+| Hosted checkout handoff | Generated `POST /checkout/handoff` | **Blocked** | Backend / environment | Railway fallback 404. No Shopify-hosted checkout URL was returned. |
+| Store unavailable / malformed store behavior | `/unified-cart` malformed-store probe | **Blocked** | Backend / environment | Railway fallback 404, not backend 400 validation. |
+| Unified cart recovery and guest checkout info | `/unified-cart` hand-written surface | **Blocked** | Backend / environment | First unified-cart add-to-cart row returned Railway fallback 404; dependent rows could not proceed. |
+| Orders list/detail | `/customer/orders` hand-written surface | **Blocked** | Backend / environment | Customer login returned Railway fallback 404; auth-dependent order rows could not proceed. |
+
+Conclusion: the fresh issue #80 run did **not** prove `/cart/*` or `/checkout/handoff` against a functioning current sandbox. The blocker is backend/environment availability: provide a reachable backend sandbox or local backend with a valid store record and store-scoped Shopify Storefront credentials, then rerun this suite. No checkout/payment implementation, runtime branding, backend code, production data, or credentials were changed.
 
 ## Environment Used
 
