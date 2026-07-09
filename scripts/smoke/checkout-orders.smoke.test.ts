@@ -34,21 +34,27 @@ import unifiedCartApi, {
   isUnifiedCartResponse,
 } from "@/api/endpoints/unifiedCart";
 import type { UnifiedCartResponse } from "@/api/endpoints/unifiedCart";
-import { createCart } from "@/api/generated/cart/cart";
+import { createCart, removeItem, updateItemQuantity } from "@/api/generated/cart/cart";
 import {
+  checkoutHandoff,
   completeCheckout,
   getShippingRates,
   initializeCheckout,
 } from "@/api/generated/checkout/checkout";
 import { customerLogin } from "@/api/generated/customer-authentication/customer-authentication";
 
-const STORE_A = "507f1f77bcf86cd799439011";
+const SEEDED_STORE_A = "507f1f77bcf86cd799439011";
+const STORE_A = process.env.EXPO_PUBLIC_STORE_ID ?? SEEDED_STORE_A;
 const STORE_B = "507f1f77bcf86cd799439022";
 const STORE_C_INACTIVE = "507f1f77bcf86cd799439033";
 const STORE_MISSING = "507f1f77bcf86cd799439099";
 const PRODUCT_AURORA = "507f1f77bcf86cd799439a01";
 const ORDER_A = "507f1f77bcf86cd799439d01"; // owned by smoke-a
 const ORDER_B = "507f1f77bcf86cd799439d02"; // owned by smoke-b
+// Rows that assert specific seeded products/customers/orders only apply to
+// the documented local fixture store. Live sandbox runs still exercise the
+// generated cart and checkout routes without confusing fixture failures.
+const fixtureIt = STORE_A === SEEDED_STORE_A ? it : it.skip;
 
 interface MatrixRow {
   flow: string;
@@ -114,6 +120,45 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     });
   });
 
+  it("KNOWN MISMATCH: app's primary update-quantity path targets an unregistered route", async () => {
+    const actual = await updateItemQuantity(
+      "gid://shopify/Cart/fabricated",
+      "gid://shopify/CartLine/fabricated",
+      { quantity: 2 }
+    )
+      .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
+      .catch(errText);
+    record({
+      flow: "update quantity (app primary path, generated client)",
+      endpoint: "PUT /cart/{cartId}/items/{lineItemId}",
+      testData: "fabricated Shopify cart ID + line item ID",
+      expected:
+        "cart response or clean 4xx per spec; backend HEAD returns 404 (tsoa routes never register)",
+      actual,
+      mismatch: true,
+      pass: actual.startsWith("404"),
+    });
+  });
+
+  it("KNOWN MISMATCH: app's primary remove-item path targets an unregistered route", async () => {
+    const actual = await removeItem(
+      "gid://shopify/Cart/fabricated",
+      "gid://shopify/CartLine/fabricated"
+    )
+      .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
+      .catch(errText);
+    record({
+      flow: "remove item (app primary path, generated client)",
+      endpoint: "DELETE /cart/{cartId}/items/{lineItemId}",
+      testData: "fabricated Shopify cart ID + line item ID",
+      expected:
+        "cart response or clean 4xx per spec; backend HEAD returns 404 (tsoa routes never register)",
+      actual,
+      mismatch: true,
+      pass: actual.startsWith("404"),
+    });
+  });
+
   it("KNOWN MISMATCH: checkout init targets an unregistered route", async () => {
     const actual = await initializeCheckout({ cartId: "gid://shopify/Cart/fabricated" })
       .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
@@ -123,6 +168,22 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
       endpoint: "POST /checkout/init",
       testData: "fabricated Shopify cart ID",
       expected: "checkout session per spec; backend HEAD returns 404",
+      actual,
+      mismatch: true,
+      pass: actual.startsWith("404"),
+    });
+  });
+
+  it("KNOWN MISMATCH: hosted checkout handoff targets an unregistered route", async () => {
+    const actual = await checkoutHandoff({ cartId: "gid://shopify/Cart/fabricated", country: "US" })
+      .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
+      .catch(errText);
+    record({
+      flow: "hosted checkout handoff (app primary path, generated client)",
+      endpoint: "POST /checkout/handoff",
+      testData: "fabricated Shopify cart ID, country=US",
+      expected:
+        "hosted checkout URL or clean 4xx per spec; backend HEAD returns 404 (tsoa routes never register)",
       actual,
       mismatch: true,
       pass: actual.startsWith("404"),
@@ -184,7 +245,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     }
   };
 
-  it("unified cart: add to cart works for a guest", async () => {
+  fixtureIt("unified cart: add to cart works for a guest", async () => {
     const res: UnifiedCartSmokeResult = await unifiedCartApi
       .addToCart({
         productId: PRODUCT_AURORA,
@@ -209,7 +270,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     cartSessionReady = true; // record() throws on fail, so this only runs on pass
   });
 
-  it("unified cart: update quantity works (item keyed by productId)", async () => {
+  fixtureIt("unified cart: update quantity works (item keyed by productId)", async () => {
     requireCartSession();
     const res: UnifiedCartSmokeResult = await unifiedCartApi
       .updateCartItem(PRODUCT_AURORA, { quantity: 3 })
@@ -228,7 +289,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     });
   });
 
-  it("unified cart: cart recovery — session persists across a fresh GET", async () => {
+  fixtureIt("unified cart: cart recovery — session persists across a fresh GET", async () => {
     requireCartSession();
     const res: UnifiedCartSmokeResult = await unifiedCartApi
       .getCart()
@@ -246,7 +307,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     });
   });
 
-  it("unified cart: guest checkout info saves (the app's real unified-cart usage)", async () => {
+  fixtureIt("unified cart: guest checkout info saves (the app's real unified-cart usage)", async () => {
     requireCartSession();
     const actual = await unifiedCartApi
       .saveGuestCheckoutInfo({
@@ -267,7 +328,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     });
   });
 
-  it("unified cart: remove item works", async () => {
+  fixtureIt("unified cart: remove item works", async () => {
     requireCartSession();
     const res: UnifiedCartSmokeResult = await unifiedCartApi
       .removeFromCart(PRODUCT_AURORA)
@@ -289,7 +350,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
   // Store unavailable states during cart flows.
   // ---------------------------------------------------------------------
 
-  it("KNOWN MISMATCH: unified cart accepts an inactive store", async () => {
+  fixtureIt("KNOWN MISMATCH: unified cart accepts an inactive store", async () => {
     requireCartSession(); // the asserted 500 only occurs with a cross-store session attached
     const actual = await axiosInstance
       .get("/unified-cart", storeHeader(STORE_C_INACTIVE))
@@ -307,7 +368,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     });
   });
 
-  it("KNOWN MISMATCH: unified cart accepts a nonexistent store", async () => {
+  fixtureIt("KNOWN MISMATCH: unified cart accepts a nonexistent store", async () => {
     requireCartSession(); // the asserted 500 only occurs with a cross-store session attached
     const actual = await axiosInstance
       .get("/unified-cart", storeHeader(STORE_MISSING))
@@ -354,7 +415,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     return token;
   };
 
-  it("login as seeded customer A (fixture account, fabricated credentials)", async () => {
+  fixtureIt("login as seeded customer A (fixture account, fabricated credentials)", async () => {
     const res: any = await customerLogin({
       email: "smoke-a@sandbox.invalid",
       password: "smoke-pass-123",
@@ -371,7 +432,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     });
   });
 
-  it("orders list returns the seeded order", async () => {
+  fixtureIt("orders list returns the seeded order", async () => {
     const actual = await axiosInstance
       .get("/customer/orders", {
         headers: { Authorization: `Bearer ${requireToken()}`, "X-Store-ID": STORE_A },
@@ -392,7 +453,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     });
   });
 
-  it("order detail resolves the customer's own order", async () => {
+  fixtureIt("order detail resolves the customer's own order", async () => {
     const actual = await axiosInstance
       .get(`/customer/orders/${ORDER_A}`, {
         headers: { Authorization: `Bearer ${requireToken()}`, "X-Store-ID": STORE_A },
@@ -413,7 +474,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     });
   });
 
-  it("order detail enforces ownership — another customer's order is not found", async () => {
+  fixtureIt("order detail enforces ownership — another customer's order is not found", async () => {
     const actual = await axiosInstance
       .get(`/customer/orders/${ORDER_B}`, {
         headers: { Authorization: `Bearer ${requireToken()}`, "X-Store-ID": STORE_A },
@@ -431,7 +492,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     });
   });
 
-  it("order detail rejects a malformed order ID", async () => {
+  fixtureIt("order detail rejects a malformed order ID", async () => {
     const actual = await axiosInstance
       .get("/customer/orders/not-an-id", {
         headers: { Authorization: `Bearer ${requireToken()}`, "X-Store-ID": STORE_A },
@@ -449,7 +510,7 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
     });
   });
 
-  it("KNOWN MISMATCH: orders list ignores a mismatched store header", async () => {
+  fixtureIt("KNOWN MISMATCH: orders list ignores a mismatched store header", async () => {
     const actual = await axiosInstance
       .get("/customer/orders", {
         headers: { Authorization: `Bearer ${requireToken()}`, "X-Store-ID": STORE_B },
