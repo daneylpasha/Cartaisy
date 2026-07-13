@@ -44,7 +44,7 @@ Current state: `scripts/smoke/` holds manual smoke suites that drive the real mo
 
 Current state: `npm run android` maps to `expo run:android`, and `npm run ios` maps to `expo run:ios`.
 
-Current state: `eas.json` includes `development`, `sample-merchant-development`, `preview`, and `production` build profiles. The sample merchant profile extends `development` with fictional non-secret Acme env values for config/build-flow verification. The development, sample merchant, and preview Android profiles build APKs; production uses default EAS settings unless configured elsewhere.
+Current state: `eas.json` includes `development`, `sample-merchant-development`, `preview`, and `production` build profiles. The sample merchant profile extends `development` with fictional non-secret Acme identity/env values for config/build-flow verification plus real non-secret internal sample EAS metadata for `@rendernext/acme-outfitters`. The development, sample merchant, and preview Android profiles build APKs; production uses default EAS settings unless configured elsewhere.
 
 ## Dependency Audit (2026-07-03, GitHub issue #64)
 

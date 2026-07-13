@@ -20,11 +20,51 @@ Merchant development/internal build flow:
 4. Verify identity locally before building: export the merchant env in a shell (see `docs/examples/sample-merchant.env` for the pattern) and run `npx expo config --type public`.
 5. Run `eas build --profile development` (or `preview`) for the target platform.
 
-For the fictional Acme sample, `eas.json` includes `sample-merchant-development`, a non-secret profile that mirrors `docs/examples/sample-merchant.env` so EAS workers would receive the same sample identity through a profile `env` block. It is not a real merchant project: the EAS project ID and Expo owner are deliberate placeholders, and the Firebase file paths point at committed Cartaisy files only so config evaluation works.
+For the fictional Acme sample, `eas.json` includes `sample-merchant-development`, a non-secret profile that mirrors `docs/examples/sample-merchant.env` so EAS workers receive the same sample identity through a profile `env` block. As of 2026-07-13 (GitHub issue #86), the profile points at the real internal sample EAS project `@rendernext/acme-outfitters` (`EAS_PROJECT_ID=a9a1dd2e-adfe-4020-9f10-6b561859f119`). This is separate from the default Cartaisy app project. The Firebase file paths still point at committed Cartaisy files only so config evaluation works; a successful installed merchant build still needs matching sample/internal Firebase files supplied through secure EAS file environment variables.
 
 `.easignore` replaces `.gitignore` for EAS archive filtering, so it mirrors the `.gitignore` rules; keep the two in sync (guarded by `scripts/__tests__/easignore.test.ts`).
 
 Verification (2026-07-03): `eas build:inspect --platform android --profile development --stage archive` confirmed the EAS build archive excludes `ios/`, `android/`, `node_modules/`, and `.env` while keeping the committed default Firebase files, so the EAS worker will prebuild from `app.config.ts`. `npx expo config --type public` resolves Cartaisy defaults with no env set and full sample-merchant identity with `docs/examples/sample-merchant.env` exported. A real EAS cloud build was not run: the sample merchant's EAS project ID is a deliberate placeholder, per-merchant EAS ownership and signing credentials remain undecided (see Release Blockers below), and generating signing credentials on the Cartaisy EAS project is outside the scope of this build-flow decision.
+
+## Internal Sample Android EAS Build Attempt (2026-07-13, GitHub issue #86)
+
+The Acme sample profile now targets a real internal sample EAS project, `@rendernext/acme-outfitters`, created under the accessible `rendernext` account. No runtime branding, checkout/payment code, backend code, production signing secrets, real merchant credentials, private Firebase files, service-account files, or Shopify/Stripe secrets were changed or committed.
+
+### Commands Run
+
+- `eas project:init --force --non-interactive` from a disposable temporary Expo config for `@rendernext/acme-outfitters`
+- `env EXPO_NO_DOTENV=1 EXPO_OWNER=rendernext APP_SLUG=acme-outfitters EAS_PROJECT_ID=a9a1dd2e-adfe-4020-9f10-6b561859f119 npx eas-cli project:info --json`
+- `zsh -lc 'set -a; source docs/examples/sample-merchant.env; set +a; EXPO_NO_DOTENV=1 npx expo config --type public --json'`
+- `npx eas-cli build:inspect --platform android --profile sample-merchant-development --stage archive --output /private/tmp/cartaisy-eas-inspect-86 --force`
+- `npm ci` in the clean temporary worktree, because EAS local validation needs installed dependencies to detect `expo-dev-client`
+- `npx eas-cli build --profile sample-merchant-development --platform android --non-interactive`
+
+Note: bare `npx eas --version` failed locally with `npm ERR! could not determine executable to run`, so the EAS commands used `npx eas-cli`, which resolved to EAS CLI 18.0.4 and satisfies the repo's `>= 16.0.0` CLI constraint.
+
+### Verified Working
+
+Verified: the real internal sample project exists and is accessible: `@rendernext/acme-outfitters`, project ID `a9a1dd2e-adfe-4020-9f10-6b561859f119`.
+
+Verified: `npx expo config --type public --json` with `docs/examples/sample-merchant.env` exported resolves the Acme identity: app name `Acme Outfitters`, slug `acme-outfitters`, scheme `acmeoutfitters`, version `1.2.0`, iOS bundle ID `com.example.acmeoutfitters`, iOS build number `12`, Android package `com.example.acmeoutfitters`, Android version code `12`, Firebase file paths `./GoogleService-Info.plist` and `./google-services.json`, Apple Pay merchant ID `merchant.com.example.acmeoutfitters`, EAS project ID `a9a1dd2e-adfe-4020-9f10-6b561859f119`, and Expo owner `rendernext`.
+
+Verified: `eas build:inspect` completed from a clean temporary git worktree and wrote the inspected archive copy to `/private/tmp/cartaisy-eas-inspect-86`. The inspected copy excluded `ios/`, `android/`, `node_modules/`, `.env`, and the unrelated untracked local report artifacts from the main checkout, so the EAS archive path still uses Continuous Native Generation from `app.config.ts`.
+
+### Build Result
+
+Attempted: Android EAS development build with `sample-merchant-development` and `--non-interactive` from the clean temporary worktree.
+
+Blocked: the build stopped during Android remote credential setup before producing an artifact. EAS reported `Generating a new Keystore is not supported in --non-interactive mode`. No build artifact URL was produced, and no APK was available to install.
+
+Install validation: not run because there was no build artifact. Launcher name, Android package, scheme, API base URL, store ID, and Firebase association remain unverified on an installed binary.
+
+Firebase association: not reached. The sample profile still points at committed Cartaisy Firebase files for local config evaluation. A real installable sample/internal merchant build still needs Firebase config files matching `com.example.acmeoutfitters` supplied through secure EAS file environment variables, not committed to the repo.
+
+Remaining blockers before a successful installable internal sample build:
+
+- Initialize Android remote credentials/keystore for `@rendernext/acme-outfitters` through an approved interactive EAS credentials flow or another secure non-repo credential process.
+- Supply matching sample/internal Firebase config files through EAS file-type environment variables; do not commit private Firebase files.
+- Re-run the Android EAS development build from a clean working tree.
+- Install the produced APK on an emulator/device and verify launcher name, Android package, scheme, API base URL, store ID, and Firebase association where practical.
 
 ## Sample Merchant EAS Attempt (2026-07-08)
 
@@ -112,7 +152,7 @@ Risk: The checked-in iOS entitlements (`ios/cartaisy/cartaisy.entitlements`) con
 
 Risk: Push (APNs/FCM), Apple Pay merchant registration with Apple, and Stripe account configuration are external registrations that config plumbing cannot verify. They must be confirmed per merchant during release validation.
 
-Risk: A remote EAS or signed device build artifact still has not been produced for a sample merchant. The 2026-07-08 attempt was blocked before upload to Expo and the sample project metadata is placeholder-only, so store-submission behavior, signing, and on-device identity remain unproven.
+Risk: A remote EAS or signed device build artifact still has not been produced for a sample merchant. The 2026-07-08 and 2026-07-09 attempts were blocked by placeholder EAS metadata, and the 2026-07-13 attempt reached the real internal sample project but stopped at non-interactive Android keystore generation, so signing, Firebase association, store-submission behavior, and on-device identity remain unproven.
 
 ## Merchant Build Record
 
