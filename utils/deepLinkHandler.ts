@@ -1,4 +1,8 @@
 import { Router } from "expo-router";
+import {
+  BETA_CHECKOUT_ENTRY_ROUTE,
+  isLegacyNativeCheckoutEnabled,
+} from "@/utils/checkoutFlowGate";
 
 /**
  * Deep link types supported by the app
@@ -161,7 +165,11 @@ export function handleDeepLink(
         break;
 
       case "checkout":
-        navigationMethod("/checkout");
+        navigationMethod(
+          isLegacyNativeCheckoutEnabled()
+            ? "/checkout"
+            : BETA_CHECKOUT_ENTRY_ROUTE
+        );
         break;
 
       case "search":

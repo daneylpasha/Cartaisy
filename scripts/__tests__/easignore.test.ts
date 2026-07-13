@@ -66,6 +66,12 @@ describe(".easignore EAS build archive rules", () => {
     expect(rules).toContain("node_modules/");
   });
 
+  it("keeps generated local report artifacts out of EAS build archives", () => {
+    expect(rules).toContain("output");
+    expect(rules).toContain("cartaisy-*-status-report-*.md");
+    expect(rules).toContain("cartaisy-*-status-report-*.pdf");
+  });
+
   it("keeps signing and credential file patterns out of EAS build archives", () => {
     for (const pattern of ["*.keystore", "*.jks", "*.p8", "*.p12", "*.key", "*.mobileprovision", "*.pem"]) {
       expect(rules).toContain(pattern);

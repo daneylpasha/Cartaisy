@@ -106,6 +106,11 @@ yarn-error.*
 # Testing
 /coverage
 
+# Generated local reports
+output
+cartaisy-*-status-report-*.md
+cartaisy-*-status-report-*.pdf
+
 # Yarn (this repo uses npm; see docs/TESTING.md)
 yarn.lock
 yarn-error.log
