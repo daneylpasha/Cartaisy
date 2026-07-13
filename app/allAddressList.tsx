@@ -176,7 +176,7 @@ const SelectAddressScreen = () => {
           },
         });
       } else {
-        router.push(BETA_CHECKOUT_ENTRY_ROUTE);
+        router.replace(BETA_CHECKOUT_ENTRY_ROUTE);
       }
     } else {
       // Default: just go back
