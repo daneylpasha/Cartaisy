@@ -59,7 +59,7 @@ Forbidden examples include:
 - Shopify Admin API access tokens.
 - Shopify private app tokens or custom app secrets.
 - Shopify Storefront access tokens.
-- `EXPO_PUBLIC_SHOPIFY_ACCESS_TOKEN`; do not define this variable for branded mobile builds.
+- Legacy public Shopify variables: `EXPO_PUBLIC_SHOPIFY_ACCESS_TOKEN`, `EXPO_PUBLIC_SHOPIFY_STORE_URL`, and `EXPO_PUBLIC_SHOPIFY_API_VERSION`; do not define these for local development, sample env files, or branded mobile builds.
 - Stripe secret keys, webhook secrets, restricted keys, or account-level credentials.
 - JWT signing secrets, auth refresh secrets, session secrets, or password reset secrets.
 - Database URLs, database passwords, Redis URLs, or queue credentials.
@@ -67,7 +67,9 @@ Forbidden examples include:
 - Firebase private keys, service account JSON, or private push notification credentials.
 - Merchant-specific credentials that grant write, admin, checkout, order, customer, or payment access.
 
-Do not expose Shopify credentials to the mobile app. Mobile requests for Shopify-backed data should go through the backend so the backend can use store-specific credentials and tenant-scoped authorization. The legacy direct-client Shopify credential path should be retired rather than documented as safe mobile configuration.
+Do not expose Shopify credentials to the mobile app. Mobile requests for Shopify-backed data should go through the backend so the backend can use store-specific credentials and tenant-scoped authorization. The legacy direct-client Shopify credential path is retired and must not be restored in local `.env` files, `.env.example`, docs examples, EAS environment variables, or `EXPO_PUBLIC_*` values.
+
+Development-mode warnings are a blocker to clean up, not permission to keep real tokens locally. If a real Shopify token or Storefront token was ever placed in a mobile `EXPO_PUBLIC_*` variable or uploaded in an EAS archive, the operator TODO is to rotate that token in Shopify and remove the legacy variable everywhere without copying the token into issues, docs, commits, or build logs.
 
 ## Build-Time vs Runtime Values
 

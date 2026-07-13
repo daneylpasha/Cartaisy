@@ -79,9 +79,6 @@ Because this is static JSON, the app identity values listed in `.env.example` ar
 | --- | --- | --- |
 | `EXPO_PUBLIC_API_BASE_URL` | Used by API clients and `AppInitializer`. | Build-time JS constant for a shipped binary. |
 | `EXPO_PUBLIC_STORE_ID` | Sent as `X-Store-ID` by API clients. | Build-time JS constant for a shipped binary. |
-| `EXPO_PUBLIC_SHOPIFY_STORE_URL` | Used by direct Shopify product helper. | Build-time JS constant. |
-| `EXPO_PUBLIC_SHOPIFY_ACCESS_TOKEN` | Used by direct Shopify product helper. | Build-time public value; unsafe for secrets. |
-| `EXPO_PUBLIC_SHOPIFY_API_VERSION` | Used by direct Shopify product helper, default `2025-07`. | Build-time JS constant. |
 | `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Passed to `StripeProvider`. | Build-time JS constant; publishable but tenant-specific. |
 | `EXPO_PUBLIC_STRIPE_MERCHANT_ID` | Passed to `StripeProvider`; logged by wallet payment buttons. | Build-time JS constant and must match native Apple Pay entitlement. |
 | `EXPO_PUBLIC_APP_SCHEME` | Passed to `StripeProvider` `urlScheme`. | Build-time JS constant; native deep link schemes still require native config. |
@@ -89,7 +86,7 @@ Because this is static JSON, the app identity values listed in `.env.example` ar
 | `EXPO_PUBLIC_IOS_BUNDLE_ID` | Defined in example only. | Not currently consumed by app config or native project. |
 | `EXPO_PUBLIC_ANDROID_PACKAGE` | Defined in example only. | Not currently consumed by app config or native project. |
 
-Important boundary: `EXPO_PUBLIC_*` values are available in client code and must not contain secrets. The Shopify Admin access token variable is public by design and should not be used for real merchant Admin API credentials.
+Important boundary: `EXPO_PUBLIC_*` values are available in client code and must not contain secrets. Legacy direct Shopify variables such as `EXPO_PUBLIC_SHOPIFY_STORE_URL`, `EXPO_PUBLIC_SHOPIFY_ACCESS_TOKEN`, and `EXPO_PUBLIC_SHOPIFY_API_VERSION` are not part of `.env.example` and must not be reintroduced for local development, sample env files, or branded builds. Mobile Shopify, catalog, checkout, order, and store data should continue to flow through the Cartaisy backend.
 
 ## Runtime Configuration
 
