@@ -1,12 +1,54 @@
 # Checkout, Payment, and Orders Private-Beta Smoke Suite
 
-Latest run date: 2026-07-09 (GitHub issue #82).
+Latest run date: 2026-07-13 (GitHub issue #87).
 
-Previous run date: 2026-07-09 (GitHub issue #80).
+Previous run date: 2026-07-09 (GitHub issue #82).
 
 Historical run date: 2026-07-03 (GitHub issue #63).
 
 This is the repeatable smoke checklist for cart, checkout, payment, and orders on mobile, plus the results of its first run. The automated harness is `scripts/smoke/checkout-orders.smoke.test.ts`; scenarios it cannot reach are listed as manual/blocked checklist items with the exact blocker.
+
+## Verified Staging Cart/Checkout Attempt (2026-07-13, GitHub issue #87)
+
+Goal: run the cart, checkout handoff, and orders smoke suite against verified backend staging with safe Store A / Store B test data where available.
+
+Dependency status: **BLOCKED**. The GitHub issue body and comments did not provide a new verified staging API URL, Store A, Store B, inactive-store, or seeded test customer/order fixtures. The only local public backend candidate available in this workspace was the existing `.env` target, `https://cartaisy-backend-production.up.railway.app/api/v1`, with public Store A `6926c642b33c580ada05d8d0`. That host is still Railway platform fallback, so this run records current reachability but does not validate a mounted Cartaisy staging backend.
+
+Environment:
+
+- Backend target: `https://cartaisy-backend-production.up.railway.app/api/v1` from the local public mobile config.
+- Backend response identity: Railway platform fallback, `server: railway-hikari`, `x-railway-fallback: true`.
+- Backend commit: unavailable because no Cartaisy backend application is mounted at the target URL.
+- Store A candidate: public mobile store ID `6926c642b33c580ada05d8d0`; no Store B, inactive-store, safe customer, or order fixtures were provided for issue #87.
+- No Shopify credentials, Storefront tokens, Stripe secrets, backend secrets, production credentials, real Firebase files, signing material, or real merchant data were used or recorded.
+
+Command:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=https://cartaisy-backend-production.up.railway.app/api/v1 EXPO_PUBLIC_STORE_ID=6926c642b33c580ada05d8d0 npx jest --testMatch '**/scripts/smoke/checkout-orders.smoke.test.ts' --runInBand
+```
+
+Result: **FAIL / BLOCKED**. The suite reached Railway with network access, but every probed backend route returned platform-level `404 Application not found`. The generated cart and checkout rows passed only because the historical harness expects a 404 from the older local-backend route-registration bug; in this run the 404 came from Railway before Cartaisy backend code executed, so those rows are treated as blocked rather than valid passes.
+
+Fresh cart/checkout/orders matrix:
+
+| Scenario | Surface tested | Expected backend behavior | Actual 2026-07-13 result | Status | Follow-up |
+| --- | --- | --- | --- | --- | --- |
+| Add to cart, configured store | Generated `POST /cart/create` | Store-scoped cart response or clean backend 4xx | Railway 404 `Application not found` | **Blocked** | Provide verified staging with Storefront credentials. |
+| Update quantity, configured store | Generated `PUT /cart/{cartId}/items/{lineItemId}` | Store-scoped cart response or clean backend 4xx | Railway 404 `Application not found` | **Blocked** | Re-test against verified staging. |
+| Remove item, configured store | Generated `DELETE /cart/{cartId}/items/{lineItemId}` | Store-scoped cart response or clean backend 4xx | Railway 404 `Application not found` | **Blocked** | Re-test against verified staging. |
+| Hosted checkout handoff | Generated `POST /checkout/handoff` | Hosted checkout URL or clean backend 4xx for fabricated cart ID | Railway 404 `Application not found`; no checkout URL | **Blocked** | Re-test with mounted backend and store-scoped Storefront credentials. |
+| Shipping/payment generated routes | Generated `/checkout/shipping-rates`, `/checkout/complete` | Shipping/payment response or clean backend 4xx | Railway 404 `Application not found` | **Blocked** | Re-test once checkout handoff can create a valid checkout path. |
+| Malformed store during cart flow | `GET /unified-cart` with malformed `X-Store-ID` | 400 invalid store ID format | Railway 404 `Application not found` | **Blocked** | Re-test against Cartaisy backend code. |
+| Unified cart add/update/remove/recovery | `/unified-cart` fixture rows | Store-scoped guest cart behavior | Skipped by harness because configured Store A did not match the local seeded fixture Store A; backend target also returned Railway 404 | **Blocked** | Provide seeded staging data or update harness inputs for real staging fixtures. |
+| Guest session Store A vs Store B | Guest cart session from Store A with Store B header | Clean store/session mismatch rejection | Could not run: no Store B fixture and no reachable backend | **Blocked** | Provide Store B and seeded guest cart fixture. |
+| Orders, configured store | `/customer/orders` with authenticated customer token | Store/customer-scoped order list | Skipped/could not run because no safe seeded test customer/order fixtures were provided and backend target returned Railway 404 | **Blocked** | Provide safe test customer/order fixtures where practical. |
+| Orders, Store A token with Store B header | `/customer/orders` with Store A token and Store B header | Clean store-mismatch rejection | Could not run: no auth token, Store B, or seeded backend | **Blocked** | Re-test against seeded staging. |
+
+Focused follow-up issues to keep outside mobile runtime code:
+
+- Backend/env: provide a verified staging API URL mounted to the Cartaisy backend, safe public Store A / optional Store B IDs, and safe customer/order fixtures for cart/checkout/orders smoke verification.
+- Backend/env: configure store-scoped Shopify Storefront credentials in staging so generated `/cart/*` and `POST /checkout/handoff` can be tested without exposing credentials to mobile.
 
 ## Tenant-Mismatch Cart/Checkout/Orders Rerun (2026-07-09, GitHub issue #82)
 
