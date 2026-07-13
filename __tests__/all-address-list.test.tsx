@@ -13,6 +13,7 @@ jest.mock("@react-native-async-storage/async-storage", () =>
 jest.mock("expo-router", () => ({
   router: {
     back: jest.fn(),
+    dismissAll: jest.fn(),
     push: jest.fn(),
     replace: jest.fn(),
   },
@@ -65,9 +66,18 @@ const formattedAddress = {
 };
 
 describe("all address list legacy checkout gate", () => {
+  let navigationStack: string[];
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockSearchParams = { sessionId: "legacy-session" };
+    navigationStack = ["/checkout", "/allAddressList"];
+    mockRouter.dismissAll.mockImplementation(() => {
+      navigationStack = navigationStack.slice(0, 1);
+    });
+    mockRouter.replace.mockImplementation((route: string) => {
+      navigationStack[navigationStack.length - 1] = route;
+    });
     mockUseFormattedAddresses.mockReturnValue({
       addresses: [rawAddress],
       formattedAddresses: [formattedAddress],
@@ -78,12 +88,14 @@ describe("all address list legacy checkout gate", () => {
     });
   });
 
-  it("replaces legacy checkout address returns with the cart entry", () => {
+  it("unwinds legacy checkout history before replacing with the cart entry", () => {
     const { getByText } = renderWithTamagui(<SelectAddressScreen />);
 
     fireEvent.press(getByText("Confirm Address"));
 
+    expect(mockRouter.dismissAll).toHaveBeenCalledTimes(1);
     expect(mockRouter.replace).toHaveBeenCalledWith(BETA_CHECKOUT_ENTRY_ROUTE);
+    expect(navigationStack).toEqual([BETA_CHECKOUT_ENTRY_ROUTE]);
     expect(mockRouter.push).not.toHaveBeenCalledWith(BETA_CHECKOUT_ENTRY_ROUTE);
     expect(mockRouter.push).not.toHaveBeenCalledWith(
       expect.objectContaining({ pathname: "/checkout" })

@@ -176,6 +176,7 @@ const SelectAddressScreen = () => {
           },
         });
       } else {
+        router.dismissAll();
         router.replace(BETA_CHECKOUT_ENTRY_ROUTE);
       }
     } else {
