@@ -1,7 +1,13 @@
 import { clearSavedCart } from "@/api/endpoints/cart";
 import { useClearCart } from "@/api/generated/cart/cart";
 import { useCompleteCheckout } from "@/api/generated/checkout/checkout";
-import { TextMDBold, TextSMRegular, TextSMSemiBold } from "@/components/atoms";
+import {
+  HeadingSMBold,
+  ParagraphMD,
+  TextMDBold,
+  TextSMRegular,
+  TextSMSemiBold,
+} from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 
 import { Divider } from "@/components/atoms/Divider";
@@ -21,6 +27,11 @@ import useAuthStore from "@/store/useAuthStore";
 
 import useCartStore from "@/store/useCartStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
+import {
+  BETA_CHECKOUT_ENTRY_ROUTE,
+  isLegacyNativeCheckoutEnabled,
+  legacyNativeCheckoutDisabledMessage,
+} from "@/utils/checkoutFlowGate";
 import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { formatPrice } from "@/utils/formatPrice";
 import {
@@ -44,7 +55,42 @@ import { getTokenValue, XStack, YStack } from "tamagui";
 
 type CheckoutStep = "shipping" | "payment" | "confirmation" | "succesfull";
 
-const CheckoutScreen = () => {
+const LegacyNativeCheckoutDisabled = () => (
+  <YStack
+    flex={1}
+    justifyContent="center"
+    alignItems="center"
+    padding="$lg"
+    backgroundColor="$background"
+  >
+    <AppImage
+      name="warningIcon"
+      size={48}
+      tintColor={getTokenValue("$primary")}
+    />
+    <Spacer size="$lg" />
+    <HeadingSMBold textAlign="center">Checkout unavailable</HeadingSMBold>
+    <Spacer size="$reg" />
+    <ParagraphMD color="$textgrey" textAlign="center">
+      {legacyNativeCheckoutDisabledMessage}
+    </ParagraphMD>
+    <Spacer size="$xl" />
+    <PrimaryButton
+      label="Go to Cart"
+      onPress={() => router.replace(BETA_CHECKOUT_ENTRY_ROUTE)}
+      icon={
+        <AppImage
+          name="cartIcon"
+          tintColor={getTokenValue("$white")}
+          size={16}
+        />
+      }
+      iconPosition="left"
+    />
+  </YStack>
+);
+
+const LegacyNativeCheckoutScreen = () => {
   const params = useLocalSearchParams();
   const initialSessionId = params.sessionId as string;
   const queryClient = useQueryClient();
@@ -800,4 +846,12 @@ const CheckoutScreen = () => {
     </YStack>
   );
 };
+
+const CheckoutScreen = () =>
+  isLegacyNativeCheckoutEnabled() ? (
+    <LegacyNativeCheckoutScreen />
+  ) : (
+    <LegacyNativeCheckoutDisabled />
+  );
+
 export default CheckoutScreen;

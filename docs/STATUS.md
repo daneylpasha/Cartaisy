@@ -14,7 +14,7 @@ Current state: Public API base URL and store ID configuration are validated in `
 
 Current state: Store config currently loads `currency`, `timezone`, and `name` from `/store/config` with local fallbacks.
 
-Current state: `package.json` exposes `start`, `android`, `ios`, `web`, `lint`, `typecheck`, `test`, and `generate:api` scripts. `npm test` runs Jest (`jest-expo` preset via `jest.config.js`) with a current baseline of 12 test suites / 75 tests. Coverage includes real suites in `utils/__tests__/`, `api/config/__tests__/`, `api/__tests__/` (auth refresh), `store/__tests__/` (cart/auth stores), and focused component/screen tests for unavailable states, auth gating, cart checkout handoff, and home module resilience.
+Current state: `package.json` exposes `start`, `android`, `ios`, `web`, `lint`, `typecheck`, `test`, and `generate:api` scripts. `npm test` runs Jest (`jest-expo` preset via `jest.config.js`) with a current baseline of 15 test suites / 78 tests. Coverage includes real suites in `utils/__tests__/`, `api/config/__tests__/`, `api/__tests__/` (auth refresh), `store/__tests__/` (cart/auth stores), and focused component/screen tests for unavailable states, auth gating, cart checkout handoff, checkout beta gating, legacy address-list checkout returns, and home module resilience.
 
 Current state: npm is the authoritative package manager. `package.json` declares `"packageManager": "npm@10.8.2"`, `package-lock.json` is the only committed lockfile, and `yarn.lock` was removed and gitignored. As of 2026-07-02, a clean checkout validates with `npm ci`, `npm run lint`, `npm run typecheck`, and `npm test`, matching CI.
 
