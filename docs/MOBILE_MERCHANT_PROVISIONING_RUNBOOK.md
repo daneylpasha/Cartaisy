@@ -168,13 +168,13 @@ A dry run of this runbook using the fictional merchant in `docs/examples/sample-
 
 - [ ] Step 0: identity inputs collected — provided by `docs/examples/sample-merchant.env` (`Acme Outfitters`, `com.example.acmeoutfitters`, scheme `acmeoutfitters`, store ID `507f1f77bcf86cd799439011`).
 - [ ] Step 1: backend store record confirmed — *simulated* (sample API URL and store ID are fictional).
-- [ ] Step 2: EAS project created and env set — *simulated* (`EAS_PROJECT_ID` is a placeholder UUID; a real merchant gets a real project and its ID recorded).
+- [x] Step 2: EAS project created and env set — real internal sample project `@rendernext/acme-outfitters` created for GitHub issue #86, with non-secret `EAS_PROJECT_ID` and `EXPO_OWNER` recorded in `docs/examples/sample-merchant.env` and the `sample-merchant-development` profile. Real merchant releases still need their own project/owner decision.
 - [ ] Step 3: signing credentials provisioned in EAS — *simulated* (needs the EAS project and an Apple team).
 - [ ] Step 4: Firebase apps created, files stored as EAS file env vars — *simulated* (sample points at the committed Cartaisy files only so config evaluation works; a real merchant must use their own files or Android builds fail at the Google Services Gradle step).
 - [ ] Step 5: push registration — *simulated*.
 - [ ] Step 6: Apple Pay/Stripe — *simulated* (sample uses `pk_test_sample_placeholder` and a fictional merchant ID).
 - [ ] Step 7: `npx expo config --type public` with the sample env exported resolves the full Acme identity — runnable today; last verified 2026-07-08 (see `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`).
-- [ ] Step 8: EAS development build — attempted 2026-07-08 for Android, but no artifact was produced because the workspace blocked archive upload to Expo and the sample EAS project ID remains a placeholder; recorded as a known gap in `docs/RELEASE_CHECKLIST.md`.
+- [ ] Step 8: EAS development build — attempted 2026-07-08 and 2026-07-09 for Android with placeholder EAS metadata, then attempted again on 2026-07-13 against the real internal sample project. No artifact was produced; the latest blocker is uninitialized Android remote credentials/keystore in `--non-interactive` mode. Results are recorded in `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md` and `docs/RELEASE_CHECKLIST.md`.
 
 ## Manual Steps Today vs Automation Opportunities
 
