@@ -10,6 +10,10 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { AddressCard } from "@/components/molecules/AddressCard";
 import { PrimaryButton } from "@/components/molecules/buttons";
+import {
+  BETA_CHECKOUT_ENTRY_ROUTE,
+  isLegacyNativeCheckoutEnabled,
+} from "@/utils/checkoutFlowGate";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -162,14 +166,18 @@ const SelectAddressScreen = () => {
           router.back();
         });
     } else if (params.sessionId) {
-      // Return to checkout with selected address
-      router.push({
-        pathname: "/checkout",
-        params: {
-          sessionId: params.sessionId as string,
-          selectedAddressId: selectedAddress.toString(),
-        },
-      });
+      // Legacy native checkout is preserved only behind the beta gate.
+      if (isLegacyNativeCheckoutEnabled()) {
+        router.push({
+          pathname: "/checkout",
+          params: {
+            sessionId: params.sessionId as string,
+            selectedAddressId: selectedAddress.toString(),
+          },
+        });
+      } else {
+        router.push(BETA_CHECKOUT_ENTRY_ROUTE);
+      }
     } else {
       // Default: just go back
       router.back();

@@ -1,8 +1,7 @@
 /**
- * Focused screen tests for app/checkout.tsx (GitHub issue #65):
- * - auth gate: guests are blocked (login modal requested + routed back)
- * - catalog/store unavailable state replaces the checkout steps and
- *   blocks the Continue action until retry
+ * Focused screen tests for app/checkout.tsx:
+ * - private-beta gate: the legacy native checkout route renders a disabled
+ *   state and does not mount checkout steps or legacy checkout mutations.
  *
  * Lives outside app/ on purpose: expo-router treats app/ as the route
  * tree, so test files must not be added there.
@@ -39,8 +38,9 @@ jest.mock("@/api/endpoints/cart", () => ({ clearSavedCart: jest.fn() }));
 jest.mock("@/api/generated/cart/cart", () => ({
   useClearCart: () => ({ mutate: jest.fn() }),
 }));
+const mockUseCompleteCheckout = jest.fn(() => ({ mutate: jest.fn() }));
 jest.mock("@/api/generated/checkout/checkout", () => ({
-  useCompleteCheckout: () => ({ mutate: jest.fn() }),
+  useCompleteCheckout: () => mockUseCompleteCheckout(),
 }));
 
 jest.mock("@/components/molecules/CustomAlert", () => ({
@@ -97,6 +97,10 @@ jest.mock("@/components/molecules/checkout/Shipping", () => {
 import CheckoutScreen from "@/app/checkout";
 import useCartStore from "@/store/useCartStore";
 import config from "@/tamagui.config";
+import {
+  BETA_CHECKOUT_ENTRY_ROUTE,
+  legacyNativeCheckoutDisabledMessage,
+} from "@/utils/checkoutFlowGate";
 
 const { router } = jest.requireMock("expo-router");
 
@@ -108,56 +112,30 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 
 const renderCheckout = () => render(<CheckoutScreen />, { wrapper: Wrapper });
 
-const controlledMessage =
-  "This store's catalog is temporarily unavailable. Please try again later.";
-
-describe("checkout screen", () => {
+describe("checkout screen private-beta gate", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockAuthGuard.isAuthenticated = true;
     useCartStore.setState({ cartId: "cart-1", items: [] });
   });
 
-  it("blocks guests: requests the login modal and routes back to the cart", () => {
+  it("disables the legacy native checkout route for beta", () => {
     mockAuthGuard.isAuthenticated = false;
 
-    renderCheckout();
-
-    expect(mockAuthGuard.requireAuth).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "checkout" })
-    );
-    expect(router.back).toHaveBeenCalled();
-  });
-
-  it("does not gate authenticated customers and shows the checkout flow", () => {
-    const { getByText, getByTestId } = renderCheckout();
-
-    expect(mockAuthGuard.requireAuth).not.toHaveBeenCalled();
-    expect(router.back).not.toHaveBeenCalled();
-    expect(getByTestId("checkout-stepper")).toBeTruthy();
-    expect(getByText("Continue")).toBeTruthy();
-  });
-
-  it("replaces steps and blocks the Continue action when a step reports catalog unavailable", () => {
-    const { getByText, getByTestId, queryByText, queryByTestId } = renderCheckout();
-
-    fireEvent.press(getByTestId("shipping-unavailable-error"));
+    const { getByText, queryByTestId } = renderCheckout();
 
     expect(getByText("Checkout unavailable")).toBeTruthy();
-    expect(getByText(controlledMessage)).toBeTruthy();
-    expect(queryByText("Continue")).toBeNull();
+    expect(getByText(legacyNativeCheckoutDisabledMessage)).toBeTruthy();
     expect(queryByTestId("checkout-stepper")).toBeNull();
-
-    fireEvent.press(getByText("Try again"));
-    expect(getByText("Continue")).toBeTruthy();
+    expect(mockAuthGuard.requireAuth).not.toHaveBeenCalled();
+    expect(router.back).not.toHaveBeenCalled();
+    expect(mockUseCompleteCheckout).not.toHaveBeenCalled();
   });
 
-  it("does not enter the unavailable state for a generic step error", () => {
-    const { getByText, getByTestId, queryByText } = renderCheckout();
+  it("sends direct checkout route visitors back to the cart entry", () => {
+    const { getByText } = renderCheckout();
 
-    fireEvent.press(getByTestId("shipping-generic-error"));
-
-    expect(queryByText("Checkout unavailable")).toBeNull();
-    expect(getByText("Continue")).toBeTruthy();
+    fireEvent.press(getByText("Go to Cart"));
+    expect(router.replace).toHaveBeenCalledWith(BETA_CHECKOUT_ENTRY_ROUTE);
   });
 });
