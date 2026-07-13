@@ -1,12 +1,58 @@
 # Cross-Repo Backend API and Tenant Smoke Test
 
-Latest run date: 2026-07-09 (GitHub issue #82).
+Latest run date: 2026-07-13 (GitHub issue #87).
 
-Previous run date: 2026-07-09 (GitHub issue #80).
+Previous run date: 2026-07-09 (GitHub issue #82).
 
 Historical run date: 2026-07-03 (GitHub issue #62).
 
 This report records a cross-repo smoke test of the mobile API surface (generated Orval client plus the hand-written axios endpoints the app uses at runtime) against the Cartaisy backend, including tenant/wrong-store behavior. The repeatable test harness is `scripts/smoke/backend-api.smoke.test.ts`.
+
+## Verified Staging Attempt (2026-07-13, GitHub issue #87)
+
+Goal: run the mobile backend smoke suites against verified backend staging and safe test Store IDs.
+
+Dependency status: **BLOCKED**. The GitHub issue body and comments did not provide a new verified staging API URL, Store A, Store B, inactive-store, or nonexistent-store test set. The only local public backend candidate available in this workspace was the existing `.env` target, `https://cartaisy-backend-production.up.railway.app/api/v1`, with public Store A `6926c642b33c580ada05d8d0`. That host is the same Railway target previously documented as unavailable. The run below therefore records current reachability for the only available candidate; it is not a passing verified-staging run.
+
+Environment:
+
+- Backend target: `https://cartaisy-backend-production.up.railway.app/api/v1` from the local public mobile config.
+- Backend response identity: Railway platform fallback, `server: railway-hikari`, `x-railway-fallback: true`.
+- Backend commit: unavailable because no Cartaisy backend application is mounted at the target URL.
+- Store A candidate: public mobile store ID `6926c642b33c580ada05d8d0`; no Store B or inactive-store IDs were provided for issue #87.
+- Built-in fixture probes still used their hard-coded nonexistent/malformed/inactive IDs, but Railway handled every request before Cartaisy backend validation could run.
+- No Shopify credentials, Storefront tokens, Stripe secrets, backend secrets, production credentials, real Firebase files, signing material, or real merchant data were used or recorded.
+
+Commands:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=https://cartaisy-backend-production.up.railway.app/api/v1 EXPO_PUBLIC_STORE_ID=6926c642b33c580ada05d8d0 npx jest --testMatch '**/scripts/smoke/backend-api.smoke.test.ts' --runInBand
+EXPO_PUBLIC_API_BASE_URL=https://cartaisy-backend-production.up.railway.app/api/v1 EXPO_PUBLIC_STORE_ID=6926c642b33c580ada05d8d0 npx jest --testMatch '**/scripts/smoke/checkout-orders.smoke.test.ts' --runInBand
+```
+
+Result: **FAIL / BLOCKED**. With network access allowed, both suites reached Railway, but the target returned platform-level `404 Application not found` for every probed backend route. No Cartaisy backend tenant validation, store validation, auth/profile, orders, cart, checkout handoff, product/search, or home behavior was exercised. Rows that the historical harness marks as "pass" for a 404 are not valid backend passes in this run because the 404 came from Railway fallback before backend code executed.
+
+Fresh backend/API matrix:
+
+| Endpoint / flow | Test data | Expected backend behavior | Actual 2026-07-13 result | Status | Follow-up |
+| --- | --- | --- | --- | --- | --- |
+| Store config, configured store | `X-Store-ID=6926c642b33c580ada05d8d0` | 200 with store config | Railway 404; mobile fallback returned default config with empty store name | **Blocked** | Backend/env: provide a verified mounted staging backend and Store A. |
+| Store config, nonexistent store | Fixture missing ID `507f1f77bcf86cd799439099` | 404 store not found from Cartaisy backend | Railway 404 `Application not found`; not backend validation | **Blocked** | Re-test against seeded staging. |
+| Store config, malformed store | `X-Store-ID=not-a-valid-object-id` | 400 invalid store ID format | Railway 404 `Application not found` | **Blocked** | Re-test against seeded staging. |
+| Store config, inactive store | Fixture inactive ID `507f1f77bcf86cd799439033` | 403 store inactive | Railway 404 `Application not found` | **Blocked** | Re-test with provided inactive-store case. |
+| Home | `GET /customer/homescreen`, configured store | 200 success envelope scoped to store | Railway 404 `Application not found` | **Blocked** | Re-test against verified staging. |
+| Product/search | `GET /customer/search`, `GET /products/{id}`, `GET /products` | Store-scoped product/search responses or clean backend 4xx | Railway 404 `Application not found` | **Blocked** | Re-test against verified staging. |
+| Generated cart | `POST /cart/create`, update, remove | Store-scoped cart response or clean backend 4xx | Railway 404 `Application not found` | **Blocked** | Provide staging with store-scoped Storefront credentials. |
+| Checkout handoff | `POST /checkout/handoff` with fabricated cart ID | Hosted checkout URL or clean backend 4xx | Railway 404 `Application not found`; no checkout URL | **Blocked** | Re-test after staging is mounted and reachable. |
+| Unified cart, guest | `GET /unified-cart`, configured store | 200 guest cart or clean unavailable state | Railway 404 `Application not found` | **Blocked** | Re-test against verified staging. |
+| Auth/profile | Register/login/profile, configured store | Token issued; profile scoped to authenticated customer/store | Register/login returned Railway 404; profile rows could not run without token | **Blocked** | Re-test with safe test customer/store data where practical. |
+| Tenant mismatch | Store A token/session with Store B header | Clean rejection where practical | Could not run: no Store B/test auth fixtures and backend target returned Railway 404 | **Blocked** | Provide Store B and seeded staging fixtures. |
+| Orders | `GET /customer/orders`, customer token | Store/customer-scoped order list | Could not run: login failed at Railway 404 | **Blocked** | Re-test with safe test customer/order data where practical. |
+
+Focused follow-up issues to keep outside mobile runtime code:
+
+- Backend/env: provide a verified staging API URL mounted to the Cartaisy backend, plus safe public Store A, optional Store B, inactive-store, and nonexistent-store test IDs for smoke runs.
+- Backend/env: either restore the Railway target above or remove it from mobile smoke configuration so future runs do not hit a platform fallback host.
 
 ## Tenant-Mismatch Rerun (2026-07-09, GitHub issue #82)
 
