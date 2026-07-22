@@ -8,6 +8,24 @@ Historical run date: 2026-07-03 (GitHub issue #62).
 
 This report records a cross-repo smoke test of the mobile API surface (generated Orval client plus the hand-written axios endpoints the app uses at runtime) against the Cartaisy backend, including tenant/wrong-store behavior. The repeatable test harness is `scripts/smoke/backend-api.smoke.test.ts`.
 
+## Verified Staging Run (2026-07-22, GitHub issue #99)
+
+First smoke run against verified backend staging (https://cartaisy-backend-staging-staging.up.railway.app/api/v1, Store A `6a5f46b302669bae116c348e`, 41-product catalog). The #87 attempt was blocked for lack of a reachable staging URL; that dependency is now satisfied.
+
+Raw results: backend-api smoke = 14 passed / 6 failed / 20 total; checkout-orders smoke = 4 passed / 13 skipped / 4 failed / 21 total.
+
+Interpretation — the "failed" rows are the harness's KNOWN MISMATCH cases whose hard-coded `expected` values still encode the OLD broken state (routes returning 404 because tsoa route registration failed at startup). On current staging those routes are now REGISTERED and respond:
+- Generated cart-create client now returns 200 with a real Shopify cart (was expected 404). Contract gap CLOSED.
+- Generated checkout/shipping/payment clients now return 401 "No token provided" (route exists, auth required) instead of 404. Routes REGISTERED; the guest smoke is correctly rejected for lack of auth.
+
+Tenant / wrong-store isolation: the passing rows include inactive-store, nonexistent-store, and malformed-store-id rejection against Store A — single-store cross-store isolation behaviour verified.
+
+Skipped: authenticated-customer rows (no customer token supplied).
+
+Pending for the FULL cross-store gate: a distinct Store B was not provided, so Store-A-vs-Store-B isolation rows remain unrun — seed a second store to complete them.
+
+Follow-up filed: the harness's `expected` values for the issue #62/#63 "unregistered route" rows are now stale (those routes work); update them so the suites assert the current, aligned contract.
+
 ## Verified Staging Attempt (2026-07-13, GitHub issue #87)
 
 Goal: run the mobile backend smoke suites against verified backend staging and safe test Store IDs.
