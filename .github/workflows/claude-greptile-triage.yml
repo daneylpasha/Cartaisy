@@ -83,14 +83,15 @@ jobs:
           claude_args: '--max-turns 15 --allowedTools "Edit,MultiEdit,Write,Bash(npm ci),Bash(npm install),Bash(npm run:*),Bash(npm test:*),Bash(gh pr comment:*),Bash(gh api:*)"'
 
       - name: Record triage-run marker (loop guard)
-        if: fromJSON(steps.guard.outputs.count) < 2
+        if: ${{ always() && !cancelled() && steps.guard.outputs.count != '' && fromJSON(steps.guard.outputs.count) < 2 && steps.claude.outcome != 'skipped' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           RUN_NUM: ${{ steps.guard.outputs.count }}
+          CLAUDE_OUTCOME: ${{ steps.claude.outcome }}
         run: |
           gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
-            -f body="<!-- claude-greptile-triage-run --> Greptile triage run #$((RUN_NUM + 1)) completed by Claude on this PR."
+            -f body="<!-- claude-greptile-triage-run --> Greptile triage run #$((RUN_NUM + 1)) finished with Claude outcome: ${CLAUDE_OUTCOME}."
 
       - name: Loop-guard tripped — notify instead of running again
         if: fromJSON(steps.guard.outputs.count) >= 2
