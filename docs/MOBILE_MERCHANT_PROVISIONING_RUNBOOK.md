@@ -15,7 +15,8 @@ How it relates to the other docs:
 
 - Firebase console access (to create the merchant's Firebase project and apps).
 - An Expo account that will own the merchant's EAS project, and `eas-cli` logged in to it.
-- Apple Developer Program membership for the iOS app (see the ownership decision in Step 3).
+- Apple Developer Program membership for the iOS app — the merchant's own, per the ownership decision in Step 3.
+- An App Store Connect invitation from the merchant, accepted before you start. Ask for the `Developer` role: it is the least-privileged role that can both upload builds and manage TestFlight groups, and it carries no control over pricing or store listing metadata. Without this, Step 3 signing and any TestFlight distribution are blocked. See `docs/IOS_PROVISIONING_SCOPE.md` for the role breakdown.
 - A Google Play developer account is NOT needed for development/internal builds; it becomes relevant at store submission (out of scope here).
 - Stripe dashboard access for the merchant's Stripe account, if wallet payments are in scope.
 - Cartaisy backend admin access to confirm the merchant's store record and API environment.
@@ -63,9 +64,9 @@ Manual today: yes.
 
 Ownership model: one EAS project per merchant app. The Cartaisy `rendernext` EAS project is for the Cartaisy default app only and must never be reused for a merchant build (see `docs/DECISIONS.md`).
 
-Open decision (flag to the build owner if unresolved): whether merchant EAS projects live under a Cartaisy-managed Expo organization or under an Expo account the merchant owns. Until decided, provision sample/internal merchants under a Cartaisy-managed Expo account so work can proceed; real merchant releases need this decision recorded in `docs/DECISIONS.md` first.
+Account ownership: merchant EAS projects live under a **Cartaisy-managed Expo organization**, one EAS project per merchant app. This is settled, not open — recorded 2026-07-23 in the `cartaisy-backend` repo's `docs/DECISIONS.md` under "Merchant EAS/Expo projects live under a Cartaisy-managed Expo organization": *"Merchant mobile builds run from a Cartaisy-managed Expo/EAS organization, with one EAS project per merchant app inside it. Merchant-owned Expo accounts are a documented, separately priced exception for merchants who explicitly require full infrastructure ownership — never the default."* Provisioning sample, internal, and real merchant projects under the Cartaisy-managed Expo account is therefore the settled default, not a stopgap pending a decision. Note the deliberate contrast with Step 3: Expo/EAS is build machinery and stays Cartaisy-owned, while the Apple Developer team is app identity and stays merchant-owned.
 
-1. Log in to the owning Expo account: `eas login` / verify with `eas whoami`.
+1. Log in to the owning Expo account: `eas login` / verify with `eas whoami`. Two org requirements apply before you do, per the same 2026-07-23 decision: the Cartaisy Expo organization requires **hardware-key 2FA** on accounts that can reach it, and any automation touching the org must authenticate with a **scoped organization token**, never full-account credentials. Sort both out before starting this step rather than discovering them mid-provisioning.
 2. Create the project (Expo dashboard, or `eas project:init` run with `APP_SLUG`/`EXPO_OWNER` exported so it initializes against the merchant identity, from a checkout you do not commit). Use a disposable checkout because `eas project:init` may write the generated project ID into an `app.json`; this repo reads `EAS_PROJECT_ID` from the environment via `app.config.ts`, and a committed `app.json` carrying one merchant's project ID would silently override that for anyone building without the merchant env exported.
 3. Record the generated project ID as `EAS_PROJECT_ID` and the owning account as `EXPO_OWNER`.
 4. Set every identity variable from Step 0 as an EAS environment variable on the merchant project (plain visibility is fine — they are non-secret). Locally exported shell values are NOT forwarded to EAS build workers; only EAS environment variables or an `eas.json` profile `env` block reach the worker where `app.config.ts` is re-evaluated during prebuild.
@@ -76,12 +77,39 @@ Manual today: yes. Automation opportunity: a provisioning script that creates th
 
 Model: use EAS-managed (remote) credentials, stored in the merchant's EAS project — never in this repository.
 
-- iOS: EAS generates and stores the distribution certificate and provisioning profile against an Apple Developer team. Open decision (same flag as Step 2): whether the Apple Developer Program membership of record is Cartaisy's or the merchant's. Apple's rules push toward the merchant's own membership for merchant-branded store apps; internal development builds can proceed under a Cartaisy-controlled team.
+- iOS: the Apple Developer Program membership of record is the **merchant's own account**, not Cartaisy's. This is settled, not open — recorded 2026-07-17 in the `cartaisy-backend` repo's `docs/DECISIONS.md` under "Merchants own their app-store developer accounts": *"Each merchant enrolls in and owns their own Apple Developer and Google Play developer accounts. Cartaisy performs the setup, provisioning, build, and submission work inside those accounts as part of the paid onboarding/setup service."* EAS therefore generates and stores the distribution certificate and provisioning profile against the merchant-owned Apple Developer team. A Cartaisy-controlled team is still acceptable for genuinely internal development builds — ones that are not merchant-branded and are never submitted to the App Store — but never for a merchant-branded or store-bound build. Merchant Apple enrollment lead time, App Store Connect setup, and the on-device distribution path are scoped in `docs/IOS_PROVISIONING_SCOPE.md`.
 - Android: let EAS generate and store the upload keystore for the merchant project. Do not generate local keystores.
 
 The first `eas build` for each platform walks through credential generation interactively; run it from a terminal, not CI, the first time.
 
 Manual today: yes (interactive on first build). Automation opportunity: `credentials.json`-free EAS remote credentials are already mostly automated after the first interactive run.
+
+### Offboarding — Handing Back What Cartaisy Holds
+
+The rest of this runbook covers onboarding. This subsection covers the reverse, and lives here because what has to be handed back is exactly what this step creates. Required by the 2026-07-23 decision in the `cartaisy-backend` repo's `docs/DECISIONS.md`: *"the merchant offboarding path (hand over keystore + bundle IDs) must be written into the onboarding runbook and merchant agreement."*
+
+**What Cartaisy holds on the merchant's behalf, and must hand back:**
+
+- **The Android upload keystore.** EAS generated it and stores it in the merchant's EAS project, which sits inside the Cartaisy-managed Expo organization — so it is in Cartaisy's custody, not the merchant's. It is what signs updates to the merchant's existing Play listing, so handing it back is what keeps the app portable to another provider.
+- **The bundle identifiers.** `IOS_BUNDLE_IDENTIFIER` and `ANDROID_PACKAGE` from Step 0, already recorded in the "Merchant Build Record" section of `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`. Not secret, but permanent and tied to the merchant's shipped apps, so the merchant needs them written down somewhere they own.
+
+**What does not transfer, because it was never Cartaisy's to transfer:** the Apple Developer Program account and the Google Play developer account. Both are merchant-owned per the 2026-07-17 decision ("Merchants own their app-store developer accounts"). There is no ownership handover for these — the only offboarding action is Cartaisy losing its own access.
+
+**What the merchant does not receive:** the EAS project itself. Expo/EAS is Cartaisy build machinery under the 2026-07-23 decision (see Step 2), so the project stays in the Cartaisy organization. The keystore inside it is the merchant's; the project around it is not.
+
+**Steps:**
+
+1. Export the Android upload keystore from the merchant's EAS project. Per Expo's current documentation this is an interactive menu rather than a single flag: run `eas credentials`, select the Android platform and build profile, choose *"credentials.json: Upload/Download credentials between EAS servers and your local json"*, then *"Download credentials from EAS to credentials.json"*. Confirm the exact wording against EAS's CLI docs when you actually run this — menu labels move between `eas-cli` versions, so treat the path above as a pointer, not a guarantee.
+2. Treat the exported keystore as secret material. Expo's guidance is explicit: *"Your application's keystore should be kept private. Under no circumstances should you check it into your repository."* Transfer it over a channel the merchant controls, and delete local copies once the merchant confirms receipt.
+3. Hand over the bundle identifiers from the Merchant Build Record.
+4. **Delete the remote credentials from the merchant's EAS project once the merchant confirms receipt.** Exporting the keystore copies it; it does not remove it. Leaving it in place means Cartaisy keeps the ability to sign releases for a merchant it no longer serves, which is precisely what handing it back was meant to end. The same applies to the EAS-managed iOS distribution certificate and provisioning profile. Use the `eas credentials` menu for each platform, and only after the merchant has confirmed they hold a working copy of the keystore — deleting it first is unrecoverable and would cost the merchant their Play update path.
+5. **Transfer Firebase, then leave it.** If push was in scope (Step 4), the merchant's Firebase project is a separate per-merchant project. Grant the merchant Owner on it, have them confirm they can administer it independently, then remove every Cartaisy account from its IAM members. Handing over the project details without transferring administrative control leaves the merchant unable to manage their own push infrastructure, and leaves former Cartaisy staff with continued access to it.
+6. Revoke Cartaisy's access to the merchant's Apple Developer and Google Play accounts. For the App Store Connect side specifically, see the access note in `docs/IOS_PROVISIONING_SCOPE.md` — Cartaisy staff are invited as users on the merchant's team during provisioning, and that invitation is what gets withdrawn here.
+7. Record what was handed over, what was deleted, and what access was revoked, against the merchant's build record.
+
+**Out of scope for this runbook:** the merchant agreement. The same 2026-07-23 decision requires offboarding to be written into the contract as well as here, and that is a business and legal task for Daniyal — not something this document covers and not something an agent should draft.
+
+Manual today: yes, and appropriately so — this runs once per merchant relationship and moves secret material. Automation opportunity: none worth building.
 
 ## Step 4 — Firebase Provisioning (iOS + Android)
 
@@ -107,7 +135,7 @@ Manual today: yes (console clicks + file download + EAS env upload). Automation 
 - Android: FCM registration comes with `google-services.json`; provide `APP_NOTIFICATION_ICON_PATH` and `APP_NOTIFICATION_COLOR`.
 - The `.p8` key is a secret. It lives in the Apple/Firebase consoles only — never in the repo, never in an EAS plain-visibility variable.
 
-Manual today: yes. Automation opportunity: none worth building until the Apple account ownership decision is made.
+Manual today: yes. Automation opportunity: low — but no longer gated on a pending decision. Apple account ownership was settled on 2026-07-17 (`cartaisy-backend` repo, `docs/DECISIONS.md`, "Merchants own their app-store developer accounts"), so that is not the reason this step stays manual. The reason is the nature of the step: the `.p8` key is secret material created inside the merchant's own Apple Developer account and hand-carried into the merchant's Firebase console, and routing a secret like that through automation buys little for the risk it adds.
 
 ## Step 6 — Apple Pay / Stripe (if wallet payments are in scope)
 
@@ -168,7 +196,7 @@ A dry run of this runbook using the fictional merchant in `docs/examples/sample-
 
 - [ ] Step 0: identity inputs collected — provided by `docs/examples/sample-merchant.env` (`Acme Outfitters`, `com.example.acmeoutfitters`, scheme `acmeoutfitters`, store ID `507f1f77bcf86cd799439011`).
 - [ ] Step 1: backend store record confirmed — *simulated* (sample API URL and store ID are fictional).
-- [x] Step 2: EAS project created and env set — real internal sample project `@rendernext/acme-outfitters` created for GitHub issue #86, with non-secret `EAS_PROJECT_ID` and `EXPO_OWNER` recorded in `docs/examples/sample-merchant.env` and the `sample-merchant-development` profile. Real merchant releases still need their own project/owner decision.
+- [x] Step 2: EAS project created and env set — real internal sample project `@rendernext/acme-outfitters` created for GitHub issue #86, with non-secret `EAS_PROJECT_ID` and `EXPO_OWNER` recorded in `docs/examples/sample-merchant.env` and the `sample-merchant-development` profile. Real merchant releases follow the same model — one EAS project per merchant inside the Cartaisy-managed Expo organization, settled 2026-07-23 (see Step 2); no per-merchant project/owner decision is outstanding.
 - [ ] Step 3: signing credentials provisioned in EAS — *simulated* (needs the EAS project and an Apple team).
 - [ ] Step 4: Firebase apps created, files stored as EAS file env vars — *simulated* (sample points at the committed Cartaisy files only so config evaluation works; a real merchant must use their own files or Android builds fail at the Google Services Gradle step).
 - [ ] Step 5: push registration — *simulated*.
@@ -194,9 +222,9 @@ Automatable later (rough priority order):
 1. Config verification diff: script that compares `npx expo config --type public` output against a merchant record and fails on mismatch (no external accounts needed — cheapest win).
 2. EAS project bootstrap: create project + push the full env set (incl. Firebase file variables) from a merchant record via `eas-cli`.
 3. Firebase provisioning: create project/apps and fetch config files via the Firebase Management API.
-4. A single "provision merchant" pipeline chaining 2–3 once the EAS/Apple ownership decisions are recorded in `docs/DECISIONS.md`.
+4. A single "provision merchant" pipeline chaining 2–3. Ready to ticket and prioritize — the ownership decisions this item used to wait on are both recorded (see below). Not built and not scoped here.
 
-Blocked on decisions, not tooling: Apple Developer and Expo/EAS account ownership (Cartaisy-managed vs merchant-owned) must be decided and recorded before store-facing automation is worth building.
+No longer blocked on decisions: both ownership questions are settled and recorded in the `cartaisy-backend` repo's `docs/DECISIONS.md` — Apple Developer account ownership on 2026-07-17 ("Merchants own their app-store developer accounts") and Expo/EAS organization ownership on 2026-07-23 ("Merchant EAS/Expo projects live under a Cartaisy-managed Expo organization"). The 2026-07-23 entry states directly that store-facing provisioning automation "is now unblocked and may be ticketed." What remains is tooling nobody has built yet. This runbook records that state; it does not schedule the work.
 
 ## Related Docs
 
