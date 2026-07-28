@@ -15,7 +15,8 @@ How it relates to the other docs:
 
 - Firebase console access (to create the merchant's Firebase project and apps).
 - An Expo account that will own the merchant's EAS project, and `eas-cli` logged in to it.
-- Apple Developer Program membership for the iOS app (see the ownership decision in Step 3).
+- Apple Developer Program membership for the iOS app — the merchant's own, per the ownership decision in Step 3.
+- An App Store Connect invitation from the merchant, accepted before you start. Ask for the `Developer` role: it is the least-privileged role that can both upload builds and manage TestFlight groups, and it carries no control over pricing or store listing metadata. Without this, Step 3 signing and any TestFlight distribution are blocked. See `docs/IOS_PROVISIONING_SCOPE.md` for the role breakdown.
 - A Google Play developer account is NOT needed for development/internal builds; it becomes relevant at store submission (out of scope here).
 - Stripe dashboard access for the merchant's Stripe account, if wallet payments are in scope.
 - Cartaisy backend admin access to confirm the merchant's store record and API environment.
@@ -100,8 +101,11 @@ The rest of this runbook covers onboarding. This subsection covers the reverse, 
 
 1. Export the Android upload keystore from the merchant's EAS project. Per Expo's current documentation this is an interactive menu rather than a single flag: run `eas credentials`, select the Android platform and build profile, choose *"credentials.json: Upload/Download credentials between EAS servers and your local json"*, then *"Download credentials from EAS to credentials.json"*. Confirm the exact wording against EAS's CLI docs when you actually run this — menu labels move between `eas-cli` versions, so treat the path above as a pointer, not a guarantee.
 2. Treat the exported keystore as secret material. Expo's guidance is explicit: *"Your application's keystore should be kept private. Under no circumstances should you check it into your repository."* Transfer it over a channel the merchant controls, and delete local copies once the merchant confirms receipt.
-3. Hand over the bundle identifiers from the Merchant Build Record, along with the Firebase project details from Step 4 if push was in scope.
-4. Revoke Cartaisy's access to the merchant's Apple Developer and Google Play accounts. For the App Store Connect side specifically, see the access note in `docs/IOS_PROVISIONING_SCOPE.md` — Cartaisy staff are invited as users on the merchant's team during provisioning, and that invitation is what gets withdrawn here.
+3. Hand over the bundle identifiers from the Merchant Build Record.
+4. **Delete the remote credentials from the merchant's EAS project once the merchant confirms receipt.** Exporting the keystore copies it; it does not remove it. Leaving it in place means Cartaisy keeps the ability to sign releases for a merchant it no longer serves, which is precisely what handing it back was meant to end. The same applies to the EAS-managed iOS distribution certificate and provisioning profile. Use the `eas credentials` menu for each platform, and only after the merchant has confirmed they hold a working copy of the keystore — deleting it first is unrecoverable and would cost the merchant their Play update path.
+5. **Transfer Firebase, then leave it.** If push was in scope (Step 4), the merchant's Firebase project is a separate per-merchant project. Grant the merchant Owner on it, have them confirm they can administer it independently, then remove every Cartaisy account from its IAM members. Handing over the project details without transferring administrative control leaves the merchant unable to manage their own push infrastructure, and leaves former Cartaisy staff with continued access to it.
+6. Revoke Cartaisy's access to the merchant's Apple Developer and Google Play accounts. For the App Store Connect side specifically, see the access note in `docs/IOS_PROVISIONING_SCOPE.md` — Cartaisy staff are invited as users on the merchant's team during provisioning, and that invitation is what gets withdrawn here.
+7. Record what was handed over, what was deleted, and what access was revoked, against the merchant's build record.
 
 **Out of scope for this runbook:** the merchant agreement. The same 2026-07-23 decision requires offboarding to be written into the contract as well as here, and that is a business and legal task for Daniyal — not something this document covers and not something an agent should draft.
 
@@ -192,7 +196,7 @@ A dry run of this runbook using the fictional merchant in `docs/examples/sample-
 
 - [ ] Step 0: identity inputs collected — provided by `docs/examples/sample-merchant.env` (`Acme Outfitters`, `com.example.acmeoutfitters`, scheme `acmeoutfitters`, store ID `507f1f77bcf86cd799439011`).
 - [ ] Step 1: backend store record confirmed — *simulated* (sample API URL and store ID are fictional).
-- [x] Step 2: EAS project created and env set — real internal sample project `@rendernext/acme-outfitters` created for GitHub issue #86, with non-secret `EAS_PROJECT_ID` and `EXPO_OWNER` recorded in `docs/examples/sample-merchant.env` and the `sample-merchant-development` profile. Real merchant releases still need their own project/owner decision.
+- [x] Step 2: EAS project created and env set — real internal sample project `@rendernext/acme-outfitters` created for GitHub issue #86, with non-secret `EAS_PROJECT_ID` and `EXPO_OWNER` recorded in `docs/examples/sample-merchant.env` and the `sample-merchant-development` profile. Real merchant releases follow the same model — one EAS project per merchant inside the Cartaisy-managed Expo organization, settled 2026-07-23 (see Step 2); no per-merchant project/owner decision is outstanding.
 - [ ] Step 3: signing credentials provisioned in EAS — *simulated* (needs the EAS project and an Apple team).
 - [ ] Step 4: Firebase apps created, files stored as EAS file env vars — *simulated* (sample points at the committed Cartaisy files only so config evaluation works; a real merchant must use their own files or Android builds fail at the Google Services Gradle step).
 - [ ] Step 5: push registration — *simulated*.
