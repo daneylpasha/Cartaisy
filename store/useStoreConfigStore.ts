@@ -14,6 +14,16 @@ interface StoreConfigState {
   secondaryColor?: string;
   logoUrl?: string;
   isLoaded: boolean;
+  // True once zustand's persist middleware has finished its async
+  // AsyncStorage read and merged any previously-persisted state in. Until
+  // this flips true, that merge can still land at any moment — including
+  // after AppInitializer's own setConfig() call — and a late merge would
+  // silently restore stale branding a successful fetch just correctly
+  // cleared. AppInitializer must wait for this before calling setConfig(),
+  // mirroring the same _hasHydrated guard useAuthStore already uses for
+  // exactly this race.
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
   setConfig: (config: {
     currency: string;
     timezone: string;
@@ -45,6 +55,8 @@ const useStoreConfigStore = create<StoreConfigState>()(
       secondaryColor: undefined,
       logoUrl: undefined,
       isLoaded: false,
+      _hasHydrated: false,
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
       setConfig: (config) => set((state) => {
         const fetchSucceeded = config.fetchSucceeded ?? true;
 
@@ -78,6 +90,9 @@ const useStoreConfigStore = create<StoreConfigState>()(
     {
       name: "store-config-storage",
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

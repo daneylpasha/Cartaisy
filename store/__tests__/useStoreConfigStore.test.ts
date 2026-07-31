@@ -20,6 +20,7 @@ const baseState = {
   secondaryColor: undefined,
   logoUrl: undefined,
   isLoaded: false,
+  _hasHydrated: false,
 };
 
 describe("useStoreConfigStore", () => {
@@ -144,6 +145,29 @@ describe("useStoreConfigStore", () => {
     expect(state.primaryColor).toBe("#A82A50");
     expect(state.secondaryColor).toBe("#4B5563");
     expect(state.logoUrl).toBe("https://cdn.cartaisy.com/stores/acme/logo-v2.png");
+  });
+
+  it("starts with _hasHydrated false and flips to true via setHasHydrated (called by onRehydrateStorage once AsyncStorage read completes)", () => {
+    expect(useStoreConfigStore.getState()._hasHydrated).toBe(false);
+
+    useStoreConfigStore.getState().setHasHydrated(true);
+
+    expect(useStoreConfigStore.getState()._hasHydrated).toBe(true);
+  });
+
+  it("reset does not affect _hasHydrated — it's a one-time hydration flag, not part of the config being reset", () => {
+    useStoreConfigStore.getState().setHasHydrated(true);
+    useStoreConfigStore.getState().setConfig({
+      currency: "USD",
+      timezone: "UTC",
+      storeName: "Acme Outfitters",
+      primaryColor: "#A82A50",
+    });
+
+    useStoreConfigStore.getState().reset();
+
+    expect(useStoreConfigStore.getState()._hasHydrated).toBe(true);
+    expect(useStoreConfigStore.getState().primaryColor).toBeUndefined();
   });
 
   it("reset clears branding along with the rest of the config", () => {

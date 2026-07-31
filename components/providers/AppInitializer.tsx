@@ -122,8 +122,18 @@ export const AppInitializer = () => {
   // Fetch store configuration (currency, timezone, etc.) from backend
   // Deferred to 500ms to let app UI render first
   const storeConfigFetchedRef = useRef(false);
+  const storeConfigHasHydrated = useStoreConfigStore((state) => state._hasHydrated);
 
   useEffect(() => {
+    // Wait for the persist middleware's async AsyncStorage read to finish
+    // before calling setConfig(). That rehydration merge can land at any
+    // time in the background; if it landed AFTER setConfig() ran, it would
+    // silently overwrite freshly-fetched (or freshly-cleared) branding with
+    // whatever was previously on disk. Gating on _hasHydrated — the same
+    // pattern useAuthStore uses for its own hydration race — guarantees
+    // setConfig() always runs last.
+    if (!storeConfigHasHydrated) return;
+
     const initializeStoreConfig = async () => {
       // Only fetch once per app session
       if (storeConfigFetchedRef.current) return;
@@ -162,7 +172,7 @@ export const AppInitializer = () => {
     // Defer store config initialization to 500ms
     const timer = setTimeout(initializeStoreConfig, 500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [storeConfigHasHydrated]);
 
   // ==================== ADD MORE INITIALIZATIONS BELOW ====================
   // Example: Cart sync, user preferences, notification settings, etc.
