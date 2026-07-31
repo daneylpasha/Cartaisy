@@ -4,7 +4,7 @@
  *
  * The backend already validates and sanitizes these fields before returning
  * them (malformed hex colors are omitted, `logoUrl` is omitted unless it's an
- * absolute http(s) URL — see docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md), but the
+ * absolute URL — see docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md), but the
  * mobile app treats the network response as untrusted input anyway rather than
  * assuming today's backend behavior holds forever. Anything that fails
  * validation here is treated as absent (falls back to bundled branding), never
@@ -25,7 +25,13 @@ export function isValidLogoUrl(value: unknown): value is string {
 
   try {
     const parsedUrl = new URL(value);
-    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+    // HTTPS only. An accepted http: URL would be silently unusable once a
+    // future ticket actually renders it: iOS release builds set
+    // NSAllowsArbitraryLoads to false and Android only allows cleartext
+    // traffic in the debug manifest, so a persisted http: logoUrl would
+    // simply fail to load in production. Matches the contract doc's own
+    // "require HTTPS for remote assets outside development" guidance.
+    return parsedUrl.protocol === "https:";
   } catch {
     return false;
   }

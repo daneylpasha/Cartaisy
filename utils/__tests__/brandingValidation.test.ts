@@ -30,12 +30,15 @@ describe("brandingValidation", () => {
   });
 
   describe("isValidLogoUrl", () => {
-    it("accepts absolute http and https URLs", () => {
+    it("accepts an absolute https URL", () => {
       expect(isValidLogoUrl("https://cdn.cartaisy.com/logo.png")).toBe(true);
-      expect(isValidLogoUrl("http://cdn.cartaisy.com/logo.png")).toBe(true);
     });
 
-    it("rejects non-http(s) protocols", () => {
+    it("rejects http — iOS release builds and Android's non-debug manifest both refuse cleartext, so a persisted http URL would silently fail to load", () => {
+      expect(isValidLogoUrl("http://cdn.cartaisy.com/logo.png")).toBe(false);
+    });
+
+    it("rejects non-https protocols", () => {
       expect(isValidLogoUrl("ftp://cdn.cartaisy.com/logo.png")).toBe(false);
       expect(isValidLogoUrl("data:image/png;base64,AAAA")).toBe(false);
       expect(isValidLogoUrl("javascript:alert(1)")).toBe(false);
