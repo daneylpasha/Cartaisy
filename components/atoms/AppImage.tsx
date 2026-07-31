@@ -11,6 +11,11 @@ import { styled, YStack } from "tamagui";
 type AppImageProps = {
   name?: keyof typeof Icons;
   source?: string | { uri: string };
+  // Bundled icon to render when a remote `source` fails to load. Only
+  // takes effect on the remote-image path — call sites that don't pass
+  // this keep today's behavior of rendering nothing on a failed remote
+  // load.
+  fallbackName?: keyof typeof Icons;
   size?: number;
   width?: number | string;
   radius?: keyof AppConfig["tokens"]["space"] | number;
@@ -55,9 +60,93 @@ const resolveTokenColor = (
   return typeof value === "string" ? value : undefined;
 };
 
+// Resolves a bundled icon key from assets/Icons.ts into either an SVG
+// component or a local image source. Shared by the `name` prop path and
+// the remote-image fallback path (see BundledIcon below) so both render
+// bundled icons through the exact same SVG/Image branching instead of
+// duplicating it.
+type ResolvedIcon =
+  | { kind: "svg"; Component: React.FC<SvgProps> }
+  | { kind: "image"; source: number | { uri: string } }
+  | undefined;
+
+const resolveNamedIcon = (name: keyof typeof Icons): ResolvedIcon => {
+  const iconSource = Icons[name];
+
+  if (typeof iconSource === "function") {
+    return { kind: "svg", Component: iconSource as React.FC<SvgProps> };
+  }
+
+  if (
+    iconSource &&
+    (typeof iconSource === "number" ||
+      (typeof iconSource === "object" && iconSource.uri))
+  ) {
+    return { kind: "image", source: iconSource as number | { uri: string } };
+  }
+
+  return undefined;
+};
+
+type BundledIconProps = {
+  iconName: keyof typeof Icons;
+  width?: number | string;
+  height?: number;
+  style?: any;
+  tintColor?: string;
+  resizeMode: ImageResizeMode;
+  radius?: keyof AppConfig["tokens"]["space"] | number;
+};
+
+const BundledIcon: React.FC<BundledIconProps> = ({
+  iconName,
+  width,
+  height,
+  style,
+  tintColor,
+  resizeMode,
+  radius,
+}) => {
+  const resolved = resolveNamedIcon(iconName);
+
+  if (!resolved) {
+    return null;
+  }
+
+  if (resolved.kind === "svg") {
+    const SvgComponent = resolved.Component;
+    return (
+      <SvgComponent
+        width={width}
+        height={height}
+        style={style}
+        fill={tintColor}
+        color={tintColor}
+      />
+    );
+  }
+
+  return (
+    <StyledImage
+      source={resolved.source}
+      style={[
+        {
+          width,
+          height,
+          borderRadius: radius,
+        },
+        style,
+      ]}
+      tintColor={tintColor}
+      resizeMode={resizeMode}
+    />
+  );
+};
+
 export const AppImage: React.FC<AppImageProps> = ({
   name,
   source,
+  fallbackName,
   size,
   width,
   radius,
@@ -99,24 +188,25 @@ export const AppImage: React.FC<AppImageProps> = ({
 
   const finalTintColor = resolveTokenColor(tintColor);
 
+  // Bundled icon by name — render directly via the shared helper.
+  if (name) {
+    return (
+      <BundledIcon
+        iconName={name}
+        width={finalWidth}
+        height={finalHeight}
+        style={style}
+        tintColor={finalTintColor}
+        resizeMode={resizeMode}
+        radius={radius}
+      />
+    );
+  }
+
   let finalSource;
-  let isSvgComponent = false;
   let isRemoteImage = false;
 
-  if (name) {
-    const iconSource = Icons[name];
-
-    if (typeof iconSource === "function") {
-      isSvgComponent = true;
-      finalSource = iconSource;
-    } else if (
-      iconSource &&
-      (typeof iconSource === "number" ||
-        (typeof iconSource === "object" && iconSource.uri))
-    ) {
-      finalSource = iconSource;
-    }
-  } else if (source) {
+  if (source) {
     if (typeof source === "string") {
       // Only create URI object if string is not empty
       finalSource = source.trim() ? { uri: source } : undefined;
@@ -132,22 +222,27 @@ export const AppImage: React.FC<AppImageProps> = ({
     return null;
   }
 
-  // Render SVG component
-  if (isSvgComponent) {
-    const SvgComponent = finalSource as React.FC<SvgProps>;
-    return (
-      <SvgComponent
-        width={finalWidth}
-        height={finalHeight}
-        style={style}
-        fill={finalTintColor}
-        color={finalTintColor}
-      />
-    );
-  }
-
   // Render regular image with shimmer placeholder for remote images
   if (isRemoteImage) {
+    // A remote image that failed to load: fall back to a bundled icon if
+    // the caller opted in via `fallbackName`, instead of continuing to
+    // render the now-broken remote <Image> (native `Image` renders
+    // blank/nothing on a failed load, not any kind of fallback). Call
+    // sites that don't pass `fallbackName` keep today's exact behavior.
+    if (hasError && fallbackName) {
+      return (
+        <BundledIcon
+          iconName={fallbackName}
+          width={finalWidth}
+          height={finalHeight}
+          style={style}
+          tintColor={finalTintColor}
+          resizeMode={resizeMode}
+          radius={radius}
+        />
+      );
+    }
+
     return (
       <YStack
         width={finalWidth as any}
@@ -204,20 +299,8 @@ export const AppImage: React.FC<AppImageProps> = ({
     );
   }
 
-  // Render regular image without shimmer (for local/non-remote images)
-  return (
-    <StyledImage
-      source={finalSource}
-      style={[
-        {
-          width: finalWidth,
-          height: finalHeight,
-          borderRadius: radius,
-        },
-        style,
-      ]}
-      tintColor={finalTintColor}
-      resizeMode={resizeMode}
-    />
-  );
+  // isRemoteImage is only ever false here if finalSource is falsy, which
+  // already returned null above — this is unreachable, kept only so the
+  // function has an explicit exhaustive return for TypeScript.
+  return null;
 };
