@@ -4,6 +4,15 @@ export interface StoreConfig {
   currency: string;
   timezone: string;
   name: string;
+  // Runtime branding fields — flat on the response, not nested under a
+  // `branding` key (see docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md). Optional
+  // because the backend omits any of these that aren't set or don't pass its
+  // own validation, and older/default stores may not have them at all. Not
+  // validated here — callers must validate before persisting or rendering
+  // (see utils/brandingValidation.ts).
+  primaryColor?: string;
+  secondaryColor?: string;
+  logoUrl?: string;
 }
 
 export const getStoreConfig = async (): Promise<StoreConfig> => {

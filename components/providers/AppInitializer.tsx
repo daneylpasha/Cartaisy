@@ -4,6 +4,7 @@ import { getStoreConfig } from "@/api/endpoints/storeConfig";
 import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
+import { validateBranding } from "@/utils/brandingValidation";
 import { useEffect, useRef } from "react";
 import Axios from "axios";
 
@@ -130,10 +131,21 @@ export const AppInitializer = () => {
 
       try {
         const config = await getStoreConfig();
+        const branding = validateBranding({
+          primaryColor: config.primaryColor,
+          secondaryColor: config.secondaryColor,
+          logoUrl: config.logoUrl,
+        });
         useStoreConfigStore.getState().setConfig({
           currency: config.currency || "USD",
           timezone: config.timezone || "UTC",
           storeName: config.name || "",
+          // Fields that failed validation (or were never present — including
+          // when getStoreConfig() itself swallowed a fetch failure and
+          // returned its bare currency/timezone/name defaults) are omitted
+          // here entirely, so the store's own merge logic keeps whatever
+          // branding was last persisted instead of clearing it.
+          ...branding,
         });
         console.log("[AppInitializer] Store config loaded - Currency:", config.currency);
       } catch (error) {
