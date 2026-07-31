@@ -8,9 +8,8 @@ interface StoreConfigState {
   storeName: string;
   // Runtime branding — already validated by the caller (see
   // utils/brandingValidation.ts) before it reaches this store. Undefined
-  // means "no valid value from the most recent fetch"; a startup that can't
-  // reach the backend, or a response that simply doesn't set a field, never
-  // clears an already-persisted value here — see setConfig below.
+  // means "no valid value as of the last setConfig call that represented a
+  // successful fetch."
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
@@ -22,6 +21,15 @@ interface StoreConfigState {
     primaryColor?: string;
     secondaryColor?: string;
     logoUrl?: string;
+    // Whether this call represents a successful `/store/config` fetch.
+    // Defaults to true. When explicitly false (the caller's fetch failed
+    // and it's passing through its own fallback defaults), branding
+    // fields are left untouched instead of being cleared — this is what
+    // keeps last-known branding intact across a failed refetch, per the
+    // contract doc's fallback rule. currency/timezone/storeName are NOT
+    // covered by this — they keep their existing overwrite-on-every-call
+    // behavior regardless of fetchSucceeded, unchanged from before.
+    fetchSucceeded?: boolean;
   }) => void;
   setCurrency: (currency: string) => void;
   reset: () => void;
@@ -37,23 +45,25 @@ const useStoreConfigStore = create<StoreConfigState>()(
       secondaryColor: undefined,
       logoUrl: undefined,
       isLoaded: false,
-      setConfig: (config) => set((state) => ({
-        currency: config.currency || "USD",
-        timezone: config.timezone || "UTC",
-        storeName: config.storeName || "",
-        // Branding fields only ever move from "absent" to "a new valid
-        // value," or stay as whatever was last persisted. A field that's
-        // absent on this call — whether because the backend genuinely has
-        // nothing set for this store, or because the fetch itself failed
-        // and the caller is passing through its own fallback defaults —
-        // must never clear a previously persisted value. This is what
-        // keeps last-known branding intact across a failed refetch, per
-        // the contract doc's fallback rule.
-        primaryColor: config.primaryColor ?? state.primaryColor,
-        secondaryColor: config.secondaryColor ?? state.secondaryColor,
-        logoUrl: config.logoUrl ?? state.logoUrl,
-        isLoaded: true,
-      })),
+      setConfig: (config) => set((state) => {
+        const fetchSucceeded = config.fetchSucceeded ?? true;
+
+        return {
+          currency: config.currency || "USD",
+          timezone: config.timezone || "UTC",
+          storeName: config.storeName || "",
+          // On a successful fetch, a branding field that's absent or
+          // invalid means the backend genuinely has nothing there right
+          // now (e.g. a merchant removed their custom color) — that must
+          // clear any stale persisted value, not keep it forever. Only a
+          // failed fetch (fetchSucceeded: false) preserves what was
+          // already persisted.
+          primaryColor: fetchSucceeded ? config.primaryColor : state.primaryColor,
+          secondaryColor: fetchSucceeded ? config.secondaryColor : state.secondaryColor,
+          logoUrl: fetchSucceeded ? config.logoUrl : state.logoUrl,
+          isLoaded: true,
+        };
+      }),
       setCurrency: (currency) => set({ currency }),
       reset: () => set({
         currency: "USD",

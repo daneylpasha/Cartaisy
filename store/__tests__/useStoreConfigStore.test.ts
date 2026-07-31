@@ -1,9 +1,10 @@
 /**
  * Covers the runtime branding fields added to store/useStoreConfigStore.ts:
- * persistence when present, and — the important safety behavior — that a
- * setConfig call with branding fields absent (e.g. after a failed refetch
- * falls back to bare currency/timezone/name defaults) never clears branding
- * that was already persisted from an earlier successful fetch.
+ * persistence when present, clearing when a successful fetch genuinely has
+ * no branding (e.g. a merchant removed their custom colors), and — the
+ * important safety behavior — that only a setConfig call explicitly marked
+ * fetchSucceeded: false (a real fetch failure) preserves previously
+ * persisted branding instead of clearing it.
  */
 jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock")
@@ -43,11 +44,13 @@ describe("useStoreConfigStore", () => {
     expect(state.isLoaded).toBe(true);
   });
 
-  it("leaves branding as undefined when a config call never included any (today's default store)", () => {
+  it("leaves branding as undefined on a successful config call that never included any (today's default store)", () => {
     useStoreConfigStore.getState().setConfig({
       currency: "USD",
       timezone: "UTC",
       storeName: "Cartaisy",
+      // fetchSucceeded omitted — defaults to true, matching a genuine
+      // successful fetch that simply has no branding set.
     });
 
     const state = useStoreConfigStore.getState();
@@ -58,7 +61,32 @@ describe("useStoreConfigStore", () => {
     expect(state.storeName).toBe("Cartaisy");
   });
 
-  it("keeps previously persisted branding when a later setConfig call omits it (failed refetch)", () => {
+  it("clears previously persisted branding when a later SUCCESSFUL fetch genuinely has none (merchant removed their branding)", () => {
+    useStoreConfigStore.getState().setConfig({
+      currency: "USD",
+      timezone: "UTC",
+      storeName: "Acme Outfitters",
+      primaryColor: "#A82A50",
+      secondaryColor: "#4B5563",
+      logoUrl: "https://cdn.cartaisy.com/stores/acme/logo.png",
+    });
+
+    // A later successful fetch (fetchSucceeded defaults to true) that no
+    // longer includes branding must clear it, not keep the stale value
+    // forever — this is the P1 Greptile/Codex both flagged.
+    useStoreConfigStore.getState().setConfig({
+      currency: "USD",
+      timezone: "UTC",
+      storeName: "Acme Outfitters",
+    });
+
+    const state = useStoreConfigStore.getState();
+    expect(state.primaryColor).toBeUndefined();
+    expect(state.secondaryColor).toBeUndefined();
+    expect(state.logoUrl).toBeUndefined();
+  });
+
+  it("keeps previously persisted branding when a later setConfig call is explicitly marked fetchSucceeded: false (real fetch failure)", () => {
     // First startup: backend returns full branding.
     useStoreConfigStore.getState().setConfig({
       currency: "USD",
@@ -69,21 +97,28 @@ describe("useStoreConfigStore", () => {
       logoUrl: "https://cdn.cartaisy.com/stores/acme/logo.png",
     });
 
-    // Second startup: fetch fails, caller passes through bare defaults with
-    // no branding fields at all (mirroring getStoreConfig()'s catch path).
+    // Second startup: fetch genuinely failed. Caller passes through bare
+    // defaults with no branding fields, explicitly marked as a failure —
+    // this must preserve branding rather than clear it.
     useStoreConfigStore.getState().setConfig({
       currency: "USD",
       timezone: "UTC",
       storeName: "",
+      fetchSucceeded: false,
     });
 
     const state = useStoreConfigStore.getState();
     expect(state.primaryColor).toBe("#A82A50");
     expect(state.secondaryColor).toBe("#4B5563");
     expect(state.logoUrl).toBe("https://cdn.cartaisy.com/stores/acme/logo.png");
+    // currency/timezone/storeName are unaffected by fetchSucceeded — they
+    // keep their existing overwrite-on-every-call behavior, unchanged from
+    // before this ticket.
+    expect(state.currency).toBe("USD");
+    expect(state.storeName).toBe("");
   });
 
-  it("updates a single branding field on a later call without disturbing the others", () => {
+  it("updates branding to whatever a later successful fetch's full response contains (e.g. merchant updated their logo)", () => {
     useStoreConfigStore.getState().setConfig({
       currency: "USD",
       timezone: "UTC",
@@ -93,11 +128,15 @@ describe("useStoreConfigStore", () => {
       logoUrl: "https://cdn.cartaisy.com/stores/acme/logo.png",
     });
 
-    // Only the logo changed on this fetch (e.g. merchant updated their logo).
+    // GET /store/config always returns the store's whole current branding
+    // together, not a partial diff — so a later successful call carries all
+    // three fields again, with only the logo actually changed.
     useStoreConfigStore.getState().setConfig({
       currency: "USD",
       timezone: "UTC",
       storeName: "Acme Outfitters",
+      primaryColor: "#A82A50",
+      secondaryColor: "#4B5563",
       logoUrl: "https://cdn.cartaisy.com/stores/acme/logo-v2.png",
     });
 

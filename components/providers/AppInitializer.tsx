@@ -130,6 +130,10 @@ export const AppInitializer = () => {
       storeConfigFetchedRef.current = true;
 
       try {
+        // getStoreConfig() throws on fetch failure (see storeConfig.ts) so
+        // this catch block can tell a successful-but-empty response apart
+        // from a genuine failure — only the latter should preserve
+        // previously persisted branding instead of clearing it.
         const config = await getStoreConfig();
         const branding = validateBranding({
           primaryColor: config.primaryColor,
@@ -140,16 +144,18 @@ export const AppInitializer = () => {
           currency: config.currency || "USD",
           timezone: config.timezone || "UTC",
           storeName: config.name || "",
-          // Fields that failed validation (or were never present — including
-          // when getStoreConfig() itself swallowed a fetch failure and
-          // returned its bare currency/timezone/name defaults) are omitted
-          // here entirely, so the store's own merge logic keeps whatever
-          // branding was last persisted instead of clearing it.
           ...branding,
+          fetchSucceeded: true,
         });
         console.log("[AppInitializer] Store config loaded - Currency:", config.currency);
       } catch (error) {
-        console.warn("[AppInitializer] Failed to load store config:", error);
+        console.warn("[AppInitializer] Failed to load store config, using defaults:", error);
+        useStoreConfigStore.getState().setConfig({
+          currency: "USD",
+          timezone: "UTC",
+          storeName: "",
+          fetchSucceeded: false,
+        });
       }
     };
 

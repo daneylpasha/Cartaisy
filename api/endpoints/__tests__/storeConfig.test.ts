@@ -65,13 +65,17 @@ describe("getStoreConfig", () => {
     expect(config.name).toBe("Cartaisy");
   });
 
-  it("falls back to bare defaults with no branding fields when the fetch fails, and does not throw", async () => {
-    mockGet.mockRejectedValueOnce(new Error("network error"));
+  it("rejects on fetch failure instead of silently falling back to defaults", async () => {
+    // getStoreConfig() used to catch this internally and resolve to bare
+    // defaults, which made a genuine fetch failure indistinguishable from a
+    // successful response with no branding — both looked like the same
+    // plain object to the caller. It now lets the error propagate so
+    // AppInitializer's catch block can tell the two apart and only
+    // preserve previously persisted branding on a real failure (see
+    // store/useStoreConfigStore.ts's `fetchSucceeded` flag).
+    const networkError = new Error("network error");
+    mockGet.mockRejectedValueOnce(networkError);
 
-    await expect(getStoreConfig()).resolves.toEqual({
-      currency: "USD",
-      timezone: "UTC",
-      name: "",
-    });
+    await expect(getStoreConfig()).rejects.toThrow("network error");
   });
 });
