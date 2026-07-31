@@ -76,9 +76,19 @@ These values should be treated as untrusted public input. The mobile app should 
 
 Runtime branding should not introduce direct Shopify calls in the mobile app. Catalog, store, and branding data should continue to come from the Cartaisy backend.
 
-## Recommended API Response Shape
+## API Response Shape (Live)
 
-Recommended additive shape for `GET /store/config`:
+**Update:** this section originally recommended nesting branding fields under
+a `branding` object. That was never implemented. Phase 3 item 1 shipped
+`primaryColor`, `secondaryColor`, and `logoUrl` as **flat top-level fields on
+`data`** instead, and the mobile data layer (Phase 3 item 2) was built
+against that real shape. `shortName`, `logoDarkUrl`, and
+`branding.updatedAt` were never implemented on the backend and are not
+available today — treat any reference to them elsewhere in this document as
+aspirational, not current.
+
+Actual shape for `GET /store/config`, verified live against
+`src/controllers/storeConfigController.ts` in the backend repo:
 
 ```json
 {
@@ -87,14 +97,10 @@ Recommended additive shape for `GET /store/config`:
     "name": "Merchant Store",
     "currency": "USD",
     "timezone": "UTC",
-    "branding": {
-      "shortName": "Merchant",
-      "primaryColor": "#A82A50",
-      "secondaryColor": "#4B5563",
-      "logoUrl": "https://cdn.cartaisy.com/stores/store-id/logo.png",
-      "logoDarkUrl": "https://cdn.cartaisy.com/stores/store-id/logo-dark.png",
-      "updatedAt": "2026-06-30T00:00:00.000Z"
-    }
+    "language": "en",
+    "primaryColor": "#A82A50",
+    "secondaryColor": "#4B5563",
+    "logoUrl": "https://cdn.cartaisy.com/stores/store-id/logo.png"
   }
 }
 ```
@@ -102,8 +108,9 @@ Recommended additive shape for `GET /store/config`:
 Contract notes:
 
 - Keep the existing `name`, `currency`, and `timezone` fields stable.
-- Add `branding` as an optional object so older backend responses continue to work.
-- Use six-digit hex colors initially, such as `#A82A50`, to keep validation and accessibility checks simple.
+- `primaryColor`, `secondaryColor`, and `logoUrl` are optional, flat fields — add them without breaking older clients that don't read them yet.
+- The backend already validates before returning: malformed hex colors are omitted (not nulled), and `logoUrl` is omitted unless it parses as an absolute `http:`/`https:` URL. The mobile app should still validate independently rather than trust the response shape blindly (see Recommended Mobile Fallback Behavior below).
+- Use six-digit hex colors, such as `#A82A50`, to keep validation and accessibility checks simple.
 - Use public CDN HTTPS URLs for logos; do not embed credentials or signed URLs that expose private storage.
 - Keep backend tenant scoping authoritative through the existing store context. The mobile app should not choose arbitrary tenant branding by URL.
 
