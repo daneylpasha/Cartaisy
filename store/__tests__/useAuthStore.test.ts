@@ -15,6 +15,7 @@ const baseState = {
   isGuest: false,
   guestSessionId: null,
   deviceId: null,
+  _hasHydrated: false,
 };
 
 describe("useAuthStore", () => {
@@ -90,5 +91,47 @@ describe("useAuthStore", () => {
 
     expect(firstDeviceId).toBeTruthy();
     expect(useAuthStore.getState().deviceId).toBe(firstDeviceId);
+  });
+
+  describe("onRehydrateStorage", () => {
+    // _hasHydrated gates guest-mode setup, startup token refresh, push-token
+    // registration, and isAuthenticated checks across the tab screens and
+    // order/address hooks (see AppInitializer.tsx, app/_layout.tsx,
+    // app/(tabs)/*.tsx, api/hooks/useOrders.ts, api/hooks/useAddresses.ts).
+    // A rehydration that never marks the flag true would freeze all of that
+    // for the app install, so both the success and failure paths need to
+    // reliably flip it.
+    beforeEach(() => {
+      jest.spyOn(console, "warn").mockImplementation(() => {});
+    });
+
+    it("marks hydration complete on a successful rehydration", () => {
+      const onRehydrateStorage = useAuthStore.persist.getOptions().onRehydrateStorage;
+      expect(onRehydrateStorage).toBeDefined();
+
+      const rehydrateCallback = onRehydrateStorage!(useAuthStore.getState());
+      expect(rehydrateCallback).toBeDefined();
+
+      rehydrateCallback!(useAuthStore.getState(), undefined);
+
+      expect(useAuthStore.getState()._hasHydrated).toBe(true);
+    });
+
+    it("still marks hydration complete when AsyncStorage rehydration fails (corrupt JSON, storage read error)", () => {
+      // On a failed rehydration, zustand's persist middleware calls
+      // onRehydrateStorage's returned callback with state=undefined and an
+      // error, instead of the hydrated state. The old implementation used
+      // state?.setHasHydrated(true), which silently no-oped on undefined —
+      // simulate that failure path directly via the persist API.
+      const onRehydrateStorage = useAuthStore.persist.getOptions().onRehydrateStorage;
+      expect(onRehydrateStorage).toBeDefined();
+
+      const rehydrateCallback = onRehydrateStorage!(useAuthStore.getState());
+      expect(rehydrateCallback).toBeDefined();
+
+      rehydrateCallback!(undefined, new Error("AsyncStorage read failed"));
+
+      expect(useAuthStore.getState()._hasHydrated).toBe(true);
+    });
   });
 });

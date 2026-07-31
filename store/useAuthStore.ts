@@ -129,7 +129,23 @@ const useAuthStore = create<AuthState>()(
         deviceId: state.deviceId,
         isGuest: state.isGuest,
       }),
-      onRehydrateStorage: () => (state) => {
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          // AsyncStorage read failed, or the persisted JSON couldn't be
+          // parsed — `state` is undefined in this case, so
+          // `state?.setHasHydrated(true)` would silently no-op and leave
+          // _hasHydrated false for the rest of the session. That flag gates
+          // guest-mode setup, startup token refresh, push-token
+          // registration, and isAuthenticated checks across the tab
+          // screens and order/address hooks — a single corrupted or
+          // unreadable auth-storage entry would otherwise freeze all of
+          // that permanently for the install. Fall back to the store's own
+          // action so hydration is always marked complete either way (same
+          // pattern already shipped in useStoreConfigStore.ts, PR #104).
+          console.warn('[AuthStore] Failed to rehydrate persisted state:', error);
+          useAuthStore.getState().setHasHydrated(true);
+          return;
+        }
         console.log('[AuthStore] Rehydrated from storage, token:', state?.token ? 'EXISTS' : 'NULL');
         console.log('[AuthStore] Guest session:', state?.guestSessionId ? 'EXISTS' : 'NULL');
         state?.setHasHydrated(true);
