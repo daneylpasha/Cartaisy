@@ -4,6 +4,7 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
 import useCartStore from "@/store/useCartStore";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
 import useUserStore from "@/store/useUserStore";
 import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
@@ -27,6 +28,14 @@ export const HomeHeader = ({
   const { defaultAddress } = useUserStore();
   const cartItemCount = getTotalQuantity();
 
+  // Runtime branding (PR #104's data layer) — both are already validated
+  // (hex color, HTTPS-only logo URL) before they land in the store, so no
+  // extra validation is needed here beyond checking logoUrl is non-empty.
+  // Absent in either case falls back to today's exact bundled appearance.
+  const primaryColor = useStoreConfigStore((state) => state.primaryColor);
+  const logoUrl = useStoreConfigStore((state) => state.logoUrl);
+  const hasLogoUrl = Boolean(logoUrl && logoUrl.trim());
+
   // Format default address for display
   const displayAddress = defaultAddress
     ? [
@@ -43,7 +52,7 @@ export const HomeHeader = ({
     <YStack
       paddingTop={Platform.OS === "android" ? 10 : 0}
       paddingHorizontal="$md"
-      backgroundColor="$primary"
+      backgroundColor={primaryColor || "$primary"}
       paddingBottom={"$md"}
     >
       <XStack alignItems="center" paddingVertical={"$xs"} position="relative">
@@ -55,7 +64,16 @@ export const HomeHeader = ({
           left="40%"
           // transform={[{ translateX: -30 }]}
         >
-          <AppImage name="cartaisyWhitelogo" width={75} height={26} />
+          {hasLogoUrl ? (
+            <AppImage
+              source={logoUrl}
+              fallbackName="cartaisyWhitelogo"
+              width={75}
+              height={26}
+            />
+          ) : (
+            <AppImage name="cartaisyWhitelogo" width={75} height={26} />
+          )}
         </YStack>
 
         <YStack position="absolute" right={0}>
