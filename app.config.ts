@@ -123,6 +123,7 @@ const config: ExpoConfig = {
     [
       "expo-splash-screen",
       {
+        image: appIconPath,
         backgroundColor: splashBackgroundColor,
         android: {
           backgroundColor: splashBackgroundColor,
