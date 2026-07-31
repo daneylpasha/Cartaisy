@@ -155,6 +155,25 @@ describe("useStoreConfigStore", () => {
     expect(useStoreConfigStore.getState()._hasHydrated).toBe(true);
   });
 
+  it("still marks hydration complete when AsyncStorage rehydration fails (corrupt JSON, storage read error)", () => {
+    // On a failed rehydration, zustand's persist middleware calls
+    // onRehydrateStorage's returned callback with state=undefined and an
+    // error, instead of the hydrated state. If that path didn't set
+    // _hasHydrated, AppInitializer's fetch effect (gated on this flag)
+    // would stay blocked for the rest of the session and /store/config
+    // would never be requested — worse than the race this flag exists to
+    // prevent. Simulate that failure path directly via the persist API.
+    const onRehydrateStorage = useStoreConfigStore.persist.getOptions().onRehydrateStorage;
+    expect(onRehydrateStorage).toBeDefined();
+
+    const rehydrateCallback = onRehydrateStorage!(useStoreConfigStore.getState());
+    expect(rehydrateCallback).toBeDefined();
+
+    rehydrateCallback!(undefined, new Error("AsyncStorage read failed"));
+
+    expect(useStoreConfigStore.getState()._hasHydrated).toBe(true);
+  });
+
   it("reset does not affect _hasHydrated — it's a one-time hydration flag, not part of the config being reset", () => {
     useStoreConfigStore.getState().setHasHydrated(true);
     useStoreConfigStore.getState().setConfig({

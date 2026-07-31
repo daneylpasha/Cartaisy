@@ -90,7 +90,20 @@ const useStoreConfigStore = create<StoreConfigState>()(
     {
       name: "store-config-storage",
       storage: createJSONStorage(() => AsyncStorage),
-      onRehydrateStorage: () => (state) => {
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          // AsyncStorage read failed, or the persisted JSON couldn't be
+          // parsed — `state` is undefined in this case, so
+          // `state?.setHasHydrated(true)` would silently no-op and leave
+          // _hasHydrated false for the rest of the session. Since
+          // AppInitializer gates its entire /store/config fetch on that
+          // flag, that would permanently block the fetch instead of just
+          // skipping a stale-cache restore. Fall back to the store's own
+          // action so hydration is always marked complete either way.
+          console.warn("[StoreConfigStore] Failed to rehydrate persisted state:", error);
+          useStoreConfigStore.getState().setHasHydrated(true);
+          return;
+        }
         state?.setHasHydrated(true);
       },
     }
