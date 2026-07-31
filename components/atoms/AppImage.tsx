@@ -11,10 +11,11 @@ import { styled, YStack } from "tamagui";
 type AppImageProps = {
   name?: keyof typeof Icons;
   source?: string | { uri: string };
-  // Bundled icon to render when a remote `source` fails to load. Only
-  // takes effect on the remote-image path — call sites that don't pass
-  // this keep today's behavior of rendering nothing on a failed remote
-  // load.
+  // Bundled icon to show in place of a remote `source` while it's still
+  // loading, and to fall back to if it fails to load. Only takes effect
+  // on the remote-image path — call sites that don't pass this keep
+  // today's behavior (a gray shimmer while loading, nothing on a failed
+  // load).
   fallbackName?: keyof typeof Icons;
   size?: number;
   width?: number | string;
@@ -224,24 +225,19 @@ export const AppImage: React.FC<AppImageProps> = ({
 
   // Render regular image with shimmer placeholder for remote images
   if (isRemoteImage) {
-    // A remote image that failed to load: fall back to a bundled icon if
-    // the caller opted in via `fallbackName`, instead of continuing to
-    // render the now-broken remote <Image> (native `Image` renders
-    // blank/nothing on a failed load, not any kind of fallback). Call
-    // sites that don't pass `fallbackName` keep today's exact behavior.
-    if (hasError && fallbackName) {
-      return (
-        <BundledIcon
-          iconName={fallbackName}
-          width={finalWidth}
-          height={finalHeight}
-          style={style}
-          tintColor={finalTintColor}
-          resizeMode={resizeMode}
-          radius={radius}
-        />
-      );
-    }
+    // When the caller opted in via `fallbackName`: keep the bundled icon
+    // visible both while the remote image is still loading AND if it
+    // fails, instead of a generic gray shimmer or a blank failed load.
+    // Per MOBILE_RUNTIME_BRANDING_CONTRACT.md's "keep current bundled
+    // assets visible until a remote logo finishes loading" — a shimmer
+    // block over an empty logo slot during every cache miss violates that,
+    // and native <Image> renders blank/nothing on a failed load with no
+    // fallback of its own. The real <Image> below stays mounted the whole
+    // time (just visually covered) so it can still finish loading or
+    // error in the background; a successful load hides this overlay.
+    // Call sites that don't pass `fallbackName` keep today's exact
+    // shimmer-while-loading, blank-on-error behavior, unchanged.
+    const showBundledOverlay = !!fallbackName && (isLoading || hasError);
 
     return (
       <YStack
@@ -249,8 +245,19 @@ export const AppImage: React.FC<AppImageProps> = ({
         height={finalHeight}
         position="relative"
       >
-        {/* Shimmer Placeholder - Only visible while loading */}
-        {isLoading ? (
+        {showBundledOverlay ? (
+          <YStack position="absolute" top={0} left={0} right={0} bottom={0} zIndex={10}>
+            <BundledIcon
+              iconName={fallbackName!}
+              width={finalWidth}
+              height={finalHeight}
+              style={style}
+              tintColor={finalTintColor}
+              resizeMode={resizeMode}
+              radius={radius}
+            />
+          </YStack>
+        ) : isLoading ? (
           <ShimmerProvider key={`shimmer-${sourceKey}`} duration={1000}>
             <YStack
               position="absolute"
@@ -269,7 +276,8 @@ export const AppImage: React.FC<AppImageProps> = ({
           </ShimmerProvider>
         ) : null}
 
-        {/* Actual Image */}
+        {/* Actual Image — always mounted so it can load/error in the
+            background even while the overlay above is covering it. */}
         <StyledImage
           key={sourceKey}
           source={finalSource}

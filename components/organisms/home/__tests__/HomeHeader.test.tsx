@@ -72,7 +72,7 @@ describe("HomeHeader", () => {
     expect(flatStyle.backgroundColor).toBe(DEFAULT_PRIMARY_HEX);
   });
 
-  it("renders the runtime logo and primary color when both are present in the store", () => {
+  it("renders the primary color background immediately and the bundled logo while the runtime logo is still loading", () => {
     const logoUrl = "https://cdn.cartaisy.com/stores/acme/logo.png";
     const primaryColor = "#123456";
 
@@ -83,6 +83,11 @@ describe("HomeHeader", () => {
 
     const { UNSAFE_getAllByType } = renderHeader();
 
+    // Per MOBILE_RUNTIME_BRANDING_CONTRACT.md ("keep current bundled
+    // assets visible until a remote logo finishes loading"), the bundled
+    // logo is what's shown while the remote one is still loading — not a
+    // generic shimmer — while the real remote image stays mounted
+    // underneath so it can finish loading in the background.
     const images = UNSAFE_getAllByType(Image);
     const remoteLogo = images.find(
       (img) =>
@@ -90,14 +95,44 @@ describe("HomeHeader", () => {
         img.props.source?.uri === logoUrl
     );
     expect(remoteLogo).toBeTruthy();
-    // The bundled fallback asset must not also be rendered alongside it.
     expect(images.some((img) => img.props.source === MOCK_LOGO_ASSET)).toBe(
-      false
+      true
     );
 
+    // Background color doesn't wait on the logo — it applies immediately.
     const rootView = UNSAFE_getAllByType(View)[0];
     const flatStyle = StyleSheet.flatten(rootView.props.style);
     expect(flatStyle.backgroundColor).toBe(primaryColor);
+  });
+
+  it("swaps to the runtime logo once it finishes loading successfully", () => {
+    const logoUrl = "https://cdn.cartaisy.com/stores/acme/logo.png";
+    useStoreConfigStore.setState({ logoUrl });
+
+    const { UNSAFE_getAllByType } = renderHeader();
+
+    const remoteLogoBefore = UNSAFE_getAllByType(Image).find(
+      (img) =>
+        typeof img.props.source === "object" &&
+        img.props.source?.uri === logoUrl
+    );
+
+    const { act } = require("@testing-library/react-native");
+    act(() => {
+      remoteLogoBefore!.props.onLoadEnd();
+    });
+
+    const images = UNSAFE_getAllByType(Image);
+    expect(images.some((img) => img.props.source === MOCK_LOGO_ASSET)).toBe(
+      false
+    );
+    expect(
+      images.some(
+        (img) =>
+          typeof img.props.source === "object" &&
+          img.props.source?.uri === logoUrl
+      )
+    ).toBe(true);
   });
 
   it("falls back to the bundled logo when the runtime logoUrl fails to load", () => {
