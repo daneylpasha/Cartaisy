@@ -1,5 +1,6 @@
 import { AppImage } from "@/components/atoms/AppImage";
 import useAuthStore from "@/store/useAuthStore";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
 import {
   resetDeepLinkState,
   wasDeepLinkHandled,
@@ -13,6 +14,13 @@ const SPLASH_DURATION = 3000;
 
 const Splash = () => {
   const hasNavigated = useRef(false);
+
+  // Runtime branding (PR #104's data layer), same pattern PR #106 shipped
+  // for HomeHeader — already validated (HTTPS-only logo URL) before it
+  // lands in the store, so no extra validation needed beyond a non-empty
+  // check. Absent falls back to today's exact bundled appearance.
+  const logoUrl = useStoreConfigStore((state) => state.logoUrl);
+  const hasLogoUrl = Boolean(logoUrl && logoUrl.trim());
 
   useEffect(() => {
     // Only navigate once on initial mount
@@ -64,7 +72,16 @@ const Splash = () => {
       alignItems="center"
     >
       <StatusBar hidden={true} />
-      <AppImage width={270} height={79} name={"cartaisyColorlogo"} />
+      {hasLogoUrl ? (
+        <AppImage
+          source={logoUrl}
+          fallbackName="cartaisyColorlogo"
+          width={270}
+          height={79}
+        />
+      ) : (
+        <AppImage width={270} height={79} name={"cartaisyColorlogo"} />
+      )}
     </YStack>
   );
 };
