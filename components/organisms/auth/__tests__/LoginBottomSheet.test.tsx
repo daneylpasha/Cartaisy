@@ -177,4 +177,10 @@ describe("LoginBottomSheet — runtime logo", () => {
   // test isn't included: written, run against this component with both
   // `key` props removed, and it still passed — same synchronous-effect-
   // flushing limitation PR #107/#108 already documented for this harness.
+  //
+  // Same finding for the URL-to-URL variant (review caught, PR #109,
+  // before merge): the runtime branch's key is suffixed with `logoUrl`
+  // itself so switching between two different non-empty URLs also
+  // remounts. A test for that was attempted the same way and also passed
+  // regardless of the fix — not included for the same reason.
 });

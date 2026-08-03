@@ -123,4 +123,10 @@ describe("SignUp screen — runtime logo", () => {
   // included: written, run against this file with both `key` props
   // removed, and it still passed — same synchronous-effect-flushing
   // limitation PR #107/#108 already documented for this test harness.
+  //
+  // Same finding for the URL-to-URL variant (review caught, PR #109,
+  // before merge): the runtime branch's key is suffixed with `logoUrl`
+  // itself so switching between two different non-empty URLs also
+  // remounts. A test for that was attempted the same way and also passed
+  // regardless of the fix — not included for the same reason.
 });

@@ -236,11 +236,22 @@ const Login = () => {
               // bundled logo stays visible with no gap. Same fix as
               // app/splash.tsx (PR #107) and HomeHeader.tsx (PR #108).
               //
+              // The key is suffixed with `logoUrl` itself (not just the
+              // constant "runtime-logo") so this same remount also happens
+              // when one non-empty logoUrl is replaced by a *different*
+              // non-empty logoUrl while this screen stays mounted — e.g. a
+              // merchant's branding refetch resolves to a new URL. Without
+              // this, the constant key would let this exact bug recur on
+              // that transition too, since React would reuse the existing
+              // instance and its already-`isLoading=false` state instead of
+              // remounting (caught in review on PR #109, fixed before
+              // merge rather than shipped and patched later).
+              //
               // No tintColor here: a merchant's uploaded logo is likely
               // multi-color, and tinting would flatten it into a solid
               // silhouette. Only the bundled fallback below keeps a tint.
               <AppImage
-                key="runtime-logo"
+                key={`runtime-logo-${logoUrl}`}
                 source={logoUrl}
                 fallbackName="cartaisyColorlogo"
                 width={107}

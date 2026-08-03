@@ -139,4 +139,13 @@ describe("Login screen — runtime logo", () => {
   // gap the bug lives in. Per that established standard, no such test is
   // included here since it would pass regardless of whether the `key`
   // props are present.
+  //
+  // Same finding for the URL-to-URL variant of this bug (review caught,
+  // PR #109, before merge): the runtime branch's key is suffixed with
+  // `logoUrl` itself so switching between two different non-empty URLs
+  // also remounts, not just the absent-to-present transition. A test
+  // simulating a loaded logoUrl swapping to a different logoUrl was
+  // written and run against a build with that suffix reverted to the
+  // bare "runtime-logo" constant — it still passed, same synchronous-
+  // effect-flushing reason. Not included for the same reason.
 });
