@@ -136,6 +136,27 @@ describe("Add New Card Details screen — runtime logo", () => {
     expect(remoteLogo!.props.tintColor).toBeUndefined();
   });
 
+  it("gives the runtime logo an explicit height so a real network image can actually size itself (caught in review, PR #111)", () => {
+    const logoUrl = "https://cdn.cartaisy.com/stores/acme/logo.png";
+    useStoreConfigStore.setState({ logoUrl });
+
+    const { UNSAFE_getAllByType } = renderWithTamagui(<AddNewCardDetails />);
+
+    const remoteLogo = UNSAFE_getAllByType(Image).find(
+      (img) =>
+        typeof img.props.source === "object" &&
+        img.props.source?.uri === logoUrl
+    );
+    expect(remoteLogo).toBeTruthy();
+    // Regression guard for the width-only bug: without an explicit height,
+    // React Native cannot size a network <Image>, so it renders at zero
+    // height and is effectively invisible. width-only "worked" for the
+    // bundled fallback only because that's a local require()'d asset with
+    // build-time-known dimensions — not true for this remote path.
+    const resolvedStyle = Object.assign({}, ...[].concat(remoteLogo!.props.style));
+    expect(resolvedStyle.height).toBe(24);
+  });
+
   it("falls back to the bundled cartaisyColorlogo when the runtime logoUrl fails to load", () => {
     const logoUrl = "https://cdn.cartaisy.com/stores/acme/unreachable-logo.png";
     useStoreConfigStore.setState({ logoUrl });

@@ -243,11 +243,25 @@ const AddNewCardDetails = () => {
                     // LoginBottomSheet.tsx (PR #109). No tintColor here: a
                     // real merchant logo shouldn't be flattened to a
                     // silhouette.
+                    //
+                    // height={24} is required here, unlike the bundled
+                    // branch below (which gets away with width-only because
+                    // it's a local `require()`'d asset with build-time-known
+                    // dimensions). AppImage's remote-image path renders a
+                    // real network <Image>, which React Native cannot size
+                    // without an explicit height in style — width-only left
+                    // both the wrapper and the image at zero height, making
+                    // a real merchant's logo (and its loading/error overlay)
+                    // invisible on the card mockup. Caught in review on
+                    // PR #111 (Codex), confirmed via a Jest probe showing
+                    // the resolved style was `{width: 70}` with no height
+                    // key at all before this fix.
                     <AppImage
                       key={`runtime-logo-${logoUrl}`}
                       source={logoUrl}
                       fallbackName="cartaisyColorlogo"
                       width={70}
+                      height={24}
                     />
                   ) : (
                     <AppImage
