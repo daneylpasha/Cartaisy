@@ -15,6 +15,7 @@ import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { SHADOW_STYLES } from "@/constants/styles";
 import useAuthStore from "@/store/useAuthStore";
 import useCartStore from "@/store/useCartStore";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
 import useUserStore from "@/store/useUserStore";
 import { t } from "@/translations";
 import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
@@ -59,6 +60,14 @@ export const LoginBottomSheet = forwardRef<
   const { setToken, setProfileComplete, guestSessionId, clearGuestSession } =
     useAuthStore();
   const { setUser } = useUserStore();
+
+  // Runtime branding (PR #104's data layer) — both are already validated
+  // (hex color, HTTPS-only logo URL) before they land in the store, so no
+  // extra validation is needed here beyond checking logoUrl is non-empty.
+  // Absent in either case falls back to today's exact bundled appearance.
+  const primaryColor = useStoreConfigStore((state) => state.primaryColor);
+  const logoUrl = useStoreConfigStore((state) => state.logoUrl);
+  const hasLogoUrl = Boolean(logoUrl && logoUrl.trim());
 
   const { mutateAsync: loginUser, isPending: isLoggingIn } = useLogin({
     onSuccess: async (data) => {
@@ -246,12 +255,46 @@ export const LoginBottomSheet = forwardRef<
               shadowRadius={4}
               backgroundColor="transparent"
             >
-              <AppImage
-                tintColor={"$primary"}
-                name={"cartaisyColorlogo"}
-                width={100}
-                height={45}
-              />
+              {hasLogoUrl ? (
+                // Distinct `key`s on these two branches are load-bearing,
+                // not decorative: without them, React treats both branches
+                // as the same <AppImage> element at this position and
+                // reuses the existing instance (and its state) when
+                // logoUrl arrives asynchronously after mount (e.g. from
+                // AppInitializer's startup fetch, which resolves after
+                // this sheet has already rendered the bundled logo). That
+                // reused instance's `isLoading` state is still `false`
+                // from its initial bundled-icon render, so the first
+                // render with the new `source` prop has no fallback
+                // overlay and briefly shows a blank/unloaded image until
+                // AppImage's own effect catches up on a subsequent
+                // render. A `key` forces a full remount on that
+                // transition instead, so the new instance's `isLoading`
+                // initializes correctly (via its own
+                // useState(!!isRemoteSource)) from its very first render
+                // — the bundled logo stays visible with no gap. Same fix
+                // as app/splash.tsx (PR #107) and HomeHeader.tsx (PR
+                // #108).
+                //
+                // No tintColor here: a merchant's uploaded logo is likely
+                // multi-color, and tinting would flatten it into a solid
+                // silhouette. Only the bundled fallback below keeps a tint.
+                <AppImage
+                  key="runtime-logo"
+                  source={logoUrl}
+                  fallbackName="cartaisyColorlogo"
+                  width={100}
+                  height={45}
+                />
+              ) : (
+                <AppImage
+                  key="bundled-logo"
+                  tintColor={primaryColor || "$primary"}
+                  name={"cartaisyColorlogo"}
+                  width={100}
+                  height={45}
+                />
+              )}
             </YStack>
             <Spacer size={"$md"} />
             <HeadingSMBold>{t("auth.login.title")}</HeadingSMBold>
