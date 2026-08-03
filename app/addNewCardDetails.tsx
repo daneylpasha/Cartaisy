@@ -22,6 +22,7 @@ import {
 } from "@/components/molecules/bottom-sheets";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import CardLinkModal from "@/components/organisms/paymentmethod/CardLinkModal";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
 import { CardField, useStripe } from "@stripe/stripe-react-native";
@@ -52,6 +53,15 @@ const AddNewCardDetails = () => {
   const form = useForm();
   const { createPaymentMethod } = useStripe();
   const calendarBottomSheetRef = useRef<BaseBottomSheetRef>(null);
+
+  // Runtime branding (PR #104's data layer) — same tint-split pattern as
+  // login.tsx/signUp.tsx/LoginBottomSheet.tsx (PR #109): bundled fallback
+  // keeps today's tintColor="$primary" (or the runtime primaryColor once
+  // set), the runtime logo never gets a tintColor since a real merchant
+  // logo shouldn't be flattened to a silhouette.
+  const primaryColor = useStoreConfigStore((state) => state.primaryColor);
+  const logoUrl = useStoreConfigStore((state) => state.logoUrl);
+  const hasLogoUrl = Boolean(logoUrl && logoUrl.trim());
 
   // Fetch existing payment methods to check for duplicates
   const { data: paymentMethodsResponse } = useListPaymentMethods();
@@ -226,12 +236,42 @@ const AddNewCardDetails = () => {
                   top={30}
                   right={40}
                 >
-                  <AppImage
-                    name="cartaisyColorlogo"
-                    width={70}
-                    // height={24}
-                    tintColor={"$primary"}
-                  />
+                  {hasLogoUrl ? (
+                    // Distinct `key`s force a full remount on the absent-
+                    // to-present and URL-to-different-URL transitions —
+                    // same load-bearing reasoning as login.tsx/signUp.tsx/
+                    // LoginBottomSheet.tsx (PR #109). No tintColor here: a
+                    // real merchant logo shouldn't be flattened to a
+                    // silhouette.
+                    //
+                    // height={24} is required here, unlike the bundled
+                    // branch below (which gets away with width-only because
+                    // it's a local `require()`'d asset with build-time-known
+                    // dimensions). AppImage's remote-image path renders a
+                    // real network <Image>, which React Native cannot size
+                    // without an explicit height in style — width-only left
+                    // both the wrapper and the image at zero height, making
+                    // a real merchant's logo (and its loading/error overlay)
+                    // invisible on the card mockup. Caught in review on
+                    // PR #111 (Codex), confirmed via a Jest probe showing
+                    // the resolved style was `{width: 70}` with no height
+                    // key at all before this fix.
+                    <AppImage
+                      key={`runtime-logo-${logoUrl}`}
+                      source={logoUrl}
+                      fallbackName="cartaisyColorlogo"
+                      width={70}
+                      height={24}
+                    />
+                  ) : (
+                    <AppImage
+                      key="bundled-logo"
+                      name="cartaisyColorlogo"
+                      width={70}
+                      // height={24}
+                      tintColor={primaryColor || "$primary"}
+                    />
+                  )}
                   <AppImage name="waveIcon" width={24} height={24} />
                 </XStack>
                 <YStack position="absolute" width={"80%"} bottom={20} left={40}>
