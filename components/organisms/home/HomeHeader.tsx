@@ -65,14 +65,37 @@ export const HomeHeader = ({
           // transform={[{ translateX: -30 }]}
         >
           {hasLogoUrl ? (
+            // Distinct `key`s on these two branches are load-bearing, not
+            // decorative: without them, React treats both branches as the
+            // same <AppImage> element at this position and reuses the
+            // existing instance (and its state) when logoUrl arrives
+            // asynchronously after mount (e.g. from AppInitializer's
+            // startup fetch, which resolves after this header has already
+            // rendered the bundled logo). That reused instance's
+            // `isLoading` state is still `false` from its initial
+            // bundled-icon render, so the first render with the new
+            // `source` prop has no fallback overlay and briefly shows a
+            // blank/unloaded image until AppImage's own effect catches up
+            // on a subsequent render. A `key` forces a full remount on
+            // that transition instead, so the new instance's `isLoading`
+            // initializes correctly (via its own
+            // useState(!!isRemoteSource)) from its very first render — the
+            // bundled logo stays visible with no gap. Same fix as
+            // app/splash.tsx (PR #107).
             <AppImage
+              key="runtime-logo"
               source={logoUrl}
               fallbackName="cartaisyWhitelogo"
               width={75}
               height={26}
             />
           ) : (
-            <AppImage name="cartaisyWhitelogo" width={75} height={26} />
+            <AppImage
+              key="bundled-logo"
+              name="cartaisyWhitelogo"
+              width={75}
+              height={26}
+            />
           )}
         </YStack>
 
