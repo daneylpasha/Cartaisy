@@ -1,7 +1,10 @@
 import { StyleSheet } from "react-native";
 import { getPrimaryLight } from "../utils/colorUtils";
 
-const PRIMARY_COLOR = "#A82A50";
+// Exported so the runtime theme sync (hooks/useDynamicPrimaryTheme.ts) has a
+// single source of truth to revert to when no merchant primaryColor is set —
+// never re-declare this hex elsewhere.
+export const PRIMARY_COLOR = "#A82A50";
 
 export const tokens = {
   color: {

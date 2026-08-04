@@ -57,6 +57,58 @@ describe("brandingValidation", () => {
     });
   });
 
+  describe("validateBranding — primaryColor contrast guardrail", () => {
+    // Per docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md's accessibility
+    // guardrails: the app pairs $primary backgrounds with fixed $white text
+    // in its existing filled-action pattern, so a merchant color must have
+    // enough contrast against white or it gets dropped like a malformed one.
+    const devWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+    afterEach(() => {
+      devWarnSpy.mockClear();
+    });
+
+    it("keeps a well-formed, high-contrast primaryColor", () => {
+      expect(validateBranding({ primaryColor: "#123456" })).toEqual({
+        primaryColor: "#123456",
+      });
+    });
+
+    it("drops a well-formed but low-contrast primaryColor (e.g. white) instead of persisting it", () => {
+      expect(validateBranding({ primaryColor: "#FFFFFF" })).toEqual({});
+    });
+
+    it("logs a development warning when dropping for low contrast, not silently", () => {
+      validateBranding({ primaryColor: "#FFFFFF" });
+      expect(devWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("#FFFFFF"),
+      );
+    });
+
+    it("does not apply the contrast check to secondaryColor", () => {
+      // secondaryColor isn't used in the fixed-white-text filled-action
+      // pattern this guardrail protects, and touching it is out of this
+      // ticket's scope — a color that would fail the primary contrast
+      // check must still pass through unchanged as secondaryColor.
+      expect(validateBranding({ secondaryColor: "#FFFFFF" })).toEqual({
+        secondaryColor: "#FFFFFF",
+      });
+    });
+
+    it("still drops a low-contrast primaryColor even when secondaryColor and logoUrl are valid", () => {
+      expect(
+        validateBranding({
+          primaryColor: "#F5F5F5",
+          secondaryColor: "#4B5563",
+          logoUrl: "https://cdn.cartaisy.com/logo.png",
+        }),
+      ).toEqual({
+        secondaryColor: "#4B5563",
+        logoUrl: "https://cdn.cartaisy.com/logo.png",
+      });
+    });
+  });
+
   describe("validateBranding", () => {
     it("passes through all three fields when present and valid", () => {
       const result = validateBranding({

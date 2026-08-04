@@ -11,6 +11,8 @@
  * as a thrown error.
  */
 
+import { hasSufficientContrastForPrimary } from "@/utils/colorUtils";
+
 // Six-digit hex colors only, matching the backend's `sanitizeHexColor`.
 const HEX_COLOR_PATTERN = /^#[A-Fa-f0-9]{6}$/;
 
@@ -60,7 +62,22 @@ export function validateBranding(raw: RawBranding): ValidatedBranding {
   const validated: ValidatedBranding = {};
 
   if (isValidHexColor(raw.primaryColor)) {
-    validated.primaryColor = raw.primaryColor;
+    // Accessibility guardrail from docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md:
+    // the app's existing filled-action pattern (e.g. the "OK" button in
+    // app/(tabs)/index.tsx) pairs a $primary background with fixed $white
+    // text, so a merchant-supplied primary color that's too close to white
+    // would make that text unreadable. A well-formed but low-contrast color
+    // is treated the same as a malformed one here — omitted, not persisted
+    // — so callers fall back to the bundled primary color. Only primaryColor
+    // gets this check; secondaryColor isn't used in that fixed-white-text
+    // pattern today.
+    if (hasSufficientContrastForPrimary(raw.primaryColor)) {
+      validated.primaryColor = raw.primaryColor;
+    } else if (__DEV__) {
+      console.warn(
+        `[brandingValidation] primaryColor ${raw.primaryColor} has insufficient contrast against white text; keeping the bundled primary color instead.`
+      );
+    }
   }
   if (isValidHexColor(raw.secondaryColor)) {
     validated.secondaryColor = raw.secondaryColor;
