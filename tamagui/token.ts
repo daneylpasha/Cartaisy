@@ -6,13 +6,16 @@ import { getPrimaryLight } from "../utils/colorUtils";
 // never re-declare this hex elsewhere.
 export const PRIMARY_COLOR = "#A82A50";
 
+// Same purpose as PRIMARY_COLOR above, for hooks/useDynamicSecondaryTheme.ts.
+export const SECONDARY_COLOR = "rgba(75, 85, 99, 1)";
+
 export const tokens = {
   color: {
     white: "#FFFFFF",
     black: "#000000",
     primary: PRIMARY_COLOR,
     primarylight: getPrimaryLight(PRIMARY_COLOR),
-    secondary: "rgba(75, 85, 99, 1)",
+    secondary: SECONDARY_COLOR,
     background: "#F8FAFC",
     grey: "#E2E8F0",
     error: "rgba(239, 68, 68, 1)",

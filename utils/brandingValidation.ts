@@ -11,7 +11,12 @@
  * as a thrown error.
  */
 
-import { hasSufficientContrastForPrimary } from "@/utils/colorUtils";
+import {
+  hasSufficientContrastAgainstPrimaryLight,
+  hasSufficientContrastForPrimary,
+  hasSufficientContrastForSecondary,
+} from "@/utils/colorUtils";
+import { PRIMARY_COLOR as STATIC_PRIMARY_COLOR } from "@/tamagui/token";
 
 // Six-digit hex colors only, matching the backend's `sanitizeHexColor`.
 const HEX_COLOR_PATTERN = /^#[A-Fa-f0-9]{6}$/;
@@ -80,7 +85,44 @@ export function validateBranding(raw: RawBranding): ValidatedBranding {
     }
   }
   if (isValidHexColor(raw.secondaryColor)) {
-    validated.secondaryColor = raw.secondaryColor;
+    // Equivalent accessibility guardrail for secondaryColor, added when it
+    // was wired into the dynamic theme (see hooks/useDynamicSecondaryTheme.ts).
+    // $secondary has the mirror-image risk from $primary: it's never a
+    // background in this app, it's always foreground text/icon-tint
+    // rendered on the app's fixed near-white surfaces — so a near-white
+    // secondaryColor would be just as illegible as a too-light primaryColor
+    // was against fixed white button text. Same "drop it, keep the bundled
+    // color, dev-warn" treatment. Checked against $background specifically
+    // (not white) — see hasSufficientContrastForSecondary's comment in
+    // colorUtils.ts for why white alone isn't the conservative choice it
+    // looks like.
+    //
+    // Also checked against $primarylight — caught in Codex review: $secondary
+    // also renders directly on $primarylight (app/paymentMethod.tsx's
+    // default-card "Expires" text, AddressCard's selected-address state),
+    // and $primarylight is derived from the *other* merchant color, so a
+    // secondaryColor that's fine against the flat $background can still be
+    // illegible against a particular primaryColor's derived overlay. Uses
+    // `validated.primaryColor` — the primary color that will actually be
+    // live in the theme once this same validateBranding() call returns
+    // (already-validated merchant value, or the bundled default when the
+    // incoming primaryColor was absent/invalid) — not the raw, possibly-
+    // rejected incoming value, so this matches real runtime behavior.
+    const effectivePrimaryColor = validated.primaryColor ?? STATIC_PRIMARY_COLOR;
+
+    if (
+      hasSufficientContrastForSecondary(raw.secondaryColor) &&
+      hasSufficientContrastAgainstPrimaryLight(
+        raw.secondaryColor,
+        effectivePrimaryColor
+      )
+    ) {
+      validated.secondaryColor = raw.secondaryColor;
+    } else if (__DEV__) {
+      console.warn(
+        `[brandingValidation] secondaryColor ${raw.secondaryColor} has insufficient contrast against $background or the current $primarylight; keeping the bundled secondary color instead.`
+      );
+    }
   }
   if (isValidLogoUrl(raw.logoUrl)) {
     validated.logoUrl = raw.logoUrl;

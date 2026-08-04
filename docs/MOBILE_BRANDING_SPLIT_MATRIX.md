@@ -1,0 +1,45 @@
+# Mobile Branding Split Matrix
+
+Phase 3 item 4. For every brandable mobile surface: is it dashboard-editable
+(runtime, via the merchant dashboard → `PATCH /admin/stores/:storeId/branding`
+→ `GET /store/config`), onboarding-set (build-time, via `eas.json`/
+`app.config.ts` env vars baked into the binary), or both.
+
+Every row below was verified live against current code in this repo,
+`cartaisy-backend`, and `cartaisy-dashboard` (see "Source" column) —
+not copied from an earlier plan. Two rows turned out to differ from what
+an earlier draft of this ticket assumed; both are called out explicitly
+where they occur, rather than silently corrected.
+
+## Matrix
+
+| Surface | Dashboard-editable (runtime) | Build-time (onboarding) | Notes |
+|---|---|---|---|
+| App icon (iOS `AppIcon`, Android launcher) | No | Yes — `APP_ICON_SQUARE_PATH`/`APP_ICON_PATH` in `app.config.ts`, baked in at EAS build time | Square-source fix from PR #112 (avoids `resizeMode: "cover"` center-cropping a wide wordmark) is still in place. |
+| Adaptive icon (Android) | No | Yes — `ANDROID_ADAPTIVE_ICON_PATH` / `ANDROID_ADAPTIVE_ICON_BACKGROUND` | |
+| Splash image | No | Yes — `expo-splash-screen` plugin, image = `APP_ICON_PATH` (the original wide wordmark, not the square-cropped one — splash uses `fit: "contain"`, so it isn't cropped) | |
+| Splash background color | No | Yes — `SPLASH_BACKGROUND_COLOR` (default `#ffffff`), set in two places: the `expo-splash-screen` plugin's `backgroundColor` and its `android.backgroundColor` | Both must be kept in sync manually if this env var's default ever changes; today they're driven by the same variable so this can't drift. |
+| App name, slug, URL scheme | No | Yes — `APP_NAME`/`APP_SLUG`/`APP_SCHEME` | |
+| iOS bundle identifier, Android package | No | Yes — `IOS_BUNDLE_IDENTIFIER`, `ANDROID_PACKAGE` | |
+| Notification icon | No | Yes — `APP_NOTIFICATION_ICON_PATH`, set in both the top-level `notification.icon` and the `expo-notifications` plugin's `icon` | Alpha-channel-derived silhouette per PR #113's fix (Android tints every non-transparent pixel solid, so a fully-opaque source rendered as a solid block before that fix). |
+| Notification color | No | Yes — `APP_NOTIFICATION_COLOR` (default `#8B5CF6`), also set in both `notification.color` and the `expo-notifications` plugin's `color` | Distinct mechanism from the icon image itself, confirmed still separate post-PR #113, per this ticket's own instruction to check. |
+| `primaryColor` | **Yes** — dashboard's Store Branding settings (PR #13, `StoreBrandingColors.tsx`) → backend `PATCH`/`GET /store/config` → mobile `AppInitializer.tsx` → `useStoreConfigStore` | Yes — bundled default `#A82A50` in `tamagui/token.ts`, used for first paint / native identity before the runtime fetch resolves | Both. Runtime override wired by PR #115 (`useDynamicPrimaryTheme`, `updateTheme`), with a contrast guardrail (`hasSufficientContrastForPrimary`, 4.5:1 vs. white) added in the same PR after a Codex review finding. |
+| `secondaryColor` | **Yes** — same dashboard editor and endpoint as `primaryColor` (PR #13 shipped both together) | Yes — bundled default `rgba(75, 85, 99, 1)` in `tamagui/token.ts` | Both, as of this ticket (Part A): wired via `useDynamicSecondaryTheme`, sharing PR #115's `updateTheme` mechanism through `hooks/internal/applyDynamicThemeColors.ts`. Given its own contrast guardrail (`hasSufficientContrastForSecondary`) — see "$secondary risk assessment" below for why, since the risk shape is mirrored from `primaryColor`'s, not identical. |
+| `logoUrl` | **Yes** — dashboard's logo upload (`StoreLogoUpload.tsx`, pre-dates PR #13) → backend `PATCH`/`GET /store/config` → mobile | No — the app icon/splash image is a *separate*, unrelated build-time asset per merchant profile, not derived from `logoUrl` | Runtime only, as the ticket expected. **Correction to this ticket's starting assumption:** `logoUrl` is actually rendered on **7** mobile surfaces, not 5 — `HomeHeader.tsx`, `LoginBottomSheet.tsx`, `app/splash.tsx` (the JS splash route, not the native splash image), `app/addNewCardDetails.tsx`, `app/(tabs)/profile.tsx`, `app/(auth)/login.tsx`, and `app/(auth)/signUp.tsx`. Verified via a live grep for `source={logoUrl}`, not assumed from the PRs #106–#111 range. |
+| Hardcoded `t("common.companyName")` string | No | No | **Known, already-disclosed gap** — called out explicitly in this ticket's own text (section 5, "explicit exclusions") as previously surfaced and deferred. Not mentioned in `MOBILE_BRANDED_BUILD_CHECKLIST.md`; checked and it isn't there. Confirmed still hardcoded, in exactly **5** UI locations: `components/organisms/SearchBar.tsx`, `components/organisms/home/HomeHeader.tsx`, `components/molecules/SearchInput.tsx`, `app/notification.tsx`, `app/wellcome.tsx`. Not wired by this ticket, per its explicit exclusions. |
+| Dashboard's own branding editor UI (PR #13) | — | — | Exposes exactly what's listed above: `primaryColor` and `secondaryColor` (`StoreBrandingColors.tsx`, reusing the pre-existing `components/ui/color-picker.tsx`) plus logo upload/delete (`StoreLogoUpload.tsx`, shipped earlier). No editor UI exists for app icon, splash, notification color, app name/scheme, or any other build-time-only field in this matrix — matching the backend, which has no endpoint for any of those either. End-to-end coverage matches what the editor exposes; there's no "field exists but nothing consumes it" or "consumed but no field to set it" gap for `primaryColor`/`secondaryColor`/`logoUrl`. |
+
+## `$secondary` risk assessment (for Part A's guardrail decision)
+
+Per this ticket's instruction to actually check rather than assume `secondaryColor` is safe: a live grep across the app found **zero** uses of `$secondary` as a `backgroundColor`/`bg`/`borderColor` — unlike `$primary`, which was the fixed-background side of the PR #115 Codex finding. `$secondary` is used **exclusively as foreground**: `color="$secondary"` (118 occurrences), `tintColor="$secondary"` (4, plus `getTokenValue("$secondary")` for native `tintColor` props elsewhere), and `placeholderTextColor="$secondary"` (1) — spot-checked across modals (`CustomAlert`, `CancelOrderModal`, `CloseAccountModal`), cards (`AddressCard`, `OrderCard`, `ProductCard`), checkout screens (`Payment.tsx`, `Shipping.tsx`, `app/checkout.tsx`), and form inputs (`FormInput.tsx`, `SearchInput.tsx`), 14+ files total.
+
+Every one of those foreground usages renders on top of the app's fixed near-white surfaces: `$white` (`#FFFFFF`), `$background` (`#F8FAFC`), `$surface` (`#FFFFFF`), `$errorbg` (`#FFF1F2`). That's a real risk, just the mirror image of the `primaryColor` bug — a merchant `secondaryColor` close to white would be effectively invisible as text/icon color against these fixed backgrounds, the same illegibility failure as a too-light `primaryColor` was against fixed white button text, with foreground/background roles swapped. A contrast guardrail was added (`hasSufficientContrastForSecondary`, 4.5:1 against white, same threshold and same "drop and keep bundled color, dev-warn only" treatment as `primaryColor`'s).
+
+## Verified backend/dashboard/mobile hex-format discrepancy (found during this ticket, not previously documented)
+
+The backend's `sanitizeHexColor` (`storeConfigController.ts`) and the dashboard's client-side regex (`color-picker.tsx`) both accept **3-digit or 6-digit** hex (`/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/`). Mobile's `isValidHexColor` (`brandingValidation.ts`) accepts **6-digit only**. A merchant who sets a 3-digit hex color (e.g. `#ABC`) in the dashboard would have it accepted and returned by the backend, but mobile would silently treat it as malformed and fall back to the bundled color — no error shown anywhere, just a merchant color that "doesn't seem to apply" on the app specifically. Documented here as a verified-live gap; not fixed in this ticket (backend/dashboard changes are out of scope, and widening mobile's own regex wasn't asked for — flagging as a candidate follow-up).
+
+## Not covered by this matrix
+
+- Backend/dashboard implementation details beyond what's needed to state "is this field editable and does mobile consume it" — this document is scoped to the mobile side per this ticket, matching `MOBILE_RUNTIME_BRANDING_CONTRACT.md`'s home in this repo.
+- The `getTokenValue()`-based `$primary`/`$secondary` consumers that don't yet pick up runtime color changes (the already-identified, already-deferred follow-up from PR #115 and this ticket) — that's a "how much of the mechanism reaches everywhere" question, answered in the PR descriptions for PR #115 and this ticket, not a dashboard-vs-build-time question this matrix tracks.

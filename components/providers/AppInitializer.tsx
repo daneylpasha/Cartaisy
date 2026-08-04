@@ -2,6 +2,7 @@ import { useGetFavorites } from "@/api/generated/favorites/favorites";
 import { mobileConfig } from "@/api/config/mobileConfig";
 import { getStoreConfig } from "@/api/endpoints/storeConfig";
 import { useDynamicPrimaryTheme } from "@/hooks/useDynamicPrimaryTheme";
+import { useDynamicSecondaryTheme } from "@/hooks/useDynamicSecondaryTheme";
 import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
@@ -176,11 +177,13 @@ export const AppInitializer = () => {
   }, [storeConfigHasHydrated]);
 
   // ==================== DYNAMIC RUNTIME THEME ====================
-  // Propagates the merchant's primaryColor (once fetched above) into the
-  // live Tamagui theme, so every $primary-styled surface across the app
-  // reflects it — see hooks/useDynamicPrimaryTheme.ts for the mechanism
-  // and its known boundary (getTokenValue() call sites aren't covered).
+  // Propagates the merchant's primaryColor/secondaryColor (once fetched
+  // above) into the live Tamagui theme, so every $primary/$secondary-styled
+  // surface across the app reflects them — see hooks/useDynamicPrimaryTheme.ts
+  // and hooks/useDynamicSecondaryTheme.ts for the mechanism and its known
+  // boundary (getTokenValue() call sites aren't covered).
   useDynamicPrimaryTheme();
+  useDynamicSecondaryTheme();
 
   // ==================== ADD MORE INITIALIZATIONS BELOW ====================
   // Example: Cart sync, user preferences, notification settings, etc.

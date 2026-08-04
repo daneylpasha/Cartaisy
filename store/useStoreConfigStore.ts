@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { validateBranding } from "@/utils/brandingValidation";
+
 interface StoreConfigState {
   currency: string;
   timezone: string;
@@ -24,6 +26,10 @@ interface StoreConfigState {
   // exactly this race.
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
+  // Re-runs the current branding fields through validateBranding() and
+  // drops whichever no longer pass — see the call site in
+  // onRehydrateStorage below for why this exists.
+  revalidateBranding: () => void;
   setConfig: (config: {
     currency: string;
     timezone: string;
@@ -57,6 +63,19 @@ const useStoreConfigStore = create<StoreConfigState>()(
       isLoaded: false,
       _hasHydrated: false,
       setHasHydrated: (state) => set({ _hasHydrated: state }),
+      revalidateBranding: () => set((state) => {
+        const revalidated = validateBranding({
+          primaryColor: state.primaryColor,
+          secondaryColor: state.secondaryColor,
+          logoUrl: state.logoUrl,
+        });
+
+        return {
+          primaryColor: revalidated.primaryColor,
+          secondaryColor: revalidated.secondaryColor,
+          logoUrl: revalidated.logoUrl,
+        };
+      }),
       setConfig: (config) => set((state) => {
         const fetchSucceeded = config.fetchSucceeded ?? true;
 
@@ -104,6 +123,22 @@ const useStoreConfigStore = create<StoreConfigState>()(
           useStoreConfigStore.getState().setHasHydrated(true);
           return;
         }
+        // Caught in Codex review: branding persisted before an app update
+        // shipped a new/stricter validation rule (e.g. the secondaryColor
+        // contrast guardrails added alongside useDynamicSecondaryTheme) was
+        // valid under the *old* rules at write time, but is restored here
+        // completely unvalidated — `useDynamicPrimaryTheme`/
+        // `useDynamicSecondaryTheme` apply whatever's in the store directly.
+        // If the next /store/config fetch then fails, setConfig's
+        // fetchSucceeded:false path deliberately preserves whatever's
+        // already in the store (see the comment there) — so a stale,
+        // now-invalid color could stick around for the entire session.
+        // Re-running every persisted branding field through the current
+        // validateBranding() right after hydration — before anything reads
+        // it — closes that gap without weakening the "preserve on fetch
+        // failure" behavior itself (that behavior is still what happens
+        // going forward, just starting from a re-validated baseline).
+        state?.revalidateBranding();
         state?.setHasHydrated(true);
       },
     }

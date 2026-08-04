@@ -1,11 +1,9 @@
 import { useEffect, useRef } from "react";
-import { updateTheme } from "tamagui";
 
+import { applyDynamicThemeColors } from "@/hooks/internal/applyDynamicThemeColors";
 import { PRIMARY_COLOR as STATIC_PRIMARY_COLOR } from "@/tamagui/token";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { getPrimaryLight } from "@/utils/colorUtils";
-
-const THEME_NAMES = ["light", "dark"] as const;
 
 /**
  * Applies the merchant's runtime `primaryColor` (from `GET /store/config`,
@@ -34,6 +32,11 @@ const THEME_NAMES = ["light", "dark"] as const;
  * `getTokenValue` reads the separate, non-reactive *token* registry, so
  * those call sites won't pick up a merchant color without individual
  * changes — see the PR description for the full accounting.
+ *
+ * The actual `updateTheme` call is shared with useDynamicSecondaryTheme.ts
+ * via hooks/internal/applyDynamicThemeColors.ts — this hook's own public
+ * name, signature, and behavior are unchanged from when it shipped in
+ * PR #115.
  */
 export function useDynamicPrimaryTheme() {
   const primaryColor = useStoreConfigStore((state) => state.primaryColor);
@@ -53,11 +56,6 @@ export function useDynamicPrimaryTheme() {
 
     const primarylight = getPrimaryLight(nextColor);
 
-    for (const name of THEME_NAMES) {
-      updateTheme({
-        name,
-        theme: { primary: nextColor, primarylight },
-      });
-    }
+    applyDynamicThemeColors({ primary: nextColor, primarylight });
   }, [primaryColor]);
 }

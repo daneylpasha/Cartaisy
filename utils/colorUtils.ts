@@ -119,3 +119,114 @@ export function hasSufficientContrastForPrimary(hex: string): boolean {
   const ratio = getContrastRatio(hex, "#FFFFFF");
   return ratio !== null && ratio >= MIN_PRIMARY_ON_WHITE_CONTRAST;
 }
+
+// WCAG 2.1 AA minimum contrast ratio for normal-weight/small text, same
+// threshold as primary. $secondary has the opposite risk shape from
+// $primary: it's never used as a background in this app (checked live —
+// zero backgroundColor="$secondary" usages across ~64 consumer files), it's
+// always the *foreground* — body/subdued text (`color="$secondary"`), icon
+// tint (`tintColor="$secondary"` / `getTokenValue("$secondary")`), and
+// placeholder text (`placeholderTextColor="$secondary"`) — rendered on top
+// of the app's fixed light surfaces: $white/$surface (#FFFFFF), $background
+// (#F8FAFC), $errorbg (#FFF1F2, not currently paired with $secondary text
+// anywhere — checked live).
+//
+// Checked against $background (#F8FAFC), not white — caught in Codex review
+// on this PR: #F8FAFC has *lower* luminance than #FFFFFF (0.9536 vs 1.0), so
+// it's the stricter (harder-to-pass) reference of the two, not the looser
+// one a naive "near white, so white should be conservative" assumption
+// suggests. A color can clear 4.5:1 against white while landing under 4.5:1
+// against $background — e.g. #767676 is ~4.54:1 against white but ~4.34:1
+// against $background — and $background is confirmed live behind
+// $secondary text (app/changePassword.tsx, app/ordersDetails.tsx). Checking
+// against the lower-luminance surface is also sufficient on its own: for a
+// darker foreground, a lower background luminance always yields a lower
+// (stricter) ratio, so passing against $background implies passing against
+// $white/$surface too — no need to check both.
+const MIN_SECONDARY_ON_BACKGROUND_CONTRAST = 4.5;
+const SECONDARY_CONTRAST_REFERENCE_SURFACE = "#F8FAFC"; // tokens.color.background
+
+/**
+ * Whether a candidate secondary color has enough contrast against the app's
+ * $background surface to stay legible as foreground text/icon-tint (see the
+ * comment above `MIN_SECONDARY_ON_BACKGROUND_CONTRAST`).
+ */
+export function hasSufficientContrastForSecondary(hex: string): boolean {
+  const ratio = getContrastRatio(hex, SECONDARY_CONTRAST_REFERENCE_SURFACE);
+  return ratio !== null && ratio >= MIN_SECONDARY_ON_BACKGROUND_CONTRAST;
+}
+
+/**
+ * Alpha-composites a translucent `#RRGGBBAA` color (as produced by
+ * `lightenColor`/`getPrimaryLight`) over an opaque backdrop, returning the
+ * resulting opaque `#RRGGBB`. A plain 6-digit hex is treated as fully
+ * opaque (composites to itself). Returns null if either input fails to
+ * parse.
+ */
+export function compositeOverBackground(
+  rgbaHex: string,
+  backdropHex: string
+): string | null {
+  const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i.exec(
+    rgbaHex
+  );
+  const backdrop = hexToRgb(backdropHex);
+  if (!match || !backdrop) return null;
+
+  const fg = {
+    r: parseInt(match[1], 16),
+    g: parseInt(match[2], 16),
+    b: parseInt(match[3], 16),
+  };
+  const alpha = match[4] ? parseInt(match[4], 16) / 255 : 1;
+
+  const composite = (fgChannel: number, bgChannel: number) =>
+    Math.round(fgChannel * alpha + bgChannel * (1 - alpha));
+
+  return rgbToHex(
+    composite(fg.r, backdrop.r),
+    composite(fg.g, backdrop.g),
+    composite(fg.b, backdrop.b)
+  );
+}
+
+// Caught in Codex review on this PR: checking secondaryColor against a
+// flat $background alone misses that $secondary also renders directly on
+// top of $primarylight — a translucent overlay DERIVED FROM THE MERCHANT'S
+// OWN primaryColor — on the payment-method screen's default-card "Expires"
+// text (app/paymentMethod.tsx) and AddressCard's selected-address state
+// (components/molecules/AddressCard.tsx, backgroundColor="$primarylight"
+// when selected, with its $secondary address-line text rendered inside).
+// $primarylight isn't a fixed color like $background — it depends on
+// *both* merchant colors together, so it can't be captured by a single
+// static reference the way the flat check above is. Reproduced live:
+// primaryColor="#000000" -> $primarylight composited over $background is
+// ~#DBDDDE; secondaryColor="#737373" clears the flat $background check
+// (~4.53:1) but only reaches ~3.48:1 against that composite — confirmed
+// with the exact numbers Codex's finding cited.
+const MIN_SECONDARY_ON_PRIMARYLIGHT_CONTRAST = 4.5;
+
+/**
+ * Whether a candidate secondary color has enough contrast against the
+ * $primarylight derived from a candidate (or bundled-fallback) primary
+ * color, composited over $background — see the comment above
+ * `MIN_SECONDARY_ON_PRIMARYLIGHT_CONTRAST`. `effectivePrimaryHex` should be
+ * whatever primary color the live theme would actually be showing (the
+ * validated merchant primaryColor, or the bundled default when there isn't
+ * one) — not necessarily the same raw value being validated alongside this
+ * secondaryColor.
+ */
+export function hasSufficientContrastAgainstPrimaryLight(
+  secondaryHex: string,
+  effectivePrimaryHex: string
+): boolean {
+  const primarylight = getPrimaryLight(effectivePrimaryHex);
+  const composited = compositeOverBackground(
+    primarylight,
+    SECONDARY_CONTRAST_REFERENCE_SURFACE
+  );
+  if (!composited) return false;
+
+  const ratio = getContrastRatio(secondaryHex, composited);
+  return ratio !== null && ratio >= MIN_SECONDARY_ON_PRIMARYLIGHT_CONTRAST;
+}

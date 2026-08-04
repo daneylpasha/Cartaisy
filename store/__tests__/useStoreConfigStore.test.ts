@@ -189,6 +189,68 @@ describe("useStoreConfigStore", () => {
     expect(useStoreConfigStore.getState().primaryColor).toBeUndefined();
   });
 
+  it("revalidateBranding clears fields that no longer pass current validation rules, keeping the ones that still do", () => {
+    // Simulates branding that was persisted under older/looser validation
+    // rules (or written directly to AsyncStorage) and no longer clears
+    // today's contrast guardrails.
+    useStoreConfigStore.setState({
+      primaryColor: "#FFFFFF", // fails hasSufficientContrastForPrimary
+      secondaryColor: "#4B5563", // still passes
+      logoUrl: "https://cdn.cartaisy.com/stores/acme/logo.png",
+    });
+
+    useStoreConfigStore.getState().revalidateBranding();
+
+    const state = useStoreConfigStore.getState();
+    expect(state.primaryColor).toBeUndefined();
+    expect(state.secondaryColor).toBe("#4B5563");
+    expect(state.logoUrl).toBe("https://cdn.cartaisy.com/stores/acme/logo.png");
+  });
+
+  it("revalidateBranding clears a secondaryColor that only fails the newer cross-field $primarylight check", () => {
+    // #737373 clears the flat $background check on its own but fails
+    // against the $primarylight derived from primaryColor #000000 — the
+    // exact scenario a pre-upgrade persisted pair could be stuck in.
+    useStoreConfigStore.setState({
+      primaryColor: "#000000",
+      secondaryColor: "#737373",
+    });
+
+    useStoreConfigStore.getState().revalidateBranding();
+
+    const state = useStoreConfigStore.getState();
+    expect(state.primaryColor).toBe("#000000");
+    expect(state.secondaryColor).toBeUndefined();
+  });
+
+  it("onRehydrateStorage's success path calls revalidateBranding before setHasHydrated, clearing a stale invalid persisted color on app upgrade", () => {
+    // Caught in Codex review: branding persisted before an app update
+    // shipped a stricter validation rule was valid at write time but is
+    // restored completely unvalidated on rehydration. If the very next
+    // /store/config fetch then fails, setConfig's fetchSucceeded:false path
+    // preserves whatever's already in the store indefinitely — so without
+    // this, a stale invalid color could stick around for the whole session.
+    useStoreConfigStore.setState({
+      primaryColor: "#A82A50",
+      secondaryColor: "#FFFFFF", // invalid under current rules
+      _hasHydrated: false,
+    });
+
+    const onRehydrateStorage = useStoreConfigStore.persist.getOptions().onRehydrateStorage;
+    expect(onRehydrateStorage).toBeDefined();
+
+    const rehydrateCallback = onRehydrateStorage!(useStoreConfigStore.getState());
+    expect(rehydrateCallback).toBeDefined();
+
+    // No error — this is the successful-rehydration path.
+    rehydrateCallback!(useStoreConfigStore.getState(), undefined);
+
+    const state = useStoreConfigStore.getState();
+    expect(state.secondaryColor).toBeUndefined();
+    expect(state.primaryColor).toBe("#A82A50");
+    expect(state._hasHydrated).toBe(true);
+  });
+
   it("reset clears branding along with the rest of the config", () => {
     useStoreConfigStore.getState().setConfig({
       currency: "USD",
