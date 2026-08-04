@@ -26,6 +26,32 @@ For the fictional Acme sample, `eas.json` includes `sample-merchant-development`
 
 Verification (2026-07-03): `eas build:inspect --platform android --profile development --stage archive` confirmed the EAS build archive excludes `ios/`, `android/`, `node_modules/`, and `.env` while keeping the committed default Firebase files, so the EAS worker will prebuild from `app.config.ts`. `npx expo config --type public` resolves Cartaisy defaults with no env set and full sample-merchant identity with `docs/examples/sample-merchant.env` exported. A real EAS cloud build was not run: the sample merchant's EAS project ID is a deliberate placeholder, per-merchant EAS ownership and signing credentials remain undecided (see Release Blockers below), and generating signing credentials on the Cartaisy EAS project is outside the scope of this build-flow decision.
 
+## Physical Device Install Verification (2026-08-04)
+
+First verification of the `sample-merchant-development` profile on a real physical Android device (prior attempts were emulator-only or blocked before producing an installable artifact). Installed via the EAS-hosted APK download link; connected to a local `npx expo start --dev-client` session (WiFi, manual URL entry — mDNS auto-discovery did not traverse the local network).
+
+### Verified Working
+
+Verified on-device: launcher icon (gold "AO"), launcher name ("Acme Outfitters"), native splash (icon + `#0A2540` background), and the `acmeoutfitters://` deep link scheme (confirmed via a QR code opened through the phone's Camera app).
+
+### Build Result
+
+Not device-verified: notification icon (simulation-verified only in PR #112; no live push trigger available), and runtime/backend-driven surfaces (`/store/config` store name, in-app JS splash logo fallback, catalog load) — all fail identically because `EXPO_PUBLIC_API_BASE_URL` is a non-resolving `api.staging.example.com` placeholder, not a real backend. Expected for the fictional sample merchant, not a Phase 2 blocker.
+
+Found and fixed locally during the session (not a repo change): a stale `.env.local` left over from the Jul 31 attempt was silently overriding shell-exported env vars and still pointed icon paths at Cartaisy's own logo. Recreating `.env.local` to match the current `eas.json` profile resolved it.
+
+## Sample-Merchant Android APK Install — Emulator (2026-07-31)
+
+First real Android APK produced and installed for the `sample-merchant-development` profile, verified on an emulator (no physical device available at the time).
+
+### Verified Working
+
+Verified: app name, deep-link scheme, and splash background color all correctly showed Acme Outfitters branding.
+
+### Build Result
+
+Not yet correct: app icon and splash image still showed Cartaisy's own logo — no non-Cartaisy placeholder art existed yet at this point. This gap was closed by PR #112 (2026-08-03, new `acme-outfitters-*` placeholder assets) and PR #113 (2026-08-03, fixed the underlying center-crop bug in the icon generator).
+
 ## Internal Sample Android EAS Build Attempt (2026-07-13, GitHub issue #86)
 
 The Acme sample profile now targets a real internal sample EAS project, `@rendernext/acme-outfitters`, created under the accessible `rendernext` account. No runtime branding, checkout/payment code, backend code, production signing secrets, real merchant credentials, private Firebase files, service-account files, or Shopify/Stripe secrets were changed or committed.
