@@ -85,16 +85,6 @@ describe("brandingValidation", () => {
       );
     });
 
-    it("does not apply the contrast check to secondaryColor", () => {
-      // secondaryColor isn't used in the fixed-white-text filled-action
-      // pattern this guardrail protects, and touching it is out of this
-      // ticket's scope — a color that would fail the primary contrast
-      // check must still pass through unchanged as secondaryColor.
-      expect(validateBranding({ secondaryColor: "#FFFFFF" })).toEqual({
-        secondaryColor: "#FFFFFF",
-      });
-    });
-
     it("still drops a low-contrast primaryColor even when secondaryColor and logoUrl are valid", () => {
       expect(
         validateBranding({
@@ -105,6 +95,69 @@ describe("brandingValidation", () => {
       ).toEqual({
         secondaryColor: "#4B5563",
         logoUrl: "https://cdn.cartaisy.com/logo.png",
+      });
+    });
+  });
+
+  describe("validateBranding — secondaryColor contrast guardrail", () => {
+    // Added alongside secondaryColor's dynamic-theme wiring: $secondary is
+    // always foreground text/icon color in this app, rendered on fixed
+    // near-white surfaces, so an equivalent (mirrored) contrast guardrail
+    // applies here too — see the comment in validateBranding() and
+    // colorUtils.ts's MIN_SECONDARY_ON_WHITE_CONTRAST.
+    const devWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+    afterEach(() => {
+      devWarnSpy.mockClear();
+    });
+
+    it("keeps a well-formed, high-contrast secondaryColor", () => {
+      expect(validateBranding({ secondaryColor: "#123456" })).toEqual({
+        secondaryColor: "#123456",
+      });
+    });
+
+    it("drops a well-formed but low-contrast secondaryColor (e.g. white) instead of persisting it", () => {
+      expect(validateBranding({ secondaryColor: "#FFFFFF" })).toEqual({});
+    });
+
+    it("logs a development warning when dropping for low contrast, not silently", () => {
+      validateBranding({ secondaryColor: "#FFFFFF" });
+      expect(devWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("#FFFFFF"),
+      );
+    });
+
+    it("still drops a low-contrast secondaryColor even when primaryColor and logoUrl are valid", () => {
+      expect(
+        validateBranding({
+          primaryColor: "#A82A50",
+          secondaryColor: "#F5F5F5",
+          logoUrl: "https://cdn.cartaisy.com/logo.png",
+        }),
+      ).toEqual({
+        primaryColor: "#A82A50",
+        logoUrl: "https://cdn.cartaisy.com/logo.png",
+      });
+    });
+
+    it("evaluates primaryColor and secondaryColor contrast independently — one failing doesn't affect the other", () => {
+      expect(
+        validateBranding({
+          primaryColor: "#FFFFFF", // fails
+          secondaryColor: "#123456", // passes
+        }),
+      ).toEqual({
+        secondaryColor: "#123456",
+      });
+
+      expect(
+        validateBranding({
+          primaryColor: "#123456", // passes
+          secondaryColor: "#FFFFFF", // fails
+        }),
+      ).toEqual({
+        primaryColor: "#123456",
       });
     });
   });

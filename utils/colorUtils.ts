@@ -119,3 +119,27 @@ export function hasSufficientContrastForPrimary(hex: string): boolean {
   const ratio = getContrastRatio(hex, "#FFFFFF");
   return ratio !== null && ratio >= MIN_PRIMARY_ON_WHITE_CONTRAST;
 }
+
+// WCAG 2.1 AA minimum contrast ratio for normal-weight/small text, same
+// threshold as primary. $secondary has the opposite risk shape from
+// $primary: it's never used as a background in this app (checked live —
+// zero backgroundColor="$secondary" usages across ~64 consumer files), it's
+// always the *foreground* — body/subdued text (`color="$secondary"`), icon
+// tint (`tintColor="$secondary"` / `getTokenValue("$secondary")`), and
+// placeholder text (`placeholderTextColor="$secondary"`) — rendered on top
+// of the app's fixed light surfaces ($white #FFFFFF, $background #F8FAFC,
+// $surface #FFFFFF, $errorbg #FFF1F2, all near-white). A merchant
+// secondaryColor close to white would be just as illegible against those
+// fixed backgrounds as a too-light primaryColor was against fixed white
+// button text — same failure mode, foreground/background roles swapped.
+const MIN_SECONDARY_ON_WHITE_CONTRAST = 4.5;
+
+/**
+ * Whether a candidate secondary color has enough contrast against white to
+ * stay legible as foreground text/icon-tint on the app's fixed near-white
+ * surfaces (see the comment above `MIN_SECONDARY_ON_WHITE_CONTRAST`).
+ */
+export function hasSufficientContrastForSecondary(hex: string): boolean {
+  const ratio = getContrastRatio(hex, "#FFFFFF");
+  return ratio !== null && ratio >= MIN_SECONDARY_ON_WHITE_CONTRAST;
+}

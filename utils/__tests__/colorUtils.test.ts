@@ -2,6 +2,7 @@ import {
   getContrastRatio,
   getRelativeLuminance,
   hasSufficientContrastForPrimary,
+  hasSufficientContrastForSecondary,
 } from "@/utils/colorUtils";
 
 describe("colorUtils contrast helpers", () => {
@@ -57,6 +58,34 @@ describe("colorUtils contrast helpers", () => {
 
     it("rejects a mid-tone color below the 4.5:1 AA threshold (e.g. a bright green at ~3.08:1)", () => {
       expect(hasSufficientContrastForPrimary("#00A86B")).toBe(false);
+    });
+  });
+
+  describe("hasSufficientContrastForSecondary", () => {
+    // Same 4.5:1-against-white threshold as primary, but checked because
+    // $secondary is used as *foreground* text/icon color on the app's fixed
+    // near-white surfaces ($white, $background, $surface, $errorbg) — see
+    // the comment on MIN_SECONDARY_ON_WHITE_CONTRAST in colorUtils.ts.
+    it("accepts the bundled Cartaisy secondary gray (rgb(75,85,99), well above 4.5:1 against white)", () => {
+      expect(hasSufficientContrastForSecondary("#4B5563")).toBe(true);
+    });
+
+    it("accepts a dark, clearly-legible merchant color", () => {
+      expect(hasSufficientContrastForSecondary("#123456")).toBe(true);
+    });
+
+    it("rejects white — a merchant secondary color identical to the fixed near-white surfaces it's rendered on", () => {
+      expect(hasSufficientContrastForSecondary("#FFFFFF")).toBe(false);
+    });
+
+    it("rejects near-white / light pastel colors that would make the text/icon invisible", () => {
+      expect(hasSufficientContrastForSecondary("#F5F5F5")).toBe(false);
+      expect(hasSufficientContrastForSecondary("#FFEEDD")).toBe(false);
+      expect(hasSufficientContrastForSecondary("#CCCCCC")).toBe(false);
+    });
+
+    it("rejects a mid-tone color below the 4.5:1 AA threshold (e.g. a bright green at ~3.08:1)", () => {
+      expect(hasSufficientContrastForSecondary("#00A86B")).toBe(false);
     });
   });
 });

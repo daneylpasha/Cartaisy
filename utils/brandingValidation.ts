@@ -11,7 +11,10 @@
  * as a thrown error.
  */
 
-import { hasSufficientContrastForPrimary } from "@/utils/colorUtils";
+import {
+  hasSufficientContrastForPrimary,
+  hasSufficientContrastForSecondary,
+} from "@/utils/colorUtils";
 
 // Six-digit hex colors only, matching the backend's `sanitizeHexColor`.
 const HEX_COLOR_PATTERN = /^#[A-Fa-f0-9]{6}$/;
@@ -80,7 +83,21 @@ export function validateBranding(raw: RawBranding): ValidatedBranding {
     }
   }
   if (isValidHexColor(raw.secondaryColor)) {
-    validated.secondaryColor = raw.secondaryColor;
+    // Equivalent accessibility guardrail for secondaryColor, added when it
+    // was wired into the dynamic theme (see hooks/useDynamicSecondaryTheme.ts).
+    // $secondary has the mirror-image risk from $primary: it's never a
+    // background in this app, it's always foreground text/icon-tint
+    // rendered on the app's fixed near-white surfaces ($white, $background,
+    // $surface, $errorbg) — so a near-white secondaryColor would be just as
+    // illegible as a too-light primaryColor was against fixed white button
+    // text. Same "drop it, keep the bundled color, dev-warn" treatment.
+    if (hasSufficientContrastForSecondary(raw.secondaryColor)) {
+      validated.secondaryColor = raw.secondaryColor;
+    } else if (__DEV__) {
+      console.warn(
+        `[brandingValidation] secondaryColor ${raw.secondaryColor} has insufficient contrast against white text/icons; keeping the bundled secondary color instead.`
+      );
+    }
   }
   if (isValidLogoUrl(raw.logoUrl)) {
     validated.logoUrl = raw.logoUrl;
