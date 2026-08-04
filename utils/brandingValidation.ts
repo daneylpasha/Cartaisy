@@ -87,10 +87,13 @@ export function validateBranding(raw: RawBranding): ValidatedBranding {
     // was wired into the dynamic theme (see hooks/useDynamicSecondaryTheme.ts).
     // $secondary has the mirror-image risk from $primary: it's never a
     // background in this app, it's always foreground text/icon-tint
-    // rendered on the app's fixed near-white surfaces ($white, $background,
-    // $surface, $errorbg) — so a near-white secondaryColor would be just as
-    // illegible as a too-light primaryColor was against fixed white button
-    // text. Same "drop it, keep the bundled color, dev-warn" treatment.
+    // rendered on the app's fixed near-white surfaces — so a near-white
+    // secondaryColor would be just as illegible as a too-light primaryColor
+    // was against fixed white button text. Same "drop it, keep the bundled
+    // color, dev-warn" treatment. Checked against $background specifically
+    // (not white) — see hasSufficientContrastForSecondary's comment in
+    // colorUtils.ts for why white alone isn't the conservative choice it
+    // looks like.
     if (hasSufficientContrastForSecondary(raw.secondaryColor)) {
       validated.secondaryColor = raw.secondaryColor;
     } else if (__DEV__) {

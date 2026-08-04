@@ -104,7 +104,7 @@ describe("brandingValidation", () => {
     // always foreground text/icon color in this app, rendered on fixed
     // near-white surfaces, so an equivalent (mirrored) contrast guardrail
     // applies here too — see the comment in validateBranding() and
-    // colorUtils.ts's MIN_SECONDARY_ON_WHITE_CONTRAST.
+    // colorUtils.ts's MIN_SECONDARY_ON_BACKGROUND_CONTRAST.
     const devWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
 
     afterEach(() => {

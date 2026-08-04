@@ -127,19 +127,31 @@ export function hasSufficientContrastForPrimary(hex: string): boolean {
 // always the *foreground* — body/subdued text (`color="$secondary"`), icon
 // tint (`tintColor="$secondary"` / `getTokenValue("$secondary")`), and
 // placeholder text (`placeholderTextColor="$secondary"`) — rendered on top
-// of the app's fixed light surfaces ($white #FFFFFF, $background #F8FAFC,
-// $surface #FFFFFF, $errorbg #FFF1F2, all near-white). A merchant
-// secondaryColor close to white would be just as illegible against those
-// fixed backgrounds as a too-light primaryColor was against fixed white
-// button text — same failure mode, foreground/background roles swapped.
-const MIN_SECONDARY_ON_WHITE_CONTRAST = 4.5;
+// of the app's fixed light surfaces: $white/$surface (#FFFFFF), $background
+// (#F8FAFC), $errorbg (#FFF1F2, not currently paired with $secondary text
+// anywhere — checked live).
+//
+// Checked against $background (#F8FAFC), not white — caught in Codex review
+// on this PR: #F8FAFC has *lower* luminance than #FFFFFF (0.9536 vs 1.0), so
+// it's the stricter (harder-to-pass) reference of the two, not the looser
+// one a naive "near white, so white should be conservative" assumption
+// suggests. A color can clear 4.5:1 against white while landing under 4.5:1
+// against $background — e.g. #767676 is ~4.54:1 against white but ~4.34:1
+// against $background — and $background is confirmed live behind
+// $secondary text (app/changePassword.tsx, app/ordersDetails.tsx). Checking
+// against the lower-luminance surface is also sufficient on its own: for a
+// darker foreground, a lower background luminance always yields a lower
+// (stricter) ratio, so passing against $background implies passing against
+// $white/$surface too — no need to check both.
+const MIN_SECONDARY_ON_BACKGROUND_CONTRAST = 4.5;
+const SECONDARY_CONTRAST_REFERENCE_SURFACE = "#F8FAFC"; // tokens.color.background
 
 /**
- * Whether a candidate secondary color has enough contrast against white to
- * stay legible as foreground text/icon-tint on the app's fixed near-white
- * surfaces (see the comment above `MIN_SECONDARY_ON_WHITE_CONTRAST`).
+ * Whether a candidate secondary color has enough contrast against the app's
+ * $background surface to stay legible as foreground text/icon-tint (see the
+ * comment above `MIN_SECONDARY_ON_BACKGROUND_CONTRAST`).
  */
 export function hasSufficientContrastForSecondary(hex: string): boolean {
-  const ratio = getContrastRatio(hex, "#FFFFFF");
-  return ratio !== null && ratio >= MIN_SECONDARY_ON_WHITE_CONTRAST;
+  const ratio = getContrastRatio(hex, SECONDARY_CONTRAST_REFERENCE_SURFACE);
+  return ratio !== null && ratio >= MIN_SECONDARY_ON_BACKGROUND_CONTRAST;
 }

@@ -62,11 +62,11 @@ describe("colorUtils contrast helpers", () => {
   });
 
   describe("hasSufficientContrastForSecondary", () => {
-    // Same 4.5:1-against-white threshold as primary, but checked because
-    // $secondary is used as *foreground* text/icon color on the app's fixed
-    // near-white surfaces ($white, $background, $surface, $errorbg) — see
-    // the comment on MIN_SECONDARY_ON_WHITE_CONTRAST in colorUtils.ts.
-    it("accepts the bundled Cartaisy secondary gray (rgb(75,85,99), well above 4.5:1 against white)", () => {
+    // Same 4.5:1 threshold as primary, but checked against $background
+    // (#F8FAFC), not white — see the comment on
+    // MIN_SECONDARY_ON_BACKGROUND_CONTRAST in colorUtils.ts for why $background
+    // (lower luminance than white) is the correct, stricter reference.
+    it("accepts the bundled Cartaisy secondary gray (rgb(75,85,99), well above 4.5:1 against $background)", () => {
       expect(hasSufficientContrastForSecondary("#4B5563")).toBe(true);
     });
 
@@ -84,8 +84,17 @@ describe("colorUtils contrast helpers", () => {
       expect(hasSufficientContrastForSecondary("#CCCCCC")).toBe(false);
     });
 
-    it("rejects a mid-tone color below the 4.5:1 AA threshold (e.g. a bright green at ~3.08:1)", () => {
+    it("rejects a mid-tone color below the 4.5:1 AA threshold (e.g. a bright green at ~3.08:1 against $background)", () => {
       expect(hasSufficientContrastForSecondary("#00A86B")).toBe(false);
+    });
+
+    it("rejects a color that passes against white but fails against the real $background surface (caught in Codex review)", () => {
+      // #767676 is ~4.54:1 against #FFFFFF (would incorrectly pass a
+      // white-only check) but only ~4.34:1 against #F8FAFC, the actual
+      // $background surface confirmed live behind $secondary text in
+      // app/changePassword.tsx and app/ordersDetails.tsx. This is the
+      // regression test for that bug.
+      expect(hasSufficientContrastForSecondary("#767676")).toBe(false);
     });
   });
 });
