@@ -59,3 +59,63 @@ export function lightenColor(hex: string, percent: number = 60, opacity: number 
 export function getPrimaryLight(primaryColor: string): string {
   return lightenColor(primaryColor, 60, 30); // 60% lighter, 30% opacity
 }
+
+/**
+ * WCAG relative luminance of a single sRGB channel (0-255).
+ * https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
+ */
+function channelLuminance(channel: number): number {
+  const normalized = channel / 255;
+  return normalized <= 0.03928
+    ? normalized / 12.92
+    : Math.pow((normalized + 0.055) / 1.055, 2.4);
+}
+
+/**
+ * WCAG relative luminance of a hex color (0 = black, 1 = white).
+ * Returns null for an unparseable hex string.
+ */
+export function getRelativeLuminance(hex: string): number | null {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return null;
+
+  return (
+    0.2126 * channelLuminance(rgb.r) +
+    0.7152 * channelLuminance(rgb.g) +
+    0.0722 * channelLuminance(rgb.b)
+  );
+}
+
+/**
+ * WCAG contrast ratio between two hex colors (1 = identical, 21 = max
+ * black-on-white contrast). Returns null if either color fails to parse.
+ * https://www.w3.org/TR/WCAG21/#dfn-contrast-ratio
+ */
+export function getContrastRatio(hexA: string, hexB: string): number | null {
+  const luminanceA = getRelativeLuminance(hexA);
+  const luminanceB = getRelativeLuminance(hexB);
+  if (luminanceA === null || luminanceB === null) return null;
+
+  const lighter = Math.max(luminanceA, luminanceB);
+  const darker = Math.min(luminanceA, luminanceB);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+// WCAG 2.1 AA minimum contrast ratio for normal-weight/small text. The app's
+// existing $primary-filled-action pattern (see e.g. the "OK" button in
+// app/(tabs)/index.tsx) pairs a $primary background with fixed $white text,
+// so this is checked against white specifically.
+const MIN_PRIMARY_ON_WHITE_CONTRAST = 4.5;
+
+/**
+ * Whether a candidate primary color has enough contrast against white text
+ * to stay legible on the app's existing $primary-background/$white-text
+ * filled-action pattern (buttons, chips, etc.). Per
+ * docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md's accessibility guardrails: a
+ * merchant-supplied primary color that fails this check should not be
+ * applied — the bundled default should be kept instead.
+ */
+export function hasSufficientContrastForPrimary(hex: string): boolean {
+  const ratio = getContrastRatio(hex, "#FFFFFF");
+  return ratio !== null && ratio >= MIN_PRIMARY_ON_WHITE_CONTRAST;
+}
