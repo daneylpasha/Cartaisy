@@ -31,9 +31,38 @@ const appIconPath = readEnv(
   ["APP_ICON_PATH"],
   "./assets/images/cartaisy-color-logo.png"
 );
+// The app-icon and notification-icon generators (@expo/prebuild-config's
+// withIosIcons/withAndroidIcons, expo-notifications' withNotificationsAndroid)
+// all resize their source with `resizeMode: "cover"`, which center-crops a
+// non-square source instead of fitting it — appIconPath's wide 422x100
+// wordmark was getting cropped into an unreadable fragment ("rta") on a real
+// device. A square source is immune to cover-crop entirely, since there's no
+// aspect-ratio mismatch to crop away. Splash (`fit: "contain"`, no cropping)
+// and web favicon keep using the original wide wordmark unchanged below —
+// only the two surfaces that were actually broken are repointed here. Fixed
+// in the sample-merchant placeholder-branding investigation (PR #112).
+//
+// Falls back to APP_ICON_PATH (not straight to the hardcoded default) before
+// the Cartaisy default, so a profile that already sets its own square
+// APP_ICON_PATH — like sample-merchant-development's Acme Outfitters icon,
+// itself already fixed to be square in PR #112 — keeps resolving to its own
+// asset instead of silently leaking Cartaisy's icon into a merchant build.
+const appIconSquarePath = readEnv(
+  ["APP_ICON_SQUARE_PATH", "APP_ICON_PATH"],
+  "./assets/images/icon.png"
+);
+// Android derives the status-bar notification glyph purely from this
+// image's alpha channel — every non-transparent pixel gets filled with a
+// solid system color, regardless of its original RGB value. icon.png is
+// fully opaque (a solid white square background, no transparency at all),
+// so using it here rendered as a solid tinted block instead of the Cartaisy
+// wordmark — caught in review (Codex) on PR #113. notification-icon.png is
+// a dedicated white-on-transparent silhouette derived directly from
+// cartaisy-color-logo.png's own alpha shape (not a redesign), composed
+// onto a square canvas so it isn't cover-cropped either.
 const notificationIconPath = readEnv(
-  ["APP_NOTIFICATION_ICON_PATH", "APP_ICON_PATH"],
-  "./assets/images/cartaisy-color-logo.png"
+  ["APP_NOTIFICATION_ICON_PATH"],
+  "./assets/images/notification-icon.png"
 );
 const notificationColor = readEnv(["APP_NOTIFICATION_COLOR"], "#8B5CF6");
 const splashBackgroundColor = readEnv(["SPLASH_BACKGROUND_COLOR"], "#ffffff");
@@ -81,7 +110,7 @@ const config: ExpoConfig = {
   slug: appSlug,
   version: appVersion,
   orientation: "portrait",
-  icon: appIconPath,
+  icon: appIconSquarePath,
   scheme: appScheme,
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
