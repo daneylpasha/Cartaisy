@@ -162,6 +162,72 @@ describe("brandingValidation", () => {
     });
   });
 
+  describe("validateBranding — secondaryColor vs $primarylight cross-field guardrail", () => {
+    // Caught in Codex review: $secondary also renders directly on top of
+    // $primarylight (a translucent overlay derived from the *other*
+    // merchant color) on app/paymentMethod.tsx's default-card "Expires"
+    // text and AddressCard's selected-address state. A secondaryColor that
+    // clears the flat $background check alone can still be illegible
+    // against a particular primaryColor's derived overlay — see
+    // hasSufficientContrastAgainstPrimaryLight in colorUtils.ts.
+    const devWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+    afterEach(() => {
+      devWarnSpy.mockClear();
+    });
+
+    it("drops a secondaryColor that passes the flat $background check but fails against the submitted primaryColor's $primarylight", () => {
+      // #737373 clears the flat $background check (~4.53:1) on its own —
+      // see colorUtils.test.ts — but only reaches ~3.48:1 against the
+      // $primarylight derived from primaryColor #000000. Exact reproducing
+      // case from the Codex finding. primaryColor #000000 itself easily
+      // clears its own white-text guardrail (~21:1), so it's kept — only
+      // secondaryColor is dropped here.
+      expect(
+        validateBranding({
+          primaryColor: "#000000",
+          secondaryColor: "#737373",
+        }),
+      ).toEqual({
+        primaryColor: "#000000",
+      });
+    });
+
+    it("logs a development warning when dropping for insufficient $primarylight contrast", () => {
+      validateBranding({ primaryColor: "#000000", secondaryColor: "#737373" });
+      expect(devWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("#737373"),
+      );
+    });
+
+    it("falls back to the bundled primary color as the effective $primarylight source when the submitted primaryColor itself is invalid", () => {
+      // primaryColor "not-a-color" is malformed and dropped entirely, so the
+      // secondaryColor check must fall back to the bundled STATIC_PRIMARY_COLOR
+      // (#A82A50) rather than skipping the primarylight check altogether.
+      // #123456 comfortably clears #A82A50's derived $primarylight (~10.1:1).
+      expect(
+        validateBranding({
+          primaryColor: "not-a-color",
+          secondaryColor: "#123456",
+        }),
+      ).toEqual({
+        secondaryColor: "#123456",
+      });
+    });
+
+    it("keeps a secondaryColor that passes both the flat $background check and the $primarylight check", () => {
+      expect(
+        validateBranding({
+          primaryColor: "#A82A50",
+          secondaryColor: "#4B5563",
+        }),
+      ).toEqual({
+        primaryColor: "#A82A50",
+        secondaryColor: "#4B5563",
+      });
+    });
+  });
+
   describe("validateBranding", () => {
     it("passes through all three fields when present and valid", () => {
       const result = validateBranding({

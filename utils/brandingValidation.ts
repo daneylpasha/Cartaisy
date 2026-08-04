@@ -12,9 +12,11 @@
  */
 
 import {
+  hasSufficientContrastAgainstPrimaryLight,
   hasSufficientContrastForPrimary,
   hasSufficientContrastForSecondary,
 } from "@/utils/colorUtils";
+import { PRIMARY_COLOR as STATIC_PRIMARY_COLOR } from "@/tamagui/token";
 
 // Six-digit hex colors only, matching the backend's `sanitizeHexColor`.
 const HEX_COLOR_PATTERN = /^#[A-Fa-f0-9]{6}$/;
@@ -94,11 +96,31 @@ export function validateBranding(raw: RawBranding): ValidatedBranding {
     // (not white) — see hasSufficientContrastForSecondary's comment in
     // colorUtils.ts for why white alone isn't the conservative choice it
     // looks like.
-    if (hasSufficientContrastForSecondary(raw.secondaryColor)) {
+    //
+    // Also checked against $primarylight — caught in Codex review: $secondary
+    // also renders directly on $primarylight (app/paymentMethod.tsx's
+    // default-card "Expires" text, AddressCard's selected-address state),
+    // and $primarylight is derived from the *other* merchant color, so a
+    // secondaryColor that's fine against the flat $background can still be
+    // illegible against a particular primaryColor's derived overlay. Uses
+    // `validated.primaryColor` — the primary color that will actually be
+    // live in the theme once this same validateBranding() call returns
+    // (already-validated merchant value, or the bundled default when the
+    // incoming primaryColor was absent/invalid) — not the raw, possibly-
+    // rejected incoming value, so this matches real runtime behavior.
+    const effectivePrimaryColor = validated.primaryColor ?? STATIC_PRIMARY_COLOR;
+
+    if (
+      hasSufficientContrastForSecondary(raw.secondaryColor) &&
+      hasSufficientContrastAgainstPrimaryLight(
+        raw.secondaryColor,
+        effectivePrimaryColor
+      )
+    ) {
       validated.secondaryColor = raw.secondaryColor;
     } else if (__DEV__) {
       console.warn(
-        `[brandingValidation] secondaryColor ${raw.secondaryColor} has insufficient contrast against white text/icons; keeping the bundled secondary color instead.`
+        `[brandingValidation] secondaryColor ${raw.secondaryColor} has insufficient contrast against $background or the current $primarylight; keeping the bundled secondary color instead.`
       );
     }
   }

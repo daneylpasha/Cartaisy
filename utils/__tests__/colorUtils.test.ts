@@ -1,6 +1,8 @@
 import {
+  compositeOverBackground,
   getContrastRatio,
   getRelativeLuminance,
+  hasSufficientContrastAgainstPrimaryLight,
   hasSufficientContrastForPrimary,
   hasSufficientContrastForSecondary,
 } from "@/utils/colorUtils";
@@ -95,6 +97,53 @@ describe("colorUtils contrast helpers", () => {
       // app/changePassword.tsx and app/ordersDetails.tsx. This is the
       // regression test for that bug.
       expect(hasSufficientContrastForSecondary("#767676")).toBe(false);
+    });
+  });
+
+  describe("compositeOverBackground", () => {
+    it("treats a fully opaque 6-digit hex as itself, regardless of the backdrop", () => {
+      expect(compositeOverBackground("#A82A50", "#FFFFFF")).toBe("#a82a50");
+      expect(compositeOverBackground("#A82A50", "#000000")).toBe("#a82a50");
+    });
+
+    it("resolves a fully transparent color (00 alpha) to exactly the backdrop", () => {
+      expect(compositeOverBackground("#12345600", "#F8FAFC")).toBe("#f8fafc");
+    });
+
+    it("alpha-composites $primarylight derived from black over white and $background, matching the values Codex cited", () => {
+      // getPrimaryLight("#000000") -> "#9999994d" (60% lighter, 30% opacity).
+      // Reproduced live and confirmed against the Codex finding's own numbers.
+      expect(compositeOverBackground("#9999994d", "#FFFFFF")).toBe("#e0e0e0");
+      expect(compositeOverBackground("#9999994d", "#F8FAFC")).toBe("#dbddde");
+    });
+
+    it("returns null when either input fails to parse", () => {
+      expect(compositeOverBackground("not-a-color", "#FFFFFF")).toBeNull();
+      expect(compositeOverBackground("#9999994d", "not-a-color")).toBeNull();
+    });
+  });
+
+  describe("hasSufficientContrastAgainstPrimaryLight", () => {
+    it("accepts a dark secondaryColor against the $primarylight derived from a dark primaryColor", () => {
+      expect(
+        hasSufficientContrastAgainstPrimaryLight("#123456", "#000000")
+      ).toBe(true);
+    });
+
+    it("rejects the exact reproducing case from Codex's finding: secondaryColor #737373 against primaryColor #000000's derived $primarylight (~3.48:1, well under 4.5:1)", () => {
+      expect(
+        hasSufficientContrastAgainstPrimaryLight("#737373", "#000000")
+      ).toBe(false);
+    });
+
+    it("catches a secondaryColor that the flat $background check alone would incorrectly accept", () => {
+      // #737373 clears the flat $background check (~4.53:1) but fails once
+      // $primarylight (derived from primaryColor #000000) is also checked —
+      // this is precisely the gap Codex's finding closed.
+      expect(hasSufficientContrastForSecondary("#737373")).toBe(true);
+      expect(
+        hasSufficientContrastAgainstPrimaryLight("#737373", "#000000")
+      ).toBe(false);
     });
   });
 });
