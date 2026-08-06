@@ -32,7 +32,7 @@ Current state: Store/tenant config is partial. `EXPO_PUBLIC_STORE_ID` and `X-Sto
 
 Current state: Tenant-mismatch verification is blocked on backend sandbox availability. A 2026-07-13 issue #87 rerun found no verified staging URL or safe Store A / Store B IDs in the issue body or comments, then re-tested the only available local public backend candidate with network access. The target still returned Railway `404 Application not found`, so correct-store, wrong-store, inactive-store, nonexistent/malformed-store, authenticated cross-store, guest-session cross-store, cart, checkout handoff, orders, product/search, and home behavior could not be freshly verified. The last backend-code run remains the historical local sandbox result in `docs/CROSS_REPO_SMOKE_TEST.md` and `docs/CHECKOUT_ORDERS_SMOKE_TEST.md`: `/store/config` enforced clean store validation, while `/customer/auth/profile`, `/customer/orders`, and `/unified-cart` still need backend tenant-mismatch hardening follow-up.
 
-Current state: Branding/theme is implemented at both build time and runtime. App identity is generated at build time by dynamic `app.config.ts` from environment variables with cartaisy defaults. At runtime, `primaryColor`/`secondaryColor` apply live via Tamagui's `updateTheme` (no rebuild, PRs #115/#116) and `logoUrl` renders across 7 surfaces with a bundled build-time fallback; both have WCAG contrast guardrails. Known gaps: the hardcoded `t("common.companyName")` string (5 UI locations) isn't wired to dashboard branding, and `getTokenValue()`/`AppImage` tint call sites don't pick up a runtime color change until the next app restart — both documented in `docs/MOBILE_BRANDING_SPLIT_MATRIX.md`.
+Current state: Branding/theme is implemented at both build time and runtime. App identity is generated at build time by dynamic `app.config.ts` from environment variables with cartaisy defaults. At runtime, `primaryColor`/`secondaryColor` apply live via Tamagui's `updateTheme` (no rebuild, PRs #115/#116) and `logoUrl` renders across 7 surfaces with a bundled build-time fallback; both have WCAG contrast guardrails. Known gaps: the hardcoded `t("common.companyName")` string (5 UI locations) isn't wired to dashboard branding, and `getTokenValue()`/`AppImage.resolveTokenColor()` tint call sites read the static, bundled `tokens.color` object directly rather than Tamagui's theme registry — an app restart re-runs the same bundle and does not make them pick up a merchant's runtime color; only a code change (making these reads reactive) or a rebuild with a new bundled default closes this gap. Both documented in `docs/MOBILE_BRANDING_SPLIT_MATRIX.md`.
 
 Current state: Home modules/content are partial to implemented. The app uses `GET /customer/homescreen` generated hooks and renders backend-driven layout sections, but exact backend content availability depends on tenant data.
 
@@ -56,7 +56,7 @@ Target state: Mobile SaaS readiness means each merchant-branded build has verifi
 
 Target state: Runtime Shopify/catalog/store data should come from the Cartaisy backend, with Shopify Admin/private credentials kept off device.
 
-Target state: Runtime branding should be implemented only through explicit follow-up issues and validated contracts. Dynamic app config is implemented; its per-merchant build output should be validated before branded releases.
+Target state: Runtime branding (colors + logo) is implemented (PRs #115/#116); remaining work — the `companyName` string, the `getTokenValue()`/`AppImage` reactivity gap, and a recorded end-to-end integration run — should land through explicit follow-up issues, not ad hoc changes. Dynamic app config is implemented; its per-merchant build output should be validated before branded releases.
 
 Target state: Testing should include lint, typecheck, meaningful unit/integration coverage where available, platform smoke testing, and release-specific iOS/Android validation.
 
@@ -86,7 +86,8 @@ Unknown: Whether real EAS/signed merchant builds succeed end-to-end (signing, st
 - Keep mobile secrets safety strict, especially around Shopify Admin/private credentials.
 - Preserve backend-owned tenant isolation and store-scoped API usage.
 - Resolve native identity/build mismatches before production branded releases.
-- Implement runtime branding only through scoped follow-up issues; prove merchant-branded build output end-to-end.
+- Runtime branding (colors + logo) is implemented; remaining branding work is scoped follow-up issues — wire the `companyName` string, make `getTokenValue()`/`AppImage` tint reads reactive, and record a live dashboard→backend→mobile-app integration run.
+- Prove merchant-branded build output end-to-end.
 - Extend Jest coverage when backend/mobile behavior changes.
 
 ## Related Docs And Issues
