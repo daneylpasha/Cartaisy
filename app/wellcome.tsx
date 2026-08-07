@@ -10,6 +10,7 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { LabelMD } from "@/components/atoms/texts/LabelMD";
 import { ParagraphLG } from "@/components/atoms/texts/ParagraphLG";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
+import { useCompanyName } from "@/hooks/useCompanyName";
 import { t, tArray } from "@/translations";
 import { router } from "expo-router";
 import React from "react";
@@ -19,6 +20,8 @@ import { getTokenValue, XStack, YStack } from "tamagui";
 const ListsItems = tArray("welcome.Lists");
 
 const WellcomeScreen = () => {
+  const companyName = useCompanyName();
+
   const renderLists: ListRenderItem<string> = ({ item }) => (
     <XStack alignItems="center">
       <YStack
@@ -60,9 +63,24 @@ const WellcomeScreen = () => {
           />
         </YStack>
         <Spacer size={"$xl"} />
-        <LabelMD color={"$primary"} textAlign="center">
-          {t("common.companyName").toUpperCase()}
-        </LabelMD>
+        {/* Hide the brand mark entirely rather than leaking the bundled
+            "CARTAISY" name when storeName isn't available yet — see
+            hooks/useCompanyName.ts's doc comment and
+            docs/MOBILE_BRANDED_BUILD_CHECKLIST.md's fail-closed requirement
+            (Codex P1 finding on PR #120). numberOfLines/ellipsizeMode guard
+            against a long real merchant name wrapping or overflowing past
+            the sign-up/login controls on this non-scrollable screen (Codex
+            P2 finding on PR #120). */}
+        {companyName ? (
+          <LabelMD
+            color={"$primary"}
+            textAlign="center"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {companyName.toUpperCase()}
+          </LabelMD>
+        ) : null}
         <Spacer size={"$md-lg"} />
         <HeadingSMBold textAlign="center">{t("welcome.title")}</HeadingSMBold>
         <Spacer size={"$md-lg"} />

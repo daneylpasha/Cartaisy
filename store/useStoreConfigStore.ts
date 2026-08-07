@@ -139,6 +139,22 @@ const useStoreConfigStore = create<StoreConfigState>()(
         // failure" behavior itself (that behavior is still what happens
         // going forward, just starting from a re-validated baseline).
         state?.revalidateBranding();
+        // `isLoaded` records whether THIS session's `/store/config` fetch
+        // (AppInitializer.tsx calls setConfig() once it resolves, success
+        // or failure) has completed — not whether any PAST session's fetch
+        // ever did. Without this reset, a persisted `isLoaded: true` from a
+        // previous session survives rehydration and immediately reads as
+        // "loaded" again here, before the current session's own fetch has
+        // even started — exposing whatever `storeName` also got persisted
+        // from that previous session (stale, or a different tenant's name
+        // entirely if the merchant renamed their store or the build was
+        // repointed to a different store) for the ~500ms+fetch-duration
+        // window until the current fetch actually replaces it. Caught in
+        // Codex review (PR #120) as a variant of the same branding-leak
+        // concern that made `hooks/useCompanyName.ts` drop its bundled
+        // "Cartaisy" fallback — that hook gates on this flag specifically
+        // to avoid this leak too.
+        useStoreConfigStore.setState({ isLoaded: false });
         state?.setHasHydrated(true);
       },
     }

@@ -251,6 +251,40 @@ describe("useStoreConfigStore", () => {
     expect(state._hasHydrated).toBe(true);
   });
 
+  it("onRehydrateStorage's success path resets isLoaded to false even when a previous session's persisted state had it true, so a stale/prior-tenant storeName can't be exposed via useCompanyName() before THIS session's fetch resolves (Codex review finding on PR #120)", () => {
+    // Simulates a previous session that completed its /store/config fetch
+    // (isLoaded: true, a real storeName persisted) followed by a cold
+    // relaunch: zustand's persist middleware merges that persisted state
+    // back in first, then onRehydrateStorage runs. Without the explicit
+    // reset, isLoaded would still read true immediately post-rehydration —
+    // before the current session's own AppInitializer fetch has even
+    // started — letting useCompanyName() expose last session's (possibly
+    // stale, or wrong-tenant) storeName.
+    useStoreConfigStore.setState({
+      storeName: "Acme Outfitters",
+      isLoaded: true,
+      _hasHydrated: false,
+    });
+
+    const onRehydrateStorage = useStoreConfigStore.persist.getOptions().onRehydrateStorage;
+    expect(onRehydrateStorage).toBeDefined();
+
+    const rehydrateCallback = onRehydrateStorage!(useStoreConfigStore.getState());
+    expect(rehydrateCallback).toBeDefined();
+
+    // No error — this is the successful-rehydration path.
+    rehydrateCallback!(useStoreConfigStore.getState(), undefined);
+
+    const state = useStoreConfigStore.getState();
+    expect(state.isLoaded).toBe(false);
+    // storeName itself is left alone by this reset — only isLoaded (the
+    // gate useCompanyName() reads) is forced back to false; AppInitializer's
+    // own fetch is what will overwrite storeName with the current session's
+    // real value once it resolves.
+    expect(state.storeName).toBe("Acme Outfitters");
+    expect(state._hasHydrated).toBe(true);
+  });
+
   it("reset clears branding along with the rest of the config", () => {
     useStoreConfigStore.getState().setConfig({
       currency: "USD",

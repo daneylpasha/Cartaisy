@@ -56,6 +56,10 @@ describe("HomeHeader", () => {
       primaryColor: undefined,
       secondaryColor: undefined,
       logoUrl: undefined,
+      storeName: "",
+      // isLoaded: false matches the store's post-rehydration/pre-fetch
+      // default (see useStoreConfigStore.ts's onRehydrateStorage reset).
+      isLoaded: false,
     });
   });
 
@@ -175,5 +179,36 @@ describe("HomeHeader", () => {
     const rootView = UNSAFE_getAllByType(View)[0];
     const flatStyle = StyleSheet.flatten(rootView.props.style);
     expect(flatStyle.backgroundColor).toBe("#123456");
+  });
+
+  describe("search placeholder companyName (TICKETwiremerchantstorenameintocompanynamestrings.md)", () => {
+    it("falls back to a bare 'Search' (no name) when storeName is empty (today's initial state before AppInitializer's fetch resolves) — never leaks the bundled 'Cartaisy' name (Codex P1 finding on PR #120)", () => {
+      const { getByText } = renderHeader();
+      expect(getByText("Search")).toBeTruthy();
+    });
+
+    it("reads the merchant's real storeName once isLoaded is true, instead of the hardcoded Cartaisy string", () => {
+      useStoreConfigStore.setState({ storeName: "Acme Outfitters", isLoaded: true });
+
+      const { getByText } = renderHeader();
+      expect(getByText("Search Acme Outfitters")).toBeTruthy();
+    });
+
+    it("constrains a long merchant name to one line with ellipsis instead of extending past the fixed-width header (Codex review finding on PR #120)", () => {
+      // The store-config contract places no length limit on `name`, and
+      // this row had neither flexShrink nor numberOfLines — a long real
+      // merchant name could previously push the search row wider than the
+      // header instead of staying a single-line search affordance (the
+      // former hardcoded "Cartaisy" was always short enough that this
+      // never showed up). Same fix as the notification preview card.
+      const longName = "Acme Outfitters International Trading Company Ltd.";
+      useStoreConfigStore.setState({ storeName: longName, isLoaded: true });
+
+      const { getByText } = renderHeader();
+      const searchText = getByText(`Search ${longName}`);
+
+      expect(searchText.props.numberOfLines).toBe(1);
+      expect(searchText.props.ellipsizeMode).toBe("tail");
+    });
   });
 });

@@ -13,6 +13,7 @@ import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import { useAuthGuard } from "@/contexts/AuthGuardContext";
+import { useCompanyName } from "@/hooks/useCompanyName";
 import useAuthStore from "@/store/useAuthStore";
 import { t } from "@/translations";
 import * as Notifications from "expo-notifications";
@@ -25,6 +26,7 @@ const Notification = () => {
   const [hasDeniedBefore, setHasDeniedBefore] = useState(false);
   const { token } = useAuthStore();
   const { pendingReturnPath, clearPendingReturnPath } = useAuthGuard();
+  const companyName = useCompanyName();
 
   // Helper function to navigate after signup completion
   const navigateAfterSignup = () => {
@@ -157,13 +159,31 @@ const Notification = () => {
             borderRadius={"$2xl"}
             padding={"$md"}
           >
-            <XStack alignItems="center" justifyContent="space-between">
-              <XStack>
+            <XStack alignItems="center" justifyContent="space-between" gap={"$xs"}>
+              <XStack alignItems="center" flexShrink={1}>
                 <AppImage name="bag" width={17} height={19} />
-                <Spacer size={"$xxs"} />
-                <LabelMD letterSpacing={0}>{t("common.companyName")}</LabelMD>
+                {/* Hide the sender name entirely rather than leaking the
+                    bundled "Cartaisy" name when storeName isn't available
+                    yet — see hooks/useCompanyName.ts's doc comment and
+                    docs/MOBILE_BRANDED_BUILD_CHECKLIST.md's fail-closed
+                    requirement (Codex P1 finding on PR #120). */}
+                {companyName ? (
+                  <>
+                    <Spacer size={"$xxs"} />
+                    <LabelMD
+                      letterSpacing={0}
+                      flexShrink={1}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {companyName}
+                    </LabelMD>
+                  </>
+                ) : null}
               </XStack>
-              <TextSMRegular color={"$secondary"}>{"3s ago"}</TextSMRegular>
+              <TextSMRegular color={"$secondary"} flexShrink={0}>
+                {"3s ago"}
+              </TextSMRegular>
             </XStack>
             <ParagraphXS color={"$secondary"}>
               {t("notification.notificationExample")}
