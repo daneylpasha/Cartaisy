@@ -12,12 +12,20 @@ describe("brandingValidation", () => {
       expect(isValidHexColor("#ffffff")).toBe(true);
     });
 
+    it("accepts a three-digit shorthand hex color, matching the backend's sanitizeHexColor (TICKETmobileaccept3digithexbrandingcolors.md)", () => {
+      expect(isValidHexColor("#ABC")).toBe(true);
+      expect(isValidHexColor("#000")).toBe(true);
+      expect(isValidHexColor("#fff")).toBe(true);
+    });
+
     it("rejects malformed hex colors", () => {
-      expect(isValidHexColor("#FFF")).toBe(false); // three-digit shorthand not supported
       expect(isValidHexColor("A82A50")).toBe(false); // missing leading #
-      expect(isValidHexColor("#GGGGGG")).toBe(false); // non-hex characters
-      expect(isValidHexColor("#A82A5")).toBe(false); // too short
+      expect(isValidHexColor("#GGGGGG")).toBe(false); // non-hex characters, 6-digit length
+      expect(isValidHexColor("#GGG")).toBe(false); // non-hex characters, 3-digit length
+      expect(isValidHexColor("#AB")).toBe(false); // too short to be either form
+      expect(isValidHexColor("#A82A5")).toBe(false); // too short for 6-digit, too long for 3-digit
       expect(isValidHexColor("#A82A500")).toBe(false); // too long
+      expect(isValidHexColor("#ABCDE")).toBe(false); // 5 digits — neither valid length
       expect(isValidHexColor("red")).toBe(false); // named color, not hex
     });
 
@@ -225,6 +233,50 @@ describe("brandingValidation", () => {
         primaryColor: "#A82A50",
         secondaryColor: "#4B5563",
       });
+    });
+  });
+
+  describe("validateBranding — 3-digit hex shorthand (TICKETmobileaccept3digithexbrandingcolors.md)", () => {
+    // Regression coverage for the gap this ticket closes: a merchant
+    // primaryColor/secondaryColor of e.g. `#ABC` used to be accepted and
+    // persisted by the backend, then silently rejected here with no error
+    // shown — it just fell back to the bundled color. `#123` (-> expands to
+    // `#112233`) is used as the passing case since it's dark enough to clear
+    // every contrast guardrail by a wide margin, same as the existing
+    // 6-digit `#123456` passing cases above.
+    const devWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+    afterEach(() => {
+      devWarnSpy.mockClear();
+    });
+
+    it("accepts a well-formed, high-contrast 3-digit primaryColor and secondaryColor and flows them through unexpanded", () => {
+      expect(
+        validateBranding({ primaryColor: "#123", secondaryColor: "#123" }),
+      ).toEqual({
+        primaryColor: "#123",
+        secondaryColor: "#123",
+      });
+    });
+
+    it("drops a well-formed but low-contrast 3-digit primaryColor (e.g. #eee, expands to near-white) instead of persisting it", () => {
+      expect(validateBranding({ primaryColor: "#eee" })).toEqual({});
+      expect(devWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("#eee"),
+      );
+    });
+
+    it("drops a well-formed but low-contrast 3-digit secondaryColor the same way", () => {
+      expect(validateBranding({ secondaryColor: "#eee" })).toEqual({});
+      expect(devWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("#eee"),
+      );
+    });
+
+    it("still rejects malformed near-3-digit input — this ticket widens acceptance, it doesn't loosen it", () => {
+      expect(validateBranding({ primaryColor: "#AB" })).toEqual({});
+      expect(validateBranding({ primaryColor: "#ABCDE" })).toEqual({});
+      expect(validateBranding({ primaryColor: "#GGG" })).toEqual({});
     });
   });
 

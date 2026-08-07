@@ -1,10 +1,12 @@
 import {
   compositeOverBackground,
   getContrastRatio,
+  getPrimaryLight,
   getRelativeLuminance,
   hasSufficientContrastAgainstPrimaryLight,
   hasSufficientContrastForPrimary,
   hasSufficientContrastForSecondary,
+  lightenColor,
 } from "@/utils/colorUtils";
 
 describe("colorUtils contrast helpers", () => {
@@ -16,6 +18,31 @@ describe("colorUtils contrast helpers", () => {
 
     it("returns null for an unparseable hex string", () => {
       expect(getRelativeLuminance("not-a-color")).toBeNull();
+    });
+
+    // 3-digit shorthand support (TICKETmobileaccept3digithexbrandingcolors.md):
+    // hexToRgb() must expand shorthand before parsing, or every consumer of
+    // getRelativeLuminance (getContrastRatio and everything built on it)
+    // would silently treat a now-validated 3-digit hex as unparseable.
+    it("expands a 3-digit shorthand hex the same as its 6-digit equivalent", () => {
+      expect(getRelativeLuminance("#FFF")).toBeCloseTo(
+        getRelativeLuminance("#FFFFFF") as number,
+        10,
+      );
+      expect(getRelativeLuminance("#000")).toBeCloseTo(
+        getRelativeLuminance("#000000") as number,
+        10,
+      );
+      expect(getRelativeLuminance("#ABC")).toBeCloseTo(
+        getRelativeLuminance("#AABBCC") as number,
+        10,
+      );
+    });
+
+    it("still returns null for near-3-digit malformed input", () => {
+      expect(getRelativeLuminance("#AB")).toBeNull(); // too short
+      expect(getRelativeLuminance("#ABCDE")).toBeNull(); // too long for either form
+      expect(getRelativeLuminance("#GGG")).toBeNull(); // non-hex characters
     });
   });
 
@@ -36,6 +63,10 @@ describe("colorUtils contrast helpers", () => {
 
     it("returns null if either color fails to parse", () => {
       expect(getContrastRatio("nope", "#FFFFFF")).toBeNull();
+    });
+
+    it("returns 21 for 3-digit black-on-white, same as the 6-digit form", () => {
+      expect(getContrastRatio("#000", "#FFF")).toBeCloseTo(21, 1);
     });
   });
 
@@ -60,6 +91,14 @@ describe("colorUtils contrast helpers", () => {
 
     it("rejects a mid-tone color below the 4.5:1 AA threshold (e.g. a bright green at ~3.08:1)", () => {
       expect(hasSufficientContrastForPrimary("#00A86B")).toBe(false);
+    });
+
+    it("accepts a dark 3-digit shorthand color, matching its 6-digit equivalent (TICKETmobileaccept3digithexbrandingcolors.md)", () => {
+      expect(hasSufficientContrastForPrimary("#123")).toBe(true);
+    });
+
+    it("rejects a near-white 3-digit shorthand color the same as its 6-digit equivalent", () => {
+      expect(hasSufficientContrastForPrimary("#eee")).toBe(false);
     });
   });
 
@@ -97,6 +136,30 @@ describe("colorUtils contrast helpers", () => {
       // app/changePassword.tsx and app/ordersDetails.tsx. This is the
       // regression test for that bug.
       expect(hasSufficientContrastForSecondary("#767676")).toBe(false);
+    });
+
+    it("accepts a dark 3-digit shorthand color, matching its 6-digit equivalent (TICKETmobileaccept3digithexbrandingcolors.md)", () => {
+      expect(hasSufficientContrastForSecondary("#123")).toBe(true);
+    });
+
+    it("rejects a near-white 3-digit shorthand color the same as its 6-digit equivalent", () => {
+      expect(hasSufficientContrastForSecondary("#eee")).toBe(false);
+    });
+  });
+
+  describe("lightenColor / getPrimaryLight with 3-digit shorthand input (TICKETmobileaccept3digithexbrandingcolors.md)", () => {
+    // $primarylight is derived from the merchant's primaryColor via
+    // lightenColor() -> hexToRgb(). If a validated 3-digit primaryColor
+    // failed to parse here, $primarylight would silently fall back to the
+    // raw unparsed hex (hexToRgb returning null makes lightenColor return
+    // its input unchanged) instead of an actual lightened/translucent color.
+    it("produces the same lightened output for a 3-digit hex as its 6-digit equivalent", () => {
+      expect(lightenColor("#000")).toBe(lightenColor("#000000"));
+      expect(getPrimaryLight("#000")).toBe(getPrimaryLight("#000000"));
+    });
+
+    it("returns the input unchanged when it fails to parse, same fallback as the existing 6-digit-only behavior", () => {
+      expect(lightenColor("not-a-color")).toBe("not-a-color");
     });
   });
 
@@ -144,6 +207,12 @@ describe("colorUtils contrast helpers", () => {
       expect(
         hasSufficientContrastAgainstPrimaryLight("#737373", "#000000")
       ).toBe(false);
+    });
+
+    it("gives the same result for a 3-digit primaryColor as its 6-digit equivalent (TICKETmobileaccept3digithexbrandingcolors.md)", () => {
+      expect(hasSufficientContrastAgainstPrimaryLight("#123456", "#000")).toBe(
+        hasSufficientContrastAgainstPrimaryLight("#123456", "#000000"),
+      );
     });
   });
 });

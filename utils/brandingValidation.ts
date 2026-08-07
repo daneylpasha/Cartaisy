@@ -18,8 +18,13 @@ import {
 } from "@/utils/colorUtils";
 import { PRIMARY_COLOR as STATIC_PRIMARY_COLOR } from "@/tamagui/token";
 
-// Six-digit hex colors only, matching the backend's `sanitizeHexColor`.
-const HEX_COLOR_PATTERN = /^#[A-Fa-f0-9]{6}$/;
+// Six-digit or three-digit shorthand hex colors, matching the backend's
+// `sanitizeHexColor` (cartaisy-backend's src/controllers/storeConfigController.ts)
+// exactly — see TICKETmobileaccept3digithexbrandingcolors.md. Before this fix,
+// a merchant who set a 3-digit hex (e.g. `#ABC`) in the dashboard had it
+// accepted and persisted by the backend, then silently rejected here with no
+// error shown anywhere; it just fell back to the bundled Cartaisy color.
+const HEX_COLOR_PATTERN = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
 
 export function isValidHexColor(value: unknown): value is string {
   return typeof value === "string" && HEX_COLOR_PATTERN.test(value);
