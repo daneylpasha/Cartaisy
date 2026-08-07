@@ -20,9 +20,9 @@ describe("SearchBar companyName placeholder", () => {
     useStoreConfigStore.setState({ storeName: "" });
   });
 
-  it("falls back to the bundled 'Search Cartaisy' placeholder when storeName is empty", () => {
+  it("falls back to a bare 'Search' placeholder (no name) when storeName is empty — never leaks the bundled 'Cartaisy' name (Codex P1 finding on PR #120)", () => {
     const { getByPlaceholderText } = renderWithTamagui(<SearchBar />);
-    expect(getByPlaceholderText("Search Cartaisy")).toBeTruthy();
+    expect(getByPlaceholderText("Search")).toBeTruthy();
   });
 
   it("uses the merchant's real storeName in the placeholder instead of the hardcoded Cartaisy string", () => {

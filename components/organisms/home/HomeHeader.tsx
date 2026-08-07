@@ -155,7 +155,7 @@ export const HomeHeader = ({
               numberOfLines={1}
               ellipsizeMode="tail"
             >
-              {`Search ${companyName}`}
+              {companyName ? `Search ${companyName}` : "Search"}
             </TextMDRegular>
           </XStack>
         </OpTouch>

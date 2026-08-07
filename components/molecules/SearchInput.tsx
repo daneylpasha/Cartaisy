@@ -92,7 +92,9 @@ export const SearchInput = ({
     <FormInput
       value={value}
       onChangeText={onChangeText}
-      placeholder={placeholder || `Search ${companyName}`}
+      placeholder={
+        placeholder || (companyName ? `Search ${companyName}` : "Search")
+      }
       icon={searchIcon}
       rightElement={rightElement}
       width={width}

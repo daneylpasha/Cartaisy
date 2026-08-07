@@ -179,9 +179,9 @@ describe("HomeHeader", () => {
   });
 
   describe("search placeholder companyName (TICKETwiremerchantstorenameintocompanynamestrings.md)", () => {
-    it("falls back to the bundled 'Search Cartaisy' when storeName is empty (today's initial state before AppInitializer's fetch resolves)", () => {
+    it("falls back to a bare 'Search' (no name) when storeName is empty (today's initial state before AppInitializer's fetch resolves) — never leaks the bundled 'Cartaisy' name (Codex P1 finding on PR #120)", () => {
       const { getByText } = renderHeader();
-      expect(getByText("Search Cartaisy")).toBeTruthy();
+      expect(getByText("Search")).toBeTruthy();
     });
 
     it("reads the merchant's real storeName instead of the hardcoded Cartaisy string", () => {

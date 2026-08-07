@@ -44,9 +44,9 @@ describe("notification screen companyName", () => {
     useStoreConfigStore.setState({ storeName: "" });
   });
 
-  it("falls back to the bundled 'Cartaisy' name in the mocked notification preview when storeName is empty", () => {
-    const { getByText } = renderWithTamagui(<Notification />);
-    expect(getByText("Cartaisy")).toBeTruthy();
+  it("hides the sender name in the mocked notification preview when storeName is empty, instead of leaking the bundled 'Cartaisy' name (fail-closed per docs/MOBILE_BRANDED_BUILD_CHECKLIST.md — Codex P1 finding on PR #120)", () => {
+    const { queryByText } = renderWithTamagui(<Notification />);
+    expect(queryByText("Cartaisy")).toBeNull();
   });
 
   it("shows the merchant's real storeName instead of the hardcoded Cartaisy string", () => {

@@ -26,9 +26,9 @@ describe("wellcome screen companyName brand mark", () => {
     useStoreConfigStore.setState({ storeName: "" });
   });
 
-  it("falls back to the bundled, uppercased 'CARTAISY' brand mark when storeName is empty", () => {
-    const { getByText } = renderWithTamagui(<WellcomeScreen />);
-    expect(getByText("CARTAISY")).toBeTruthy();
+  it("hides the brand mark entirely when storeName is empty, instead of leaking the bundled 'CARTAISY' name (fail-closed per docs/MOBILE_BRANDED_BUILD_CHECKLIST.md — Codex P1 finding on PR #120)", () => {
+    const { queryByText } = renderWithTamagui(<WellcomeScreen />);
+    expect(queryByText("CARTAISY")).toBeNull();
   });
 
   it("uppercases the merchant's real storeName instead of the hardcoded Cartaisy string", () => {
@@ -36,5 +36,22 @@ describe("wellcome screen companyName brand mark", () => {
 
     const { getByText } = renderWithTamagui(<WellcomeScreen />);
     expect(getByText("ACME OUTFITTERS")).toBeTruthy();
+  });
+
+  it("constrains a long merchant name to one line with ellipsis instead of wrapping or overflowing past the sign-up/login controls on this non-scrollable screen (Codex P2 finding on PR #120)", () => {
+    // The store-config contract places no length limit on `name`, and this
+    // label had no numberOfLines/ellipsizeMode constraint — a long real
+    // merchant name could previously wrap to multiple lines or overflow,
+    // pushing the sign-up/login controls off-screen (the former hardcoded
+    // "Cartaisy" was always short enough that this never showed up). Same
+    // fix as the notification preview card and HomeHeader's search row.
+    const longName = "Acme Outfitters International Trading Company Ltd.";
+    useStoreConfigStore.setState({ storeName: longName });
+
+    const { getByText } = renderWithTamagui(<WellcomeScreen />);
+    const brandText = getByText(longName.toUpperCase());
+
+    expect(brandText.props.numberOfLines).toBe(1);
+    expect(brandText.props.ellipsizeMode).toBe("tail");
   });
 });

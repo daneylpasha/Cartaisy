@@ -63,9 +63,24 @@ const WellcomeScreen = () => {
           />
         </YStack>
         <Spacer size={"$xl"} />
-        <LabelMD color={"$primary"} textAlign="center">
-          {companyName.toUpperCase()}
-        </LabelMD>
+        {/* Hide the brand mark entirely rather than leaking the bundled
+            "CARTAISY" name when storeName isn't available yet — see
+            hooks/useCompanyName.ts's doc comment and
+            docs/MOBILE_BRANDED_BUILD_CHECKLIST.md's fail-closed requirement
+            (Codex P1 finding on PR #120). numberOfLines/ellipsizeMode guard
+            against a long real merchant name wrapping or overflowing past
+            the sign-up/login controls on this non-scrollable screen (Codex
+            P2 finding on PR #120). */}
+        {companyName ? (
+          <LabelMD
+            color={"$primary"}
+            textAlign="center"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {companyName.toUpperCase()}
+          </LabelMD>
+        ) : null}
         <Spacer size={"$md-lg"} />
         <HeadingSMBold textAlign="center">{t("welcome.title")}</HeadingSMBold>
         <Spacer size={"$md-lg"} />

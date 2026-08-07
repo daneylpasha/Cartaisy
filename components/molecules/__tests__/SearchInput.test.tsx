@@ -23,11 +23,11 @@ describe("SearchInput default companyName placeholder", () => {
     useStoreConfigStore.setState({ storeName: "" });
   });
 
-  it("falls back to the bundled 'Search Cartaisy' default placeholder when no placeholder prop is passed and storeName is empty", () => {
+  it("falls back to a bare 'Search' default placeholder (no name) when no placeholder prop is passed and storeName is empty — never leaks the bundled 'Cartaisy' name (Codex P1 finding on PR #120)", () => {
     const { getByPlaceholderText } = renderWithTamagui(
       <SearchInput value="" onChangeText={() => {}} />
     );
-    expect(getByPlaceholderText("Search Cartaisy")).toBeTruthy();
+    expect(getByPlaceholderText("Search")).toBeTruthy();
   });
 
   it("uses the merchant's real storeName in the default placeholder instead of the hardcoded Cartaisy string", () => {
