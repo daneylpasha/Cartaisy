@@ -20,7 +20,9 @@ import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
 describe("SearchInput default companyName placeholder", () => {
   beforeEach(() => {
-    useStoreConfigStore.setState({ storeName: "" });
+    // isLoaded: false matches the store's post-rehydration/pre-fetch
+    // default (see useStoreConfigStore.ts's onRehydrateStorage reset).
+    useStoreConfigStore.setState({ storeName: "", isLoaded: false });
   });
 
   it("falls back to a bare 'Search' default placeholder (no name) when no placeholder prop is passed and storeName is empty — never leaks the bundled 'Cartaisy' name (Codex P1 finding on PR #120)", () => {
@@ -30,8 +32,8 @@ describe("SearchInput default companyName placeholder", () => {
     expect(getByPlaceholderText("Search")).toBeTruthy();
   });
 
-  it("uses the merchant's real storeName in the default placeholder instead of the hardcoded Cartaisy string", () => {
-    useStoreConfigStore.setState({ storeName: "Acme Outfitters" });
+  it("uses the merchant's real storeName in the default placeholder once isLoaded is true, instead of the hardcoded Cartaisy string", () => {
+    useStoreConfigStore.setState({ storeName: "Acme Outfitters", isLoaded: true });
 
     const { getByPlaceholderText } = renderWithTamagui(
       <SearchInput value="" onChangeText={() => {}} />
@@ -40,7 +42,7 @@ describe("SearchInput default companyName placeholder", () => {
   });
 
   it("an explicit placeholder prop still overrides the companyName default entirely", () => {
-    useStoreConfigStore.setState({ storeName: "Acme Outfitters" });
+    useStoreConfigStore.setState({ storeName: "Acme Outfitters", isLoaded: true });
 
     const { getByPlaceholderText, queryByPlaceholderText } = renderWithTamagui(
       <SearchInput value="" onChangeText={() => {}} placeholder="Find products" />

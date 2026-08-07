@@ -41,7 +41,9 @@ import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
 describe("notification screen companyName", () => {
   beforeEach(() => {
-    useStoreConfigStore.setState({ storeName: "" });
+    // isLoaded: false matches the store's post-rehydration/pre-fetch
+    // default (see useStoreConfigStore.ts's onRehydrateStorage reset).
+    useStoreConfigStore.setState({ storeName: "", isLoaded: false });
   });
 
   it("hides the sender name in the mocked notification preview when storeName is empty, instead of leaking the bundled 'Cartaisy' name (fail-closed per docs/MOBILE_BRANDED_BUILD_CHECKLIST.md — Codex P1 finding on PR #120)", () => {
@@ -49,8 +51,8 @@ describe("notification screen companyName", () => {
     expect(queryByText("Cartaisy")).toBeNull();
   });
 
-  it("shows the merchant's real storeName instead of the hardcoded Cartaisy string", () => {
-    useStoreConfigStore.setState({ storeName: "Acme Outfitters" });
+  it("shows the merchant's real storeName once isLoaded is true, instead of the hardcoded Cartaisy string", () => {
+    useStoreConfigStore.setState({ storeName: "Acme Outfitters", isLoaded: true });
 
     const { getByText } = renderWithTamagui(<Notification />);
     expect(getByText("Acme Outfitters")).toBeTruthy();
@@ -64,7 +66,7 @@ describe("notification screen companyName", () => {
     // numberOfLines (the former hardcoded "Cartaisy" was always short
     // enough that this never showed up).
     const longName = "Acme Outfitters International Trading Company Ltd.";
-    useStoreConfigStore.setState({ storeName: longName });
+    useStoreConfigStore.setState({ storeName: longName, isLoaded: true });
 
     const { getByText } = renderWithTamagui(<Notification />);
     const nameText = getByText(longName);

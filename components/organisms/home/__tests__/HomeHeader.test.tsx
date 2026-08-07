@@ -57,6 +57,9 @@ describe("HomeHeader", () => {
       secondaryColor: undefined,
       logoUrl: undefined,
       storeName: "",
+      // isLoaded: false matches the store's post-rehydration/pre-fetch
+      // default (see useStoreConfigStore.ts's onRehydrateStorage reset).
+      isLoaded: false,
     });
   });
 
@@ -184,8 +187,8 @@ describe("HomeHeader", () => {
       expect(getByText("Search")).toBeTruthy();
     });
 
-    it("reads the merchant's real storeName instead of the hardcoded Cartaisy string", () => {
-      useStoreConfigStore.setState({ storeName: "Acme Outfitters" });
+    it("reads the merchant's real storeName once isLoaded is true, instead of the hardcoded Cartaisy string", () => {
+      useStoreConfigStore.setState({ storeName: "Acme Outfitters", isLoaded: true });
 
       const { getByText } = renderHeader();
       expect(getByText("Search Acme Outfitters")).toBeTruthy();
@@ -199,7 +202,7 @@ describe("HomeHeader", () => {
       // former hardcoded "Cartaisy" was always short enough that this
       // never showed up). Same fix as the notification preview card.
       const longName = "Acme Outfitters International Trading Company Ltd.";
-      useStoreConfigStore.setState({ storeName: longName });
+      useStoreConfigStore.setState({ storeName: longName, isLoaded: true });
 
       const { getByText } = renderHeader();
       const searchText = getByText(`Search ${longName}`);

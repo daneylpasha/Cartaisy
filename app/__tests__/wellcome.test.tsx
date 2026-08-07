@@ -23,7 +23,9 @@ import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
 describe("wellcome screen companyName brand mark", () => {
   beforeEach(() => {
-    useStoreConfigStore.setState({ storeName: "" });
+    // isLoaded: false matches the store's post-rehydration/pre-fetch
+    // default (see useStoreConfigStore.ts's onRehydrateStorage reset).
+    useStoreConfigStore.setState({ storeName: "", isLoaded: false });
   });
 
   it("hides the brand mark entirely when storeName is empty, instead of leaking the bundled 'CARTAISY' name (fail-closed per docs/MOBILE_BRANDED_BUILD_CHECKLIST.md — Codex P1 finding on PR #120)", () => {
@@ -31,8 +33,8 @@ describe("wellcome screen companyName brand mark", () => {
     expect(queryByText("CARTAISY")).toBeNull();
   });
 
-  it("uppercases the merchant's real storeName instead of the hardcoded Cartaisy string", () => {
-    useStoreConfigStore.setState({ storeName: "Acme Outfitters" });
+  it("uppercases the merchant's real storeName once isLoaded is true, instead of the hardcoded Cartaisy string", () => {
+    useStoreConfigStore.setState({ storeName: "Acme Outfitters", isLoaded: true });
 
     const { getByText } = renderWithTamagui(<WellcomeScreen />);
     expect(getByText("ACME OUTFITTERS")).toBeTruthy();
@@ -46,7 +48,7 @@ describe("wellcome screen companyName brand mark", () => {
     // "Cartaisy" was always short enough that this never showed up). Same
     // fix as the notification preview card and HomeHeader's search row.
     const longName = "Acme Outfitters International Trading Company Ltd.";
-    useStoreConfigStore.setState({ storeName: longName });
+    useStoreConfigStore.setState({ storeName: longName, isLoaded: true });
 
     const { getByText } = renderWithTamagui(<WellcomeScreen />);
     const brandText = getByText(longName.toUpperCase());

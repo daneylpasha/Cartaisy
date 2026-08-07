@@ -32,7 +32,23 @@ import useStoreConfigStore from "@/store/useStoreConfigStore";
  * `updateTheme()`/`useTheme()` wiring. zustand's own subscription already
  * makes a consuming component re-render when `storeName` changes (e.g.
  * once the startup fetch resolves after this component already mounted).
+ *
+ * Also gates on `isLoaded`: `useStoreConfigStore`'s `storeName` is
+ * persisted (zustand's `persist` middleware, AsyncStorage-backed) and gets
+ * rehydrated on every cold launch — including before this session's own
+ * `/store/config` fetch has run. Without this gate, a previous session's
+ * persisted `storeName` (stale, or a different tenant's name entirely if
+ * the merchant renamed their store or the build got repointed to a
+ * different store) would flash for the ~500ms+fetch-duration window before
+ * the current session's real value replaces it — the same kind of leak
+ * this hook exists to prevent, just arriving from disk instead of a
+ * bundled fallback (Codex review finding on PR #120). `isLoaded` is
+ * explicitly reset to `false` on every rehydration
+ * (`store/useStoreConfigStore.ts`'s `onRehydrateStorage`) precisely so it
+ * only reflects THIS session's fetch having completed, not any past one.
  */
 export function useCompanyName(): string {
-  return useStoreConfigStore((state) => state.storeName);
+  const isLoaded = useStoreConfigStore((state) => state.isLoaded);
+  const storeName = useStoreConfigStore((state) => state.storeName);
+  return isLoaded ? storeName : "";
 }
