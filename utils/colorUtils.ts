@@ -1,13 +1,32 @@
 /**
- * Convert hex color to RGB
+ * Convert hex color to RGB. Accepts both 6-digit (`#RRGGBB`) and 3-digit
+ * shorthand (`#RGB`) hex — shorthand is expanded to 6-digit (each nibble
+ * doubled, e.g. `#ABC` -> `AABBCC`) before parsing, per the CSS hex-color
+ * shorthand convention that `utils/brandingValidation.ts`'s
+ * `isValidHexColor()` now also accepts (see
+ * TICKETmobileaccept3digithexbrandingcolors.md). Without this, a validated
+ * 3-digit primaryColor/secondaryColor would fail to parse here and every
+ * contrast check consuming it (`getRelativeLuminance`, `getContrastRatio`,
+ * and — via `lightenColor`/`getPrimaryLight` — the derived `$primarylight`
+ * math) would silently misbehave on exactly the input this ticket makes
+ * acceptable.
  */
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  const stripped = hex.replace(/^#/, "");
+  const expanded =
+    /^[a-f\d]{3}$/i.test(stripped)
+      ? stripped
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : stripped;
+
+  const result = /^([a-f\d]{6})$/i.exec(expanded);
   return result
     ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
+        r: parseInt(result[1].slice(0, 2), 16),
+        g: parseInt(result[1].slice(2, 4), 16),
+        b: parseInt(result[1].slice(4, 6), 16),
       }
     : null;
 }
