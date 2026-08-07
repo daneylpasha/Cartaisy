@@ -31,6 +31,7 @@
 import { act } from "@testing-library/react-native";
 import React from "react";
 import { Image } from "react-native";
+import { updateTheme } from "tamagui";
 
 const MOCK_LOGO_ASSET = 42;
 
@@ -141,5 +142,44 @@ describe("AppImage", () => {
   it("renders nothing when neither name nor a usable source is provided", () => {
     const { toJSON } = renderWithTamagui(<AppImage />);
     expect(toJSON()).toBeNull();
+  });
+
+  describe("tintColor reactivity (TICKETmobilereactivitygapsharedprimitives.md)", () => {
+    const DEFAULT_PRIMARY_HEX = "#A82A50"; // tamagui/token.ts PRIMARY_COLOR — keep in sync
+
+    afterEach(() => {
+      // updateTheme() mutates a module-level singleton shared across tests —
+      // reset it so this describe block can't leak into a later test file
+      // run in the same worker.
+      act(() => {
+        updateTheme({ name: "light", theme: { primary: DEFAULT_PRIMARY_HEX } });
+      });
+    });
+
+    it("resolves a $primary tintColor to the bundled color when no merchant override is set", () => {
+      const { UNSAFE_getByType } = renderWithTamagui(
+        <AppImage name="cartaisyWhitelogo" tintColor="$primary" width={20} height={20} />
+      );
+      expect(UNSAFE_getByType(Image).props.tintColor).toBe(DEFAULT_PRIMARY_HEX);
+    });
+
+    it("picks up a merchant primaryColor applied via updateTheme() with no rebuild — previously AppImage's tintColor stayed on the bundled default even after this (the exact case reproduced live in the 2026-08-06 integration run)", () => {
+      const { UNSAFE_getByType } = renderWithTamagui(
+        <AppImage name="cartaisyWhitelogo" tintColor="$primary" width={20} height={20} />
+      );
+
+      act(() => {
+        updateTheme({ name: "light", theme: { primary: "#123456" } });
+      });
+
+      expect(UNSAFE_getByType(Image).props.tintColor).toBe("#123456");
+    });
+
+    it("still passes through a raw, non-token color string unchanged (unrecognized-token fallback behavior preserved)", () => {
+      const { UNSAFE_getByType } = renderWithTamagui(
+        <AppImage name="cartaisyWhitelogo" tintColor="#00FF00" width={20} height={20} />
+      );
+      expect(UNSAFE_getByType(Image).props.tintColor).toBe("#00FF00");
+    });
   });
 });

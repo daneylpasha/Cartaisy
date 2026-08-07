@@ -1,4 +1,5 @@
 import type { AppConfig } from "@/tamagui/config";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { tokens } from "@/tamagui/token";
 import React, { useCallback, useRef } from "react";
 import {
@@ -72,6 +73,8 @@ const OpTouch = ({
   onPress,
   ...props
 }: OpTouchProps) => {
+  const getReactiveColor = useReactiveTokenColor();
+
   // Debounce to prevent double tap navigation (especially on Android)
   const isProcessing = useRef(false);
   const DEBOUNCE_DELAY = 600; // ms
@@ -92,13 +95,53 @@ const OpTouch = ({
     },
     [onPress]
   );
-  const getTokenValue = (
+  // Original static resolver, untouched — same exact expression as before
+  // this fix, still used directly for "space"/"radius" (those never change
+  // at runtime, so there's nothing to make reactive) and reused below via
+  // ReturnType<> to give the "space"/"radius" overload branch the identical
+  // type it always had, rather than hand-deriving an equivalent type
+  // expression that risks silently widening past what DimensionValue/
+  // ColorValue accept.
+  function getStaticTokenValue(
     token: string | undefined,
     tokenType: "space" | "color" | "radius"
-  ) => {
+  ) {
     if (!token) return undefined;
     return tokens[tokenType][token as keyof (typeof tokens)[typeof tokenType]];
-  };
+  }
+
+  // Reactive for "color" (see hooks/useReactiveTokenColor.ts) so
+  // backgroundColor/borderColor/shadowColor pick up a merchant's runtime
+  // primary/secondary color with no rebuild — this was the root cause of
+  // OpTouch's share of the runtime-branding reactivity gap (docs/STATUS.md),
+  // including the 3 buttons that pass backgroundColor="primary" directly and
+  // the 35 of ~38 PrimaryButton instances that inherit it via PrimaryButton's
+  // own "primary" default. "space"/"radius" tokens never change at runtime,
+  // so they still go through getStaticTokenValue above, unchanged.
+  //
+  // Overloaded (rather than one broad union return type) so each call site
+  // below keeps the exact return type it had before this fix, instead of
+  // every call site widening to the union of all three tokenTypes' possible
+  // value shapes, which ViewStyle's DimensionValue/ColorValue fields don't
+  // accept.
+  function getTokenValue(
+    token: string | undefined,
+    tokenType: "color"
+  ): string | undefined;
+  function getTokenValue(
+    token: string | undefined,
+    tokenType: "space" | "radius"
+  ): ReturnType<typeof getStaticTokenValue>;
+  function getTokenValue(
+    token: string | undefined,
+    tokenType: "space" | "color" | "radius"
+  ) {
+    if (!token) return undefined;
+    if (tokenType === "color") {
+      return getReactiveColor(token);
+    }
+    return getStaticTokenValue(token, tokenType);
+  }
 
   const customStyle: ViewStyle = {
     justifyContent,
