@@ -141,7 +141,7 @@ export const HomeHeader = ({
           onPress={() => router.push("/search")}
           hitSlop={10}
         >
-          <XStack alignItems="center" gap={"$md"}>
+          <XStack alignItems="center" gap={"$md"} flexShrink={1}>
             <AppImage
               name="searchIcon"
               width={18}
@@ -149,7 +149,12 @@ export const HomeHeader = ({
               tintColor="$secondary"
             />
 
-            <TextMDRegular color="$textgrey">
+            <TextMDRegular
+              color="$textgrey"
+              flexShrink={1}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {`Search ${companyName}`}
             </TextMDRegular>
           </XStack>

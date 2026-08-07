@@ -190,5 +190,22 @@ describe("HomeHeader", () => {
       const { getByText } = renderHeader();
       expect(getByText("Search Acme Outfitters")).toBeTruthy();
     });
+
+    it("constrains a long merchant name to one line with ellipsis instead of extending past the fixed-width header (Codex review finding on PR #120)", () => {
+      // The store-config contract places no length limit on `name`, and
+      // this row had neither flexShrink nor numberOfLines — a long real
+      // merchant name could previously push the search row wider than the
+      // header instead of staying a single-line search affordance (the
+      // former hardcoded "Cartaisy" was always short enough that this
+      // never showed up). Same fix as the notification preview card.
+      const longName = "Acme Outfitters International Trading Company Ltd.";
+      useStoreConfigStore.setState({ storeName: longName });
+
+      const { getByText } = renderHeader();
+      const searchText = getByText(`Search ${longName}`);
+
+      expect(searchText.props.numberOfLines).toBe(1);
+      expect(searchText.props.ellipsizeMode).toBe("tail");
+    });
   });
 });
