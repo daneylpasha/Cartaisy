@@ -1,5 +1,5 @@
 import { SearchInput } from "@/components/molecules/SearchInput";
-import { t } from "@/translations";
+import { useCompanyName } from "@/hooks/useCompanyName";
 import React, { useState } from "react";
 
 interface SearchBarProps {
@@ -24,6 +24,7 @@ export const SearchBar = ({
   onSubmit,
 }: SearchBarProps) => {
   const [internalSearchQuery, setInternalSearchQuery] = useState("");
+  const companyName = useCompanyName();
 
   // Use external value if provided, otherwise use internal state
   const searchQuery =
@@ -45,7 +46,7 @@ export const SearchBar = ({
       width={width}
       value={searchQuery}
       onChangeText={handleSearch}
-      placeholder={`Search ${t("common.companyName")}`}
+      placeholder={`Search ${companyName}`}
       onFocus={onFocus}
       onBlur={onBlur}
       onCancel={onCancel}

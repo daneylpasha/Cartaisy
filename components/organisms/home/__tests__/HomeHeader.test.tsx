@@ -56,6 +56,7 @@ describe("HomeHeader", () => {
       primaryColor: undefined,
       secondaryColor: undefined,
       logoUrl: undefined,
+      storeName: "",
     });
   });
 
@@ -175,5 +176,19 @@ describe("HomeHeader", () => {
     const rootView = UNSAFE_getAllByType(View)[0];
     const flatStyle = StyleSheet.flatten(rootView.props.style);
     expect(flatStyle.backgroundColor).toBe("#123456");
+  });
+
+  describe("search placeholder companyName (TICKETwiremerchantstorenameintocompanynamestrings.md)", () => {
+    it("falls back to the bundled 'Search Cartaisy' when storeName is empty (today's initial state before AppInitializer's fetch resolves)", () => {
+      const { getByText } = renderHeader();
+      expect(getByText("Search Cartaisy")).toBeTruthy();
+    });
+
+    it("reads the merchant's real storeName instead of the hardcoded Cartaisy string", () => {
+      useStoreConfigStore.setState({ storeName: "Acme Outfitters" });
+
+      const { getByText } = renderHeader();
+      expect(getByText("Search Acme Outfitters")).toBeTruthy();
+    });
   });
 });

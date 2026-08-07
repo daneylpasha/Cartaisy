@@ -13,6 +13,7 @@ import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import { useAuthGuard } from "@/contexts/AuthGuardContext";
+import { useCompanyName } from "@/hooks/useCompanyName";
 import useAuthStore from "@/store/useAuthStore";
 import { t } from "@/translations";
 import * as Notifications from "expo-notifications";
@@ -25,6 +26,7 @@ const Notification = () => {
   const [hasDeniedBefore, setHasDeniedBefore] = useState(false);
   const { token } = useAuthStore();
   const { pendingReturnPath, clearPendingReturnPath } = useAuthGuard();
+  const companyName = useCompanyName();
 
   // Helper function to navigate after signup completion
   const navigateAfterSignup = () => {
@@ -161,7 +163,7 @@ const Notification = () => {
               <XStack>
                 <AppImage name="bag" width={17} height={19} />
                 <Spacer size={"$xxs"} />
-                <LabelMD letterSpacing={0}>{t("common.companyName")}</LabelMD>
+                <LabelMD letterSpacing={0}>{companyName}</LabelMD>
               </XStack>
               <TextSMRegular color={"$secondary"}>{"3s ago"}</TextSMRegular>
             </XStack>

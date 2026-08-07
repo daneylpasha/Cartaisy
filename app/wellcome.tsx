@@ -10,6 +10,7 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { LabelMD } from "@/components/atoms/texts/LabelMD";
 import { ParagraphLG } from "@/components/atoms/texts/ParagraphLG";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
+import { useCompanyName } from "@/hooks/useCompanyName";
 import { t, tArray } from "@/translations";
 import { router } from "expo-router";
 import React from "react";
@@ -19,6 +20,8 @@ import { getTokenValue, XStack, YStack } from "tamagui";
 const ListsItems = tArray("welcome.Lists");
 
 const WellcomeScreen = () => {
+  const companyName = useCompanyName();
+
   const renderLists: ListRenderItem<string> = ({ item }) => (
     <XStack alignItems="center">
       <YStack
@@ -61,7 +64,7 @@ const WellcomeScreen = () => {
         </YStack>
         <Spacer size={"$xl"} />
         <LabelMD color={"$primary"} textAlign="center">
-          {t("common.companyName").toUpperCase()}
+          {companyName.toUpperCase()}
         </LabelMD>
         <Spacer size={"$md-lg"} />
         <HeadingSMBold textAlign="center">{t("welcome.title")}</HeadingSMBold>

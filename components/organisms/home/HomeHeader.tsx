@@ -3,11 +3,11 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
+import { useCompanyName } from "@/hooks/useCompanyName";
 import useCartStore from "@/store/useCartStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import useUserStore from "@/store/useUserStore";
 import { tokens } from "@/tamagui/token";
-import { t } from "@/translations";
 import { router } from "expo-router";
 import React from "react";
 import { Animated, Platform } from "react-native";
@@ -35,6 +35,7 @@ export const HomeHeader = ({
   const primaryColor = useStoreConfigStore((state) => state.primaryColor);
   const logoUrl = useStoreConfigStore((state) => state.logoUrl);
   const hasLogoUrl = Boolean(logoUrl && logoUrl.trim());
+  const companyName = useCompanyName();
 
   // Format default address for display
   const displayAddress = defaultAddress
@@ -149,7 +150,7 @@ export const HomeHeader = ({
             />
 
             <TextMDRegular color="$textgrey">
-              {`Search ${t("common.companyName")}`}
+              {`Search ${companyName}`}
             </TextMDRegular>
           </XStack>
         </OpTouch>

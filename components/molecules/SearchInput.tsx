@@ -2,8 +2,8 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { TextSMRegular } from "@/components/atoms/texts/TextSMRegular";
+import { useCompanyName } from "@/hooks/useCompanyName";
 import { tokens } from "@/tamagui/token";
-import { t } from "@/translations";
 import React, { useRef, useState } from "react";
 import { TextInput } from "react-native";
 import { getTokenValue } from "tamagui";
@@ -35,6 +35,7 @@ export const SearchInput = ({
 }: SearchInputProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<TextInput>(null);
+  const companyName = useCompanyName();
 
   const handleFocus = () => {
     setIsFocused(true);
@@ -91,7 +92,7 @@ export const SearchInput = ({
     <FormInput
       value={value}
       onChangeText={onChangeText}
-      placeholder={placeholder || `Search ${t("common.companyName")}`}
+      placeholder={placeholder || `Search ${companyName}`}
       icon={searchIcon}
       rightElement={rightElement}
       width={width}
