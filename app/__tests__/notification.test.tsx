@@ -55,4 +55,21 @@ describe("notification screen companyName", () => {
     const { getByText } = renderWithTamagui(<Notification />);
     expect(getByText("Acme Outfitters")).toBeTruthy();
   });
+
+  it("constrains a long merchant name to one line with ellipsis instead of overflowing past the '3s ago' timestamp (Codex review finding on PR #120)", () => {
+    // The card is fixed-width/fixed-height and the store-config contract
+    // places no length limit on `name` — a long real merchant name could
+    // previously push past the adjacent timestamp or outside the card,
+    // since the sender row had no width constraint, flexShrink, or
+    // numberOfLines (the former hardcoded "Cartaisy" was always short
+    // enough that this never showed up).
+    const longName = "Acme Outfitters International Trading Company Ltd.";
+    useStoreConfigStore.setState({ storeName: longName });
+
+    const { getByText } = renderWithTamagui(<Notification />);
+    const nameText = getByText(longName);
+
+    expect(nameText.props.numberOfLines).toBe(1);
+    expect(nameText.props.ellipsizeMode).toBe("tail");
+  });
 });

@@ -159,13 +159,22 @@ const Notification = () => {
             borderRadius={"$2xl"}
             padding={"$md"}
           >
-            <XStack alignItems="center" justifyContent="space-between">
-              <XStack>
+            <XStack alignItems="center" justifyContent="space-between" gap={"$xs"}>
+              <XStack alignItems="center" flexShrink={1}>
                 <AppImage name="bag" width={17} height={19} />
                 <Spacer size={"$xxs"} />
-                <LabelMD letterSpacing={0}>{companyName}</LabelMD>
+                <LabelMD
+                  letterSpacing={0}
+                  flexShrink={1}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {companyName}
+                </LabelMD>
               </XStack>
-              <TextSMRegular color={"$secondary"}>{"3s ago"}</TextSMRegular>
+              <TextSMRegular color={"$secondary"} flexShrink={0}>
+                {"3s ago"}
+              </TextSMRegular>
             </XStack>
             <ParagraphXS color={"$secondary"}>
               {t("notification.notificationExample")}
