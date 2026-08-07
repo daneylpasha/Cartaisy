@@ -1,4 +1,4 @@
-import colors from "@/assets/colors";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { tokens } from "@/tamagui/token";
 import React, { useState } from "react";
 import { StyleSheet, TextInput } from "react-native";
@@ -58,6 +58,7 @@ export const FormInput = ({
   inputRef,
   editable = true,
 }: FormInputProps) => {
+  const getReactiveColor = useReactiveTokenColor();
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const isPassword = secureTextEntry;
@@ -107,7 +108,12 @@ export const FormInput = ({
             onSubmitEditing={onSubmitEditing}
             returnKeyType="done"
             secureTextEntry={isPassword && !showPassword}
-            selectionColor={colors.primary}
+            // Reactive (see hooks/useReactiveTokenColor.ts) — this was the
+            // `assets/colors.ts` alias of the same static tokens.color
+            // reactivity gap (34 FormInput instances across 16 files, per
+            // docs/STATUS.md), now picks up a merchant's runtime primary
+            // color with no rebuild.
+            selectionColor={getReactiveColor("primary")}
             autoComplete="off"
             textContentType="none"
             autoCapitalize={autoCapitalize}

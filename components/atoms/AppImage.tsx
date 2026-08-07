@@ -1,4 +1,5 @@
 import Icons from "@/assets/Icons";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import type { AppConfig } from "@/tamagui/config";
 import { tokens } from "@/tamagui/token";
 import React, { useState } from "react";
@@ -31,31 +32,26 @@ const StyledImage = styled(Image, {
   resizeMode: "contain",
 });
 
+// `getReactiveColor` is hooks/useReactiveTokenColor.ts's resolver, obtained
+// by the caller (a real hook call, so it must happen inside AppImage's own
+// component body — this function itself isn't a hook and can't call
+// useTheme() directly). It already handles both the plain-key and
+// "$"-prefixed forms and already resolves primary/primarylight/secondary
+// reactively via the live Tamagui theme while falling back to the static
+// tokens.color object for every other key — see its own doc comment for why.
+// This wrapper only adds AppImage's own extra behavior: if the value isn't a
+// recognized tokens.color key at all, treat it as an already-resolved raw
+// color string (e.g. a literal hex) and pass it through unchanged, same as
+// before this fix.
 const resolveTokenColor = (
-  value?: keyof typeof tokens.color | string
+  value: (keyof typeof tokens.color | string) | undefined,
+  getReactiveColor: (token: string) => string | undefined
 ): string | undefined => {
   if (!value) return undefined;
 
-  if (
-    typeof value === "string" &&
-    value in tokens.color &&
-    typeof tokens.color[value as keyof typeof tokens.color] === "string"
-  ) {
-    return tokens.color[value as keyof typeof tokens.color] as string;
-  }
-
-  if (
-    typeof value === "string" &&
-    value.startsWith("$") &&
-    value.length > 1
-  ) {
-    const key = value.slice(1);
-    if (
-      key in tokens.color &&
-      typeof tokens.color[key as keyof typeof tokens.color] === "string"
-    ) {
-      return tokens.color[key as keyof typeof tokens.color] as string;
-    }
+  const resolved = getReactiveColor(value);
+  if (resolved !== undefined) {
+    return resolved;
   }
 
   return typeof value === "string" ? value : undefined;
@@ -156,6 +152,8 @@ export const AppImage: React.FC<AppImageProps> = ({
   tintColor,
   resizeMode = "contain",
 }) => {
+  const getReactiveColor = useReactiveTokenColor();
+
   // Determine if source is remote
   const isRemoteSource =
     (typeof source === "string" && source.trim()) ||
@@ -187,7 +185,7 @@ export const AppImage: React.FC<AppImageProps> = ({
   const finalWidth = size || width;
   const finalHeight = size || height;
 
-  const finalTintColor = resolveTokenColor(tintColor);
+  const finalTintColor = resolveTokenColor(tintColor, getReactiveColor);
 
   // Bundled icon by name — render directly via the shared helper.
   if (name) {

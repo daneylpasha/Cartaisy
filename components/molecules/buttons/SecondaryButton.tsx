@@ -1,3 +1,4 @@
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { tokens } from "@/tamagui/token";
 import React from "react";
 import { DimensionValue } from "react-native";
@@ -31,11 +32,12 @@ export const SecondaryButton = ({
   iconPosition = "right",
   ...containerStyle
 }: SecondaryButtonProps) => {
-  const getTokenValue = (token: ColorTokenWithPrefix | undefined) => {
-    if (!token) return undefined;
-    const cleanToken = token.startsWith("$") ? token.slice(1) : token;
-    return tokens.color[cleanToken as keyof typeof tokens.color];
-  };
+  // Reactive (see hooks/useReactiveTokenColor.ts) so the border picks up a
+  // merchant's runtime primary color with no rebuild — the label text
+  // (`color` prop below) already reacts, it's passed straight to
+  // TextMDSemiBold's Tamagui style prop; only the border used the old static
+  // resolver. See docs/STATUS.md's reactivity-gap paragraph.
+  const getTokenValue = useReactiveTokenColor();
 
   return (
     <OpTouch
