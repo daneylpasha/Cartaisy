@@ -27,6 +27,7 @@ import { SearchBar } from "@/components/organisms/SearchBar";
 import { EmptySearches } from "@/components/organisms/search/EmptySearches";
 import { SearchesResults } from "@/components/organisms/search/SearchesResults";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useCartStore from "@/store/useCartStore";
 import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { useFocusEffect } from "@react-navigation/native";
@@ -92,6 +93,8 @@ const transformEnrichedProduct = (
 };
 
 const Search = () => {
+  const getReactiveColor = useReactiveTokenColor();
+  const refreshTint = getReactiveColor("primary");
   const queryClient = useQueryClient();
   const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
@@ -1143,8 +1146,8 @@ const Search = () => {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              tintColor={getTokenValue("$primary")}
-              colors={[getTokenValue("$primary")]}
+              tintColor={refreshTint}
+              colors={refreshTint ? [refreshTint] : undefined}
             />
           ) : undefined
         }

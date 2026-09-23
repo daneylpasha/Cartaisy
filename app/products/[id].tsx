@@ -13,7 +13,7 @@ import {
   TextMDSemiBold,
   TextSMMedium,
   TextSMRegular,
-  TextXLMedium,
+  TextXLBold,
   TextXSRegular,
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
@@ -37,6 +37,7 @@ import AddToCartSuccessModal from "@/components/organisms/AddToCartSuccessModal"
 import ErrorModal from "@/components/organisms/ErrorModal";
 import { RatingStar } from "@/components/organisms/home";
 import { SCREEN_WIDTH } from "@/constants/styles";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useCartStore from "@/store/useCartStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
@@ -44,15 +45,18 @@ import { t } from "@/translations";
 import { getColorHex } from "@/utils/colorHelper";
 import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { formatPrice } from "@/utils/formatPrice";
+import { HOSTED_CHECKOUT_NOTE } from "@/utils/hostedCheckoutCopy";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
 import {
   Animated,
+  Easing,
   FlatList,
   Linking,
   LayoutAnimation,
   Platform,
   UIManager,
+  useWindowDimensions,
 } from "react-native";
 import ImageViewing from "react-native-image-viewing";
 import RenderHTML from "react-native-render-html";
@@ -73,6 +77,14 @@ const ProductDetailsScreen = () => {
   }>();
 
   const { top: TOP_INSET } = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const galleryHeight = Math.min(Math.round(windowWidth), 520);
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary") ?? getTokenValue("$primary");
+  const secondaryInk =
+    getReactiveColor("secondary") ?? getTokenValue("$secondary");
+  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const revealedProductId = useRef<string | null>(null);
   const { getTotalQuantity } = useCartStore();
   const cartItemCount = getTotalQuantity();
   const { requireAuth } = useAuthGuard();
@@ -147,6 +159,23 @@ const ProductDetailsScreen = () => {
       isBestSeller: apiProduct.badges?.isBestSeller || false,
     };
   }, [productDetailData]);
+
+  React.useEffect(() => {
+    if (!product?.id) {
+      contentOpacity.setValue(1);
+      return;
+    }
+    if (revealedProductId.current === product.id) return;
+    revealedProductId.current = product.id;
+    contentOpacity.setValue(0);
+    Animated.timing(contentOpacity, {
+      toValue: 1,
+      duration: 240,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [product?.id, contentOpacity]);
+
   const catalogUnavailableMessage = getCatalogUnavailableMessage(
     productDetailError
   );
@@ -450,7 +479,7 @@ const ProductDetailsScreen = () => {
       type: "carousel",
       content: (
         <ProductCarousel
-          height={385}
+          height={galleryHeight}
           images={productImages}
           onImagePress={(i) => {
             setViewerIndex(i);
@@ -481,7 +510,7 @@ const ProductDetailsScreen = () => {
                   justifyContent="center"
                 >
                   <AppImage
-                    tintColor={getTokenValue("$primary")}
+                    tintColor={primaryTint}
                     name={"trophy"}
                     width={15}
                     height={12}
@@ -517,9 +546,15 @@ const ProductDetailsScreen = () => {
           </XStack>
 
           <Spacer size={"$md"} />
-          <TextXLMedium color={"$secondary"}>
+          {product?.vendor ? (
+            <>
+              <TextSMRegular color="$textgrey">{product.vendor}</TextSMRegular>
+              <Spacer size="$xs" />
+            </>
+          ) : null}
+          <TextXLBold color="$darkgrey">
             {product?.title || ""}
-          </TextXLMedium>
+          </TextXLBold>
           <Spacer size={"$reg"} />
           {product?.soldThisMonth !== undefined &&
             product.soldThisMonth > 0 && (
@@ -580,7 +615,7 @@ const ProductDetailsScreen = () => {
                 <AppImage
                   name={"minus"}
                   size={15}
-                  tintColor={getTokenValue("$primary")}
+                  tintColor={primaryTint}
                 />
               </OpTouch>
               <Spacer size={"$md"} />
@@ -613,7 +648,7 @@ const ProductDetailsScreen = () => {
                 <AppImage
                   name={"addIcon"}
                   size={15}
-                  tintColor={getTokenValue("$primary")}
+                  tintColor={primaryTint}
                 />
               </OpTouch>
             </XStack>
@@ -799,9 +834,9 @@ const ProductDetailsScreen = () => {
                       html: `<div>${product.descriptionHtml}</div>`,
                     }}
                     baseStyle={{
-                      color: getTokenValue("$secondary"),
-                      fontSize: 14,
-                      lineHeight: 20,
+                      color: secondaryInk,
+                      fontSize: 15,
+                      lineHeight: 22,
                     }}
                   />
                 ) : null}
@@ -819,9 +854,9 @@ const ProductDetailsScreen = () => {
                       html: `<div>${product.descriptionHtml}</div>`,
                     }}
                     baseStyle={{
-                      color: getTokenValue("$secondary"),
-                      fontSize: 14,
-                      lineHeight: 20,
+                      color: secondaryInk,
+                      fontSize: 15,
+                      lineHeight: 22,
                     }}
                   />
                 ) : null}
@@ -844,7 +879,7 @@ const ProductDetailsScreen = () => {
                   <AppImage
                     name={isExpanded ? "arrowUp" : "arrowDown"}
                     size={12}
-                    tintColor={getTokenValue("$primary")}
+                    tintColor={primaryTint}
                   />
                 </XStack>
               </OpTouch>
@@ -1283,8 +1318,9 @@ const ProductDetailsScreen = () => {
           }
         />
       ) : (
-        <>
+        <Animated.View style={{ flex: 1, opacity: contentOpacity }}>
           <FlatList
+            style={{ flex: 1 }}
             ref={flatListRef}
             data={sections}
             renderItem={renderItem}
@@ -1305,7 +1341,7 @@ const ProductDetailsScreen = () => {
             <SecondaryButton
               icon={
                 <AppImage
-                  tintColor={getTokenValue("$primary")}
+                  tintColor={primaryTint}
                   size={18}
                   name="cartIcon"
                 />
@@ -1317,9 +1353,17 @@ const ProductDetailsScreen = () => {
             />
             <Spacer size={"$sm"} />
             <PrimaryButton label="Buy Now" onPress={handleBuyNow} isLoading={isBuyingNow} />
+            <Spacer size="$sm" />
+            <TextSMRegular
+              color="$textgrey"
+              textAlign="center"
+              testID="hosted-checkout-note"
+            >
+              {HOSTED_CHECKOUT_NOTE}
+            </TextSMRegular>
             <Spacer size={"$sm"} />
           </YStack>
-        </>
+        </Animated.View>
       )}
 
       {/* Full-screen viewer - key prop forces remount to reset zoom state */}

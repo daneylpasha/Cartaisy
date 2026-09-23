@@ -35,6 +35,7 @@ import useFavoritesStore from "@/store/useFavoritesStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { tokens } from "@/tamagui/token";
+import { HOSTED_CHECKOUT_NOTE } from "@/utils/hostedCheckoutCopy";
 import { formatPrice } from "@/utils/formatPrice";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -755,6 +756,14 @@ const CartScreen = () => {
               isLoading={isInitializingCheckout}
               label={`Proceed to Checkout (${totalQuantity})`}
             />
+            <Spacer size="$sm" />
+            <TextSMRegular
+              color="$textgrey"
+              textAlign="center"
+              testID="hosted-checkout-note"
+            >
+              {HOSTED_CHECKOUT_NOTE}
+            </TextSMRegular>
             <Spacer size={Platform.OS === "ios" ? "$md" : "$xs"} />
           </YStack>
         </>

@@ -6,6 +6,10 @@ import { Shimmer, ShimmerProvider } from "react-native-fast-shimmer";
 import { Easing } from "react-native-reanimated";
 import { YStack } from "tamagui";
 import { Spacer } from "../../atoms/Spacer";
+import {
+  SALES_CARD_WIDTH,
+  SALES_IMAGE_HEIGHT,
+} from "../../molecules/ProductCard";
 
 const Placeholder = () => {
   return (
@@ -33,9 +37,9 @@ const Placeholder = () => {
           <YStack key={placeholderIndex}>
             <YStack
               backgroundColor={"$grey"}
-              width={163.5}
-              height={163.5}
-              borderRadius={tokens.radius.lg}
+              width={SALES_CARD_WIDTH}
+              height={SALES_IMAGE_HEIGHT}
+              borderRadius={tokens.radius["2xl"]}
               overflow="hidden"
             >
               <Shimmer easing={Easing.linear} speed={0.5} />

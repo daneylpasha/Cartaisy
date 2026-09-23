@@ -13,6 +13,7 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { tokens } from "@/tamagui/token";
 import React from "react";
 import { getTokenValue, XStack, YStack } from "tamagui";
@@ -71,6 +72,9 @@ export default function CartLineItem(props: CartLineItemProps) {
 
   // Check if at max quantity
   const isAtMaxQuantity = maxQuantity !== undefined && quantity >= maxQuantity;
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary") ?? tokens.color.primary;
+  const imageSize = 104;
 
   return (
     <YStack>
@@ -80,17 +84,17 @@ export default function CartLineItem(props: CartLineItemProps) {
             overflow="hidden"
             borderWidth={1}
             borderColor="$lightgrey"
-            backgroundColor="$white"
-            borderRadius={tokens.radius.md}
-            width={80}
-            height={80}
+            backgroundColor="$background"
+            borderRadius={tokens.radius["2xl"]}
+            width={imageSize}
+            height={imageSize}
           >
             {isImageUrl && (
               <AppImage
                 resizeMode="cover"
                 source={{ uri: image }}
-                width={80}
-                height={80}
+                width={imageSize}
+                height={imageSize}
               />
             )}
           </YStack>
@@ -98,9 +102,9 @@ export default function CartLineItem(props: CartLineItemProps) {
         <Spacer size={"$md"} />
         <YStack flexShrink={1}>
           <OpTouch onPress={onPressItem} disabled={!onPressItem}>
-            <TextSMMedium numberOfLines={1} color={"$secondary"}>
+            <TextMDBold numberOfLines={2} color="$darkgrey">
               {title}
-            </TextSMMedium>
+            </TextMDBold>
 
             {brandName && <TextSMBold color={"$icon"}>{brandName}</TextSMBold>}
           </OpTouch>
@@ -169,7 +173,7 @@ export default function CartLineItem(props: CartLineItemProps) {
                       tintColor={
                         quantity <= 1
                           ? getTokenValue("$icon")
-                          : getTokenValue("$primary")
+                          : primaryTint
                       }
                       name={"minus"}
                       width={10}
@@ -188,7 +192,7 @@ export default function CartLineItem(props: CartLineItemProps) {
                       tintColor={
                         isAtMaxQuantity
                           ? getTokenValue("$icon")
-                          : getTokenValue("$primary")
+                          : primaryTint
                       }
                       name={"addIcon"}
                       width={10}

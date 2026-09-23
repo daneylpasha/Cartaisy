@@ -1,14 +1,16 @@
-import { HeadingSMBold, ParagraphMD, TextSMMedium } from "@/components/atoms";
+import { HeadingSMBold, ParagraphMD } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
-import { OpTouch } from "@/components/atoms/OpTouch";
-import { t } from "@/translations";
-import { tokens } from "@/tamagui/token";
-
 import { Spacer } from "@/components/atoms/Spacer";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
+import { tokens } from "@/tamagui/token";
+import { t } from "@/translations";
 import React from "react";
-import { XStack, YStack } from "tamagui";
+import { YStack } from "tamagui";
 
 export const EmptySearches = () => {
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary") ?? tokens.color.primary;
+
   return (
     <YStack
       justifyContent="center"
@@ -19,7 +21,7 @@ export const EmptySearches = () => {
       <AppImage
         name={"researchIcon"}
         size={197}
-        tintColor={tokens.color.primary}
+        tintColor={primaryTint}
       />
       <Spacer size={"$xl"} />
       <HeadingSMBold textAlign="center">
@@ -29,74 +31,6 @@ export const EmptySearches = () => {
       <ParagraphMD color="$textgrey" textAlign="center">
         {t("search.emptySearches.subtitle")}
       </ParagraphMD>
-      <Spacer size={"$xl"} />
-      <XStack justifyContent="center" flexWrap="wrap" gap={"$sm"}>
-        <OpTouch>
-          <XStack
-            alignItems="center"
-            borderWidth={1}
-            borderColor={"$lightgrey"}
-            borderRadius={"$full"}
-            paddingHorizontal={"$reg"}
-            paddingVertical={"$xs-sm"}
-          >
-            <AppImage name={"collectionBeauty"} size={16} />
-            <Spacer size={"$xs-sm"} />
-            <TextSMMedium color="$textgrey" textAlign="center">
-              {"Fashion"}
-            </TextSMMedium>
-          </XStack>
-        </OpTouch>
-        <OpTouch>
-          <XStack
-            alignItems="center"
-            borderWidth={1}
-            borderColor={"$lightgrey"}
-            borderRadius={"$full"}
-            paddingHorizontal={"$reg"}
-            paddingVertical={"$xs-sm"}
-          >
-            <AppImage name={"computer"} size={16} />
-            <Spacer size={"$xs-sm"} />
-            <TextSMMedium color="$textgrey" textAlign="center">
-              {"Electronics"}
-            </TextSMMedium>
-          </XStack>
-        </OpTouch>
-        <OpTouch>
-          <XStack
-            alignItems="center"
-            borderWidth={1}
-            borderColor={"$lightgrey"}
-            borderRadius={"$full"}
-            paddingHorizontal={"$reg"}
-            paddingVertical={"$xs-sm"}
-          >
-            <AppImage name={"offerIcon"} size={16} />
-            <Spacer size={"$xs-sm"} />
-            <TextSMMedium color="$textgrey" textAlign="center">
-              {"Offers"}
-            </TextSMMedium>
-          </XStack>
-        </OpTouch>
-
-        <OpTouch>
-          <XStack
-            alignItems="center"
-            borderWidth={1}
-            borderColor={"$lightgrey"}
-            borderRadius={"$full"}
-            paddingHorizontal={"$reg"}
-            paddingVertical={"$xs-sm"}
-          >
-            <AppImage name={"collectionAutomotive"} size={16} />
-            <Spacer size={"$xs-sm"} />
-            <TextSMMedium color="$textgrey" textAlign="center">
-              {"Automative"}
-            </TextSMMedium>
-          </XStack>
-        </OpTouch>
-      </XStack>
     </YStack>
   );
 };

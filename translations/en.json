@@ -163,7 +163,7 @@
   "search": {
     "emptySearches": {
       "title": "We couldn’t find your keywords.",
-      "subtitle": "Unfortunately, we couldn’t find a match, please try browsing the following:"
+      "subtitle": "Try another search, or browse the catalog."
     }
   },
   "product": {

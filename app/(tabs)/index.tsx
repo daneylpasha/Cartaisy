@@ -23,6 +23,7 @@ import { PromoBannerCard } from "@/components/organisms/home/PromoBannerCard";
 import ProductsHorizontalScroller from "@/components/organisms/productHorizontalScroller/ProductsHorizontalScroller";
 import ProductsGridScroller from "@/components/organisms/ProductsGridScroller/ProductsGridScroller";
 import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller/SalesHorizontalScroller";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useAuthStore from "@/store/useAuthStore";
 import { isCatalogUnavailableError } from "@/utils/catalogUnavailableError";
 import {
@@ -57,6 +58,8 @@ type CollectionDisplayItem = {
 
 const HomeScreen = () => {
   const { top: TOP_INSET, bottom: BOTTOM_INSET } = useSafeAreaInsets();
+  const getReactiveColor = useReactiveTokenColor();
+  const refreshTint = getReactiveColor("primary");
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [open, setOpen] = useState(false);
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -341,8 +344,8 @@ const HomeScreen = () => {
               <RefreshControl
                 refreshing={isRefreshing}
                 onRefresh={onRefresh}
-                tintColor={getTokenValue("$primary")}
-                colors={[getTokenValue("$primary")]}
+                tintColor={refreshTint}
+                colors={refreshTint ? [refreshTint] : undefined}
               />
             }
             ListFooterComponent={

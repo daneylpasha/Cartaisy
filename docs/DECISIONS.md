@@ -142,6 +142,18 @@ Impact: `useCartManager` remains on generated `/cart/*` for add to cart, quantit
 
 Related docs: `docs/STATUS.md`, `docs/CHECKOUT_ORDERS_SMOKE_TEST.md`, `api-spec/swagger.json`, `api/generated/checkout/checkout.ts`, backend repo `docs/DECISIONS.md`.
 
+### Shopper Checkout Stays On The Store's Hosted Page
+
+Date: 2026-09-23.
+
+Decision: The premium shopper pass does not restore native Stripe checkout. Cart "Proceed to Checkout" and product "Buy Now" still call generated `POST /checkout/handoff` and open the returned Shopify URL. Those screens add one line, `HOSTED_CHECKOUT_NOTE`, so the shopper expects to finish on the store's page. Guest checkout still goes through the existing auth gate.
+
+Reason: Hosted checkout is the private-beta path. Reopening the native checkout screen would put payment and credential handling back in the app without a dedicated issue.
+
+Impact: Presentation on browse, product, and cart. The handoff request and the auth gate are unchanged.
+
+Related docs: `utils/hostedCheckoutCopy.ts`, `app/(tabs)/cart.tsx`, `app/products/[id].tsx`, GitHub issue #122.
+
 ### EAS Builds Regenerate Native Projects From app.config.ts
 
 Date: 2026-07-03.
