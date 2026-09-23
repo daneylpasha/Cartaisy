@@ -190,6 +190,18 @@ Impact: Avoid changing auth refresh or tenant-scoping behavior unless the issue 
 
 Related docs: `AGENTS.md`, `docs/ARCHITECTURE.md`.
 
+### Smart Default Home When No Custom Layout Is Published
+
+Date: 2026-09-23.
+
+Decision: When `GET /customer/homescreen` has no renderable modules, the home tab shows a branded default composed from tenant-scoped catalog data (`GET /customer/search/initial-screen`: trending products and collections, including the backend's own catalog fallback). The default is a hero plus featured products and/or top collections. It uses the runtime store name, logo, and primary color, and it does not write Shopify catalog data. A published layout with at least one visible module that has items still wins. If the backend omits `layout` but still fills section arrays, those sections render in the existing default order. Empty and failed catalog loads show a calm retry.
+
+Reason: v1 merchant onboarding skips the home-screen builder (parent epic `daneylpasha/cartaisy-backend#152`). A fresh branded app would otherwise open on a blank home.
+
+Impact: `app/(tabs)/index.tsx` keeps the existing module renderer for published content and mounts `DefaultHome` only when nothing on the homescreen payload can render. Both requests go through the shared API client, which sends `X-Store-ID`. Copy stays industry-neutral so the same default works for any merchant.
+
+Related docs: `docs/HOME_API_USAGE.md`, `docs/STATUS.md`, `utils/defaultHome.ts`, `components/organisms/home/DefaultHome.tsx`, GitHub issue #121.
+
 ## Related Docs And Issues
 
 - `CARTAISY_CONTEXT.md`

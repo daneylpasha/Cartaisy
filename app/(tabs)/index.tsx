@@ -17,6 +17,7 @@ import {
   HomeHeader,
 } from "@/components/organisms/home";
 import BrandsCollections from "@/components/organisms/home/BrandsCollections";
+import DefaultHome from "@/components/organisms/home/DefaultHome";
 import PlaceHolder from "@/components/organisms/home/Placeholder";
 import { PromoBannerCard } from "@/components/organisms/home/PromoBannerCard";
 import ProductsHorizontalScroller from "@/components/organisms/productHorizontalScroller/ProductsHorizontalScroller";
@@ -24,6 +25,11 @@ import ProductsGridScroller from "@/components/organisms/ProductsGridScroller/Pr
 import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller/SalesHorizontalScroller";
 import useAuthStore from "@/store/useAuthStore";
 import { isCatalogUnavailableError } from "@/utils/catalogUnavailableError";
+import {
+  getRenderableHomeSections,
+  shouldUseDefaultHome,
+  type HomeLayoutType,
+} from "@/utils/defaultHome";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { router, useFocusEffect } from "expo-router";
 import React, {
@@ -37,32 +43,6 @@ import { Animated, FlatList, Platform, RefreshControl } from "react-native";
 import { DynamicStatusBar } from "@/components/atoms";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
-
-// Layout type from API to data key mapping
-type LayoutType =
-  | "carousel"
-  | "promo_banners"
-  | "callout_banners"
-  | "category_grid"
-  | "collection_displays"
-  | "collection_showcases"
-  | "category_collection_grid";
-
-type LayoutItem = {
-  type: LayoutType;
-  position: number;
-  isVisible: boolean;
-};
-
-const typeToDataKey: Record<LayoutType, string> = {
-  carousel: "carousel",
-  promo_banners: "promoBanners",
-  callout_banners: "calloutBanners",
-  category_grid: "categoryGrid",
-  collection_displays: "collectionDisplays",
-  collection_showcases: "collectionShowcases",
-  category_collection_grid: "categoryCollectionGrid",
-};
 
 // Type for collection display items from API
 type CollectionDisplayItem = {
@@ -214,7 +194,7 @@ const HomeScreen = () => {
   }, [defaultAddressIndex]);
 
   // Render component based on layout type
-  const renderComponentForType = (type: LayoutType): React.ReactNode => {
+  const renderComponentForType = useCallback((type: HomeLayoutType): React.ReactNode => {
     switch (type) {
       case "carousel":
         return (
@@ -285,47 +265,17 @@ const HomeScreen = () => {
       default:
         return null;
     }
-  };
-
-  // Check if data exists and has items for a given layout type
-  const hasDataForType = (type: LayoutType): boolean => {
-    const dataKey = typeToDataKey[type];
-    const data = homescreenData?.[dataKey as keyof typeof homescreenData];
-    return Array.isArray(data) && data.length > 0;
-  };
-
-  // Build sections dynamically from layout array
-  const sections = useMemo(() => {
-    const layout = homescreenData?.layout as LayoutItem[] | undefined;
-
-    // If no layout from API, use default order (fallback)
-    if (!layout || layout.length === 0) {
-      const defaultLayout: LayoutItem[] = [
-        { type: "carousel", position: 0, isVisible: true },
-        { type: "category_grid", position: 1, isVisible: true },
-        { type: "callout_banners", position: 2, isVisible: true },
-        { type: "collection_displays", position: 3, isVisible: true },
-        { type: "category_collection_grid", position: 4, isVisible: true },
-        { type: "promo_banners", position: 5, isVisible: true },
-        { type: "collection_showcases", position: 6, isVisible: true },
-      ];
-
-      return defaultLayout
-        .filter((item) => item.isVisible && hasDataForType(item.type))
-        .map((item) => ({
-          id: item.type,
-          content: renderComponentForType(item.type),
-        }));
-    }
-
-    // Filter visible sections with data (layout is already sorted by position)
-    return layout
-      .filter((item) => item.isVisible && hasDataForType(item.type))
-      .map((item) => ({
-        id: `${item.type}_${item.position}`,
-        content: renderComponentForType(item.type),
-      }));
   }, [homescreenData]);
+
+  // Published modules win. An empty or unrenderable layout falls through
+  // to the branded catalog default (see utils/defaultHome.ts).
+  const showDefaultHome = shouldUseDefaultHome(homescreenData);
+  const sections = useMemo(() => {
+    return getRenderableHomeSections(homescreenData).map((item) => ({
+      id: `${item.type}_${item.position}`,
+      content: renderComponentForType(item.type),
+    }));
+  }, [homescreenData, renderComponentForType]);
 
   const renderItem = ({
     item,
@@ -379,6 +329,8 @@ const HomeScreen = () => {
             onRetry={refetch}
             title="Unable to load catalog"
           />
+        ) : showDefaultHome ? (
+          <DefaultHome onRefreshHomescreen={refetch} />
         ) : (
           <FlatList
             data={sections}

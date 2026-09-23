@@ -27,7 +27,7 @@ Current state: Runtime store configuration is limited to `GET /store/config` ret
 
 Current state: Branding/theme is mostly static. `tamagui/token.ts`, `tamagui/theme.ts`, `tamagui/config.ts`, `assets/colors.ts`, `assets/Icons.ts`, and bundled logo files provide current colors and brand assets. Runtime branding is documented as a desired contract, but color/logo runtime wiring is not currently proven as implemented.
 
-Current state: Home screen content is loaded from the backend through the generated `GET /customer/homescreen` client and rendered by `app/(tabs)/index.tsx` using layout types such as carousel, promo banners, callout banners, category grid, collection displays, collection showcases, and category collection grid.
+Current state: Home screen content is loaded from the backend through the generated `GET /customer/homescreen` client and rendered by `app/(tabs)/index.tsx` using layout types such as carousel, promo banners, callout banners, category grid, collection displays, collection showcases, and category collection grid. When that payload has no renderable modules, the same screen shows a branded default home from `GET /customer/search/initial-screen` (hero, featured products, top collections) instead of a blank tab.
 
 Current state: Product detail and related catalog flows use generated backend clients such as `/products/{productId}`, recommendations, search, and collection endpoints. Shopify IDs appear in data models and route handling, but catalog calls should continue to flow through the Cartaisy backend.
 

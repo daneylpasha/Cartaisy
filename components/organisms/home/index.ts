@@ -1,3 +1,4 @@
+export { default as DefaultHome } from "./DefaultHome";
 export * from "./CalloutBanners";
 export * from "./FeaturedPromotionsCarousel";
 export * from "./HomeHeader";
