@@ -21,6 +21,7 @@ import {
   TextMDSemiBold,
   TextSMMedium,
   TextSMRegular,
+  TextXSRegular,
 } from "../atoms";
 import { AppImage } from "../atoms/AppImage";
 import { Spacer } from "../atoms/Spacer";
@@ -45,6 +46,12 @@ const GRID_CARD_WIDTH =
 
 const INLINE_CARD_WIDTH = 200;
 
+// Browse imagery. Taller than the previous 163.5 / 200 / 140 frames so a
+// product reads before its title, without changing the grid column math.
+export const GRID_IMAGE_HEIGHT = 212;
+export const INLINE_IMAGE_HEIGHT = 228;
+export const SALES_IMAGE_HEIGHT = 168;
+
 // Sales card width - shows ~2.5 cards with left padding
 // Formula: (screenWidth - leftPadding) / 2.5 - gap adjustment
 const SALES_CARD_WIDTH =
@@ -68,7 +75,13 @@ const ProductCardComponent = ({
   onPress,
 }: ProductCardProps) => {
   const imageHeight =
-    context === "grid" ? 163.5 : context === "sales" ? 140 : 200;
+    context === "grid"
+      ? GRID_IMAGE_HEIGHT
+      : context === "sales"
+      ? SALES_IMAGE_HEIGHT
+      : INLINE_IMAGE_HEIGHT;
+
+  const pressScale = useRef(new Animated.Value(1)).current;
   const cardWidth =
     context === "grid"
       ? GRID_CARD_WIDTH
@@ -258,15 +271,33 @@ const ProductCardComponent = ({
   };
 
   return (
-    <OpTouch onPress={handlePress}>
+    <Animated.View style={{ transform: [{ scale: pressScale }] }}>
+    <OpTouch
+      onPress={handlePress}
+      activeOpacity={0.92}
+      onPressIn={() => {
+        Animated.timing(pressScale, {
+          toValue: 0.98,
+          duration: 120,
+          useNativeDriver: true,
+        }).start();
+      }}
+      onPressOut={() => {
+        Animated.timing(pressScale, {
+          toValue: 1,
+          duration: 180,
+          useNativeDriver: true,
+        }).start();
+      }}
+    >
       <YStack width={cardWidth}>
         <YStack
-          borderRadius={tokens.radius.md}
+          borderRadius={tokens.radius["2xl"]}
           position="relative"
           overflow="hidden"
           borderWidth={1}
-          borderColor="$lightgrey"
-          backgroundColor="$white"
+          borderColor="$grey"
+          backgroundColor="$background"
         >
           <AppImage
             resizeMode="cover"
@@ -343,10 +374,18 @@ const ProductCardComponent = ({
         </YStack>
 
         <YStack paddingVertical="$reg">
-          <TextMDSemiBold color={"$secondary"} numberOfLines={2}>
+          {product.vendor ? (
+            <>
+              <TextXSRegular color="$textgrey" numberOfLines={1}>
+                {product.vendor}
+              </TextXSRegular>
+              <Spacer size="$xs" />
+            </>
+          ) : null}
+          <TextMDSemiBold color="$darkgrey" numberOfLines={2}>
             {product.title ? String(product.title) : "Product"}
           </TextMDSemiBold>
-          <Spacer size="$sm-reg" />
+          <Spacer size="$sm" />
 
           {/* <XStack alignItems="center">
             <RatingStar rating={product.rating || 0} />
@@ -416,6 +455,7 @@ const ProductCardComponent = ({
         ) : null} */}
       </YStack>
     </OpTouch>
+    </Animated.View>
   );
 };
 // Memoize ProductCard to prevent unnecessary re-renders when parent re-renders with same props

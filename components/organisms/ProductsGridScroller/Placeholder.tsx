@@ -5,7 +5,12 @@ import { Shimmer, ShimmerProvider } from "react-native-fast-shimmer";
 import { Easing } from "react-native-reanimated";
 import { XStack, YStack } from "tamagui";
 import { Spacer } from "../../atoms/Spacer";
-import { GRID_CARD_WIDTH, GRID_COLUMN_GAP, GRID_SIDE_PADDING } from "../../molecules/ProductCard";
+import {
+  GRID_CARD_WIDTH,
+  GRID_COLUMN_GAP,
+  GRID_IMAGE_HEIGHT,
+  GRID_SIDE_PADDING,
+} from "../../molecules/ProductCard";
 
 const Placeholder = () => {
   return (
@@ -27,8 +32,8 @@ const Placeholder = () => {
             <YStack
               backgroundColor={"$grey"}
               width="100%"
-              height={163.5}
-              borderRadius={tokens.radius.lg}
+              height={GRID_IMAGE_HEIGHT}
+              borderRadius={tokens.radius["2xl"]}
               overflow="hidden"
             >
               <Shimmer easing={Easing.linear} speed={0.5} />

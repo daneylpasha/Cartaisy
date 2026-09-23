@@ -68,6 +68,7 @@ jest.mock("@/components/organisms/ErrorModal", () => ({ __esModule: true, defaul
 import CartScreen from "@/app/(tabs)/cart";
 import useCartStore from "@/store/useCartStore";
 import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
+import { HOSTED_CHECKOUT_NOTE } from "@/utils/hostedCheckoutCopy";
 
 const catalogUnavailableError = {
   response: { status: 503, data: { code: "STORE_UNAVAILABLE" } },
@@ -167,6 +168,18 @@ describe("cart screen unavailable state", () => {
         "https://store.example.com/checkouts/abc"
       )
     );
+    expect(getByText(HOSTED_CHECKOUT_NOTE)).toBeTruthy();
+  });
+
+  it("keeps the hosted-checkout note visible when a guest is sent to sign in", async () => {
+    mockSyncCart.mockResolvedValue(true);
+    mockAuthGuard.requireAuth.mockReturnValue(false);
+
+    const { getByText } = renderWithTamagui(<CartScreen />);
+
+    await waitFor(() => expect(getByText(/Proceed to Checkout/)).toBeTruthy());
+    expect(getByText(HOSTED_CHECKOUT_NOTE)).toBeTruthy();
+    expect(mockCheckoutHandoffMutation).not.toHaveBeenCalled();
   });
 
   it("uses the latest cart ID when the deferred auth callback runs", () => {

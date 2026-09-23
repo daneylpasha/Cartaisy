@@ -14,6 +14,7 @@ import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailab
 import { ProductCard } from "@/components/molecules/ProductCard";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { useCompanyName } from "@/hooks/useCompanyName";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { SCREEN_WIDTH } from "@/constants/styles";
 import { tokens } from "@/tamagui/token";
@@ -28,7 +29,7 @@ import { router } from "expo-router";
 import React, { useCallback } from "react";
 import { Platform, RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getTokenValue, YStack } from "tamagui";
+import { YStack } from "tamagui";
 
 import PlaceHolder from "./Placeholder";
 
@@ -79,7 +80,9 @@ const DefaultHome = ({ onRefreshHomescreen }: DefaultHomeProps) => {
   const storeName = useCompanyName();
   const logoUrl = useStoreConfigStore((state) => state.logoUrl);
   const primaryColor = useStoreConfigStore((state) => state.primaryColor);
+  const getReactiveColor = useReactiveTokenColor();
   const accent = primaryColor || "$primary";
+  const refreshTint = primaryColor || getReactiveColor("primary");
 
   const { data, isLoading, isError, error, refetch, isRefetching } =
     useGetInitialSearchScreen(
@@ -170,8 +173,8 @@ const DefaultHome = ({ onRefreshHomescreen }: DefaultHomeProps) => {
         <RefreshControl
           refreshing={isRefetching}
           onRefresh={handleRetry}
-          tintColor={primaryColor || getTokenValue("$primary")}
-          colors={[primaryColor || getTokenValue("$primary")]}
+          tintColor={refreshTint}
+          colors={refreshTint ? [refreshTint] : undefined}
         />
       }
     >

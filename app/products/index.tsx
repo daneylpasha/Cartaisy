@@ -24,13 +24,14 @@ import {
   FilterBottomSheetContent,
   FilterState,
 } from "@/components/organisms/product/FilterBottomSheetContant";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
 import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { FlatList, RefreshControl } from "react-native";
-import { getTokenValue, Text, XStack, YStack } from "tamagui";
+import { Text, XStack, YStack } from "tamagui";
 
 const sidePadding = tokens.space.md;
 const columnGap = tokens.space.md;
@@ -58,6 +59,8 @@ const mapCollectionProductToProduct = (
 };
 
 const PlpScreen = () => {
+  const getReactiveColor = useReactiveTokenColor();
+  const refreshTint = getReactiveColor("primary");
   const { categoryName, collectionId } = useLocalSearchParams<{
     categoryName: string;
     collectionId: string;
@@ -404,8 +407,8 @@ const PlpScreen = () => {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              tintColor={getTokenValue("$primary")}
-              colors={[getTokenValue("$primary")]}
+              tintColor={refreshTint}
+              colors={refreshTint ? [refreshTint] : undefined}
             />
           }
           contentContainerStyle={{

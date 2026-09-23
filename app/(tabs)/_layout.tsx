@@ -1,6 +1,8 @@
 import { TextSMRegular, TextXLBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useCartStore from "@/store/useCartStore";
+import { tokens } from "@/tamagui/token";
 import { Tabs } from "expo-router";
 import React, { useRef, useCallback } from "react";
 import { Platform, Pressable } from "react-native";
@@ -15,6 +17,8 @@ export default function TabLayout() {
   // Debounce to prevent double tap navigation
   const isProcessing = useRef(false);
   const DEBOUNCE_DELAY = 600; // ms
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary") ?? tokens.color.primary;
 
   const handleTabPress = useCallback((onPress: any) => {
     return () => {
@@ -45,7 +49,7 @@ export default function TabLayout() {
   return (
     <Tabs
         screenOptions={{
-          tabBarActiveTintColor: getTokenValue("$primary"),
+          tabBarActiveTintColor: primaryTint,
           headerShown: false,
           tabBarShowLabel: true,
           // Disable ripple effect on Android
@@ -110,7 +114,7 @@ export default function TabLayout() {
             title: "Cart",
             tabBarBadge: cartItemsCount > 0 ? cartItemsCount : undefined,
             tabBarBadgeStyle: {
-              backgroundColor: getTokenValue("$primary"),
+              backgroundColor: primaryTint,
               fontSize: 10,
               minWidth: 16,
               height: 16,

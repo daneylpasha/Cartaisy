@@ -3,9 +3,10 @@ import { TextSMMedium } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { tokens } from "@/tamagui/token";
 import { BlurView } from "expo-blur";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
@@ -36,7 +37,7 @@ export default function ProductCarousel({
   showCounter = true,
   dotSize = 8,
   dotColor = "#D1D5DB",
-  activeDotColor = tokens.color.primary,
+  activeDotColor,
   onImagePress,
   isFavorited = false,
   onFavoritePress,
@@ -45,6 +46,11 @@ export default function ProductCarousel({
 }: Props) {
   const { width } = useWindowDimensions();
   const h = height ?? width;
+  const getReactiveColor = useReactiveTokenColor();
+  const resolvedActiveDotColor =
+    activeDotColor ?? getReactiveColor("primary") ?? tokens.color.primary;
+  const activeDotScale = useRef(new Animated.Value(1)).current;
+  const hasPaged = useRef(false);
 
   // ✅ always array - handle both icon names and URLs
   const data: string[] = Array.isArray(images)
@@ -54,6 +60,19 @@ export default function ProductCarousel({
 
   const [index, setIndex] = useState(0);
   const listRef = useRef<FlatList<string>>(null);
+
+  useEffect(() => {
+    if (!hasPaged.current) {
+      hasPaged.current = true;
+      return;
+    }
+    activeDotScale.setValue(0.72);
+    Animated.spring(activeDotScale, {
+      toValue: 1,
+      friction: 7,
+      useNativeDriver: true,
+    }).start();
+  }, [index, activeDotScale]);
 
   const onEnd = (e: any) => {
     const i = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -76,6 +95,7 @@ export default function ProductCarousel({
   };
 
   return (
+    <YStack width={width}>
     <YStack style={{ width, height: h, borderRadius, overflow: "hidden" }}>
       {showCounter && (
         <XStack
@@ -83,10 +103,10 @@ export default function ProductCarousel({
           top={20}
           left={10}
           zIndex={2}
-          backgroundColor="rgba(0, 0, 0, 0.6)"
+          backgroundColor="rgba(17, 17, 17, 0.55)"
           paddingHorizontal={"$reg"}
-          paddingVertical={"$xs-sm"}
-          borderRadius={"$md"}
+          paddingVertical={"$xs"}
+          borderRadius={"$full"}
         >
           <TextSMMedium color="$white">
             {total ? `${index + 1}/${total}` : "0/0"}
@@ -99,7 +119,12 @@ export default function ProductCarousel({
         data={data}
         keyExtractor={(item, i) => `${item}-${i}`}
         renderItem={({ item, index: i }) => (
-          <YStack alignItems="center" justifyContent="center" width={width}>
+          <YStack
+            alignItems="center"
+            justifyContent="center"
+            width={width}
+            height={h}
+          >
             {/* Image touch area - positioned first so it gets touch events */}
             <OpTouch
               onPress={() => handleImagePress(i)}
@@ -191,6 +216,7 @@ export default function ProductCarousel({
         onMomentumScrollEnd={onEnd}
         getItemLayout={getItemLayout}
       />
+    </YStack>
 
       <Spacer size={"$md"} />
 
@@ -201,12 +227,15 @@ export default function ProductCarousel({
             onPress={() => goTo(i)}
             style={{ paddingHorizontal: 4 }}
           >
-            <Stack
+            <Animated.View
+              testID={i === index ? "product-carousel-active-dot" : undefined}
               style={{
-                width: dotSize,
+                width: i === index ? dotSize * 2.25 : dotSize,
                 height: dotSize,
                 borderRadius: dotSize / 2,
-                backgroundColor: i === index ? activeDotColor : dotColor,
+                backgroundColor:
+                  i === index ? resolvedActiveDotColor : dotColor,
+                transform: i === index ? [{ scale: activeDotScale }] : undefined,
               }}
             />
           </OpTouch>
