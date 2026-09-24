@@ -2,6 +2,7 @@ import { TextSMRegular, TextXLBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useCartStore from "@/store/useCartStore";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { tokens } from "@/tamagui/token";
 import { Tabs } from "expo-router";
 import React, { useRef, useCallback } from "react";
@@ -18,7 +19,14 @@ export default function TabLayout() {
   const isProcessing = useRef(false);
   const DEBOUNCE_DELAY = 600; // ms
   const getReactiveColor = useReactiveTokenColor();
-  const primaryTint = getReactiveColor("primary") ?? tokens.color.primary;
+  const merchantPrimary = useStoreConfigStore((state) => state.primaryColor);
+  const resolvedPrimary = getReactiveColor("primary");
+  // Tamagui web exposes theme colors as CSS variables. React Navigation's
+  // badge parses that string with the `color` package and crashes the cart tab.
+  const primaryTint =
+    resolvedPrimary && !resolvedPrimary.startsWith("var(")
+      ? resolvedPrimary
+      : merchantPrimary || tokens.color.primary;
 
   const handleTabPress = useCallback((onPress: any) => {
     return () => {

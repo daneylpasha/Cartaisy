@@ -30,6 +30,7 @@ import { ProductCard } from "@/components/molecules/ProductCard";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import ErrorModal from "@/components/organisms/ErrorModal";
 import { useAuthGuard } from "@/contexts/AuthGuardContext";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useCartStore from "@/store/useCartStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
@@ -40,10 +41,12 @@ import { formatPrice } from "@/utils/formatPrice";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getTokenValue, Text, XStack, YStack } from "tamagui";
+import { getTokenValue, XStack, YStack } from "tamagui";
 
 const CartScreen = () => {
   const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary") ?? getTokenValue("$primary");
   const [open, setOpen] = useState(false);
   const [errorModal, setErrorModal] = useState<{
     visible: boolean;
@@ -519,7 +522,7 @@ const CartScreen = () => {
       >
         <AppImage
           name="cartIcon"
-          tintColor={getTokenValue("$black")}
+          tintColor={primaryTint}
           width={29}
           height={27}
         />
@@ -533,8 +536,12 @@ const CartScreen = () => {
         onPress={() => {
           router.push("/");
         }}
+        backgroundColor="primary"
+        paddingHorizontal="lg"
+        paddingVertical="reg"
+        borderRadius="full"
       >
-        <Text color="$primary">{"Start Shopping"}</Text>
+        <TextMDBold color="$white">{"Start Shopping"}</TextMDBold>
       </OpTouch>
     </YStack>
   );

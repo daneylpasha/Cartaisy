@@ -313,8 +313,8 @@ const ProductCardComponent = ({
               position="absolute"
               top={12}
               left={12}
-              width={76}
               height={26}
+              paddingHorizontal={10}
               backgroundColor="$error"
               borderRadius="$full"
               justifyContent="center"
@@ -342,10 +342,11 @@ const ProductCardComponent = ({
           {/* Wishlist */}
           {showFavoriteIcon ? (
             <OpTouch
-              hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+              hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
               onPress={handleFavoritePress}
+              style={styles.favoriteButton}
             >
-              <BlurView style={styles.blurView} intensity={16} tint="dark">
+              <BlurView style={styles.favoriteBlur} intensity={16} tint="dark">
                 <Animated.View
                   style={{
                     transform: [{ scale: scaleAnim }],
@@ -382,7 +383,11 @@ const ProductCardComponent = ({
               <Spacer size="$xs" />
             </>
           ) : null}
-          <TextMDSemiBold color="$darkgrey" numberOfLines={2}>
+          <TextMDSemiBold
+            color="$darkgrey"
+            numberOfLines={2}
+            minHeight={context === "grid" ? 44 : undefined}
+          >
             {product.title ? String(product.title) : "Product"}
           </TextMDSemiBold>
           <Spacer size="$sm" />
@@ -469,15 +474,19 @@ export {
 };
 
 const styles = StyleSheet.create({
-  blurView: {
+  favoriteButton: {
     position: "absolute",
     bottom: 12,
     right: 12,
     width: 40,
     height: 40,
-    justifyContent: "center",
-    alignItems: "center",
     borderRadius: 20,
     overflow: "hidden",
+  },
+  favoriteBlur: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

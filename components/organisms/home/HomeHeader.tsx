@@ -56,15 +56,14 @@ export const HomeHeader = ({
       backgroundColor={primaryColor || "$primary"}
       paddingBottom={"$md"}
     >
-      <XStack alignItems="center" paddingVertical={"$xs"} position="relative">
-        {/* <YStack position="absolute" left={0}>
-          <TextMDSemiBold color="$white">{"Hello, Lily!"}</TextMDSemiBold>
-        </YStack> */}
-        <YStack
-          position="absolute"
-          left="40%"
-          // transform={[{ translateX: -30 }]}
-        >
+      <XStack
+        alignItems="center"
+        justifyContent="center"
+        paddingVertical={"$xs"}
+        minHeight={32}
+        position="relative"
+      >
+        <YStack position="absolute" left={0} right={0} alignItems="center">
           {hasLogoUrl ? (
             // Distinct `key`s on these two branches are load-bearing, not
             // decorative: without them, React treats both branches as the
@@ -107,7 +106,7 @@ export const HomeHeader = ({
               {cartItemCount > 0 && (
                 <YStack
                   position="absolute"
-                  backgroundColor="$yellow"
+                  backgroundColor="$white"
                   top={-8}
                   right={-10}
                   borderRadius="$full"
@@ -117,7 +116,7 @@ export const HomeHeader = ({
                   alignItems="center"
                   paddingHorizontal={"$xs"}
                 >
-                  <TextXSRegular color="$white" textAlign="center">
+                  <TextXSRegular color="$darkgrey" textAlign="center">
                     {String(cartItemCount)}
                   </TextXSRegular>
                 </YStack>
@@ -132,7 +131,7 @@ export const HomeHeader = ({
       <YStack
         backgroundColor="$white"
         borderRadius={tokens.radius.md}
-        paddingVertical={"$sm"}
+        paddingVertical={"$reg"}
         paddingHorizontal={"$reg"}
         // padding={"$sm-reg"}
       >

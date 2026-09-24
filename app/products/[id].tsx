@@ -36,7 +36,6 @@ import { SectionHeader } from "@/components/molecules/SectionHeader";
 import AddToCartSuccessModal from "@/components/organisms/AddToCartSuccessModal";
 import ErrorModal from "@/components/organisms/ErrorModal";
 import { RatingStar } from "@/components/organisms/home";
-import { SCREEN_WIDTH } from "@/constants/styles";
 import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useCartStore from "@/store/useCartStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
@@ -58,7 +57,7 @@ import {
   UIManager,
   useWindowDimensions,
 } from "react-native";
-import ImageViewing from "react-native-image-viewing";
+import FullscreenImageViewer from "@/components/molecules/product/pdp/FullscreenImageViewer";
 import RenderHTML from "react-native-render-html";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
@@ -569,7 +568,7 @@ const ProductDetailsScreen = () => {
               <XStack alignItems="center">
                 <HeadingXSBold color="$text">
                   {formatPrice(
-                    (product?.currentPrice ? Number(product.currentPrice) : 0) * count,
+                    product?.currentPrice ? Number(product.currentPrice) : 0,
                     product?.currency
                   )}
                 </HeadingXSBold>
@@ -591,8 +590,8 @@ const ProductDetailsScreen = () => {
                 }
               >
                 {product?.inStock && product?.totalInventory && product?.totalInventory > 0
-                  ? `In-Stock (${product.totalInventory})`
-                  : "Out of Stock"}
+                  ? "In stock"
+                  : "Out of stock"}
               </TextSMMedium>
             </YStack>
 
@@ -614,8 +613,10 @@ const ProductDetailsScreen = () => {
               >
                 <AppImage
                   name={"minus"}
-                  size={15}
-                  tintColor={primaryTint}
+                  size={18}
+                  tintColor={
+                    count <= 1 ? getTokenValue("$icon") : primaryTint
+                  }
                 />
               </OpTouch>
               <Spacer size={"$md"} />
@@ -647,8 +648,15 @@ const ProductDetailsScreen = () => {
               >
                 <AppImage
                   name={"addIcon"}
-                  size={15}
-                  tintColor={primaryTint}
+                  size={18}
+                  tintColor={
+                    count >=
+                    (selectedVariant?.quantityAvailable ||
+                      product?.totalInventory ||
+                      0)
+                      ? getTokenValue("$icon")
+                      : primaryTint
+                  }
                 />
               </OpTouch>
             </XStack>
@@ -810,56 +818,36 @@ const ProductDetailsScreen = () => {
           <Spacer size={"$reg"} />
           {product?.descriptionHtml && product.descriptionHtml.trim() !== "" ? (
             <>
-              {/* Hidden full-height version to measure actual content height */}
               <YStack
-                position="absolute"
-                opacity={0}
-                pointerEvents="none"
-                width={SCREEN_WIDTH - 32}
+                overflow="hidden"
+                maxHeight={
+                  descriptionHeight > COLLAPSED_HEIGHT && !isExpanded
+                    ? COLLAPSED_HEIGHT
+                    : undefined
+                }
                 onLayout={(event) => {
                   const { height } = event.nativeEvent.layout;
+                  // First pass is unconstrained so we learn the real height.
+                  // Later passes are the collapsed height and must not reset it.
                   if (height > 0 && descriptionHeight === 0) {
                     setDescriptionHeight(height);
-                    // Show toggle if content is taller than collapsed height
                     if (height > COLLAPSED_HEIGHT) {
                       setShowToggle(true);
                     }
                   }
                 }}
               >
-                {product.descriptionHtml && product.descriptionHtml.trim() ? (
-                  <RenderHTML
-                    contentWidth={SCREEN_WIDTH - 32}
-                    source={{
-                      html: `<div>${product.descriptionHtml}</div>`,
-                    }}
-                    baseStyle={{
-                      color: secondaryInk,
-                      fontSize: 15,
-                      lineHeight: 22,
-                    }}
-                  />
-                ) : null}
-              </YStack>
-
-              {/* Visible version with height control */}
-              <YStack
-                overflow="hidden"
-                maxHeight={isExpanded ? undefined : COLLAPSED_HEIGHT}
-              >
-                {product.descriptionHtml && product.descriptionHtml.trim() ? (
-                  <RenderHTML
-                    contentWidth={SCREEN_WIDTH - 32}
-                    source={{
-                      html: `<div>${product.descriptionHtml}</div>`,
-                    }}
-                    baseStyle={{
-                      color: secondaryInk,
-                      fontSize: 15,
-                      lineHeight: 22,
-                    }}
-                  />
-                ) : null}
+                <RenderHTML
+                  contentWidth={windowWidth - 32}
+                  source={{
+                    html: `<div>${product.descriptionHtml}</div>`,
+                  }}
+                  baseStyle={{
+                    color: secondaryInk,
+                    fontSize: 15,
+                    lineHeight: 22,
+                  }}
+                />
               </YStack>
             </>
           ) : (
@@ -1277,7 +1265,7 @@ const ProductDetailsScreen = () => {
                   position="absolute"
                   top={-6}
                   right={-6}
-                  backgroundColor="$yellow"
+                  backgroundColor="$white"
                   borderRadius={"$full"}
                   minWidth={18}
                   height={18}
@@ -1285,7 +1273,7 @@ const ProductDetailsScreen = () => {
                   justifyContent="center"
                   paddingHorizontal={"$xs"}
                 >
-                  <TextXSRegular color="$white" fontSize={10}>
+                  <TextXSRegular color="$darkgrey" fontSize={10}>
                     {cartItemCount > 99 ? "99+" : cartItemCount}
                   </TextXSRegular>
                 </XStack>
@@ -1367,8 +1355,8 @@ const ProductDetailsScreen = () => {
       )}
 
       {/* Full-screen viewer - key prop forces remount to reset zoom state */}
-      <ImageViewing
-        key={viewerOpen ? `viewer-${viewerIndex}` : 'viewer-closed'}
+      <FullscreenImageViewer
+        key={viewerOpen ? `viewer-${viewerIndex}` : "viewer-closed"}
         images={viewerImages}
         imageIndex={viewerIndex}
         doubleTapToZoomEnabled={true}

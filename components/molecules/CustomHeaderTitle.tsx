@@ -7,10 +7,9 @@ type CustomHeaderTitleProps = {
 };
 
 export const CustomHeaderTitle = ({ title }: CustomHeaderTitleProps) => {
-  console.log(title, "title");
   return (
-    <XStack>
-      <TextMDBold color="$textPrimary" textAlign="center">
+    <XStack flex={1} justifyContent="center">
+      <TextMDBold color="$darkgrey" textAlign="center" numberOfLines={1}>
         {title}
       </TextMDBold>
     </XStack>

@@ -27,6 +27,7 @@ import {
 import { extractNumericId } from "@/utils/extractNumericId";
 import { router } from "expo-router";
 import React, { useCallback } from "react";
+import { LinearGradient } from "expo-linear-gradient";
 import { Platform, RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
@@ -198,14 +199,10 @@ const DefaultHome = ({ onRefreshHomescreen }: DefaultHomeProps) => {
             </YStack>
           ) : null}
           {model.hero.imageUrl ? (
-            <YStack
-              position="absolute"
-              left={0}
-              right={0}
-              bottom={0}
-              height={190}
-              backgroundColor="rgba(0,0,0,0.42)"
-              zIndex={1}
+            <LinearGradient
+              colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.35)", "rgba(0,0,0,0.78)"]}
+              locations={[0, 0.42, 1]}
+              style={styles.heroScrim}
             />
           ) : null}
           <YStack flex={1} justifyContent="space-between" padding="$lg" zIndex={2}>
@@ -313,6 +310,12 @@ const DefaultHome = ({ onRefreshHomescreen }: DefaultHomeProps) => {
                       />
                     </YStack>
                   ) : null}
+                  {collection.image ? (
+                    <LinearGradient
+                      colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.72)"]}
+                      style={styles.collectionScrim}
+                    />
+                  ) : null}
                   <YStack
                     position="absolute"
                     left={0}
@@ -320,9 +323,6 @@ const DefaultHome = ({ onRefreshHomescreen }: DefaultHomeProps) => {
                     bottom={0}
                     padding="$md"
                     zIndex={1}
-                    backgroundColor={
-                      collection.image ? "rgba(0,0,0,0.42)" : "transparent"
-                    }
                   >
                     <TextLGBold color="$white" numberOfLines={2}>
                       {collection.title}
@@ -350,6 +350,22 @@ const styles = StyleSheet.create({
   },
   productRow: {
     paddingHorizontal: tokens.space.md,
+  },
+  heroScrim: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 230,
+    zIndex: 1,
+  },
+  collectionScrim: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 120,
+    zIndex: 1,
   },
 });
 
