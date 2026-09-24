@@ -24,7 +24,7 @@ import { updateTheme } from "tamagui";
 import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
-const DEFAULT_PRIMARY_HEX = "#A82A50"; // tamagui/token.ts PRIMARY_COLOR — keep in sync
+const DEFAULT_PRIMARY_HEX = "#1C1917"; // tamagui/token.ts PRIMARY_COLOR — keep in sync
 const DEFAULT_SECONDARY = "rgba(75, 85, 99, 1)"; // tamagui/token.ts SECONDARY_COLOR — keep in sync
 
 // A tiny harness mirroring how each of the five fixed components calls the

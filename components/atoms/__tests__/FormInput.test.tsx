@@ -15,7 +15,7 @@ import { updateTheme } from "tamagui";
 import { FormInput } from "@/components/atoms/FormInput";
 import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
-const DEFAULT_PRIMARY_HEX = "#A82A50"; // tamagui/token.ts PRIMARY_COLOR — keep in sync
+const DEFAULT_PRIMARY_HEX = "#1C1917"; // tamagui/token.ts PRIMARY_COLOR — keep in sync
 
 describe("FormInput selectionColor reactivity", () => {
   afterEach(() => {

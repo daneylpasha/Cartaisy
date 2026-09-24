@@ -17,9 +17,8 @@ import useStoreConfigStore from "@/store/useStoreConfigStore";
  * Cartaisy branding. Showing "Cartaisy" to a merchant's own customers on
  * their own branded build — because their store-name fetch hasn't resolved
  * or failed — is exactly that leak: a different company's name shown in
- * place of theirs, not a safe generic default (unlike `primaryColor`/
- * `secondaryColor`, where falling back to Cartaisy's own color tokens is
- * cosmetically neutral).
+ * place of theirs, not a safe generic default. Missing colors fall back
+ * to the neutral ink in `tamagui/token.ts`, not Cartaisy marketing magenta.
  *
  * Each of the five call sites decides its own empty-state UI treatment
  * instead of this hook baking one in: search-surfaces (SearchBar,

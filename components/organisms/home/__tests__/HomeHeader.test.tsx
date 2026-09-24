@@ -36,8 +36,7 @@ import useStoreConfigStore from "@/store/useStoreConfigStore";
 import useUserStore from "@/store/useUserStore";
 import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
-const MOCK_LOGO_ASSET = 42;
-const DEFAULT_PRIMARY_HEX = "#A82A50"; // tamagui/token.ts PRIMARY_COLOR
+const DEFAULT_PRIMARY_HEX = "#1C1917"; // tamagui/token.ts PRIMARY_COLOR
 
 const renderHeader = () =>
   renderWithTamagui(
@@ -63,122 +62,85 @@ describe("HomeHeader", () => {
     });
   });
 
-  it("renders the bundled logo and $primary background when the store has no branding set (today's default)", () => {
-    const { UNSAFE_getAllByType } = renderHeader();
+  it("shows a neutral monogram and the fallback primary when the store has no branding", () => {
+    const { getByTestId, queryByText, UNSAFE_getAllByType } = renderHeader();
 
-    const logoImage = UNSAFE_getAllByType(Image).find(
-      (img) => img.props.source === MOCK_LOGO_ASSET
-    );
-    expect(logoImage).toBeTruthy();
+    expect(getByTestId("brand-mark-monogram")).toBeTruthy();
+    expect(queryByText(/cartaisy/i)).toBeNull();
 
     const rootView = UNSAFE_getAllByType(View)[0];
     const flatStyle = StyleSheet.flatten(rootView.props.style);
     expect(flatStyle.backgroundColor).toBe(DEFAULT_PRIMARY_HEX);
   });
 
-  it("renders the primary color background immediately and the bundled logo while the runtime logo is still loading", () => {
-    const logoUrl = "https://cdn.cartaisy.com/stores/acme/logo.png";
-    const primaryColor = "#123456";
-
+  it("shows the store name in the header when a logo was not published", () => {
     useStoreConfigStore.setState({
-      primaryColor,
-      logoUrl,
+      storeName: "Northwind Goods",
+      isLoaded: true,
+      primaryColor: "#123456",
     });
 
-    const { UNSAFE_getAllByType } = renderHeader();
+    const { getByText, queryByTestId, queryByText, UNSAFE_getAllByType } =
+      renderHeader();
 
-    // Per MOBILE_RUNTIME_BRANDING_CONTRACT.md ("keep current bundled
-    // assets visible until a remote logo finishes loading"), the bundled
-    // logo is what's shown while the remote one is still loading — not a
-    // generic shimmer — while the real remote image stays mounted
-    // underneath so it can finish loading in the background.
-    const images = UNSAFE_getAllByType(Image);
-    const remoteLogo = images.find(
-      (img) =>
-        typeof img.props.source === "object" &&
-        img.props.source?.uri === logoUrl
-    );
-    expect(remoteLogo).toBeTruthy();
-    expect(images.some((img) => img.props.source === MOCK_LOGO_ASSET)).toBe(
-      true
-    );
+    expect(getByText("Northwind Goods")).toBeTruthy();
+    expect(queryByTestId("brand-mark-logo")).toBeNull();
+    expect(queryByText(/cartaisy/i)).toBeNull();
 
-    // Background color doesn't wait on the logo — it applies immediately.
     const rootView = UNSAFE_getAllByType(View)[0];
-    const flatStyle = StyleSheet.flatten(rootView.props.style);
-    expect(flatStyle.backgroundColor).toBe(primaryColor);
+    expect(StyleSheet.flatten(rootView.props.style).backgroundColor).toBe(
+      "#123456"
+    );
   });
 
-  it("swaps to the runtime logo once it finishes loading successfully", () => {
-    const logoUrl = "https://cdn.cartaisy.com/stores/acme/logo.png";
-    useStoreConfigStore.setState({ logoUrl });
+  it("renders the merchant logo untinted once it loads, and keeps the name visible until then", () => {
+    const logoUrl = "https://cdn.example.com/stores/acme/logo.png";
+    useStoreConfigStore.setState({
+      logoUrl,
+      primaryColor: "#123456",
+      storeName: "Acme Outfitters",
+      isLoaded: true,
+    });
 
-    const { UNSAFE_getAllByType } = renderHeader();
-
-    const remoteLogoBefore = UNSAFE_getAllByType(Image).find(
-      (img) =>
-        typeof img.props.source === "object" &&
-        img.props.source?.uri === logoUrl
+    const { getByText, queryByText, UNSAFE_getAllByType } = renderHeader();
+    const remoteLogo = UNSAFE_getAllByType(Image).find(
+      (img) => img.props.source?.uri === logoUrl
     );
+    expect(remoteLogo).toBeTruthy();
+    expect(remoteLogo!.props.tintColor).toBeUndefined();
+    expect(getByText("Acme Outfitters")).toBeTruthy();
 
     const { act } = require("@testing-library/react-native");
     act(() => {
-      remoteLogoBefore!.props.onLoadEnd();
+      remoteLogo!.props.onLoad();
     });
 
-    const images = UNSAFE_getAllByType(Image);
-    expect(images.some((img) => img.props.source === MOCK_LOGO_ASSET)).toBe(
-      false
-    );
+    expect(queryByText("Acme Outfitters")).toBeNull();
     expect(
-      images.some(
-        (img) =>
-          typeof img.props.source === "object" &&
-          img.props.source?.uri === logoUrl
-      )
+      UNSAFE_getAllByType(Image).some((img) => img.props.source?.uri === logoUrl)
     ).toBe(true);
   });
 
-  it("falls back to the bundled logo when the runtime logoUrl fails to load", () => {
-    const logoUrl = "https://cdn.cartaisy.com/stores/acme/unreachable-logo.png";
-    useStoreConfigStore.setState({ logoUrl });
+  it("falls back to the store name when the logo fails, never a Cartaisy wordmark", () => {
+    const logoUrl = "https://cdn.example.com/stores/acme/unreachable-logo.png";
+    useStoreConfigStore.setState({
+      logoUrl,
+      storeName: "Acme Outfitters",
+      isLoaded: true,
+    });
 
-    const { UNSAFE_getAllByType } = renderHeader();
-
-    const remoteLogoBefore = UNSAFE_getAllByType(Image).find(
-      (img) =>
-        typeof img.props.source === "object" &&
-        img.props.source?.uri === logoUrl
+    const { getByText, queryByText, UNSAFE_getAllByType } = renderHeader();
+    const remoteLogo = UNSAFE_getAllByType(Image).find(
+      (img) => img.props.source?.uri === logoUrl
     );
-    expect(remoteLogoBefore).toBeTruthy();
 
     const { act } = require("@testing-library/react-native");
     act(() => {
-      remoteLogoBefore!.props.onError();
+      remoteLogo!.props.onError();
     });
 
-    // Failed to load: falls back to the bundled Cartaisy logo, not a blank
-    // space — this is AppImage's fallbackName path (see AppImage.test.tsx),
-    // exercised here through HomeHeader's actual wiring.
-    const logoImage = UNSAFE_getAllByType(Image).find(
-      (img) => img.props.source === MOCK_LOGO_ASSET
-    );
-    expect(logoImage).toBeTruthy();
-  });
-
-  it("keeps the bundled logo/$primary background when only one of primaryColor/logoUrl is set", () => {
-    useStoreConfigStore.setState({ primaryColor: "#123456", logoUrl: undefined });
-
-    const { UNSAFE_getAllByType } = renderHeader();
-
-    const logoImage = UNSAFE_getAllByType(Image).find(
-      (img) => img.props.source === MOCK_LOGO_ASSET
-    );
-    expect(logoImage).toBeTruthy();
-
-    const rootView = UNSAFE_getAllByType(View)[0];
-    const flatStyle = StyleSheet.flatten(rootView.props.style);
-    expect(flatStyle.backgroundColor).toBe("#123456");
+    expect(getByText("Acme Outfitters")).toBeTruthy();
+    expect(queryByText(/cartaisy/i)).toBeNull();
   });
 
   describe("search placeholder companyName (TICKETwiremerchantstorenameintocompanynamestrings.md)", () => {

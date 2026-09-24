@@ -10,6 +10,7 @@ import {
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
+import { BrandMark } from "@/components/molecules/BrandMark";
 import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import { ProductCard } from "@/components/molecules/ProductCard";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
@@ -221,7 +222,15 @@ const DefaultHome = ({ onRefreshHomescreen }: DefaultHomeProps) => {
                 />
               </YStack>
             ) : (
-              <YStack />
+              <YStack
+                alignSelf="flex-start"
+                backgroundColor="$white"
+                borderRadius="$md"
+                paddingHorizontal="$sm"
+                paddingVertical="$xs"
+              >
+                <BrandMark tone="onLight" size="compact" logoWidth={120} logoHeight={28} />
+              </YStack>
             )}
             <YStack gap="$xs">
               <TextXLBold color="$white" numberOfLines={2}>

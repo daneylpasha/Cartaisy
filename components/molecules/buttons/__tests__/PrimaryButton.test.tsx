@@ -18,7 +18,7 @@ import { updateTheme } from "tamagui";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
-const DEFAULT_PRIMARY_HEX = "#A82A50"; // tamagui/token.ts PRIMARY_COLOR — keep in sync
+const DEFAULT_PRIMARY_HEX = "#1C1917"; // tamagui/token.ts PRIMARY_COLOR — keep in sync
 
 const findBackgroundColor = (getAllByType: any) => {
   const views = getAllByType(View) as any[];

@@ -4,7 +4,7 @@ export const themes = {
   light: {
     // background: "#F5F5F5",
     color: "$primary", // Default text color is now primary
-    primary: tokens.color.primary, // Use the purple from tokens
+    primary: tokens.color.primary,
     // Registered as a theme key (not just a token) so it's covered by the
     // same runtime override as `primary` — see hooks/useDynamicPrimaryTheme.ts.
     primarylight: tokens.color.primarylight,
@@ -17,7 +17,7 @@ export const themes = {
   dark: {
     background: "#1C1C1E",
     color: "$primary", // Default text color is now primary
-    primary: tokens.color.primary, // Use the purple from tokens
+    primary: tokens.color.primary,
     primarylight: tokens.color.primarylight,
     secondary: tokens.color.secondary,
     surface: "#2C2C2E",

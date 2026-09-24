@@ -71,7 +71,8 @@ describe("colorUtils contrast helpers", () => {
   });
 
   describe("hasSufficientContrastForPrimary", () => {
-    it("accepts the bundled Cartaisy primary color (dark magenta, ~6.75:1 against white)", () => {
+    it("accepts the neutral premium fallback ink and a dark merchant magenta", () => {
+      expect(hasSufficientContrastForPrimary("#1C1917")).toBe(true);
       expect(hasSufficientContrastForPrimary("#A82A50")).toBe(true);
     });
 
