@@ -14,19 +14,22 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import { useCompanyName } from "@/hooks/useCompanyName";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useAuthStore from "@/store/useAuthStore";
 import { t } from "@/translations";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, Linking, Platform } from "react-native";
-import { getTokenValue, XStack, YStack } from "tamagui";
+import { XStack, YStack } from "tamagui";
 const Notification = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasDeniedBefore, setHasDeniedBefore] = useState(false);
   const { token } = useAuthStore();
   const { pendingReturnPath, clearPendingReturnPath } = useAuthGuard();
   const companyName = useCompanyName();
+  const getReactiveColor = useReactiveTokenColor();
+  const secondaryTint = getReactiveColor("secondary");
 
   // Helper function to navigate after signup completion
   const navigateAfterSignup = () => {
@@ -194,7 +197,7 @@ const Notification = () => {
         <XStack alignItems="center" justifyContent="center">
           <AppImage
             name="errorIcon"
-            tintColor={getTokenValue("$secondary")}
+            tintColor={secondaryTint}
             width={16}
             height={16}
           />

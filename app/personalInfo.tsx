@@ -24,6 +24,7 @@ import type { BaseBottomSheetRef } from "@/components/molecules/bottom-sheets/ty
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
 import { SHADOW_STYLES } from "@/constants/styles";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useAuthStore from "@/store/useAuthStore";
 import { tokens } from "@/tamagui/token";
 import { t } from "@/translations";
@@ -61,6 +62,9 @@ const formatDMY = (d: Date) => {
 };
 
 const PersonalInfo = () => {
+  const getReactiveColor = useReactiveTokenColor();
+  const brandPrimary = getReactiveColor("primary") ?? tokens.color.primary;
+  const brandSecondary = getReactiveColor("secondary") ?? tokens.color.secondary;
   const queryClient = useQueryClient();
   const params = useLocalSearchParams();
   const form = useForm();
@@ -557,7 +561,7 @@ const PersonalInfo = () => {
                     borderWidth={0}
                     icon={
                       <AppImage
-                        tintColor={getTokenValue("$secondary")}
+                        tintColor={brandSecondary}
                         name="userIcon"
                         width={14}
                         height={18}
@@ -610,7 +614,7 @@ const PersonalInfo = () => {
                     name="arrowDown"
                     width={14}
                     height={8}
-                    tintColor={getTokenValue("$secondary")}
+                    tintColor={brandSecondary}
                   />
                 </XStack>
               </XStack>
@@ -661,7 +665,7 @@ const PersonalInfo = () => {
                           name="genderIcon"
                           width={15}
                           height={15}
-                          tintColor={getTokenValue("$secondary")}
+                          tintColor={brandSecondary}
                         />
                         <Spacer size="$reg" />
                         <TextMDRegular
@@ -674,7 +678,7 @@ const PersonalInfo = () => {
                         name="arrowDown"
                         width={14}
                         height={8}
-                        tintColor={getTokenValue("$secondary")}
+                        tintColor={brandSecondary}
                       />
                     </XStack>
                   </OpTouch>
@@ -722,7 +726,7 @@ const PersonalInfo = () => {
                         name="calendar"
                         width={16}
                         height={16}
-                        tintColor={getTokenValue("$secondary")}
+                        tintColor={brandSecondary}
                       />
                     </OpTouch>
                   </XStack>
@@ -839,7 +843,7 @@ const PersonalInfo = () => {
                     borderWidth={0}
                     icon={
                       <AppImage
-                        tintColor={getTokenValue("$secondary")}
+                        tintColor={brandSecondary}
                         name="emailIcon"
                         width={14}
                         height={18}
@@ -900,7 +904,7 @@ const PersonalInfo = () => {
                       name="locationIconUnfilled"
                       width={14}
                       height={18}
-                      tintColor={getTokenValue("$secondary")}
+                      tintColor={brandSecondary}
                     />
                   </YStack>
                   <Spacer size={"$sm"} />
@@ -1047,7 +1051,7 @@ const PersonalInfo = () => {
                   borderWidth={tempGenderSelection === "female" ? 1.5 : 1}
                   borderColor={
                     tempGenderSelection === "female"
-                      ? tokens.color.primary
+                      ? brandPrimary
                       : "rgba(203, 213, 225, 0.3)"
                   }
                   borderRadius="$xl"
@@ -1060,7 +1064,7 @@ const PersonalInfo = () => {
                     backdropFilter: "blur(8px)",
                     ...(tempGenderSelection === "female"
                       ? {
-                          shadowColor: tokens.color.primary,
+                          shadowColor: brandPrimary,
                           shadowOffset: { width: 0, height: 4 },
                           shadowOpacity: 0.15,
                           shadowRadius: 8,
@@ -1078,7 +1082,7 @@ const PersonalInfo = () => {
                   <YStack
                     backgroundColor={
                       tempGenderSelection === "female"
-                        ? tokens.color.primary
+                        ? brandPrimary
                         : "rgba(124, 58, 237, 0.1)"
                     }
                     borderRadius="$full"
@@ -1095,14 +1099,14 @@ const PersonalInfo = () => {
                       tintColor={
                         tempGenderSelection === "female"
                           ? tokens.color.white
-                          : tokens.color.primary
+                          : brandPrimary
                       }
                     />
                   </YStack>
                   <TextSMSemiBold
                     color={
                       tempGenderSelection === "female"
-                        ? tokens.color.primary
+                        ? brandPrimary
                         : tokens.color.darkgrey
                     }
                   >
@@ -1126,7 +1130,7 @@ const PersonalInfo = () => {
                   borderWidth={tempGenderSelection === "male" ? 1.5 : 1}
                   borderColor={
                     tempGenderSelection === "male"
-                      ? tokens.color.primary
+                      ? brandPrimary
                       : "rgba(203, 213, 225, 0.3)"
                   }
                   borderRadius="$xl"
@@ -1139,7 +1143,7 @@ const PersonalInfo = () => {
                     backdropFilter: "blur(8px)",
                     ...(tempGenderSelection === "male"
                       ? {
-                          shadowColor: tokens.color.primary,
+                          shadowColor: brandPrimary,
                           shadowOffset: { width: 0, height: 4 },
                           shadowOpacity: 0.15,
                           shadowRadius: 8,
@@ -1157,7 +1161,7 @@ const PersonalInfo = () => {
                   <YStack
                     backgroundColor={
                       tempGenderSelection === "male"
-                        ? tokens.color.primary
+                        ? brandPrimary
                         : "rgba(124, 58, 237, 0.1)"
                     }
                     borderRadius="$full"
@@ -1174,14 +1178,14 @@ const PersonalInfo = () => {
                       tintColor={
                         tempGenderSelection === "male"
                           ? tokens.color.white
-                          : tokens.color.primary
+                          : brandPrimary
                       }
                     />
                   </YStack>
                   <TextSMSemiBold
                     color={
                       tempGenderSelection === "male"
-                        ? tokens.color.primary
+                        ? brandPrimary
                         : tokens.color.darkgrey
                     }
                   >
@@ -1265,12 +1269,12 @@ const PersonalInfo = () => {
                       gap="$xs"
                       borderWidth={1}
                       borderColor={
-                        showMonthPicker ? tokens.color.primary : "$lightgrey"
+                        showMonthPicker ? brandPrimary : "$lightgrey"
                       }
                     >
                       <TextMDSemiBold
                         color={
-                          showMonthPicker ? tokens.color.primary : "$darkgrey"
+                          showMonthPicker ? brandPrimary : "$darkgrey"
                         }
                       >
                         {calendarDate.toLocaleString("default", {
@@ -1283,8 +1287,8 @@ const PersonalInfo = () => {
                         height={10}
                         tintColor={
                           showMonthPicker
-                            ? tokens.color.primary
-                            : tokens.color.secondary
+                            ? brandPrimary
+                            : brandSecondary
                         }
                         style={{
                           transform: [
@@ -1309,12 +1313,12 @@ const PersonalInfo = () => {
                       gap="$xs"
                       borderWidth={1}
                       borderColor={
-                        showYearPicker ? tokens.color.primary : "$lightgrey"
+                        showYearPicker ? brandPrimary : "$lightgrey"
                       }
                     >
                       <TextMDSemiBold
                         color={
-                          showYearPicker ? tokens.color.primary : "$darkgrey"
+                          showYearPicker ? brandPrimary : "$darkgrey"
                         }
                       >
                         {calendarDate.getFullYear()}
@@ -1325,8 +1329,8 @@ const PersonalInfo = () => {
                         height={10}
                         tintColor={
                           showYearPicker
-                            ? tokens.color.primary
-                            : tokens.color.secondary
+                            ? brandPrimary
+                            : brandSecondary
                         }
                         style={{
                           transform: [
@@ -1383,7 +1387,7 @@ const PersonalInfo = () => {
                                 <YStack
                                   backgroundColor={
                                     isCurrentMonth
-                                      ? tokens.color.primary
+                                      ? brandPrimary
                                       : "$white"
                                   }
                                   borderRadius="$lg"
@@ -1445,7 +1449,7 @@ const PersonalInfo = () => {
                               <YStack
                                 backgroundColor={
                                   isSelected
-                                    ? tokens.color.primary
+                                    ? brandPrimary
                                     : "transparent"
                                 }
                                 borderRadius="$md"
@@ -1490,7 +1494,7 @@ const PersonalInfo = () => {
                           ? {
                               [tempDateSelection]: {
                                 selected: true,
-                                selectedColor: tokens.color.primary,
+                                selectedColor: brandPrimary,
                                 selectedTextColor: tokens.color.white,
                               },
                             }
@@ -1505,14 +1509,14 @@ const PersonalInfo = () => {
                       theme={{
                         backgroundColor: "transparent",
                         calendarBackground: "transparent",
-                        todayTextColor: tokens.color.primary,
+                        todayTextColor: brandPrimary,
                         todayBackgroundColor: "rgba(124, 58, 237, 0.1)",
-                        arrowColor: tokens.color.primary,
+                        arrowColor: brandPrimary,
                         monthTextColor: tokens.color.darkgrey,
                         textSectionTitleColor: tokens.color.textgrey,
                         dayTextColor: tokens.color.darkgrey,
                         textDisabledColor: tokens.color.lightgrey,
-                        selectedDayBackgroundColor: tokens.color.primary,
+                        selectedDayBackgroundColor: brandPrimary,
                         selectedDayTextColor: tokens.color.white,
                         textDayFontFamily: "Figtree-Regular",
                         textMonthFontFamily: "Figtree-SemiBold",
@@ -1526,7 +1530,7 @@ const PersonalInfo = () => {
                           name="arrowBack"
                           width={16}
                           height={16}
-                          tintColor={tokens.color.primary}
+                          tintColor={brandPrimary}
                           style={{
                             transform: [
                               {

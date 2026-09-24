@@ -8,20 +8,24 @@ import { ParagraphMD } from "@/components/atoms/texts/ParagraphMD";
 import { TextSMRegular } from "@/components/atoms/texts/TextSMRegular";
 import { TextSMSemiBold } from "@/components/atoms/texts/TextSMSemiBold";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
-import { tokens } from "@/tamagui/token";
+import { useCompanyName } from "@/hooks/useCompanyName";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { t } from "@/translations";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Alert, Linking } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { XStack, YStack } from "tamagui";
+import { YStack } from "tamagui";
 type ForgotPasswordForm = {
   email: string;
 };
 
 const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const companyName = useCompanyName();
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
   const form = useForm<ForgotPasswordForm>({
     defaultValues: {
       email: "",
@@ -30,8 +34,8 @@ const ForgotPassword = () => {
 
   const openSupportEmail = async () => {
     const to = "help@cartaisy.com";
-    const subject = "Cartaisy Support";
-    const body = "Assalam-o-Alaikum,\n\nMujhe madad chahiye regarding ...";
+    const subject = companyName ? `${companyName} account help` : "Account help";
+    const body = "I need help signing in.";
 
     const s = encodeURIComponent(subject);
     const b = encodeURIComponent(body);
@@ -109,7 +113,7 @@ const ForgotPassword = () => {
             justifyContent="center"
           >
             <AppImage
-              tintColor={tokens.color.primary}
+              tintColor={primaryTint}
               name={"lock"}
               width={75}
               height={98}
@@ -160,20 +164,15 @@ const ForgotPassword = () => {
               <TextSMRegular color={"$secondary"}>
                 {t("auth.forgotPassword.dontRememberEmail")}
               </TextSMRegular>
-              <XStack alignItems="center" gap={"$xs"}>
-                <TextSMRegular color={"$secondary"}>
+              <OpTouch onPress={openSupportEmail}>
+                <TextSMRegular
+                  borderBottomWidth={1}
+                  fontWeight={"700"}
+                  color={"$primary"}
+                >
                   {t("auth.forgotPassword.contactSupport")}
                 </TextSMRegular>
-                <OpTouch onPress={openSupportEmail}>
-                  <TextSMRegular
-                    borderBottomWidth={1}
-                    fontWeight={"700"}
-                    color={"$primary"}
-                  >
-                    {t("common.url.help")}
-                  </TextSMRegular>
-                </OpTouch>
-              </XStack>
+              </OpTouch>
             </YStack>
           </YStack>
         </YStack>

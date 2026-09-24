@@ -10,6 +10,7 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { AddressCard } from "@/components/molecules/AddressCard";
 import { PrimaryButton } from "@/components/molecules/buttons";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import {
   BETA_CHECKOUT_ENTRY_ROUTE,
   isLegacyNativeCheckoutEnabled,
@@ -32,6 +33,8 @@ type AddressDataItem = {
 };
 
 const SelectAddressScreen = () => {
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
   const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
   const params = useLocalSearchParams();
   const currentSelectedId = params.selectedAddressId
@@ -203,7 +206,7 @@ const SelectAddressScreen = () => {
       <OpTouch onPress={() => router.push("/addAddress")}>
         <XStack alignItems="center">
           <AppImage
-            tintColor={getTokenValue("$primary")}
+            tintColor={primaryTint}
             name="addIcon"
             width={16}
             height={16}

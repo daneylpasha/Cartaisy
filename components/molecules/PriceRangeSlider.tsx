@@ -8,6 +8,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { getTokenValue, XStack, YStack } from "tamagui";
 import { TextMDSemiBold } from "../atoms";
 
@@ -34,8 +35,10 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
   const minThumbPosition = useSharedValue(0);
   const maxThumbPosition = useSharedValue(SLIDER_WIDTH - THUMB_SIZE);
 
-  // Get token values outside of animated styles to avoid UI thread issues
-  const primaryColor = getTokenValue("$primary");
+  // Primary is a runtime theme color. Light grey never changes, so the
+  // static token read is correct for that one.
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryColor = getReactiveColor("primary") ?? getTokenValue("$primary");
   const lightGreyColor = getTokenValue("$lightgrey");
 
   // Initialize positions based on initial values
@@ -137,14 +140,17 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
       );
     });
 
-  const trackStyle = useAnimatedStyle(() => ({
-    position: "absolute",
-    left: minThumbPosition.value + THUMB_SIZE / 2,
-    width: maxThumbPosition.value - minThumbPosition.value,
-    height: TRACK_HEIGHT,
-    backgroundColor: primaryColor,
-    borderRadius: TRACK_HEIGHT / 2,
-  }));
+  const trackStyle = useAnimatedStyle(
+    () => ({
+      position: "absolute" as const,
+      left: minThumbPosition.value + THUMB_SIZE / 2,
+      width: maxThumbPosition.value - minThumbPosition.value,
+      height: TRACK_HEIGHT,
+      backgroundColor: primaryColor,
+      borderRadius: TRACK_HEIGHT / 2,
+    }),
+    [primaryColor]
+  );
 
   const minThumbStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: minThumbPosition.value }],

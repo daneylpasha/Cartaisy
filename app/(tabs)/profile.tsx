@@ -1,6 +1,5 @@
 import {
   DynamicStatusBar,
-  Loader,
   TextSMRegular,
   TextSMSemiBold,
   TextXLBold,
@@ -11,6 +10,8 @@ import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
+import { ShopperSkeleton } from "@/components/molecules/ShopperSkeleton";
+import { ShopperState } from "@/components/molecules/ShopperState";
 import { ActiveOrders } from "@/components/molecules/profile/ActiveOrders";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import { ActiveListItem } from "@/components/organisms/profile/ActiveListItems";
@@ -27,6 +28,7 @@ import { SHADOW_STYLES } from "@/constants/styles";
 import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
+import { useCompanyName } from "@/hooks/useCompanyName";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import useUserStore from "@/store/useUserStore";
 import { formatPrice } from "@/utils/formatPrice";
@@ -50,6 +52,7 @@ const ProfileScreen = () => {
   // a tint. Absent logoUrl falls back to today's exact bundled appearance.
   const logoUrl = useStoreConfigStore((state) => state.logoUrl);
   const hasLogoUrl = Boolean(logoUrl && logoUrl.trim());
+  const companyName = useCompanyName();
 
   // Get auth state to check if user is logged in
   const { isGuest, token, _hasHydrated } = useAuthStore();
@@ -62,6 +65,7 @@ const ProfileScreen = () => {
   const {
     data: profileApiData,
     isLoading: isLoadingProfile,
+    isError: isProfileError,
     refetch: refetchProfile,
   } = useCustomerGetProfile({
     query: {
@@ -464,9 +468,24 @@ const ProfileScreen = () => {
   if (!_hasHydrated || (isLoggedIn && isLoadingProfile && !profileApiData)) {
     return (
       <ScreenContainer backgroundColor="background">
-        <YStack flex={1} justifyContent="center" alignItems="center">
-          <Loader size="large" />
-        </YStack>
+        <ShopperSkeleton variant="account" />
+      </ScreenContainer>
+    );
+  }
+
+  if (isLoggedIn && isProfileError && !profileApiData && !localUser) {
+    return (
+      <ScreenContainer backgroundColor="background">
+        <DynamicStatusBar backgroundColor="#FFFFFF" />
+        <ShopperState
+          icon="userIcon"
+          title="Account unavailable"
+          message="We couldn't load your account. Check your connection and try again."
+          actionLabel="Try again"
+          onAction={() => {
+            refetchProfile();
+          }}
+        />
       </ScreenContainer>
     );
   }
@@ -510,7 +529,11 @@ const ProfileScreen = () => {
                 />
               )}
               <Spacer size={"$sm"} />
-              <TextSMRegular color="$secondary">{`All rights reserved, 2028©`}</TextSMRegular>
+              <TextSMRegular color="$secondary">
+                {companyName
+                  ? `© ${new Date().getFullYear()} ${companyName}`
+                  : `© ${new Date().getFullYear()}`}
+              </TextSMRegular>
               <Spacer size={"$md"} />
             </YStack>
           )}

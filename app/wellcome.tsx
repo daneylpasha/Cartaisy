@@ -11,6 +11,7 @@ import { LabelMD } from "@/components/atoms/texts/LabelMD";
 import { ParagraphLG } from "@/components/atoms/texts/ParagraphLG";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { useCompanyName } from "@/hooks/useCompanyName";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { t, tArray } from "@/translations";
 import { router } from "expo-router";
 import React from "react";
@@ -21,6 +22,8 @@ const ListsItems = tArray("welcome.Lists");
 
 const WellcomeScreen = () => {
   const companyName = useCompanyName();
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
 
   const renderLists: ListRenderItem<string> = ({ item }) => (
     <XStack alignItems="center">
@@ -30,7 +33,7 @@ const WellcomeScreen = () => {
         width={20}
         height={20}
         borderRadius={"$full"}
-        backgroundColor={getTokenValue("$primary")}
+        backgroundColor={primaryTint}
       >
         <AppImage
           tintColor={getTokenValue("$white")}
@@ -114,7 +117,7 @@ const WellcomeScreen = () => {
         <OpTouch onPress={() => router.push("/(auth)/login")}>
           <XStack alignItems="center">
             <AppImage
-              tintColor={getTokenValue("$primary")}
+              tintColor={primaryTint}
               name={"loginIcon"}
               size={20}
             />

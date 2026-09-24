@@ -16,21 +16,20 @@
     }
   },
   "welcome": {
-    "title": "AI E-Commerce & Shopping App UI Kit",
-    "subtitle": "Smart shopping is the future of shopping. Save more money with cartaisy!",
+    "title": "Welcome",
+    "subtitle": "Browse the catalog, save favorites, and check out when you are ready.",
     "signUp": "Sign Up",
     "alreadyHaveAccount": "I already have an account",
     "Lists": [
-      "AI Shopping Assistant",
-      "Personalized E-Commerce",
-      "Open Your Own Store",
-      "Browse Millions of Products",
-      "BPoints, Rewards & More!"
+      "Browse the full catalog",
+      "Save favorites for later",
+      "Secure checkout on the store page",
+      "Orders and addresses in one place"
     ]
   },
   "auth": {
     "login": {
-      "title": "Sign In to Cartaisy",
+      "title": "Sign in",
       "email": "Email Address",
       "password": "Password",
       "emailPlaceholder": "Enter your email address",
@@ -42,7 +41,7 @@
       "forgotPassword": "Forgot Password?"
     },
     "signup": {
-      "title": "Sign Up to Cartaisy",
+      "title": "Create an account",
       "email": "Email Address",
       "password": "Password",
       "confirmPassword": "Confirm Password",
@@ -162,7 +161,7 @@
   },
   "search": {
     "emptySearches": {
-      "title": "We couldn’t find your keywords.",
+      "title": "No matches",
       "subtitle": "Try another search, or browse the catalog."
     }
   },
@@ -170,12 +169,12 @@
     "productDetails": {}
   },
   "cart": {
-    "title": "Your cart is empty.",
-    "subtitle": "Browse product or add an item to see your cart."
+    "title": "Your cart is empty",
+    "subtitle": "Browse the catalog and add something you like."
   },
   "wishlist": {
-    "title": "You don’t have any wishlist yet.",
-    "subtitle": "Let’s add a new one by browsing our products."
+    "title": "Your wishlist is empty",
+    "subtitle": "Save products you want to come back to."
   },
   "addAddress": {
     "title": "Add a new address",
@@ -190,11 +189,11 @@
   },
   "securitySettings": {
     "title": "Security Settings",
-    "subtitle": "Your financial privacy matters. Control and own your own data from here."
+    "subtitle": "Control how this store remembers you on this device."
   },
   "notificationSettings": {
     "title": "Notification Settings",
-    "subtitle": "Users with notifications enabled are 2x more likely to stick to their budgets."
+    "subtitle": "Choose what this store can tell you about orders and the catalog."
   },
   "paymentMethod": {
     "title": "Payment Methods",
@@ -230,7 +229,7 @@
     "fieldeight": "Postal Code"
   },
   "newpassword": {
-    "title": "Change Passowrd",
+    "title": "Change Password",
     "subtitle": "Enter your new password",
     "btn": "Change Password",
     "Lists": [

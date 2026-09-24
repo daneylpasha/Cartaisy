@@ -4,6 +4,7 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { tokens } from "@/tamagui/token";
 import React from "react";
 import { getTokenValue, XStack, YStack } from "tamagui";
@@ -18,6 +19,8 @@ export type WishListItemProps = {
 
 const WishListItem = (props: WishListItemProps) => {
   const { image, title, totalItems, totalItemsOnSale } = props;
+  const getReactiveColor = useReactiveTokenColor();
+  const secondaryTint = getReactiveColor("secondary");
 
   return (
     <>
@@ -70,7 +73,7 @@ const WishListItem = (props: WishListItemProps) => {
         <OpTouch onPress={() => {}}>
           <AppImage
             name="caretRight"
-            tintColor={getTokenValue("$secondary")}
+            tintColor={secondaryTint}
             width={9}
             height={16}
           />

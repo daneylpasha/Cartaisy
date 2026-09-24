@@ -8,7 +8,7 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { ToggleSwitch } from "@/components/molecules/ToggleSwitch";
-import { tokens } from "@/tamagui/token";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { t } from "@/translations";
 import { useState } from "react";
 import { SectionList } from "react-native";
@@ -31,6 +31,8 @@ interface SecuritySection {
 
 const SecuritySettings = () => {
   const { bottom: bottomSafeAreaInset } = useSafeAreaInsets();
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
 
   const [securityStates, setSecurityStates] = useState<Record<string, boolean>>(
     {
@@ -50,14 +52,14 @@ const SecuritySettings = () => {
           id: "rememberLoginEmail",
           title: "Remember Login Email",
           icon: "passwordChange",
-          iconColor: tokens.color.primary,
+          iconColor: primaryTint,
           enabled: securityStates.rememberLoginEmail,
         },
         {
           id: "useFaceID",
           title: "Use FaceID",
           icon: "scanner",
-          iconColor: tokens.color.primary,
+          iconColor: primaryTint,
           enabled: securityStates.useFaceID,
         },
       ],
@@ -76,7 +78,7 @@ const SecuritySettings = () => {
             name={item.icon as any}
             width={19}
             height={15}
-            tintColor={item.iconColor || tokens.color.primary}
+            tintColor={item.iconColor || primaryTint}
           />
           <Spacer size={"$reg"} />
           <YStack flex={1}>

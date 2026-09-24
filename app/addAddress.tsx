@@ -14,6 +14,7 @@ import { TextMDSemiBold } from "@/components/atoms/texts/TextMDSemiBold";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { SecondaryButton } from "@/components/molecules/buttons/SecondaryButton";
 import { fonts } from "@/tamagui/fonts";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 
 import type {
   CustomerAddAddressRequest,
@@ -53,6 +54,8 @@ import { getTokenValue, XStack, YStack } from "tamagui";
 
 const AddAddress = () => {
   const params = useLocalSearchParams();
+  const getReactiveColor = useReactiveTokenColor();
+  const secondaryTint = getReactiveColor("secondary");
 
   // Auth guard for blocking guest access
   const { requireAuth, isAuthenticated } = useAuthGuard();
@@ -436,7 +439,7 @@ const AddAddress = () => {
                     editable={true}
                     icon={
                       <AppImage
-                        tintColor={getTokenValue("$secondary")}
+                        tintColor={secondaryTint}
                         name="locationUnfilled"
                         width={14}
                         height={18}
@@ -498,7 +501,7 @@ const AddAddress = () => {
                   name="arrowDown"
                   width={14}
                   height={8}
-                  tintColor={getTokenValue("$secondary")}
+                  tintColor={secondaryTint}
                 />
               </XStack>
             </XStack>
@@ -529,7 +532,7 @@ const AddAddress = () => {
                   borderWidth={0}
                   icon={
                     <AppImage
-                      tintColor={getTokenValue("$secondary")}
+                      tintColor={secondaryTint}
                       name="locationIconUnfilled"
                       width={14}
                       height={18}
@@ -570,7 +573,7 @@ const AddAddress = () => {
                   borderWidth={0}
                   icon={
                     <AppImage
-                      tintColor={getTokenValue("$secondary")}
+                      tintColor={secondaryTint}
                       name="suitIcon"
                       width={19}
                       height={16}
@@ -608,7 +611,7 @@ const AddAddress = () => {
                   borderWidth={0}
                   icon={
                     <AppImage
-                      tintColor={getTokenValue("$secondary")}
+                      tintColor={secondaryTint}
                       name="locationIconUnfilled"
                       width={14}
                       height={18}
@@ -640,7 +643,7 @@ const AddAddress = () => {
                     borderWidth={1}
                     icon={
                       <AppImage
-                        tintColor={getTokenValue("$secondary")}
+                        tintColor={secondaryTint}
                         name="flagIcon"
                         width={19}
                         height={16}
@@ -671,7 +674,7 @@ const AddAddress = () => {
                     borderWidth={1}
                     icon={
                       <AppImage
-                        tintColor={getTokenValue("$secondary")}
+                        tintColor={secondaryTint}
                         name="postCodeIcon"
                         width={19}
                         height={16}

@@ -55,7 +55,25 @@ describe("Login screen — runtime logo", () => {
       primaryColor: undefined,
       secondaryColor: undefined,
       logoUrl: undefined,
+      storeName: "",
+      isLoaded: false,
     });
+  });
+
+  it("does not put a Cartaisy wordmark in the sign-in title when the store name is not loaded", () => {
+    useStoreConfigStore.setState({ storeName: "", isLoaded: false });
+    const { getByText, queryByText } = renderWithTamagui(<Login />);
+    expect(getByText("Sign in")).toBeTruthy();
+    expect(queryByText(/cartaisy/i)).toBeNull();
+  });
+
+  it("uses the merchant store name in the sign-in title once config has loaded", () => {
+    useStoreConfigStore.setState({
+      storeName: "Northwind Goods",
+      isLoaded: true,
+    });
+    const { getByText } = renderWithTamagui(<Login />);
+    expect(getByText("Sign in to Northwind Goods")).toBeTruthy();
   });
 
   it("renders the bundled logo tinted $primary when the store has no branding set (today's default)", () => {

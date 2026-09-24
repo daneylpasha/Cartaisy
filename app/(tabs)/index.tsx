@@ -18,14 +18,13 @@ import {
 } from "@/components/organisms/home";
 import BrandsCollections from "@/components/organisms/home/BrandsCollections";
 import DefaultHome from "@/components/organisms/home/DefaultHome";
-import PlaceHolder from "@/components/organisms/home/Placeholder";
+import { ShopperSkeleton } from "@/components/molecules/ShopperSkeleton";
 import { PromoBannerCard } from "@/components/organisms/home/PromoBannerCard";
 import ProductsHorizontalScroller from "@/components/organisms/productHorizontalScroller/ProductsHorizontalScroller";
 import ProductsGridScroller from "@/components/organisms/ProductsGridScroller/ProductsGridScroller";
 import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller/SalesHorizontalScroller";
 import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useAuthStore from "@/store/useAuthStore";
-import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { tokens } from "@/tamagui/token";
 import { isCatalogUnavailableError } from "@/utils/catalogUnavailableError";
 import {
@@ -60,10 +59,9 @@ type CollectionDisplayItem = {
 
 const HomeScreen = () => {
   const { top: TOP_INSET, bottom: BOTTOM_INSET } = useSafeAreaInsets();
-  const merchantPrimary =
-    useStoreConfigStore((state) => state.primaryColor) || tokens.color.primary;
   const getReactiveColor = useReactiveTokenColor();
-  const refreshTint = getReactiveColor("primary");
+  const merchantPrimary = getReactiveColor("primary") ?? tokens.color.primary;
+  const refreshTint = merchantPrimary;
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [open, setOpen] = useState(false);
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -327,7 +325,7 @@ const HomeScreen = () => {
 
       <YStack backgroundColor={"$background"} flex={1}>
         {isLoading ? (
-          <PlaceHolder />
+          <ShopperSkeleton variant="catalog" />
         ) : isCatalogUnavailableError(error) ? (
           <CatalogUnavailableState error={error} onRetry={refetch} />
         ) : error ? (

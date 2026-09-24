@@ -4,6 +4,7 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import React from "react";
 import { Platform } from "react-native";
 import { getTokenValue, XStack, YStack } from "tamagui";
@@ -22,6 +23,9 @@ export const GeneralCard = ({
   subtitle,
   onPress,
 }: GeneralCardProps) => {
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
+  const secondaryTint = getReactiveColor("secondary");
   // Lighter shadow for cleaner look
   const lightShadow = Platform.select({
     ios: {
@@ -52,9 +56,9 @@ export const GeneralCard = ({
       <XStack alignItems="center">
         <YStack>
           <AppImage
-            tintColor={getTokenValue(
-              image == "trash" ? "$error" : "$primary"
-            )}
+            tintColor={
+              image == "trash" ? getTokenValue("$error") : primaryTint
+            }
             name={image}
             width={19}
             height={18}
@@ -71,7 +75,7 @@ export const GeneralCard = ({
       </XStack>
       <AppImage
         name="caretRight"
-        tintColor={getTokenValue("$secondary")}
+        tintColor={secondaryTint}
         width={9}
         height={16}
       />

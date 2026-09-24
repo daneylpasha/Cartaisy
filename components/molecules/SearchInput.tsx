@@ -3,10 +3,10 @@ import { FormInput } from "@/components/atoms/FormInput";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { TextSMRegular } from "@/components/atoms/texts/TextSMRegular";
 import { useCompanyName } from "@/hooks/useCompanyName";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { tokens } from "@/tamagui/token";
 import React, { useRef, useState } from "react";
 import { TextInput } from "react-native";
-import { getTokenValue } from "tamagui";
 
 interface SearchInputProps {
   value: string;
@@ -36,6 +36,8 @@ export const SearchInput = ({
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const companyName = useCompanyName();
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
 
   const handleFocus = () => {
     setIsFocused(true);
@@ -64,7 +66,7 @@ export const SearchInput = ({
         <AppImage
           name="closeIcon"
           size={12}
-          tintColor={getTokenValue("$primary")}
+          tintColor={primaryTint}
         />
       </OpTouch>
     );
