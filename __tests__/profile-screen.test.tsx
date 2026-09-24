@@ -106,14 +106,14 @@ import useAuthStore from "@/store/useAuthStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
-const MOCK_LOGO_ASSET = 77;
-
 describe("Profile screen — runtime logo", () => {
   beforeEach(() => {
     useStoreConfigStore.setState({
       primaryColor: undefined,
       secondaryColor: undefined,
       logoUrl: undefined,
+      storeName: "",
+      isLoaded: false,
     });
     // Guest state — _hasHydrated must be true or the screen renders only
     // the loading spinner, never reaching the FlatList/footer at all.
@@ -124,67 +124,63 @@ describe("Profile screen — runtime logo", () => {
     } as any);
   });
 
-  it("renders the bundled footer logo untinted when the store has no branding set (today's default)", () => {
-    const { UNSAFE_getAllByType } = renderWithTamagui(<ProfileScreen />);
+  it("shows a neutral monogram instead of a Cartaisy wordmark when no logo or name is set", () => {
+    const { getByTestId, queryByText } = renderWithTamagui(<ProfileScreen />);
 
-    const logoImage = UNSAFE_getAllByType(Image).find(
-      (img) => img.props.source === MOCK_LOGO_ASSET
-    );
-    expect(logoImage).toBeTruthy();
-    expect(logoImage!.props.tintColor).toBeUndefined();
+    expect(getByTestId("brand-mark-monogram")).toBeTruthy();
+    expect(queryByText(/cartaisy/i)).toBeNull();
   });
 
-  it("does not tint the bundled footer logo even when a runtime primaryColor is set — this surface has no tint today and shouldn't gain one", () => {
-    useStoreConfigStore.setState({ primaryColor: "#123456" });
+  it("shows the store name in the footer when branding has no logo", () => {
+    useStoreConfigStore.setState({
+      storeName: "Northwind Goods",
+      isLoaded: true,
+      primaryColor: "#123456",
+    });
 
-    const { UNSAFE_getAllByType } = renderWithTamagui(<ProfileScreen />);
+    const { getByText, queryByTestId } = renderWithTamagui(<ProfileScreen />);
 
-    const logoImage = UNSAFE_getAllByType(Image).find(
-      (img) => img.props.source === MOCK_LOGO_ASSET
-    );
-    expect(logoImage).toBeTruthy();
-    expect(logoImage!.props.tintColor).toBeUndefined();
+    expect(getByText("Northwind Goods")).toBeTruthy();
+    expect(queryByTestId("brand-mark-logo")).toBeNull();
   });
 
   it("renders the runtime footer logo untinted when logoUrl is present", () => {
-    const logoUrl = "https://cdn.cartaisy.com/stores/acme/logo.png";
-    useStoreConfigStore.setState({ logoUrl });
+    const logoUrl = "https://cdn.example.com/stores/acme/logo.png";
+    useStoreConfigStore.setState({ logoUrl, storeName: "Acme", isLoaded: true });
 
     const { UNSAFE_getAllByType } = renderWithTamagui(<ProfileScreen />);
-
-    const images = UNSAFE_getAllByType(Image);
-    const remoteLogo = images.find(
-      (img) =>
-        typeof img.props.source === "object" &&
-        img.props.source?.uri === logoUrl
+    const remoteLogo = UNSAFE_getAllByType(Image).find(
+      (img) => img.props.source?.uri === logoUrl
     );
+
     expect(remoteLogo).toBeTruthy();
     expect(remoteLogo!.props.tintColor).toBeUndefined();
+    const resolvedStyle = Object.assign({}, ...[].concat(remoteLogo!.props.style));
+    expect(resolvedStyle.height).toBe(32);
   });
 
-  it("falls back to the bundled cartaisyColorlogo when the runtime logoUrl fails to load", () => {
-    const logoUrl = "https://cdn.cartaisy.com/stores/acme/unreachable-logo.png";
-    useStoreConfigStore.setState({ logoUrl });
+  it("falls back to the store name when the runtime logoUrl fails to load", () => {
+    const logoUrl = "https://cdn.example.com/stores/acme/unreachable-logo.png";
+    useStoreConfigStore.setState({
+      logoUrl,
+      storeName: "Acme Outfitters",
+      isLoaded: true,
+    });
 
-    const { UNSAFE_getAllByType } = renderWithTamagui(<ProfileScreen />);
-
-    const remoteLogoBefore = UNSAFE_getAllByType(Image).find(
-      (img) =>
-        typeof img.props.source === "object" &&
-        img.props.source?.uri === logoUrl
+    const { getByText, queryByText, UNSAFE_getAllByType } = renderWithTamagui(
+      <ProfileScreen />
     );
-    expect(remoteLogoBefore).toBeTruthy();
+    const remoteLogo = UNSAFE_getAllByType(Image).find(
+      (img) => img.props.source?.uri === logoUrl
+    );
 
     const { act } = require("@testing-library/react-native");
     act(() => {
-      remoteLogoBefore!.props.onError();
+      remoteLogo!.props.onError();
     });
 
-    const logoImage = UNSAFE_getAllByType(Image).find(
-      (img) => img.props.source === MOCK_LOGO_ASSET
-    );
-    expect(logoImage).toBeTruthy();
-    expect(logoImage!.props.tintColor).toBeUndefined();
+    expect(getByText("Acme Outfitters")).toBeTruthy();
+    expect(queryByText(/cartaisy/i)).toBeNull();
   });
 
   // NOTE on the remount/key regression: same finding as PRs #107/#108/#109

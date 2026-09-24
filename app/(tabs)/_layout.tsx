@@ -128,11 +128,14 @@ export default function TabLayout() {
               height: 16,
             },
             headerShown: true,
-            headerTitle: () => <TextXLBold>{"Cart"}</TextXLBold>,
+            headerTitle: () => (
+              <TextXLBold color="$white">{"Cart"}</TextXLBold>
+            ),
             headerShadowVisible: false,
             headerTitleAlign: "center",
+            headerTintColor: "#FFFFFF",
             headerStyle: {
-              backgroundColor: getTokenValue("$background"),
+              backgroundColor: primaryTint,
             },
             tabBarLabel: ({ focused }) => (
               <TextSMRegular color={focused ? "$primary" : "$icon"}>

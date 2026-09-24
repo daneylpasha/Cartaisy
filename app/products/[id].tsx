@@ -22,6 +22,7 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
+import { BrandMark } from "@/components/molecules/BrandMark";
 import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import { ShopperSkeleton } from "@/components/molecules/ShopperSkeleton";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
@@ -1251,6 +1252,13 @@ const ProductDetailsScreen = () => {
               tintColor={getTokenValue("$white")}
             />
           </OpTouch>
+
+          <BrandMark
+            tone="onColor"
+            size="compact"
+            logoWidth={120}
+            logoHeight={24}
+          />
 
           {/* Cart Icon */}
           <OpTouch onPress={() => router.navigate("/cart")}>

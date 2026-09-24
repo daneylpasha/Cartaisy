@@ -1,12 +1,13 @@
 import { StyleSheet } from "react-native";
 import { getPrimaryLight } from "../utils/colorUtils";
 
-// Exported so the runtime theme sync (hooks/useDynamicPrimaryTheme.ts) has a
-// single source of truth to revert to when no merchant primaryColor is set —
-// never re-declare this hex elsewhere.
-export const PRIMARY_COLOR = "#A82A50";
+// Neutral premium ink used when a connected store has no primaryColor.
+// Deliberately not the old Cartaisy marketing magenta. Merchant colors from
+// GET /store/config override this through hooks/useDynamicPrimaryTheme.ts.
+// Never re-declare this hex elsewhere.
+export const PRIMARY_COLOR = "#1C1917";
 
-// Same purpose as PRIMARY_COLOR above, for hooks/useDynamicSecondaryTheme.ts.
+// Calm slate, not a marketing teal. Overridden by a valid secondaryColor.
 export const SECONDARY_COLOR = "rgba(75, 85, 99, 1)";
 
 export const tokens = {

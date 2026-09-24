@@ -39,84 +39,76 @@ import SignUp from "@/app/(auth)/signUp";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
-const MOCK_LOGO_ASSET = 77;
-const DEFAULT_PRIMARY_HEX = "#A82A50"; // tamagui/token.ts PRIMARY_COLOR
-
 describe("SignUp screen — runtime logo", () => {
   beforeEach(() => {
     useStoreConfigStore.setState({
       primaryColor: undefined,
       secondaryColor: undefined,
       logoUrl: undefined,
+      storeName: "",
+      isLoaded: false,
     });
   });
 
-  it("renders the bundled logo tinted $primary when the store has no branding set (today's default)", () => {
-    const { UNSAFE_getAllByType } = renderWithTamagui(<SignUp />);
+  it("shows a neutral monogram instead of a Cartaisy wordmark when no logo or name is set", () => {
+    const { getByTestId, queryByText } = renderWithTamagui(<SignUp />);
 
-    const logoImage = UNSAFE_getAllByType(Image).find(
-      (img) => img.props.source === MOCK_LOGO_ASSET
-    );
-    expect(logoImage).toBeTruthy();
-    expect(logoImage!.props.tintColor).toBe(DEFAULT_PRIMARY_HEX);
+    expect(getByTestId("brand-mark-monogram")).toBeTruthy();
+    expect(queryByText(/cartaisy/i)).toBeNull();
   });
 
-  it("tints the bundled fallback logo with the runtime primaryColor when set but logoUrl is absent", () => {
-    useStoreConfigStore.setState({ primaryColor: "#123456" });
+  it("shows the store name when branding has no logo", () => {
+    useStoreConfigStore.setState({
+      storeName: "Northwind Goods",
+      isLoaded: true,
+    });
 
-    const { UNSAFE_getAllByType } = renderWithTamagui(<SignUp />);
+    const { getByText, queryByTestId } = renderWithTamagui(<SignUp />);
 
-    const logoImage = UNSAFE_getAllByType(Image).find(
-      (img) => img.props.source === MOCK_LOGO_ASSET
-    );
-    expect(logoImage).toBeTruthy();
-    expect(logoImage!.props.tintColor).toBe("#123456");
+    expect(getByText("Northwind Goods")).toBeTruthy();
+    expect(queryByTestId("brand-mark-logo")).toBeNull();
   });
 
-  it("renders the runtime logo untinted when logoUrl is present, never applying $primary or the runtime primaryColor to it", () => {
-    const logoUrl = "https://cdn.cartaisy.com/stores/acme/logo.png";
-    useStoreConfigStore.setState({ logoUrl, primaryColor: "#123456" });
+  it("renders the runtime logo untinted when logoUrl is present", () => {
+    const logoUrl = "https://cdn.example.com/stores/acme/logo.png";
+    useStoreConfigStore.setState({
+      logoUrl,
+      primaryColor: "#123456",
+      storeName: "Acme Outfitters",
+      isLoaded: true,
+    });
 
     const { UNSAFE_getAllByType } = renderWithTamagui(<SignUp />);
-
-    const images = UNSAFE_getAllByType(Image);
-    const remoteLogo = images.find(
-      (img) =>
-        typeof img.props.source === "object" &&
-        img.props.source?.uri === logoUrl
+    const remoteLogo = UNSAFE_getAllByType(Image).find(
+      (img) => img.props.source?.uri === logoUrl
     );
+
     expect(remoteLogo).toBeTruthy();
     expect(remoteLogo!.props.tintColor).toBeUndefined();
   });
 
-  it("falls back to the bundled cartaisyColorlogo when the runtime logoUrl fails to load", () => {
-    const logoUrl = "https://cdn.cartaisy.com/stores/acme/unreachable-logo.png";
-    useStoreConfigStore.setState({ logoUrl });
+  it("falls back to the store name when the runtime logoUrl fails to load", () => {
+    const logoUrl = "https://cdn.example.com/stores/acme/unreachable-logo.png";
+    useStoreConfigStore.setState({
+      logoUrl,
+      storeName: "Acme Outfitters",
+      isLoaded: true,
+    });
 
-    const { UNSAFE_getAllByType } = renderWithTamagui(<SignUp />);
-
-    const remoteLogoBefore = UNSAFE_getAllByType(Image).find(
-      (img) =>
-        typeof img.props.source === "object" &&
-        img.props.source?.uri === logoUrl
+    const { getByText, queryByText, UNSAFE_getAllByType } = renderWithTamagui(
+      <SignUp />
     );
-    expect(remoteLogoBefore).toBeTruthy();
+    const remoteLogo = UNSAFE_getAllByType(Image).find(
+      (img) => img.props.source?.uri === logoUrl
+    );
 
     const { act } = require("@testing-library/react-native");
     act(() => {
-      remoteLogoBefore!.props.onError();
+      remoteLogo!.props.onError();
     });
 
-    // Falls back to the bundled logo, not a blank space. Untinted (not
-    // "bundled+tinted") because the runtime AppImage call intentionally
-    // passes no tintColor and AppImage.tsx shares one tintColor between its
-    // remote image and this fallback overlay — see login-screen.test.tsx's
-    // matching case and the PR description for the full explanation.
-    const logoImage = UNSAFE_getAllByType(Image).find(
-      (img) => img.props.source === MOCK_LOGO_ASSET
-    );
-    expect(logoImage).toBeTruthy();
-    expect(logoImage!.props.tintColor).toBeUndefined();
+    expect(getByText("Acme Outfitters")).toBeTruthy();
+    expect(queryByText(/cartaisy/i)).toBeNull();
   });
 
   // See login-screen.test.tsx for why a remount/key regression test isn't

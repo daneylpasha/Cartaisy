@@ -1,8 +1,9 @@
+import { PRIMARY_COLOR } from "@/tamagui/token";
 import * as React from "react";
 import Svg, { Path, SvgProps } from "react-native-svg";
 
 const BagSvg = ({ color, fill, ...props }: SvgProps) => {
-  const resolvedFill = color ?? fill ?? "#A82A50";
+  const resolvedFill = color ?? fill ?? PRIMARY_COLOR;
 
   return (
     <Svg

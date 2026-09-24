@@ -13,7 +13,7 @@ import { updateTheme } from "tamagui";
 import ProductCarousel from "@/components/molecules/product/pdp/ProductCarousel";
 import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
-const DEFAULT_PRIMARY_HEX = "#A82A50";
+const DEFAULT_PRIMARY_HEX = "#1C1917";
 const DEFAULT_SECONDARY = "rgba(75, 85, 99, 1)";
 
 describe("ProductCarousel branding", () => {

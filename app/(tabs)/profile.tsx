@@ -10,6 +10,7 @@ import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
 import { useCustomAlert } from "@/components/molecules/CustomAlert";
+import { BrandMark } from "@/components/molecules/BrandMark";
 import { ShopperSkeleton } from "@/components/molecules/ShopperSkeleton";
 import { ShopperState } from "@/components/molecules/ShopperState";
 import { ActiveOrders } from "@/components/molecules/profile/ActiveOrders";
@@ -29,7 +30,6 @@ import { useAuthGuard } from "@/contexts/AuthGuardContext";
 import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import { useCompanyName } from "@/hooks/useCompanyName";
-import useStoreConfigStore from "@/store/useStoreConfigStore";
 import useUserStore from "@/store/useUserStore";
 import { formatPrice } from "@/utils/formatPrice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -45,13 +45,6 @@ const ProfileScreen = () => {
   const { showAlert, AlertComponent } = useCustomAlert();
   const { showLoginModal } = useAuthGuard();
 
-  // Runtime branding (PR #104's data layer). Unlike every other surface
-  // wired so far, this footer logo renders untinted today (no tintColor at
-  // all) — so unlike login/signUp/LoginBottomSheet/addNewCardDetails,
-  // there's no primaryColor to read here, and neither branch below applies
-  // a tint. Absent logoUrl falls back to today's exact bundled appearance.
-  const logoUrl = useStoreConfigStore((state) => state.logoUrl);
-  const hasLogoUrl = Boolean(logoUrl && logoUrl.trim());
   const companyName = useCompanyName();
 
   // Get auth state to check if user is logged in
@@ -505,29 +498,7 @@ const ProfileScreen = () => {
           }}
           ListFooterComponent={() => (
             <YStack alignItems="center" justifyContent="center">
-              {hasLogoUrl ? (
-                // Distinct `key`s force a full remount on the absent-to-
-                // present and URL-to-different-URL transitions — same
-                // load-bearing reasoning as login.tsx/signUp.tsx/
-                // LoginBottomSheet.tsx (PRs #107/#108/#109); see those files
-                // for the full explanation. No tintColor on either branch
-                // here — this logo renders untinted today and shouldn't
-                // gain a tint as a side effect of this ticket.
-                <AppImage
-                  key={`runtime-logo-${logoUrl}`}
-                  source={logoUrl}
-                  fallbackName="cartaisyColorlogo"
-                  width={65}
-                  height={26}
-                />
-              ) : (
-                <AppImage
-                  key="bundled-logo"
-                  name="cartaisyColorlogo"
-                  width={65}
-                  height={26}
-                />
-              )}
+              <BrandMark tone="onLight" size="compact" logoWidth={120} logoHeight={32} />
               <Spacer size={"$sm"} />
               <TextSMRegular color="$secondary">
                 {companyName

@@ -145,7 +145,7 @@ describe("AppImage", () => {
   });
 
   describe("tintColor reactivity (TICKETmobilereactivitygapsharedprimitives.md)", () => {
-    const DEFAULT_PRIMARY_HEX = "#A82A50"; // tamagui/token.ts PRIMARY_COLOR — keep in sync
+    const DEFAULT_PRIMARY_HEX = "#1C1917"; // tamagui/token.ts PRIMARY_COLOR — keep in sync
 
     afterEach(() => {
       // updateTheme() mutates a module-level singleton shared across tests —

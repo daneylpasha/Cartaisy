@@ -4,6 +4,7 @@ import { XStack, YStack, getTokenValue } from "tamagui";
 
 import { TextSMSemiBold } from "@/components/atoms";
 import { OpTouch } from "@/components/atoms/OpTouch";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { tokens } from "@/tamagui/token";
 import { getPrimaryLight } from "@/utils/colorUtils";
 
@@ -25,6 +26,9 @@ export const CheckoutStepper = ({
   currentStep = 0,
   onStepPress,
 }: CheckoutStepperProps) => {
+  const getReactiveColor = useReactiveTokenColor();
+  const primary = getReactiveColor("primary") ?? tokens.color.primary;
+  const primaryLight = getPrimaryLight(primary);
   const padX = getTokenValue("$4xl"); // ⬅️ to cancel outer padding for full-bleed
 
   const getStepStatus = (index: number): StepStatus => {
@@ -60,7 +64,7 @@ export const CheckoutStepper = ({
       return (
         <YStack
           borderWidth={6}
-          borderColor={getPrimaryLight(tokens.color.primary)}
+          borderColor={primaryLight}
           borderRadius={"$full"}
         >
           <YStack
@@ -105,13 +109,10 @@ export const CheckoutStepper = ({
     );
   };
 
-  const getLineColor = (fromStatus: StepStatus) =>
-    fromStatus === "completed" ? tokens.color.primary : tokens.color.lightgrey;
-
   const getTextColor = (status: StepStatus) =>
     status === "pending" ? tokens.color.lightgrey : tokens.color.black;
   const segmentColor = (segmentIndex: number) =>
-    segmentIndex <= currentStep ? tokens.color.primary : tokens.color.lightgrey;
+    segmentIndex <= currentStep ? primary : tokens.color.lightgrey;
 
   return (
     <YStack width="100%" paddingHorizontal="$md" paddingVertical="$md">

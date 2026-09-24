@@ -25,7 +25,7 @@ import { useDynamicPrimaryTheme } from "@/hooks/useDynamicPrimaryTheme";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
-const DEFAULT_PRIMARY_HEX = "#A82A50"; // tamagui/token.ts PRIMARY_COLOR — keep in sync
+const DEFAULT_PRIMARY_HEX = "#1C1917"; // tamagui/token.ts PRIMARY_COLOR — keep in sync
 
 // A tiny harness that mounts the hook exactly like AppInitializer does,
 // alongside a real, previously-unwired $primary consumer.
@@ -63,7 +63,7 @@ describe("useDynamicPrimaryTheme", () => {
     });
   });
 
-  it("leaves $primary at the bundled Cartaisy color when no merchant primaryColor is set (fallback discipline)", () => {
+  it("leaves $primary at the neutral premium ink when no merchant primaryColor is set", () => {
     const { UNSAFE_getAllByType } = renderToggleOn();
     expect(getToggleTrackColor(UNSAFE_getAllByType)).toBe(DEFAULT_PRIMARY_HEX);
   });
@@ -93,7 +93,7 @@ describe("useDynamicPrimaryTheme", () => {
     ).toBe(true);
   });
 
-  it("reverts to the bundled Cartaisy color when primaryColor is cleared (e.g. a later fetch has nothing configured)", () => {
+  it("reverts to the neutral premium ink when primaryColor is cleared", () => {
     useStoreConfigStore.setState({ primaryColor: "#654321" });
     const { UNSAFE_getAllByType, rerender } = renderToggleOn();
     expect(getToggleTrackColor(UNSAFE_getAllByType)).toBe("#654321");

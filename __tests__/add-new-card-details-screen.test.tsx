@@ -86,104 +86,87 @@ import AddNewCardDetails from "@/app/addNewCardDetails";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
-const MOCK_LOGO_ASSET = 77;
-const DEFAULT_PRIMARY_HEX = "#A82A50"; // tamagui/token.ts PRIMARY_COLOR
-
 describe("Add New Card Details screen — runtime logo", () => {
   beforeEach(() => {
     useStoreConfigStore.setState({
       primaryColor: undefined,
       secondaryColor: undefined,
       logoUrl: undefined,
+      storeName: "",
+      isLoaded: false,
     });
   });
 
-  it("renders the bundled logo tinted $primary when the store has no branding set (today's default)", () => {
-    const { UNSAFE_getAllByType } = renderWithTamagui(<AddNewCardDetails />);
+  it("shows a neutral monogram instead of a Cartaisy wordmark when no logo or name is set", () => {
+    const { getByTestId, queryByText } = renderWithTamagui(<AddNewCardDetails />);
 
-    const logoImage = UNSAFE_getAllByType(Image).find(
-      (img) => img.props.source === MOCK_LOGO_ASSET
-    );
-    expect(logoImage).toBeTruthy();
-    expect(logoImage!.props.tintColor).toBe(DEFAULT_PRIMARY_HEX);
+    expect(getByTestId("brand-mark-monogram")).toBeTruthy();
+    expect(queryByText(/cartaisy/i)).toBeNull();
   });
 
-  it("tints the bundled fallback logo with the runtime primaryColor when set but logoUrl is absent", () => {
-    useStoreConfigStore.setState({ primaryColor: "#123456" });
+  it("shows the store name on the card when branding has no logo", () => {
+    useStoreConfigStore.setState({
+      storeName: "Northwind Goods",
+      isLoaded: true,
+      primaryColor: "#123456",
+    });
 
-    const { UNSAFE_getAllByType } = renderWithTamagui(<AddNewCardDetails />);
+    const { getByText, queryByTestId } = renderWithTamagui(<AddNewCardDetails />);
 
-    const logoImage = UNSAFE_getAllByType(Image).find(
-      (img) => img.props.source === MOCK_LOGO_ASSET
-    );
-    expect(logoImage).toBeTruthy();
-    expect(logoImage!.props.tintColor).toBe("#123456");
+    expect(getByText("Northwind Goods")).toBeTruthy();
+    expect(queryByTestId("brand-mark-logo")).toBeNull();
   });
 
-  it("renders the runtime logo untinted when logoUrl is present, never applying $primary or the runtime primaryColor to it", () => {
-    const logoUrl = "https://cdn.cartaisy.com/stores/acme/logo.png";
-    useStoreConfigStore.setState({ logoUrl, primaryColor: "#123456" });
+  it("renders the runtime logo untinted when logoUrl is present", () => {
+    const logoUrl = "https://cdn.example.com/stores/acme/logo.png";
+    useStoreConfigStore.setState({
+      logoUrl,
+      primaryColor: "#123456",
+      storeName: "Acme",
+      isLoaded: true,
+    });
 
     const { UNSAFE_getAllByType } = renderWithTamagui(<AddNewCardDetails />);
-
-    const images = UNSAFE_getAllByType(Image);
-    const remoteLogo = images.find(
-      (img) =>
-        typeof img.props.source === "object" &&
-        img.props.source?.uri === logoUrl
+    const remoteLogo = UNSAFE_getAllByType(Image).find(
+      (img) => img.props.source?.uri === logoUrl
     );
+
     expect(remoteLogo).toBeTruthy();
     expect(remoteLogo!.props.tintColor).toBeUndefined();
   });
 
-  it("gives the runtime logo an explicit height so a real network image can actually size itself (caught in review, PR #111)", () => {
-    const logoUrl = "https://cdn.cartaisy.com/stores/acme/logo.png";
+  it("gives the runtime logo an explicit height so a real network image can actually size itself", () => {
+    const logoUrl = "https://cdn.example.com/stores/acme/logo.png";
     useStoreConfigStore.setState({ logoUrl });
 
     const { UNSAFE_getAllByType } = renderWithTamagui(<AddNewCardDetails />);
 
     const remoteLogo = UNSAFE_getAllByType(Image).find(
-      (img) =>
-        typeof img.props.source === "object" &&
-        img.props.source?.uri === logoUrl
+      (img) => img.props.source?.uri === logoUrl
     );
     expect(remoteLogo).toBeTruthy();
-    // Regression guard for the width-only bug: without an explicit height,
-    // React Native cannot size a network <Image>, so it renders at zero
-    // height and is effectively invisible. width-only "worked" for the
-    // bundled fallback only because that's a local require()'d asset with
-    // build-time-known dimensions — not true for this remote path.
     const resolvedStyle = Object.assign({}, ...[].concat(remoteLogo!.props.style));
     expect(resolvedStyle.height).toBe(24);
   });
 
-  it("falls back to the bundled cartaisyColorlogo when the runtime logoUrl fails to load", () => {
-    const logoUrl = "https://cdn.cartaisy.com/stores/acme/unreachable-logo.png";
+  it("falls back to a neutral monogram when the runtime logoUrl fails and no name is loaded", () => {
+    const logoUrl = "https://cdn.example.com/stores/acme/unreachable-logo.png";
     useStoreConfigStore.setState({ logoUrl });
 
-    const { UNSAFE_getAllByType } = renderWithTamagui(<AddNewCardDetails />);
-
-    const remoteLogoBefore = UNSAFE_getAllByType(Image).find(
-      (img) =>
-        typeof img.props.source === "object" &&
-        img.props.source?.uri === logoUrl
+    const { getByTestId, queryByText, UNSAFE_getAllByType } = renderWithTamagui(
+      <AddNewCardDetails />
     );
-    expect(remoteLogoBefore).toBeTruthy();
+    const remoteLogo = UNSAFE_getAllByType(Image).find(
+      (img) => img.props.source?.uri === logoUrl
+    );
 
     const { act } = require("@testing-library/react-native");
     act(() => {
-      remoteLogoBefore!.props.onError();
+      remoteLogo!.props.onError();
     });
 
-    // Same disclosed tradeoff as the auth screens: AppImage applies one
-    // tintColor to both the remote image and the fallback overlay, and the
-    // runtime call passes none — so this fallback-on-error render is
-    // untinted too, unlike the "no logoUrl at all" bundled branch above.
-    const logoImage = UNSAFE_getAllByType(Image).find(
-      (img) => img.props.source === MOCK_LOGO_ASSET
-    );
-    expect(logoImage).toBeTruthy();
-    expect(logoImage!.props.tintColor).toBeUndefined();
+    expect(getByTestId("brand-mark-monogram")).toBeTruthy();
+    expect(queryByText(/cartaisy/i)).toBeNull();
   });
 
   // NOTE on the remount/key regression: same finding as PRs #107/#108/#109
