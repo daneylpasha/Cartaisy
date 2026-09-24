@@ -32,7 +32,7 @@ import { Platform, RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
 
-import PlaceHolder from "./Placeholder";
+import { ShopperSkeleton } from "@/components/molecules/ShopperSkeleton";
 
 type DefaultHomeProps = {
   onRefreshHomescreen: () => Promise<unknown> | unknown;
@@ -106,7 +106,7 @@ const DefaultHome = ({ onRefreshHomescreen }: DefaultHomeProps) => {
   }, [onRefreshHomescreen, refetch]);
 
   if (isLoading && !data) {
-    return <PlaceHolder />;
+    return <ShopperSkeleton variant="catalog" />;
   }
 
   if ((isError || !data) && !model) {

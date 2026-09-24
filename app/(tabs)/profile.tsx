@@ -433,7 +433,7 @@ const ProfileScreen = () => {
                     borderRadius="md"
                     onPress={showLoginModal}
                   >
-                    <TextSMSemiBold color="$white">Sign In</TextSMSemiBold>
+                    <TextSMSemiBold color="$white">Sign in</TextSMSemiBold>
                   </OpTouch>
                 </YStack>
                 <Spacer size="$xl" />
