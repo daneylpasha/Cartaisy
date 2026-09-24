@@ -1,6 +1,6 @@
+import { zustandStorage } from "@/utils/storage";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { validateBranding } from "@/utils/brandingValidation";
 
@@ -108,7 +108,7 @@ const useStoreConfigStore = create<StoreConfigState>()(
     }),
     {
       name: "store-config-storage",
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => zustandStorage),
       onRehydrateStorage: () => (state, error) => {
         if (error) {
           // AsyncStorage read failed, or the persisted JSON couldn't be

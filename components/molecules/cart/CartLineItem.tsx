@@ -100,7 +100,7 @@ export default function CartLineItem(props: CartLineItemProps) {
           </YStack>
         </OpTouch>
         <Spacer size={"$md"} />
-        <YStack flexShrink={1}>
+        <YStack flex={1} flexShrink={1} minWidth={0}>
           <OpTouch onPress={onPressItem} disabled={!onPressItem}>
             <TextMDBold numberOfLines={2} color="$darkgrey">
               {title}
@@ -136,8 +136,8 @@ export default function CartLineItem(props: CartLineItemProps) {
           )}
 
           {inStockCount !== undefined && (
-            <TextSMMedium color="$green">
-              In Stock ({inStockCount})
+            <TextSMMedium color={inStockCount > 0 ? "$green" : "$error"}>
+              {inStockCount > 0 ? "In stock" : "Out of stock"}
             </TextSMMedium>
           )}
           <Spacer size={"$sm"} />
@@ -148,10 +148,10 @@ export default function CartLineItem(props: CartLineItemProps) {
               borderWidth={1}
               borderColor="$lightgrey"
               borderRadius={"$md"}
-              width={90}
+              minWidth={108}
               justifyContent="center"
-              paddingHorizontal={"$reg"}
-              paddingVertical={"$xs"}
+              paddingHorizontal={"$md"}
+              paddingVertical={"$sm"}
             >
               {isUpdating ? (
                 <YStack paddingVertical={"$xs"}>
@@ -176,8 +176,8 @@ export default function CartLineItem(props: CartLineItemProps) {
                           : primaryTint
                       }
                       name={"minus"}
-                      width={10}
-                      height={10}
+                      width={16}
+                      height={16}
                     />
                   </OpTouch>
                   <Spacer size={"$reg"} />
@@ -195,8 +195,8 @@ export default function CartLineItem(props: CartLineItemProps) {
                           : primaryTint
                       }
                       name={"addIcon"}
-                      width={10}
-                      height={10}
+                      width={16}
+                      height={16}
                     />
                   </OpTouch>
                 </>

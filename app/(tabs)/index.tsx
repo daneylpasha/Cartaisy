@@ -25,6 +25,8 @@ import ProductsGridScroller from "@/components/organisms/ProductsGridScroller/Pr
 import SalesHorizontalScroller from "@/components/organisms/SalesHorizontalScroller/SalesHorizontalScroller";
 import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useAuthStore from "@/store/useAuthStore";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
+import { tokens } from "@/tamagui/token";
 import { isCatalogUnavailableError } from "@/utils/catalogUnavailableError";
 import {
   getRenderableHomeSections,
@@ -58,6 +60,8 @@ type CollectionDisplayItem = {
 
 const HomeScreen = () => {
   const { top: TOP_INSET, bottom: BOTTOM_INSET } = useSafeAreaInsets();
+  const merchantPrimary =
+    useStoreConfigStore((state) => state.primaryColor) || tokens.color.primary;
   const getReactiveColor = useReactiveTokenColor();
   const refreshTint = getReactiveColor("primary");
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -302,7 +306,7 @@ const HomeScreen = () => {
   return (
     <>
       <YStack backgroundColor={"$primary"} height={TOP_INSET} />
-      <DynamicStatusBar backgroundColor="#A82A50" />
+      <DynamicStatusBar backgroundColor={merchantPrimary} />
       <HomeHeader
         topInset={TOP_INSET}
         rotateAnim={rotateAnim}
