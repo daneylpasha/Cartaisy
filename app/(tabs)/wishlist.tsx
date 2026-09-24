@@ -161,10 +161,7 @@ const WishlistScreen = () => {
   // Render empty wishlist state
   const renderEmptyWishlist = () => (
     <ShopperState
-      presentation="illustration"
-      icon="wishlistFrame"
-      illustrationWidth={200}
-      illustrationHeight={134}
+      icon="heart"
       title={t("wishlist.title")}
       message={t("wishlist.subtitle")}
       actionLabel="Start shopping"
