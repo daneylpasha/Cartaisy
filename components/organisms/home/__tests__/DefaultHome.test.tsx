@@ -18,12 +18,11 @@ jest.mock("expo-router", () => ({
   router: { push: jest.fn(), back: jest.fn() },
 }));
 
-jest.mock("@/components/organisms/home/Placeholder", () => {
+jest.mock("@/components/molecules/ShopperSkeleton", () => {
   const React = require("react");
   const { Text } = require("react-native");
   return {
-    __esModule: true,
-    default: () => React.createElement(Text, null, "Loading home"),
+    ShopperSkeleton: () => React.createElement(Text, null, "Loading home"),
   };
 });
 

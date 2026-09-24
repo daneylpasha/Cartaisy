@@ -62,8 +62,8 @@ describe("Login screen — runtime logo", () => {
 
   it("does not put a Cartaisy wordmark in the sign-in title when the store name is not loaded", () => {
     useStoreConfigStore.setState({ storeName: "", isLoaded: false });
-    const { getByText, queryByText } = renderWithTamagui(<Login />);
-    expect(getByText("Sign in")).toBeTruthy();
+    const { getAllByText, queryByText } = renderWithTamagui(<Login />);
+    expect(getAllByText("Sign in").length).toBeGreaterThan(0);
     expect(queryByText(/cartaisy/i)).toBeNull();
   });
 
