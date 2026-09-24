@@ -18,12 +18,12 @@ import {
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
-import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
 import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
+import { ShopperSkeleton } from "@/components/molecules/ShopperSkeleton";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
 import ProductCarousel from "@/components/molecules/product/pdp/ProductCarousel";
 import ProductSpec from "@/components/molecules/product/pdp/ProductSpec";
@@ -1284,14 +1284,7 @@ const ProductDetailsScreen = () => {
       </YStack>
       {/* <Spacer size={"$md"} /> */}
       {isLoadingProduct ? (
-        <YStack
-          flex={1}
-          backgroundColor="$background"
-          justifyContent="center"
-          alignItems="center"
-        >
-          <Loader size="large" color="$primary" />
-        </YStack>
+        <ShopperSkeleton variant="detail" />
       ) : productDetailError || !product ? (
         <CatalogUnavailableState
           message={

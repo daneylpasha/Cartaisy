@@ -15,6 +15,8 @@ import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
 import { SHADOW_STYLES } from "@/constants/styles";
 import useAuthStore from "@/store/useAuthStore";
 import useCartStore from "@/store/useCartStore";
+import { useCompanyName } from "@/hooks/useCompanyName";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import useUserStore from "@/store/useUserStore";
 import { t } from "@/translations";
@@ -68,6 +70,12 @@ export const LoginBottomSheet = forwardRef<
   const primaryColor = useStoreConfigStore((state) => state.primaryColor);
   const logoUrl = useStoreConfigStore((state) => state.logoUrl);
   const hasLogoUrl = Boolean(logoUrl && logoUrl.trim());
+  const companyName = useCompanyName();
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
+  const signInTitle = companyName
+    ? `Sign in to ${companyName}`
+    : t("auth.login.title");
 
   const { mutateAsync: loginUser, isPending: isLoggingIn } = useLogin({
     onSuccess: async (data) => {
@@ -309,7 +317,7 @@ export const LoginBottomSheet = forwardRef<
               )}
             </YStack>
             <Spacer size={"$md"} />
-            <HeadingSMBold>{t("auth.login.title")}</HeadingSMBold>
+            <HeadingSMBold textAlign="center">{signInTitle}</HeadingSMBold>
             <Spacer size={"$xs"} />
             <ParagraphMD color="$secondary" textAlign="center">
               Sign in to continue shopping
@@ -384,7 +392,7 @@ export const LoginBottomSheet = forwardRef<
                 width={16}
                 height={16}
                 borderRadius={"$full"}
-                backgroundColor={getTokenValue("$primary")}
+                backgroundColor={primaryTint}
               >
                 <AppImage
                   tintColor={getTokenValue("$white")}

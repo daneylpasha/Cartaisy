@@ -1,5 +1,6 @@
 import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { getTokenValue, XStack, YStack } from "tamagui";
 import { TextMDSemiBold, TextXSRegular } from "../atoms";
 import { Spacer } from "../atoms/Spacer";
@@ -26,6 +27,8 @@ export const AddressCard = ({
   setSelectedAddress,
   onEdit,
 }: AddressCardProps) => {
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
   const isEditMode = !!onEdit;
 
   return (
@@ -55,7 +58,7 @@ export const AddressCard = ({
         <XStack>
           <AppImage
             name="locationUnfilled"
-            tintColor={getTokenValue("$primary")}
+            tintColor={primaryTint}
             width={16}
             height={20}
           />
@@ -91,7 +94,7 @@ export const AddressCard = ({
           <YStack marginTop={"$xl"}>
             <AppImage
               name="editIcon"
-              tintColor={getTokenValue("$primary")}
+              tintColor={primaryTint}
               width={16}
               height={16}
             />

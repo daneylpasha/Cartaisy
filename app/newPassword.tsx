@@ -4,6 +4,7 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { FormInput } from "@/components/atoms/FormInput";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton } from "@/components/molecules/buttons";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { t, tArray } from "@/translations";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
@@ -27,6 +28,8 @@ const NewPassword = () => {
   }>();
 
   const [isLoading, setIsLoading] = useState(false);
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
 
   // Determine which flow we're in
   const isResetFlow = !!params.token;
@@ -110,7 +113,7 @@ const NewPassword = () => {
         width={20}
         height={20}
         borderRadius={"$full"}
-        backgroundColor={getTokenValue("$primary")}
+        backgroundColor={primaryTint}
       >
         <AppImage
           tintColor={getTokenValue("$white")}

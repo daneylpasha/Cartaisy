@@ -7,18 +7,35 @@ import { ParagraphMD } from "@/components/atoms/texts/ParagraphMD";
 import { TextSMRegular } from "@/components/atoms/texts/TextSMRegular";
 import { SecondaryButton } from "@/components/molecules/buttons";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
-import { tokens } from "@/tamagui/token";
+import { useCompanyName } from "@/hooks/useCompanyName";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { t } from "@/translations";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { Alert, Linking } from "react-native";
-import { XStack, YStack } from "tamagui";
+import { YStack } from "tamagui";
 
 const PasswordRestSent = () => {
   const { email, from } = useLocalSearchParams<{
     email?: string;
     from?: string;
   }>();
+  const companyName = useCompanyName();
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
+
+  const openSupportEmail = async () => {
+    const subject = companyName ? `${companyName} account help` : "Account help";
+    const mailto = `mailto:help@cartaisy.com?subject=${encodeURIComponent(subject)}`;
+    try {
+      const can = await Linking.canOpenURL(mailto);
+      if (can) {
+        await Linking.openURL(mailto);
+      }
+    } catch {
+      Alert.alert("Couldn't open email", "Please try again from your mail app.");
+    }
+  };
 
   const openEmailApp = async () => {
     const emailDomain = email?.split("@")[1];
@@ -71,7 +88,7 @@ const PasswordRestSent = () => {
       <Spacer size={"$6xl"} />
       <AppImage
         name="emailSent"
-        tintColor={tokens.color.primary}
+        tintColor={primaryTint}
         height={250}
       />
       <Spacer size={"$xl"} />
@@ -91,26 +108,21 @@ const PasswordRestSent = () => {
           onPress={openEmailApp}
         />
         <Spacer size={"$reg"} />
-        <SecondaryButton label="login" onPress={() => router.dismissAll()} />
+        <SecondaryButton label="Back to sign in" onPress={() => router.dismissAll()} />
         <Spacer size={"$xl"} />
         <YStack alignItems="center">
           <TextSMRegular color={"$secondary"}>
             {t("auth.passwordResetSent.dontRememberEmail")}
           </TextSMRegular>
-          <XStack alignItems="center" gap={"$xs"}>
-            <TextSMRegular color={"$secondary"}>
+          <OpTouch onPress={openSupportEmail}>
+            <TextSMRegular
+              borderBottomWidth={1}
+              fontWeight={"700"}
+              color={"$primary"}
+            >
               {t("auth.passwordResetSent.contactSupport")}
             </TextSMRegular>
-            <OpTouch>
-              <TextSMRegular
-                borderBottomWidth={1}
-                fontWeight={"700"}
-                color={"$primary"}
-              >
-                {t("auth.passwordResetSent.supportEmail")}
-              </TextSMRegular>
-            </OpTouch>
-          </XStack>
+          </OpTouch>
         </YStack>
       </YStack>
     </ScreenContainer>

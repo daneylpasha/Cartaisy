@@ -1,7 +1,7 @@
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import React from "react";
 import { ActivityIndicatorProps } from "react-native";
 import { LoaderKitView } from "react-native-loader-kit";
-import { getTokenValue } from "tamagui";
 
 export interface LoaderProps {
   size?: ActivityIndicatorProps["size"];
@@ -25,8 +25,14 @@ export const Loader = ({
   width,
   height,
 }: LoaderProps) => {
-  // If color starts with $, resolve it from tokens, otherwise use as-is
-  const resolvedColor = color.startsWith("$") ? getTokenValue(color as any) : color;
+  const getReactiveColor = useReactiveTokenColor();
+  // Hex and rgb values are already concrete. Token names (including
+  // "$primary") resolve through the live theme so a merchant color
+  // reaches every spinner without a rebuild.
+  const resolvedColor =
+    color.startsWith("#") || color.startsWith("rgb")
+      ? color
+      : getReactiveColor(color) ?? color;
 
   // Map size prop to dimensions (only used if width/height not provided)
   const defaultSize = 22;

@@ -8,7 +8,7 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { ToggleSwitch } from "@/components/molecules/ToggleSwitch";
-import { tokens } from "@/tamagui/token";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { t } from "@/translations";
 import { useState } from "react";
 import { SectionList } from "react-native";
@@ -31,6 +31,8 @@ interface NotificationSection {
 
 const NotificationSettings = () => {
   const { bottom: bottomSafeAreaInset } = useSafeAreaInsets();
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
 
   const [notificationStates, setNotificationStates] = useState<
     Record<string, boolean>
@@ -49,9 +51,9 @@ const NotificationSettings = () => {
         {
           id: "customerService",
           title: "Customer Service",
-          description: "Shake your phone to randomize your account balances.",
+          description: "Messages from the store about your account.",
           icon: "clock",
-          iconColor: tokens.color.primary,
+          iconColor: primaryTint,
           enabled: notificationStates.customerService,
         },
       ],
@@ -62,24 +64,24 @@ const NotificationSettings = () => {
         {
           id: "shipments",
           title: "Your shipments",
-          description: "Shake your phone to randomize your account balances.",
+          description: "Delivery updates for your orders.",
           icon: "notification",
-          iconColor: tokens.color.primary,
+          iconColor: primaryTint,
           enabled: notificationStates.shipments,
         },
         {
           id: "recommendations",
           title: "Your recommendations",
           icon: "recommend",
-          iconColor: tokens.color.primary,
+          iconColor: primaryTint,
           enabled: notificationStates.recommendations,
         },
         {
           id: "wishlist",
           title: "Your Wishlist",
-          description: "Send budget and goal reminders via your emails",
+          description: "A note when a saved product changes.",
           icon: "heart",
-          iconColor: tokens.color.primary,
+          iconColor: primaryTint,
           enabled: notificationStates.wishlist,
         },
       ],
@@ -91,7 +93,7 @@ const NotificationSettings = () => {
           id: "referralPromotions",
           title: "Referral Promotions",
           icon: "gift",
-          iconColor: tokens.color.primary,
+          iconColor: primaryTint,
           enabled: notificationStates.referralPromotions,
         },
       ],
@@ -103,7 +105,7 @@ const NotificationSettings = () => {
           id: "communityNotifications",
           title: "Community Notifications",
           icon: "gift",
-          iconColor: tokens.color.primary,
+          iconColor: primaryTint,
           enabled: notificationStates.communityNotifications,
         },
       ],
@@ -122,7 +124,7 @@ const NotificationSettings = () => {
             name={item.icon as any}
             width={19}
             height={15}
-            tintColor={item.iconColor || tokens.color.primary}
+            tintColor={item.iconColor || primaryTint}
           />
           <Spacer size={"$reg"} />
           <YStack flex={1}>

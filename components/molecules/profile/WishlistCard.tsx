@@ -3,6 +3,7 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { TextMDRegular } from "@/components/atoms/texts/TextMDRegular";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { router } from "expo-router";
 import React from "react";
 import { Platform, ViewStyle } from "react-native";
@@ -42,6 +43,8 @@ export const SHADOW_STYLES: ViewStyle =
 type Props = { item: WishlistItem };
 
 export function WishlistCard({ item }: Props) {
+  const getReactiveColor = useReactiveTokenColor();
+  const secondaryTint = getReactiveColor("secondary");
   // Handle both image formats: array of objects or array of strings
   const productImage = Array.isArray(item?.images)
     ? typeof item.images[0] === "string"
@@ -118,7 +121,7 @@ export function WishlistCard({ item }: Props) {
         </YStack>
         <YStack justifyContent="center">
           <AppImage
-            tintColor={getTokenValue("$secondary")}
+            tintColor={secondaryTint}
             name="caretRight"
             width={9}
             height={16}

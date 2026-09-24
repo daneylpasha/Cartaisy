@@ -15,6 +15,8 @@ import { Product } from "@/api/types";
 import { useGetCollectionProducts } from "@/api/generated/collections/collections";
 import { extractNumericId } from "@/utils/extractNumericId";
 import { HeadingXSBold, Loader, TextMDSemiBold } from "@/components/atoms";
+import { ShopperSkeleton } from "@/components/molecules/ShopperSkeleton";
+import { ShopperState } from "@/components/molecules/ShopperState";
 import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
@@ -31,7 +33,7 @@ import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { FlatList, RefreshControl } from "react-native";
-import { Text, XStack, YStack } from "tamagui";
+import { XStack, YStack } from "tamagui";
 
 const sidePadding = tokens.space.md;
 const columnGap = tokens.space.md;
@@ -341,13 +343,8 @@ const PlpScreen = () => {
   // Show full screen loader when loading and no products to show
   if (isScreenLoading) {
     return (
-      <YStack
-        flex={1}
-        backgroundColor="$background"
-        justifyContent="center"
-        alignItems="center"
-      >
-        <Loader size="large" />
+      <YStack flex={1} backgroundColor="$background">
+        <ShopperSkeleton variant="catalog" />
       </YStack>
     );
   }
@@ -356,29 +353,28 @@ const PlpScreen = () => {
   if (error && allProducts.length === 0) {
     const catalogUnavailableMessage = getCatalogUnavailableMessage(error);
 
-    if (catalogUnavailableMessage) {
-      return (
-        <CatalogUnavailableState
-          message={catalogUnavailableMessage}
-          onRetry={refetch}
-        />
-      );
-    }
-
     return (
-      <YStack
-        flex={1}
-        backgroundColor="$background"
-        justifyContent="center"
-        alignItems="center"
-        padding="$lg"
-      >
-        <Text fontSize={16} color="$error" textAlign="center">
-          Failed to load products. Please try again.
-        </Text>
-      </YStack>
+      <CatalogUnavailableState
+        message={
+          catalogUnavailableMessage ||
+          "We couldn't load these products. Please try again."
+        }
+        title={
+          catalogUnavailableMessage ? "Catalog unavailable" : "Products unavailable"
+        }
+        onRetry={refetch}
+      />
     );
   }
+
+  const hasActiveFilters =
+    appliedFilters.sort !== "" ||
+    appliedFilters.categories.length > 0 ||
+    appliedFilters.colors.length > 0 ||
+    (appliedFilters.vendors?.length ?? 0) > 0 ||
+    (appliedFilters.tags?.length ?? 0) > 0 ||
+    appliedFilters.priceRange[0] !== 0 ||
+    appliedFilters.priceRange[1] !== 1000;
 
   return (
     <YStack flex={1} backgroundColor="$background">
@@ -403,6 +399,44 @@ const PlpScreen = () => {
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
+          ListEmptyComponent={
+            <ShopperState
+              presentation="illustration"
+              icon="researchIcon"
+              illustrationWidth={148}
+              illustrationHeight={148}
+              minHeight={360}
+              title={hasActiveFilters ? "No matches" : "Nothing here yet"}
+              message={
+                hasActiveFilters
+                  ? "Nothing in this collection matches those filters."
+                  : "This collection does not have products right now."
+              }
+              actionLabel={hasActiveFilters ? "Clear filters" : undefined}
+              onAction={
+                hasActiveFilters
+                  ? () => {
+                      const cleared: FilterState = {
+                        sort: "",
+                        categories: [],
+                        priceRange: initialPriceRange
+                          ? [
+                              Math.floor(initialPriceRange.min),
+                              Math.ceil(initialPriceRange.max),
+                            ]
+                          : [0, 1000],
+                        colors: [],
+                        vendors: [],
+                        tags: [],
+                      };
+                      setPendingFilters(cleared);
+                      setAppliedFilters(cleared);
+                      setCursor(undefined);
+                    }
+                  : undefined
+              }
+            />
+          }
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}

@@ -1,15 +1,13 @@
 import { DynamicStatusBar, TextXLBold } from "@/components/atoms";
-import { AppImage } from "@/components/atoms/AppImage";
 import { Spacer } from "@/components/atoms/Spacer";
 import { t } from "@/translations";
 import { FlatList, LayoutAnimation, Platform, UIManager } from "react-native";
 
 import { useGetDetailedFavorites } from "@/api/generated/favorites/favorites";
-import { Loader } from "@/components/atoms/Loader";
-import { OpTouch } from "@/components/atoms/OpTouch";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
-import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
+import { ShopperSkeleton } from "@/components/molecules/ShopperSkeleton";
+import { ShopperState } from "@/components/molecules/ShopperState";
 import { ProductCard } from "@/components/molecules/ProductCard";
 import useAuthStore from "@/store/useAuthStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
@@ -162,28 +160,18 @@ const WishlistScreen = () => {
 
   // Render empty wishlist state
   const renderEmptyWishlist = () => (
-    <YStack alignItems="center" justifyContent="center" flex={1}>
-      <YStack>
-        <AppImage
-          name="wishlistFrame"
-          width={215}
-          height={144}
-          tintColor={tokens.color.primary}
-        />
-      </YStack>
-      {/* <Spacer size={"$lg"} /> */}
-      <TextXLBold>{t("wishlist.title")}</TextXLBold>
-      <Spacer size={"$reg"} />
-      <ParagraphSM color="$secondary">{t("wishlist.subtitle")}</ParagraphSM>
-      <Spacer size={"$reg"} />
-      <OpTouch
-        onPress={() => {
-          router.push("/(tabs)");
-        }}
-      >
-        <ParagraphSM color="$primary">{"Start Shopping"}</ParagraphSM>
-      </OpTouch>
-    </YStack>
+    <ShopperState
+      presentation="illustration"
+      icon="wishlistFrame"
+      illustrationWidth={200}
+      illustrationHeight={134}
+      title={t("wishlist.title")}
+      message={t("wishlist.subtitle")}
+      actionLabel="Start shopping"
+      onAction={() => {
+        router.push("/(tabs)");
+      }}
+    />
   );
 
   const unavailableMessage = getCatalogUnavailableMessage(favoritesError);
@@ -193,9 +181,7 @@ const WishlistScreen = () => {
   if (isLoading || isRetryingUnavailable) {
     return (
       <ScreenContainer backgroundColor="$background">
-        <YStack flex={1} justifyContent="center" alignItems="center">
-          <Loader size="large" color="$primary" />
-        </YStack>
+        <ShopperSkeleton variant="catalog" />
       </ScreenContainer>
     );
   }

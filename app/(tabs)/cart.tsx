@@ -1,14 +1,11 @@
 import {
   DynamicStatusBar,
-  HeadingXSBold,
-  ParagraphMD,
   TextMDBold,
   TextSMRegular,
   TextSMSemiBold,
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Spacer } from "@/components/atoms/Spacer";
-import { SHADOW_STYLES } from "@/constants/styles";
 import { t } from "@/translations";
 import {
   Animated,
@@ -26,11 +23,11 @@ import { OpTouch } from "@/components/atoms/OpTouch";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import CartLineItem from "@/components/molecules/cart/CartLineItem";
 import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
+import { ShopperState } from "@/components/molecules/ShopperState";
 import { ProductCard } from "@/components/molecules/ProductCard";
 import { SectionHeader } from "@/components/molecules/SectionHeader";
 import ErrorModal from "@/components/organisms/ErrorModal";
 import { useAuthGuard } from "@/contexts/AuthGuardContext";
-import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useCartStore from "@/store/useCartStore";
 import useFavoritesStore from "@/store/useFavoritesStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
@@ -41,12 +38,10 @@ import { formatPrice } from "@/utils/formatPrice";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getTokenValue, XStack, YStack } from "tamagui";
+import { XStack, YStack } from "tamagui";
 
 const CartScreen = () => {
   const { bottom: BOTTOM_INSET } = useSafeAreaInsets();
-  const getReactiveColor = useReactiveTokenColor();
-  const primaryTint = getReactiveColor("primary") ?? getTokenValue("$primary");
   const [open, setOpen] = useState(false);
   const [errorModal, setErrorModal] = useState<{
     visible: boolean;
@@ -507,43 +502,15 @@ const CartScreen = () => {
   );
 
   const renderEmptyCart = () => (
-    <YStack alignItems="center" justifyContent="center" flex={1}>
-      <Spacer size={"$2xl"} />
-      <YStack
-        backgroundColor="$white"
-        borderRadius="$full"
-        padding="$md"
-        width={64}
-        height={64}
-        borderColor="$border"
-        justifyContent="center"
-        alignItems="center"
-        {...SHADOW_STYLES}
-      >
-        <AppImage
-          name="cartIcon"
-          tintColor={primaryTint}
-          width={29}
-          height={27}
-        />
-      </YStack>
-      <Spacer size={"$lg"} />
-      <HeadingXSBold>{t("cart.title")}</HeadingXSBold>
-      <Spacer size={"$reg"} />
-      <ParagraphMD color="$secondary">{t("cart.subtitle")}</ParagraphMD>
-      <Spacer size={"$reg"} />
-      <OpTouch
-        onPress={() => {
-          router.push("/");
-        }}
-        backgroundColor="primary"
-        paddingHorizontal="lg"
-        paddingVertical="reg"
-        borderRadius="full"
-      >
-        <TextMDBold color="$white">{"Start Shopping"}</TextMDBold>
-      </OpTouch>
-    </YStack>
+    <ShopperState
+      icon="cartIcon"
+      title={t("cart.title")}
+      message={t("cart.subtitle")}
+      actionLabel="Start shopping"
+      onAction={() => {
+        router.push("/");
+      }}
+    />
   );
 
   // Render recommendations section

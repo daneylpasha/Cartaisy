@@ -8,6 +8,8 @@ import { HeadingSMBold } from "@/components/atoms/texts/HeadingSMBold";
 import { TextMDSemiBold } from "@/components/atoms/texts/TextMDSemiBold";
 import { TextSMSemiBold } from "@/components/atoms/texts/TextSMSemiBold";
 import { PrimaryButton } from "@/components/molecules/buttons/PrimaryButton";
+import { useCompanyName } from "@/hooks/useCompanyName";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import useAuthStore from "@/store/useAuthStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import useUserStore from "@/store/useUserStore";
@@ -17,7 +19,7 @@ import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Alert } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { getTokenValue, XStack, YStack } from "tamagui";
+import { XStack, YStack } from "tamagui";
 import PasswordStrengthBar from "./components/PasswordStrengthBar";
 
 type SignUpForm = {
@@ -37,6 +39,12 @@ const SignUp = () => {
   const primaryColor = useStoreConfigStore((state) => state.primaryColor);
   const logoUrl = useStoreConfigStore((state) => state.logoUrl);
   const hasLogoUrl = Boolean(logoUrl && logoUrl.trim());
+  const companyName = useCompanyName();
+  const getReactiveColor = useReactiveTokenColor();
+  const secondaryTint = getReactiveColor("secondary");
+  const signUpTitle = companyName
+    ? `Join ${companyName}`
+    : t("auth.signup.title");
 
   const { mutateAsync: signUpUser, isPending: isSigningUp } = useSignUp({
     onSuccess: (data) => {
@@ -128,7 +136,7 @@ const SignUp = () => {
             <AppImage
               name={"arrowBack"}
               size={20}
-              tintColor={getTokenValue("$secondary")}
+              tintColor={secondaryTint}
             />
           </OpTouch>
         </XStack>
@@ -193,7 +201,7 @@ const SignUp = () => {
           </YStack>
 
           <Spacer size={"$lg"} />
-          <HeadingSMBold>{t("auth.signup.title")}</HeadingSMBold>
+          <HeadingSMBold textAlign="center">{signUpTitle}</HeadingSMBold>
           <Spacer size={"$2xl"} />
 
           <YStack width="100%">

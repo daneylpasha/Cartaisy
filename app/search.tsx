@@ -11,7 +11,7 @@ import { isSearchResponse, type Product, type SearchResponse } from "@/api/types
 import { useHomeScreenData } from "@/api/hooks/useHomeScreenData";
 import { TextMDSemiBold } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
-import { Loader } from "@/components/atoms/Loader";
+import { ShopperSkeleton } from "@/components/molecules/ShopperSkeleton";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { OpTouch } from "@/components/atoms/OpTouch";
@@ -855,12 +855,8 @@ const Search = () => {
         const availableHeight = SCREEN_HEIGHT - headerHeight - bottomInset;
 
         return (
-          <YStack
-            height={availableHeight}
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Loader size="small" />
+          <YStack height={availableHeight}>
+            <ShopperSkeleton variant="results" />
           </YStack>
         );
 
@@ -891,12 +887,8 @@ const Search = () => {
           const availableHeight = SCREEN_HEIGHT - headerHeight - bottomInset;
 
           return (
-            <YStack
-              height={availableHeight}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Loader size="small" />
+            <YStack height={availableHeight}>
+              <ShopperSkeleton variant="results" />
             </YStack>
           );
         }
