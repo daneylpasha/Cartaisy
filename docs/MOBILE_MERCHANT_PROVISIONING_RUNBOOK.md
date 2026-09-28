@@ -290,10 +290,11 @@ Automatable later (rough priority order):
 3. Firebase provisioning: create project/apps and fetch config files via the Firebase Management API.
 4. A single "provision merchant" pipeline chaining 2–3. Ready to ticket and prioritize — the ownership decisions this item used to wait on are both recorded (see below). Not built and not scoped here.
 
-No longer blocked on decisions: both ownership questions are settled and recorded in the `cartaisy-backend` repo's `docs/DECISIONS.md` — Apple Developer account ownership on 2026-07-17 ("Merchants own their app-store developer accounts") and Expo/EAS organization ownership on 2026-07-23 ("Merchant EAS/Expo projects live under a Cartaisy-managed Expo organization"). The 2026-07-23 entry states directly that store-facing provisioning automation "is now unblocked and may be ticketed." What remains is tooling nobody has built yet. This runbook records that state; it does not schedule the work.
+No longer blocked on decisions: both ownership questions are settled and recorded in the `cartaisy-backend` repo's `docs/DECISIONS.md` — Apple Developer account ownership on 2026-07-17 ("Merchants own their app-store developer accounts") and Expo/EAS organization ownership on 2026-07-23 ("Merchant EAS/Expo projects live under a Cartaisy-managed Expo organization"). The 2026-07-23 entry states directly that store-facing provisioning automation "is now unblocked and may be ticketed." The numbered pipeline above is still unbuilt. Store-admin build dispatch is separate: `cartaisy-backend` runs `.eas/workflows/store-build.yml` when its EAS env vars are set (`docs/EAS_STORE_BUILD_WORKFLOW.md`). This runbook records that state; it does not schedule the work.
 
 ## Related Docs
 
+- `docs/EAS_STORE_BUILD_WORKFLOW.md`
 - `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`
 - `docs/RELEASE_CHECKLIST.md`
 - `docs/MOBILE_ENV_VARIABLES.md`
@@ -302,4 +303,4 @@ No longer blocked on decisions: both ownership questions are settled and recorde
 - `app.config.ts`
 - `cartaisy-dashboard` `docs/STATUS.md` and `docs/DECISIONS.md` ("The ops build queue shows public icon and splash URLs", issue #43 / PR #44; "Ops copies the icon as ICON_IMAGE_URL", issue #45 / PR #47; "Ops copies the merchant display name as APP_NAME", issue #49 / PR #50; "Ops copies the merchant store id as EXPO_PUBLIC_STORE_ID", issue #51 / PR #52; "Ops copies every launcher assignment as one EAS env block", issue #55 / PR #57)
 - `cartaisy-backend` `docs/cartaisy/BUILD_REQUEST_API.md` (issue #177)
-- GitHub issues #60, #61, #133, #135, #137, #139, #141, #143, #145
+- GitHub issues #60, #61, #133, #135, #137, #139, #141, #143, #145, #149
