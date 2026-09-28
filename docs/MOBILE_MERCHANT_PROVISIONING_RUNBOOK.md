@@ -38,7 +38,9 @@ Everything downstream depends on these values. Record them in the "Merchant Buil
 | Apple Pay merchant ID | `IOS_APPLE_PAY_MERCHANT_ID` | `merchant.`-prefixed reverse-DNS; only if wallet payments are in scope (Step 5). |
 | App icon | `APP_ICON_PATH` | Merchant-approved asset committed under `assets/` or supplied through the build pipeline. |
 | Notification icon / color | `APP_NOTIFICATION_ICON_PATH`, `APP_NOTIFICATION_COLOR` | Only if push is in scope. |
-| Adaptive icon / splash | `ANDROID_ADAPTIVE_ICON_PATH`, `ANDROID_ADAPTIVE_ICON_BACKGROUND`, `SPLASH_BACKGROUND_COLOR` | Merchant-approved. |
+| Adaptive icon | `ANDROID_ADAPTIVE_ICON_PATH`, `ANDROID_ADAPTIVE_ICON_BACKGROUND` | Merchant-approved. Repo path or EAS file env. |
+| Native splash image | `SPLASH_IMAGE_PATH` or `SPLASH_IMAGE_URL` | PNG/JPEG. Path may be a repo file or an EAS file env. URL must be public `https` with no credentials (scripted download in `app.config.ts`). A missing asset resolves to `assets/images/neutral-splash.png`. |
+| Native splash background | `SPLASH_BACKGROUND_COLOR` | Merchant-approved. Shown behind the splash image, including the neutral fallback. |
 | EAS project | `EAS_PROJECT_ID`, `EXPO_OWNER` | Produced by Step 2, not chosen by the merchant. |
 | Backend API URL | `EXPO_PUBLIC_API_BASE_URL` | Public; must point at the intended Cartaisy backend environment. |
 | Store ID | `EXPO_PUBLIC_STORE_ID` | Public; the merchant's 24-character hex Mongo ObjectId (validated by `api/config/mobileConfig.ts`). Not a security boundary — backend tenant isolation is authoritative. |
@@ -48,7 +50,17 @@ Everything downstream depends on these values. Record them in the "Merchant Buil
 
 All of these are non-secret build-time values. Anything not in this table — tokens, keys, credentials — does not belong in mobile configuration at all (see "What Must Never Be Committed").
 
-Manual today: yes (values gathered from the merchant by hand).
+### How splash and icon files reach the build
+
+Icons (`APP_ICON_PATH`, `APP_ICON_SQUARE_PATH`, `ANDROID_ADAPTIVE_ICON_PATH`, `APP_NOTIFICATION_ICON_PATH`) are local files. Commit a merchant-approved placeholder only for non-production samples, or upload the real file as an EAS file-type environment variable with the same name. The worker exposes that variable as a filesystem path.
+
+The pre-JS native splash uses the same file-env pattern when you set `SPLASH_IMAGE_PATH`. To take the image from merchant branding without committing it, set `SPLASH_IMAGE_URL` to the public `https` URL the Cartaisy backend already publishes for that splash. `app.config.ts` downloads it during config evaluation (local `npx expo config` and the EAS worker's prebuild). The request sends no auth header. Rejected URLs — anything other than public `https`, plus URLs with userinfo or token-like query parameters — and failed downloads resolve to `assets/images/neutral-splash.png` so the Cartaisy wordmark is not compiled into the pre-JS frame. `SPLASH_IMAGE_PATH` wins when it is set; a path that does not point at a PNG or JPEG also resolves to the neutral image and does not continue on to the URL.
+
+Do not place Shopify Admin, Storefront, or custom-app tokens in `SPLASH_IMAGE_URL`, in any other mobile env var, or on the device. The runtime JS splash (`app/splash.tsx`) still loads store branding after JavaScript starts; this step does not change that path.
+
+The fictional Acme sample sets `SPLASH_IMAGE_URL` to `https://cdn.example.com/stores/acme-outfitters/splash.png`. That URL does not resolve, so sample config evaluation uses the neutral splash. Replace it for a real merchant. No additional EAS release pipeline is required for this wiring.
+
+Manual today: yes (values gathered from the merchant by hand). The download itself runs inside config evaluation once the URL or file env is set.
 
 ## Step 1 — Confirm the Backend Store Record
 
@@ -159,7 +171,7 @@ npx expo config --type public
 
 (Use `docs/examples/sample-merchant.env` as the template for the merchant env file; keep real merchant env files outside the repo.)
 
-Confirm in the output: `name`, `slug`, `scheme`, `version`, `ios.bundleIdentifier`, `ios.buildNumber`, `android.package`, `android.versionCode`, the Firebase file paths, the Apple Pay merchant ID in both the entitlements and the Stripe plugin block, and `extra.eas.projectId` / `owner`.
+Confirm in the output: `name`, `slug`, `scheme`, `version`, `ios.bundleIdentifier`, `ios.buildNumber`, `android.package`, `android.versionCode`, the Firebase file paths, the Apple Pay merchant ID in both the entitlements and the Stripe plugin block, `extra.eas.projectId` / `owner`, and the `expo-splash-screen` plugin `image`. For a merchant build that image is the local splash file, the downloaded file, or `./assets/images/neutral-splash.png`.
 
 Manual today: yes. Automation opportunity: a script that diffs this output against the merchant record and fails on mismatch.
 

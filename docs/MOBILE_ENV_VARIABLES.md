@@ -26,11 +26,27 @@ Use mobile environment variables only for values that are safe for customers, ap
 | `APP_NOTIFICATION_COLOR` | Android notification accent color. | `#8B5CF6` |
 | `ANDROID_ADAPTIVE_ICON_PATH` | Android adaptive icon foreground path. | `./assets/images/adaptive-icon.png` |
 | `ANDROID_ADAPTIVE_ICON_BACKGROUND` | Android adaptive icon background color. | `#ffffff` |
+| `SPLASH_IMAGE_PATH` | Pre-JS native splash image. Repo-relative PNG/JPEG, or an absolute path from an EAS file environment variable. Takes precedence over `SPLASH_IMAGE_URL`. | Cartaisy wordmark on the default Cartaisy identity; `assets/images/neutral-splash.png` on any other identity |
+| `SPLASH_IMAGE_URL` | Public `https` URL of the merchant splash. Downloaded while `app.config.ts` evaluates on the EAS worker. Not read by app JavaScript. | Unset |
 | `SPLASH_BACKGROUND_COLOR` | Native splash screen background color. | `#ffffff` |
 | `EAS_PROJECT_ID` | EAS project ID for the branded app. | Cartaisy project ID |
 | `EXPO_OWNER` | Expo account owner. | `rendernext` |
 
 For the checked-in Cartaisy native project, the iOS bundle identifier, Android package, and Firebase files are aligned to the Cartaisy defaults. EAS builds regenerate native projects from `app.config.ts` because `.easignore` excludes the checked-in `ios/` and `android/` directories from the build archive (see `docs/DECISIONS.md`); merchant builds must set these variables on the EAS build itself (EAS environment variables or `eas.json` profile `env` — locally exported shell values are not forwarded to EAS workers) and supply matching Firebase files.
+
+### Native splash and icon assets
+
+Launcher icons stay local files. Set `APP_ICON_PATH`, `APP_ICON_SQUARE_PATH`, and `ANDROID_ADAPTIVE_ICON_PATH` to repo-relative assets, or upload those files as EAS file environment variables. On the worker, a file variable's value is the absolute path `app.config.ts` already accepts.
+
+The pre-JS native splash is separate from the icon and from the runtime JS splash (`app/splash.tsx`). Supply it in one of these ways:
+
+1. `SPLASH_IMAGE_PATH` — a PNG or JPEG in the repo, or an EAS file environment variable with that name.
+2. `SPLASH_IMAGE_URL` — a public `https` URL for the merchant splash (for example a Cartaisy backend branding CDN URL). `scripts/resolveNativeSplash.js`, called from `app.config.ts`, downloads it while config evaluates, including on the EAS worker during prebuild. No `Authorization` header is sent. The URL is not an `EXPO_PUBLIC_` variable, so it is not bundled into JavaScript.
+3. `SPLASH_BACKGROUND_COLOR` — the solid color behind that image.
+
+`SPLASH_IMAGE_URL` must be `https`, must use a public hostname, and must not carry userinfo or credential query parameters (`token`, `access_token`, `key`, `secret`, Shopify token prefixes, and similar). A missing file, a rejected URL, or a failed download resolves the native splash to `assets/images/neutral-splash.png` on any build that is not the default Cartaisy identity (and on a Cartaisy build that explicitly set a splash asset which then failed). The Cartaisy wordmark remains the splash only for the default Cartaisy identity when no splash path or URL is set.
+
+The runtime JS splash still comes from store config through `BrandMark`. This download does not change that path and does not put Shopify tokens on the device.
 
 ## Safe Public Build Variables
 

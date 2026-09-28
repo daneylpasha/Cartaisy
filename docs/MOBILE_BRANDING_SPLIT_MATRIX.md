@@ -17,7 +17,7 @@ where they occur, rather than silently corrected.
 |---|---|---|---|
 | App icon (iOS `AppIcon`, Android launcher) | No | Yes — `APP_ICON_SQUARE_PATH`/`APP_ICON_PATH` in `app.config.ts`, baked in at EAS build time | Square-source fix from PR #112 (avoids `resizeMode: "cover"` center-cropping a wide wordmark) is still in place. |
 | Adaptive icon (Android) | No | Yes — `ANDROID_ADAPTIVE_ICON_PATH` / `ANDROID_ADAPTIVE_ICON_BACKGROUND` | |
-| Splash image | No | Yes — `expo-splash-screen` plugin, image = `APP_ICON_PATH` (the original wide wordmark, not the square-cropped one — splash uses `fit: "contain"`, so it isn't cropped) | |
+| Splash image | No | Yes — `expo-splash-screen` plugin. Merchant builds set `SPLASH_IMAGE_PATH` (repo file or EAS file env) or `SPLASH_IMAGE_URL` (public https, downloaded when `app.config.ts` evaluates). A missing merchant asset resolves to `assets/images/neutral-splash.png`. The Cartaisy default identity uses `assets/images/cartaisy-color-logo.png` only when no splash path or URL is set. | Pre-JS frame only. The JS splash route stays on runtime store branding (`BrandMark` in `app/splash.tsx`). |
 | Splash background color | No | Yes — `SPLASH_BACKGROUND_COLOR` (default `#ffffff`), set in two places: the `expo-splash-screen` plugin's `backgroundColor` and its `android.backgroundColor` | Both must be kept in sync manually if this env var's default ever changes; today they're driven by the same variable so this can't drift. |
 | App name, slug, URL scheme | No | Yes — `APP_NAME`/`APP_SLUG`/`APP_SCHEME` | |
 | iOS bundle identifier, Android package | No | Yes — `IOS_BUNDLE_IDENTIFIER`, `ANDROID_PACKAGE` | |
