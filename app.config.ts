@@ -1,4 +1,5 @@
 import type { ExpoConfig } from "@expo/config-types";
+import { resolveNativeIconAssets } from "./scripts/resolveNativeIcon";
 import { resolveNativeSplashImage } from "./scripts/resolveNativeSplash";
 
 const readEnv = (names: string[], fallback: string) => {
@@ -31,27 +32,6 @@ const appVersion = readEnv(["APP_VERSION"], "1.0.0");
 const appIconPath = readEnv(
   ["APP_ICON_PATH"],
   "./assets/images/cartaisy-color-logo.png"
-);
-// The app-icon and notification-icon generators (@expo/prebuild-config's
-// withIosIcons/withAndroidIcons, expo-notifications' withNotificationsAndroid)
-// all resize their source with `resizeMode: "cover"`, which center-crops a
-// non-square source instead of fitting it — appIconPath's wide 422x100
-// wordmark was getting cropped into an unreadable fragment ("rta") on a real
-// device. A square source is immune to cover-crop entirely, since there's no
-// aspect-ratio mismatch to crop away. Web favicon keeps using the original
-// wide wordmark below. Fixed in the sample-merchant placeholder-branding
-// investigation (PR #112). The native splash is resolved separately
-// (scripts/resolveNativeSplash.js) so a branded build does not inherit this
-// wordmark on the pre-JS frame.
-//
-// Falls back to APP_ICON_PATH (not straight to the hardcoded default) before
-// the Cartaisy default, so a profile that already sets its own square
-// APP_ICON_PATH — like sample-merchant-development's Acme Outfitters icon,
-// itself already fixed to be square in PR #112 — keeps resolving to its own
-// asset instead of silently leaking Cartaisy's icon into a merchant build.
-const appIconSquarePath = readEnv(
-  ["APP_ICON_SQUARE_PATH", "APP_ICON_PATH"],
-  "./assets/images/icon.png"
 );
 // Android derives the status-bar notification glyph purely from this
 // image's alpha channel — every non-transparent pixel gets filled with a
@@ -93,10 +73,6 @@ const androidGoogleServicesFile = readEnv(
   ["ANDROID_GOOGLE_SERVICES_FILE"],
   "./google-services.json"
 );
-const androidAdaptiveIconPath = readEnv(
-  ["ANDROID_ADAPTIVE_ICON_PATH"],
-  "./assets/images/adaptive-icon.png"
-);
 const androidAdaptiveIconBackground = readEnv(
   ["ANDROID_ADAPTIVE_ICON_BACKGROUND"],
   "#ffffff"
@@ -106,6 +82,18 @@ const easProjectId = readEnv(
   "eabf3411-284b-4bd8-88eb-8d89a8a4ee14"
 );
 const expoOwner = readEnv(["EXPO_OWNER"], "rendernext");
+// Web favicon keeps the wide wordmark (APP_ICON_PATH). The native launcher
+// icon is resolved separately: ICON_IMAGE_PATH, then a public https
+// ICON_IMAGE_URL downloaded while this config evaluates, then
+// assets/images/icon.png only for the default Cartaisy identity. Merchant
+// builds with no usable asset get assets/images/neutral-icon.png so the
+// Cartaisy wordmark is not baked into the launcher. Expo's icon generators
+// cover-crop non-square sources (PR #112); merchant icon files should be square.
+// The runtime JS icon (BrandMark / iconUrl) is unchanged.
+// Android adaptive foreground uses ANDROID_ADAPTIVE_ICON_PATH when that file
+// is a merchant asset. The Cartaisy adaptive wordmark stays on the default
+// identity only; a merchant build otherwise follows the resolved launcher icon.
+const nativeIcon = resolveNativeIconAssets(process.env);
 const splashImagePath = resolveNativeSplashImage(process.env);
 
 const config: ExpoConfig = {
@@ -113,7 +101,7 @@ const config: ExpoConfig = {
   slug: appSlug,
   version: appVersion,
   orientation: "portrait",
-  icon: appIconSquarePath,
+  icon: nativeIcon.icon,
   scheme: appScheme,
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
@@ -137,7 +125,7 @@ const config: ExpoConfig = {
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: androidAdaptiveIconPath,
+      foregroundImage: nativeIcon.adaptiveForeground,
       backgroundColor: androidAdaptiveIconBackground,
     },
     edgeToEdgeEnabled: true,

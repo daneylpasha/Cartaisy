@@ -21,10 +21,12 @@ Use mobile environment variables only for values that are safe for customers, ap
 | `ANDROID_PACKAGE` | Android package/application ID. Falls back to `EXPO_PUBLIC_ANDROID_PACKAGE` when unset. | `com.rendernext.cartaisy` |
 | `ANDROID_VERSION_CODE` | Android version code. | `1` |
 | `ANDROID_GOOGLE_SERVICES_FILE` | Android Firebase JSON used by Expo config. | `./google-services.json` |
-| `APP_ICON_PATH` | App icon and web favicon path. | `./assets/images/cartaisy-color-logo.png` |
+| `APP_ICON_PATH` | Web favicon path. The native launcher icon uses `ICON_IMAGE_PATH` / `ICON_IMAGE_URL`. | `./assets/images/cartaisy-color-logo.png` |
+| `ICON_IMAGE_PATH` | Native launcher icon. Repo-relative PNG/JPEG, or an absolute path from an EAS file environment variable. Takes precedence over `ICON_IMAGE_URL`. | Cartaisy square icon (`assets/images/icon.png`) on the default Cartaisy identity; `assets/images/neutral-icon.png` on any other identity |
+| `ICON_IMAGE_URL` | Public `https` URL of the merchant launcher icon. Downloaded while `app.config.ts` evaluates on the EAS worker. Not read by app JavaScript. Not an `EXPO_PUBLIC_` variable. | Unset |
 | `APP_NOTIFICATION_ICON_PATH` | Notification icon path. Falls back to `APP_ICON_PATH` when unset. | `./assets/images/cartaisy-color-logo.png` |
 | `APP_NOTIFICATION_COLOR` | Android notification accent color. | `#8B5CF6` |
-| `ANDROID_ADAPTIVE_ICON_PATH` | Android adaptive icon foreground path. | `./assets/images/adaptive-icon.png` |
+| `ANDROID_ADAPTIVE_ICON_PATH` | Android adaptive icon foreground. A merchant build that leaves this unset, or points it at `assets/images/adaptive-icon.png`, uses the resolved launcher icon instead. | `./assets/images/adaptive-icon.png` on the default Cartaisy identity |
 | `ANDROID_ADAPTIVE_ICON_BACKGROUND` | Android adaptive icon background color. | `#ffffff` |
 | `SPLASH_IMAGE_PATH` | Pre-JS native splash image. Repo-relative PNG/JPEG, or an absolute path from an EAS file environment variable. Takes precedence over `SPLASH_IMAGE_URL`. | Cartaisy wordmark on the default Cartaisy identity; `assets/images/neutral-splash.png` on any other identity |
 | `SPLASH_IMAGE_URL` | Public `https` URL of the merchant splash. Downloaded while `app.config.ts` evaluates on the EAS worker. Not read by app JavaScript. | Unset |
@@ -36,7 +38,14 @@ For the checked-in Cartaisy native project, the iOS bundle identifier, Android p
 
 ### Native splash and icon assets
 
-Launcher icons stay local files. Set `APP_ICON_PATH`, `APP_ICON_SQUARE_PATH`, and `ANDROID_ADAPTIVE_ICON_PATH` to repo-relative assets, or upload those files as EAS file environment variables. On the worker, a file variable's value is the absolute path `app.config.ts` already accepts.
+The native launcher icon (iOS App Icon and the Android icon) is separate from the web favicon and from the runtime in-app mark (`BrandMark` / `iconUrl`). Supply it in one of these ways:
+
+1. `ICON_IMAGE_PATH` — a PNG or JPEG in the repo, or an EAS file environment variable with that name.
+2. `ICON_IMAGE_URL` — a public `https` URL for the merchant icon (for example a Cartaisy backend branding CDN URL). `scripts/resolveNativeIcon.js`, called from `app.config.ts`, downloads it while config evaluates, including on the EAS worker during prebuild. No `Authorization` header is sent. The URL is not an `EXPO_PUBLIC_` variable, so it is not bundled into JavaScript.
+
+`ICON_IMAGE_URL` must be `https`, must use a public hostname, and must not carry userinfo or credential query parameters (`token`, `access_token`, `key`, `secret`, Shopify token prefixes, and similar). A missing file, a rejected URL, or a failed download resolves the launcher icon to `assets/images/neutral-icon.png` on any build that is not the default Cartaisy identity (and on a Cartaisy build that explicitly set an icon asset which then failed). The Cartaisy square icon (`assets/images/icon.png`) remains the launcher icon only for the default Cartaisy identity when no icon path or URL is set. `ICON_IMAGE_PATH` wins when it is set; a path that does not point at a PNG or JPEG also resolves to the neutral image and does not continue on to the URL.
+
+Android adaptive foreground uses `ANDROID_ADAPTIVE_ICON_PATH` when that value is a PNG or JPEG other than the Cartaisy default `assets/images/adaptive-icon.png`. Otherwise it uses the resolved launcher icon, so a merchant build does not inherit the Cartaisy adaptive wordmark. The default Cartaisy identity keeps `assets/images/adaptive-icon.png` when no separate merchant adaptive file is set. `APP_ICON_SQUARE_PATH` is not read. `APP_ICON_PATH` is the web favicon only. Notification icons are unchanged.
 
 The pre-JS native splash is separate from the icon and from the runtime JS splash (`app/splash.tsx`). Supply it in one of these ways:
 
@@ -46,7 +55,7 @@ The pre-JS native splash is separate from the icon and from the runtime JS splas
 
 `SPLASH_IMAGE_URL` must be `https`, must use a public hostname, and must not carry userinfo or credential query parameters (`token`, `access_token`, `key`, `secret`, Shopify token prefixes, and similar). A missing file, a rejected URL, or a failed download resolves the native splash to `assets/images/neutral-splash.png` on any build that is not the default Cartaisy identity (and on a Cartaisy build that explicitly set a splash asset which then failed). The Cartaisy wordmark remains the splash only for the default Cartaisy identity when no splash path or URL is set.
 
-The runtime JS splash still comes from store config through `BrandMark`. This download does not change that path and does not put Shopify tokens on the device.
+The runtime JS icon and splash still come from store config through `BrandMark`. These downloads do not change that path and do not put Shopify tokens on the device.
 
 ## Safe Public Build Variables
 

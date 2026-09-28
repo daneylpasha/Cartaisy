@@ -243,7 +243,7 @@ These values are packaged into the binary or native project. Changing them requi
 
 ### Native Assets
 
-- [ ] Provide the iOS AppIcon asset set at all required sizes.
+- [ ] Provide the iOS AppIcon asset set at all required sizes (see native app icon below).
 - [ ] Provide the Android launcher and adaptive icon assets.
 - [ ] Provide the native splash image and background color (see below).
 - [ ] Provide any in-app bundled logo assets needed before runtime config loads.
@@ -262,11 +262,31 @@ Supply the image at build time in one of these ways:
 
 Also set `SPLASH_BACKGROUND_COLOR`.
 
-Launcher icons stay on `APP_ICON_PATH`, `APP_ICON_SQUARE_PATH`, and `ANDROID_ADAPTIVE_ICON_PATH` (repo path or EAS file env). They are not downloaded from `SPLASH_IMAGE_URL`.
+Launcher icons are not downloaded from `SPLASH_IMAGE_URL`. They use `ICON_IMAGE_PATH` / `ICON_IMAGE_URL` (see below).
 
 If the splash file is missing, the URL is rejected, or the download fails, a merchant build uses `assets/images/neutral-splash.png` with `SPLASH_BACKGROUND_COLOR`. That image has no Cartaisy wordmark. The wordmark is used only for the default Cartaisy identity when no splash path or URL is set.
 
 The sample profile `sample-merchant-development` sets `SPLASH_IMAGE_URL` to `https://cdn.example.com/stores/acme-outfitters/splash.png`. That host does not serve an image, so config evaluation uses the neutral splash. A real merchant replaces the URL or sets `SPLASH_IMAGE_PATH`. This slice does not require a new EAS cloud build; sample Android signing stays as already recorded in this checklist.
+
+### Native app icon (launcher)
+
+The native launcher icon is the iOS App Icon and the Android icon configured by `icon` in `app.config.ts`. The Android adaptive foreground is the home-screen icon on current Android versions. The runtime in-app mark (`BrandMark` / `iconUrl` from store config) is a separate path and is not changed by this checklist.
+
+Supply the image at build time in one of these ways:
+
+1. **Env path.** Set `ICON_IMAGE_PATH` to a square PNG or JPEG in the repo (for example `./assets/images/acme-outfitters-logo.png`). Expo cover-crops a non-square source.
+2. **EAS file env.** Upload the PNG or JPEG as a file-type EAS environment variable named `ICON_IMAGE_PATH`. On the worker the value is an absolute file path, which `app.config.ts` accepts. This is the same pattern as `IOS_GOOGLE_SERVICES_FILE` / `ANDROID_GOOGLE_SERVICES_FILE`.
+3. **Public branding URL.** Set `ICON_IMAGE_URL` to a public `https` URL (a Cartaisy backend branding CDN URL is the expected source). `app.config.ts` downloads it when config is evaluated on the EAS worker. No authorization header is sent. Do not copy the URL into an `EXPO_PUBLIC_*` variable, and do not put Shopify tokens, signed secrets, or other credentials in the URL.
+
+`ICON_IMAGE_PATH` wins when both are set. A path that is missing or is not a PNG or JPEG does not fall through to the URL.
+
+If the icon file is missing, the URL is rejected, or the download fails, a merchant build uses `assets/images/neutral-icon.png`. That image has no Cartaisy wordmark. `assets/images/icon.png` is used only for the default Cartaisy identity when no icon path or URL is set.
+
+Set `ANDROID_ADAPTIVE_ICON_PATH` when the merchant has a separate adaptive foreground. If that variable is unset, or it still points at `assets/images/adaptive-icon.png`, a merchant build uses the resolved launcher icon instead of the Cartaisy adaptive wordmark. The default Cartaisy identity keeps `assets/images/adaptive-icon.png`.
+
+`APP_ICON_PATH` is the web favicon only. `APP_ICON_SQUARE_PATH` is not read. Notification icons stay on `APP_NOTIFICATION_ICON_PATH`.
+
+The sample profile `sample-merchant-development` sets `ICON_IMAGE_PATH` to `./assets/images/acme-outfitters-logo.png` (the existing square Acme placeholder) and `ANDROID_ADAPTIVE_ICON_PATH` to `./assets/images/acme-outfitters-adaptive-icon.png`. A real merchant replaces the path or sets `ICON_IMAGE_URL`. This slice does not require a new EAS cloud build; sample Android signing stays as already recorded in this checklist.
 
 ### Firebase and Push
 
@@ -297,7 +317,8 @@ The sample profile `sample-merchant-development` sets `SPLASH_IMAGE_URL` to `htt
 - [ ] `ANDROID_PACKAGE`
 - [ ] `ANDROID_VERSION_CODE`
 - [ ] `ANDROID_GOOGLE_SERVICES_FILE`
-- [ ] `APP_ICON_PATH`
+- [ ] `APP_ICON_PATH` (web favicon)
+- [ ] `ICON_IMAGE_PATH` or `ICON_IMAGE_URL` (public https only; no credentials; not `EXPO_PUBLIC_*`)
 - [ ] `APP_NOTIFICATION_ICON_PATH`
 - [ ] `APP_NOTIFICATION_COLOR`
 - [ ] `ANDROID_ADAPTIVE_ICON_PATH`
@@ -346,11 +367,11 @@ These values should be loaded from the backend at runtime through the existing s
 
 - [ ] Confirm `.easignore` still excludes `/ios` and `/android` so the EAS build regenerates native projects from `app.config.ts`; builds from the checked-in Cartaisy projects (including local `expo run:*`) ignore merchant identity values.
 - [ ] Confirm the merchant identity env values are set on the EAS build (EAS environment variables or `eas.json` profile `env`), not only in a local shell.
-- [ ] Run `npx expo config --type public` with the merchant environment set and verify name, slug, scheme, bundle ID, package, Firebase file paths, payment merchant ID, and the `expo-splash-screen` image (merchant file, downloaded file, or `assets/images/neutral-splash.png`).
+- [ ] Run `npx expo config --type public` with the merchant environment set and verify name, slug, scheme, bundle ID, package, Firebase file paths, payment merchant ID, the launcher `icon` (merchant file, downloaded file, or `assets/images/neutral-icon.png`), and the `expo-splash-screen` image (merchant file, downloaded file, or `assets/images/neutral-splash.png`).
 - [ ] Build iOS with the merchant bundle identifier and Firebase file.
 - [ ] Build Android with the merchant package name and Firebase file.
 - [ ] Install each build on a clean device or simulator.
-- [ ] Verify launcher name, launcher icon, and the pre-JS native splash (merchant splash or the neutral splash on a merchant build).
+- [ ] Verify launcher name, launcher icon (merchant icon or the neutral icon on a merchant build; no Cartaisy wordmark), and the pre-JS native splash (merchant splash or the neutral splash on a merchant build).
 - [ ] Verify the app connects to the intended backend API URL.
 - [ ] Verify the app loads data for the intended store ID only.
 - [ ] Verify currency, timezone, and store name display from runtime config where those fields are used.

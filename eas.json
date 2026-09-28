@@ -25,6 +25,7 @@
         "IOS_GOOGLE_SERVICES_FILE": "./GoogleService-Info.plist",
         "ANDROID_GOOGLE_SERVICES_FILE": "./google-services.json",
         "APP_ICON_PATH": "./assets/images/acme-outfitters-logo.png",
+        "ICON_IMAGE_PATH": "./assets/images/acme-outfitters-logo.png",
         "APP_NOTIFICATION_ICON_PATH": "./assets/images/acme-outfitters-logo.png",
         "APP_NOTIFICATION_COLOR": "#1E90FF",
         "ANDROID_ADAPTIVE_ICON_PATH": "./assets/images/acme-outfitters-adaptive-icon.png",
