@@ -67,20 +67,21 @@ The fictional Acme sample sets `ICON_IMAGE_PATH` to `./assets/images/acme-outfit
 
 Use this when a merchant has uploaded branding and you are about to set env on that merchant's EAS project. The queue is the copy source. It does not start an EAS build. Self-serve EAS is not built; Step 8 is still a manual `eas build` after the dry run below.
 
-**Where the URLs are (current, 2026-09-28).** Open `/dashboard/admin/build-requests` as a platform operator. That page is recorded in the `cartaisy-dashboard` repo's `docs/STATUS.md` and in `docs/DECISIONS.md` under "The ops build queue shows public icon and splash URLs" (dashboard issue #43, PR #44). A store owner, including `super_admin`, gets a 403 empty state and is not a source for these URLs.
+**Where the URLs are.** Open `/dashboard/admin/build-requests` as a platform operator. That page is recorded in the `cartaisy-dashboard` repo's `docs/STATUS.md` and in `docs/DECISIONS.md` under "The ops build queue shows public icon and splash URLs" (dashboard issue #43, PR #44) and "Ops copies the icon as ICON_IMAGE_URL" (dashboard issue #45, PR #47). A store owner, including `super_admin`, gets a 403 empty state and is not a source for these URLs.
 
 Each row shows the merchant icon and splash when `GET /api/v1/admin/build-requests` includes them. `store.iconUrl` and `store.splashUrl` are optional. That contract is cartaisy-backend issue #177, in the `cartaisy-backend` repo's `docs/cartaisy/BUILD_REQUEST_API.md`. The list returns a URL only when it is absolute `https` and not token-shaped. Missing or unsafe branding is null. The API does not invent a Cartaisy CDN URL and does not select Shopify tokens. The same stored fields are on admin branding GET (`iconUrl` / `appIconUrl`, `splashUrl` / `splashImageUrl`) if you need to confirm a row. Prefer the queue so you do not open Settings or Mongo to find the URL.
 
-**Copy shape — current vs target.**
+**Copy shape.**
 
-- Splash, current: the splash button copies `SPLASH_IMAGE_URL=<url>`. Paste that assignment.
-- Icon, current: the icon button copies the bare `https` URL. It does not copy `ICON_IMAGE_URL=<url>`. On the merchant EAS project, set the variable name to `ICON_IMAGE_URL` and the value to that URL. Do not paste the bare URL into a different variable.
-- Icon, target: `cartaisy-dashboard` issue #45 (open) changes the icon button so it copies `ICON_IMAGE_URL=<url>`, matching splash. After that issue lands, paste the assignment the same way as splash. Until it lands, do not expect an `ICON_IMAGE_URL=` prefix on the icon clipboard.
+Both buttons copy an env assignment. Paste each assignment onto the merchant EAS project. Do not strip the variable name.
+
+- Icon: the icon button copies `ICON_IMAGE_URL=<url>`.
+- Splash: the splash button copies `SPLASH_IMAGE_URL=<url>`.
 
 **Paste.**
 
-1. On the merchant's row, copy splash when the splash button is present. Set `SPLASH_IMAGE_URL` on the merchant EAS project (plain visibility). The value is the public `https` URL only.
-2. Copy the icon when the icon button is present. Set `ICON_IMAGE_URL` using the current copy shape above.
+1. On the merchant's row, copy the icon when the icon button is present. Paste `ICON_IMAGE_URL=<url>` as `ICON_IMAGE_URL` on the merchant EAS project (plain visibility). The value is the public `https` URL only.
+2. Copy splash when the splash button is present. Paste `SPLASH_IMAGE_URL=<url>` as `SPLASH_IMAGE_URL` the same way.
 3. If a button is absent, that asset has no public `https` URL. Supply `ICON_IMAGE_PATH` or `SPLASH_IMAGE_PATH` (repo file or EAS file env), or write on the Merchant Build Record that the neutral image is intentional (`assets/images/neutral-icon.png` or `assets/images/neutral-splash.png`). Do not substitute the Cartaisy wordmark.
 4. Leave `ICON_IMAGE_PATH` unset when `ICON_IMAGE_URL` should win, and leave `SPLASH_IMAGE_PATH` unset when `SPLASH_IMAGE_URL` should win. A set path that is missing or is not a PNG or JPEG resolves to the neutral image and does not continue on to the URL.
 5. Do not copy either URL into an `EXPO_PUBLIC_*` variable. Do not put Shopify Admin, Storefront, or custom-app tokens in these variables or anywhere else in mobile env. Do not commit the real URL.
@@ -282,6 +283,6 @@ No longer blocked on decisions: both ownership questions are settled and recorde
 - `docs/DECISIONS.md`
 - `docs/examples/sample-merchant.env`
 - `app.config.ts`
-- `cartaisy-dashboard` `docs/STATUS.md` and `docs/DECISIONS.md` ("The ops build queue shows public icon and splash URLs", issue #43 / PR #44; icon assignment parity is open issue #45)
+- `cartaisy-dashboard` `docs/STATUS.md` and `docs/DECISIONS.md` ("The ops build queue shows public icon and splash URLs", issue #43 / PR #44; "Ops copies the icon as ICON_IMAGE_URL", issue #45 / PR #47)
 - `cartaisy-backend` `docs/cartaisy/BUILD_REQUEST_API.md` (issue #177)
-- GitHub issues #60, #61, #133, #135, #137
+- GitHub issues #60, #61, #133, #135, #137, #139
