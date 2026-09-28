@@ -1,5 +1,9 @@
 import { useCompanyName } from "@/hooks/useCompanyName";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
+import {
+  isValidLogoUrl,
+  isValidPublicBrandImageUrl,
+} from "@/utils/brandingValidation";
 import React, { useEffect, useState } from "react";
 import { Image, StyleSheet } from "react-native";
 import { Text, YStack } from "tamagui";
@@ -28,9 +32,9 @@ const SIZE_DEFAULTS: Record<
 
 /**
  * Store identity for headers, splash, auth, and account.
- * Uses the public logo when the store published one. Otherwise the store
- * name, or a quiet ink monogram when the name is also missing.
- * Never renders the bundled Cartaisy wordmark.
+ * Uses the public logo when the store published one. Otherwise the square
+ * app icon (`iconUrl`), then the store name, then a quiet ink monogram.
+ * Never renders the bundled Cartaisy wordmark or a token-shaped image URL.
  */
 export const BrandMark = ({
   tone = "onLight",
@@ -39,22 +43,37 @@ export const BrandMark = ({
   logoHeight,
 }: BrandMarkProps) => {
   const logoUrl = useStoreConfigStore((state) => state.logoUrl);
+  const iconUrl = useStoreConfigStore((state) => state.iconUrl);
   const primaryColor = useStoreConfigStore((state) => state.primaryColor);
   const companyName = useCompanyName();
-  const trimmedLogo = logoUrl?.trim() ?? "";
-  const [failed, setFailed] = useState(false);
+  const safeLogo = isValidLogoUrl(logoUrl) ? logoUrl.trim() : "";
+  const safeIcon = isValidPublicBrandImageUrl(iconUrl) ? iconUrl.trim() : "";
+  const [logoFailed, setLogoFailed] = useState(false);
+  const [iconFailed, setIconFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setFailed(false);
+    setLogoFailed(false);
     setLoaded(false);
-  }, [trimmedLogo]);
+  }, [safeLogo]);
+
+  useEffect(() => {
+    setIconFailed(false);
+    setLoaded(false);
+  }, [safeIcon]);
 
   const defaults = SIZE_DEFAULTS[size];
-  const width = logoWidth ?? defaults.logoWidth;
-  const height = logoHeight ?? defaults.logoHeight;
-  const showLogo = Boolean(trimmedLogo) && !failed;
+  const showLogo = Boolean(safeLogo) && !logoFailed;
+  const showIcon = !showLogo && Boolean(safeIcon) && !iconFailed;
+  const imageUrl = showLogo ? safeLogo : showIcon ? safeIcon : "";
+  const iconSize = defaults.mark * 2;
+  const width = showIcon ? iconSize : logoWidth ?? defaults.logoWidth;
+  const height = showIcon ? iconSize : logoHeight ?? defaults.logoHeight;
   const ink = tone === "onColor" ? "$white" : primaryColor || "$primary";
+
+  useEffect(() => {
+    setLoaded(false);
+  }, [imageUrl]);
 
   const wordmark = companyName ? (
     <Text
@@ -100,26 +119,36 @@ export const BrandMark = ({
       minHeight={height}
       maxWidth={Math.max(width + 48, 180)}
     >
-      {showLogo ? (
+      {imageUrl ? (
         <Image
-          testID="brand-mark-logo"
-          accessibilityLabel={companyName || "Store logo"}
-          source={{ uri: trimmedLogo }}
+          testID={showIcon ? "brand-mark-icon" : "brand-mark-logo"}
+          accessibilityLabel={
+            companyName || (showIcon ? "Store icon" : "Store logo")
+          }
+          source={{ uri: imageUrl }}
           resizeMode="contain"
           onLoad={() => setLoaded(true)}
-          onError={() => setFailed(true)}
+          onError={() => {
+            if (showLogo) {
+              setLogoFailed(true);
+            } else {
+              setIconFailed(true);
+            }
+          }}
           style={[
             styles.logo,
+            showIcon ? styles.icon : null,
             {
               width,
               height,
+              borderRadius: showIcon ? Math.round(iconSize * 0.22) : 0,
               opacity: loaded ? 1 : 0,
               position: loaded ? "relative" : "absolute",
             },
           ]}
         />
       ) : null}
-      {showLogo && loaded ? null : wordmark}
+      {imageUrl && loaded ? null : wordmark}
     </YStack>
   );
 };
@@ -127,5 +156,8 @@ export const BrandMark = ({
 const styles = StyleSheet.create({
   logo: {
     alignSelf: "center",
+  },
+  icon: {
+    overflow: "hidden",
   },
 });

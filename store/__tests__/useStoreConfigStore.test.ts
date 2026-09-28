@@ -19,6 +19,8 @@ const baseState = {
   primaryColor: undefined,
   secondaryColor: undefined,
   logoUrl: undefined,
+  iconUrl: undefined,
+  splashUrl: undefined,
   isLoaded: false,
   _hasHydrated: false,
 };
@@ -293,6 +295,8 @@ describe("useStoreConfigStore", () => {
       primaryColor: "#A82A50",
       secondaryColor: "#4B5563",
       logoUrl: "https://cdn.cartaisy.com/stores/acme/logo.png",
+      iconUrl: "https://cdn.example.com/stores/acme/icon.png",
+      splashUrl: "https://cdn.example.com/stores/acme/splash.png",
     });
 
     useStoreConfigStore.getState().reset();
@@ -301,7 +305,64 @@ describe("useStoreConfigStore", () => {
     expect(state.primaryColor).toBeUndefined();
     expect(state.secondaryColor).toBeUndefined();
     expect(state.logoUrl).toBeUndefined();
+    expect(state.iconUrl).toBeUndefined();
+    expect(state.splashUrl).toBeUndefined();
     expect(state.currency).toBe("USD");
     expect(state.isLoaded).toBe(false);
+  });
+
+  it("persists splashUrl and iconUrl, clears them on a later successful fetch, and keeps them when that fetch fails", () => {
+    useStoreConfigStore.getState().setConfig({
+      currency: "USD",
+      timezone: "UTC",
+      storeName: "Acme Outfitters",
+      iconUrl: "https://cdn.example.com/stores/acme/icon.png",
+      splashUrl: "https://cdn.example.com/stores/acme/splash.png",
+    });
+
+    expect(useStoreConfigStore.getState().iconUrl).toBe(
+      "https://cdn.example.com/stores/acme/icon.png"
+    );
+    expect(useStoreConfigStore.getState().splashUrl).toBe(
+      "https://cdn.example.com/stores/acme/splash.png"
+    );
+
+    useStoreConfigStore.getState().setConfig({
+      currency: "USD",
+      timezone: "UTC",
+      storeName: "Acme Outfitters",
+      fetchSucceeded: false,
+    });
+
+    expect(useStoreConfigStore.getState().iconUrl).toBe(
+      "https://cdn.example.com/stores/acme/icon.png"
+    );
+    expect(useStoreConfigStore.getState().splashUrl).toBe(
+      "https://cdn.example.com/stores/acme/splash.png"
+    );
+
+    useStoreConfigStore.getState().setConfig({
+      currency: "USD",
+      timezone: "UTC",
+      storeName: "Acme Outfitters",
+    });
+
+    expect(useStoreConfigStore.getState().iconUrl).toBeUndefined();
+    expect(useStoreConfigStore.getState().splashUrl).toBeUndefined();
+  });
+
+  it("revalidateBranding drops a token-shaped splash or icon that was persisted earlier", () => {
+    useStoreConfigStore.setState({
+      iconUrl: "https://cdn.example.com/icon.png?access_token=shpat_secret",
+      splashUrl: "https://cdn.example.com/shpat_abc/splash.png",
+      logoUrl: "https://cdn.example.com/logo.png",
+    });
+
+    useStoreConfigStore.getState().revalidateBranding();
+
+    const state = useStoreConfigStore.getState();
+    expect(state.iconUrl).toBeUndefined();
+    expect(state.splashUrl).toBeUndefined();
+    expect(state.logoUrl).toBe("https://cdn.example.com/logo.png");
   });
 });

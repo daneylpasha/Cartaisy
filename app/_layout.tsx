@@ -1,4 +1,5 @@
 import { queryClient } from "@/api/config/queryClient";
+import { EarlyMerchantSplash } from "@/components/molecules/EarlyMerchantSplash";
 import { AppInitializer } from "@/components/providers/AppInitializer";
 import { HEADER_CONFIGS } from "@/constants/headers";
 import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
@@ -10,6 +11,11 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { StripeProvider } from "@stripe/stripe-react-native";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
+
+// Keep the native splash up until we know whether a merchant splash should
+// replace it. Rejected calls are safe on web and during fast refresh.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // Suppress console logs in production to prevent error toasts/displays
 if (!__DEV__) {
@@ -738,6 +744,15 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
+  // The splash route hides the native splash once store config has hydrated.
+  // This is the backup for a launch that never mounts that route.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      SplashScreen.hideAsync().catch(() => {});
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Process pending notification from killed state AFTER fonts are loaded and navigation is ready
   useEffect(() => {
     if (!loaded) return;
@@ -808,7 +823,7 @@ export default function RootLayout() {
   //   }
   // }, []);
 
-  if (!loaded) return null;
+  if (!loaded) return <EarlyMerchantSplash />;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

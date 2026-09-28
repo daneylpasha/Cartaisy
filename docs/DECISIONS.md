@@ -214,6 +214,18 @@ Impact: `app/(tabs)/index.tsx` keeps the existing module renderer for published 
 
 Related docs: `docs/HOME_API_USAGE.md`, `docs/STATUS.md`, `utils/defaultHome.ts`, `components/organisms/home/DefaultHome.tsx`, GitHub issue #121.
 
+### Shopper Splash And In-App Icon Come From Store Config
+
+Date: 2026-09-28.
+
+Decision: The shopper JS splash and the in-app mark read public branding from the existing `GET /store/config` fetch. `splashUrl` wins over `splashImageUrl`. `iconUrl` wins over `appIconUrl`. The app drops anything that is not an absolute `http:` or `https:` URL, anything token-shaped (`shpat_`, `shpss_`, `shpca_`, `shpct_`, `shpua_`, `access_token`, `bearer`), and any URL with userinfo. A missing, rejected, or failed splash keeps the current mark (logo, then icon, then store name, then monogram). `logoUrl` stays HTTPS-only. Native launcher icons, the Expo splash asset, and EAS identity stay build-time.
+
+Reason: Merchants already upload an icon and splash on the dashboard, and the public store config now returns them (cartaisy-backend PR #176). The cold-start splash was still the bundled Cartaisy asset. Those URLs are untrusted public input and must not put a Shopify token on the device.
+
+Impact: `utils/brandingValidation.ts`, `store/useStoreConfigStore.ts`, and `AppInitializer` extend the logo/color path. `app/splash.tsx` paints the merchant splash. `BrandMark` uses `iconUrl` only when no logo is available. `X-Store-ID` is unchanged. No Shopify token is sent to or rendered by the client.
+
+Related docs: `docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md`, `docs/STATUS.md`, GitHub issue #131.
+
 ## Related Docs And Issues
 
 - `CARTAISY_CONTEXT.md`

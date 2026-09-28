@@ -1,6 +1,7 @@
 import {
   isValidHexColor,
   isValidLogoUrl,
+  isValidPublicBrandImageUrl,
   validateBranding,
 } from "@/utils/brandingValidation";
 
@@ -62,6 +63,51 @@ describe("brandingValidation", () => {
       expect(isValidLogoUrl(undefined)).toBe(false);
       expect(isValidLogoUrl(null)).toBe(false);
       expect(isValidLogoUrl(42)).toBe(false);
+    });
+
+    it("rejects token-shaped https URLs so a Shopify secret cannot be rendered", () => {
+      expect(
+        isValidLogoUrl("https://cdn.example.com/logo.png?access_token=shpat_secret")
+      ).toBe(false);
+      expect(isValidLogoUrl("https://cdn.example.com/shpat_abc/logo.png")).toBe(
+        false
+      );
+    });
+  });
+
+  describe("isValidPublicBrandImageUrl", () => {
+    it("accepts absolute http and https URLs", () => {
+      expect(
+        isValidPublicBrandImageUrl("https://cdn.example.com/splash.png")
+      ).toBe(true);
+      expect(
+        isValidPublicBrandImageUrl("http://cdn.example.com/icon.png")
+      ).toBe(true);
+    });
+
+    it("rejects token-shaped values, userinfo, and non-http(s) URLs", () => {
+      expect(
+        isValidPublicBrandImageUrl(
+          "https://cdn.example.com/splash.png?access_token=shpat_secret"
+        )
+      ).toBe(false);
+      expect(
+        isValidPublicBrandImageUrl("https://cdn.example.com/shpss_token.png")
+      ).toBe(false);
+      expect(
+        isValidPublicBrandImageUrl(
+          "https://user:secret@cdn.example.com/splash.png"
+        )
+      ).toBe(false);
+      expect(isValidPublicBrandImageUrl("ftp://cdn.example.com/splash.png")).toBe(
+        false
+      );
+      expect(isValidPublicBrandImageUrl("data:image/png;base64,AAAA")).toBe(
+        false
+      );
+      expect(isValidPublicBrandImageUrl("/splash.png")).toBe(false);
+      expect(isValidPublicBrandImageUrl(null)).toBe(false);
+      expect(isValidPublicBrandImageUrl("")).toBe(false);
     });
   });
 
@@ -357,6 +403,45 @@ describe("brandingValidation", () => {
         primaryColor: "#A82A50",
         secondaryColor: "#4B5563",
       });
+    });
+
+    it("prefers splashUrl and iconUrl over their read aliases", () => {
+      expect(
+        validateBranding({
+          splashUrl: "https://cdn.example.com/splash-primary.png",
+          splashImageUrl: "https://cdn.example.com/splash-alias.png",
+          iconUrl: "https://cdn.example.com/icon-primary.png",
+          appIconUrl: "https://cdn.example.com/icon-alias.png",
+        })
+      ).toEqual({
+        splashUrl: "https://cdn.example.com/splash-primary.png",
+        iconUrl: "https://cdn.example.com/icon-primary.png",
+      });
+    });
+
+    it("uses a valid alias when the canonical splash or icon URL is token-shaped", () => {
+      expect(
+        validateBranding({
+          splashUrl: "https://cdn.example.com/splash.png?access_token=shpat_nope",
+          splashImageUrl: "http://cdn.example.com/splash-ok.png",
+          iconUrl: "not a url",
+          appIconUrl: "https://cdn.example.com/icon-ok.png",
+        })
+      ).toEqual({
+        splashUrl: "http://cdn.example.com/splash-ok.png",
+        iconUrl: "https://cdn.example.com/icon-ok.png",
+      });
+    });
+
+    it("omits splash and icon when both the canonical value and the alias are unusable", () => {
+      expect(
+        validateBranding({
+          splashUrl: "shpat_secret",
+          splashImageUrl: "javascript:alert(1)",
+          iconUrl: "ftp://cdn.example.com/icon.png",
+          appIconUrl: null as unknown as string,
+        })
+      ).toEqual({});
     });
 
     it("returns an empty object when nothing is present or valid", () => {

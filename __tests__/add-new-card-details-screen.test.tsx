@@ -92,6 +92,8 @@ describe("Add New Card Details screen — runtime logo", () => {
       primaryColor: undefined,
       secondaryColor: undefined,
       logoUrl: undefined,
+      iconUrl: undefined,
+      splashUrl: undefined,
       storeName: "",
       isLoaded: false,
     });

@@ -45,6 +45,35 @@ describe("getStoreConfig", () => {
     });
   });
 
+  it("passes through icon and splash fields, including read aliases, without rewriting them", async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        data: {
+          currency: "USD",
+          timezone: "UTC",
+          name: "Acme Outfitters",
+          iconUrl: "https://cdn.example.com/stores/acme/icon.png",
+          appIconUrl: "https://cdn.example.com/stores/acme/icon.png",
+          splashUrl: "https://cdn.example.com/stores/acme/splash.png",
+          splashImageUrl: "https://cdn.example.com/stores/acme/splash.png",
+        },
+      },
+    });
+
+    const config = await getStoreConfig();
+
+    expect(config.iconUrl).toBe("https://cdn.example.com/stores/acme/icon.png");
+    expect(config.appIconUrl).toBe(
+      "https://cdn.example.com/stores/acme/icon.png"
+    );
+    expect(config.splashUrl).toBe(
+      "https://cdn.example.com/stores/acme/splash.png"
+    );
+    expect(config.splashImageUrl).toBe(
+      "https://cdn.example.com/stores/acme/splash.png"
+    );
+  });
+
   it("returns branding fields as undefined when the backend response omits them entirely (today's default Cartaisy store)", async () => {
     mockGet.mockResolvedValueOnce({
       data: {
@@ -61,6 +90,8 @@ describe("getStoreConfig", () => {
     expect(config.primaryColor).toBeUndefined();
     expect(config.secondaryColor).toBeUndefined();
     expect(config.logoUrl).toBeUndefined();
+    expect(config.iconUrl).toBeUndefined();
+    expect(config.splashUrl).toBeUndefined();
     expect(config.currency).toBe("USD");
     expect(config.name).toBe("Cartaisy");
   });

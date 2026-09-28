@@ -55,6 +55,8 @@ describe("HomeHeader", () => {
       primaryColor: undefined,
       secondaryColor: undefined,
       logoUrl: undefined,
+      iconUrl: undefined,
+      splashUrl: undefined,
       storeName: "",
       // isLoaded: false matches the store's post-rehydration/pre-fetch
       // default (see useStoreConfigStore.ts's onRehydrateStorage reset).

@@ -1,14 +1,15 @@
 /**
- * Validation helpers for the runtime branding fields (`primaryColor`,
- * `secondaryColor`, `logoUrl`) returned by `GET /store/config`.
+ * Validation helpers for the runtime branding fields returned by
+ * `GET /store/config` (`primaryColor`, `secondaryColor`, `logoUrl`,
+ * `iconUrl` / `appIconUrl`, `splashUrl` / `splashImageUrl`).
  *
  * The backend already validates and sanitizes these fields before returning
- * them (malformed hex colors are omitted, `logoUrl` is omitted unless it's an
- * absolute URL — see docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md), but the
- * mobile app treats the network response as untrusted input anyway rather than
- * assuming today's backend behavior holds forever. Anything that fails
- * validation here is treated as absent (falls back to bundled branding), never
- * as a thrown error.
+ * them (malformed hex colors are omitted, brand image URLs are omitted unless
+ * they are absolute http(s) URLs and not token-shaped — see
+ * docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md), but the mobile app treats the
+ * network response as untrusted input anyway rather than assuming today's
+ * backend behavior holds forever. Anything that fails validation here is
+ * treated as absent (falls back to bundled branding), never as a thrown error.
  */
 
 import {
@@ -30,19 +31,71 @@ export function isValidHexColor(value: unknown): value is string {
   return typeof value === "string" && HEX_COLOR_PATTERN.test(value);
 }
 
-export function isValidLogoUrl(value: unknown): value is string {
-  if (typeof value !== "string" || value.length === 0) {
+// Same markers the backend uses in `sanitizeBrandImageUrl`
+// (cartaisy-backend src/controllers/storeConfigController.ts). A Shopify
+// admin token pasted into a branding URL must never be rendered or persisted
+// on the device.
+const TOKEN_SHAPED_URL = /shpat_|shpss_|shpca_|shpct_|shpua_|access_token|bearer\s/i;
+
+/**
+ * Absolute http(s) brand image URL that is safe to render.
+ * Matches the backend's `sanitizeBrandImageUrl`: trim, drop token-shaped
+ * values, allow only `http:` and `https:`. Also drops URLs that embed
+ * userinfo, which the public config should never need.
+ */
+export function isValidPublicBrandImageUrl(value: unknown): value is string {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed || TOKEN_SHAPED_URL.test(trimmed)) {
     return false;
   }
 
   try {
-    const parsedUrl = new URL(value);
+    const parsedUrl = new URL(trimmed);
+    if (parsedUrl.username || parsedUrl.password) {
+      return false;
+    }
+    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Prefer the canonical field when it is usable, otherwise the read alias.
+ * An invalid canonical value does not block a valid alias.
+ */
+export function pickPublicBrandImageUrl(
+  primary: unknown,
+  alias: unknown
+): string | undefined {
+  if (isValidPublicBrandImageUrl(primary)) {
+    return primary.trim();
+  }
+  if (isValidPublicBrandImageUrl(alias)) {
+    return alias.trim();
+  }
+  return undefined;
+}
+
+export function isValidLogoUrl(value: unknown): value is string {
+  if (!isValidPublicBrandImageUrl(value)) {
+    return false;
+  }
+
+  try {
+    const parsedUrl = new URL(value.trim());
     // HTTPS only. An accepted http: URL would be silently unusable once a
     // future ticket actually renders it: iOS release builds set
     // NSAllowsArbitraryLoads to false and Android only allows cleartext
     // traffic in the debug manifest, so a persisted http: logoUrl would
     // simply fail to load in production. Matches the contract doc's own
     // "require HTTPS for remote assets outside development" guidance.
+    // Splash and icon URLs follow the backend and allow http as well;
+    // a cleartext splash that fails to load falls back in the UI.
     return parsedUrl.protocol === "https:";
   } catch {
     return false;
@@ -53,12 +106,18 @@ export interface RawBranding {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  iconUrl?: string;
+  appIconUrl?: string;
+  splashUrl?: string;
+  splashImageUrl?: string;
 }
 
 export interface ValidatedBranding {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  iconUrl?: string;
+  splashUrl?: string;
 }
 
 /**
@@ -130,7 +189,17 @@ export function validateBranding(raw: RawBranding): ValidatedBranding {
     }
   }
   if (isValidLogoUrl(raw.logoUrl)) {
-    validated.logoUrl = raw.logoUrl;
+    validated.logoUrl = raw.logoUrl.trim();
+  }
+
+  const iconUrl = pickPublicBrandImageUrl(raw.iconUrl, raw.appIconUrl);
+  if (iconUrl) {
+    validated.iconUrl = iconUrl;
+  }
+
+  const splashUrl = pickPublicBrandImageUrl(raw.splashUrl, raw.splashImageUrl);
+  if (splashUrl) {
+    validated.splashUrl = splashUrl;
   }
 
   return validated;

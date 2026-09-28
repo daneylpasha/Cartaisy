@@ -1,18 +1,50 @@
 import { BrandMark } from "@/components/molecules/BrandMark";
+import { MerchantSplashImage } from "@/components/molecules/MerchantSplashImage";
 import useAuthStore from "@/store/useAuthStore";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
+import { isValidPublicBrandImageUrl } from "@/utils/brandingValidation";
 import {
   resetDeepLinkState,
   wasDeepLinkHandled,
 } from "@/utils/navigationState";
+import * as SplashScreen from "expo-splash-screen";
 import { router } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StatusBar } from "react-native";
 import { YStack } from "tamagui";
 
 const SPLASH_DURATION = 3000;
+const SPLASH_LOAD_TIMEOUT = 2500;
 
 const Splash = () => {
   const hasNavigated = useRef(false);
+  const splashReadyRef = useRef(false);
+  const hydrated = useStoreConfigStore((state) => state._hasHydrated);
+  const splashUrl = useStoreConfigStore((state) => state.splashUrl);
+  const safeSplash = isValidPublicBrandImageUrl(splashUrl)
+    ? splashUrl.trim()
+    : "";
+  const [splashFailed, setSplashFailed] = useState(false);
+
+  useEffect(() => {
+    splashReadyRef.current = false;
+    setSplashFailed(false);
+
+    if (!hydrated || !safeSplash) return;
+
+    const timer = setTimeout(() => {
+      if (!splashReadyRef.current) {
+        setSplashFailed(true);
+      }
+    }, SPLASH_LOAD_TIMEOUT);
+
+    return () => clearTimeout(timer);
+  }, [hydrated, safeSplash]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    SplashScreen.hideAsync().catch(() => {});
+  }, [hydrated]);
 
   useEffect(() => {
     // Only navigate once on initial mount
@@ -56,6 +88,16 @@ const Splash = () => {
     return () => clearTimeout(timer);
   }, []); // Empty dependency - only run once on mount
 
+  const showMerchantSplash = Boolean(safeSplash) && !splashFailed;
+
+  if (!hydrated) {
+    return (
+      <YStack flex={1} backgroundColor="$white" testID="splash-pending">
+        <StatusBar hidden={true} />
+      </YStack>
+    );
+  }
+
   return (
     <YStack
       flex={1}
@@ -64,7 +106,17 @@ const Splash = () => {
       alignItems="center"
     >
       <StatusBar hidden={true} />
-      <BrandMark size="hero" tone="onLight" />
+      {showMerchantSplash ? (
+        <MerchantSplashImage
+          uri={safeSplash}
+          onLoad={() => {
+            splashReadyRef.current = true;
+          }}
+          onError={() => setSplashFailed(true)}
+        />
+      ) : (
+        <BrandMark size="hero" tone="onLight" />
+      )}
     </YStack>
   );
 };

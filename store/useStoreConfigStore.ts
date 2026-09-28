@@ -15,6 +15,10 @@ interface StoreConfigState {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  // Canonical in-app icon and splash. Aliases (`appIconUrl`,
+  // `splashImageUrl`) are resolved before they reach this store.
+  iconUrl?: string;
+  splashUrl?: string;
   isLoaded: boolean;
   // True once zustand's persist middleware has finished its async
   // AsyncStorage read and merged any previously-persisted state in. Until
@@ -37,6 +41,8 @@ interface StoreConfigState {
     primaryColor?: string;
     secondaryColor?: string;
     logoUrl?: string;
+    iconUrl?: string;
+    splashUrl?: string;
     // Whether this call represents a successful `/store/config` fetch.
     // Defaults to true. When explicitly false (the caller's fetch failed
     // and it's passing through its own fallback defaults), branding
@@ -60,6 +66,8 @@ const useStoreConfigStore = create<StoreConfigState>()(
       primaryColor: undefined,
       secondaryColor: undefined,
       logoUrl: undefined,
+      iconUrl: undefined,
+      splashUrl: undefined,
       isLoaded: false,
       _hasHydrated: false,
       setHasHydrated: (state) => set({ _hasHydrated: state }),
@@ -68,12 +76,16 @@ const useStoreConfigStore = create<StoreConfigState>()(
           primaryColor: state.primaryColor,
           secondaryColor: state.secondaryColor,
           logoUrl: state.logoUrl,
+          iconUrl: state.iconUrl,
+          splashUrl: state.splashUrl,
         });
 
         return {
           primaryColor: revalidated.primaryColor,
           secondaryColor: revalidated.secondaryColor,
           logoUrl: revalidated.logoUrl,
+          iconUrl: revalidated.iconUrl,
+          splashUrl: revalidated.splashUrl,
         };
       }),
       setConfig: (config) => set((state) => {
@@ -92,6 +104,8 @@ const useStoreConfigStore = create<StoreConfigState>()(
           primaryColor: fetchSucceeded ? config.primaryColor : state.primaryColor,
           secondaryColor: fetchSucceeded ? config.secondaryColor : state.secondaryColor,
           logoUrl: fetchSucceeded ? config.logoUrl : state.logoUrl,
+          iconUrl: fetchSucceeded ? config.iconUrl : state.iconUrl,
+          splashUrl: fetchSucceeded ? config.splashUrl : state.splashUrl,
           isLoaded: true,
         };
       }),
@@ -103,6 +117,8 @@ const useStoreConfigStore = create<StoreConfigState>()(
         primaryColor: undefined,
         secondaryColor: undefined,
         logoUrl: undefined,
+        iconUrl: undefined,
+        splashUrl: undefined,
         isLoaded: false,
       }),
     }),
