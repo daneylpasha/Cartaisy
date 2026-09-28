@@ -20,6 +20,8 @@ Merchant development/internal build flow:
 4. Verify identity locally before building: export the merchant env in a shell (see `docs/examples/sample-merchant.env` for the pattern) and run `npx expo config --type public`.
 5. Run `eas build --profile development` (or `preview`) for the target platform.
 
+Store-admin automation is a separate path. `.eas/workflows/store-build.yml` builds this repo's shared Cartaisy Expo project (the `app.config.ts` default project id and owner `rendernext`) with the `preview` profile. It does not replace the per-merchant project steps above. See `docs/EAS_STORE_BUILD_WORKFLOW.md`.
+
 For the fictional Acme sample, `eas.json` includes `sample-merchant-development`, a non-secret profile that mirrors `docs/examples/sample-merchant.env` so EAS workers receive the same sample identity through a profile `env` block. As of 2026-07-13 (GitHub issue #86), the profile points at the real internal sample EAS project `@rendernext/acme-outfitters` (`EAS_PROJECT_ID=a9a1dd2e-adfe-4020-9f10-6b561859f119`). This is separate from the default Cartaisy app project. The Firebase file paths still point at committed Cartaisy files only so config evaluation works; a successful installed merchant build still needs matching sample/internal Firebase files supplied through secure EAS file environment variables.
 
 `.easignore` replaces `.gitignore` for EAS archive filtering, so it mirrors the `.gitignore` rules; keep the two in sync (guarded by `scripts/__tests__/easignore.test.ts`).

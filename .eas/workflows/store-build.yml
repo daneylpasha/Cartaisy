@@ -1,0 +1,70 @@
+# Dispatched by cartaisy-backend when a store admin requests a build.
+# Railway sets EAS_WORKFLOW_FILE=store-build.yml (file name only).
+# One run builds one platform. See docs/EAS_STORE_BUILD_WORKFLOW.md.
+name: Store build
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        type: choice
+        description: Platform to build. The backend sends ios or android.
+        required: true
+        options:
+          - ios
+          - android
+      storeId:
+        type: string
+        description: Cartaisy store id. The build receives it as EXPO_PUBLIC_STORE_ID.
+        required: true
+      appName:
+        type: string
+        description: Merchant display name. The build receives it as APP_NAME and EXPO_PUBLIC_APP_NAME.
+        required: false
+      storeSlug:
+        type: string
+        description: Expo slug. The build receives it as APP_SLUG.
+        required: false
+      iconUrl:
+        type: string
+        description: Public https launcher icon. The build receives it as ICON_IMAGE_URL.
+        required: false
+      splashUrl:
+        type: string
+        description: Public https splash image. The build receives it as SPLASH_IMAGE_URL.
+        required: false
+
+jobs:
+  build_ios:
+    name: Build iOS
+    type: build
+    if: ${{ inputs.platform == 'ios' }}
+    environment: preview
+    env:
+      EXPO_PUBLIC_STORE_ID: ${{ inputs.storeId }}
+      APP_NAME: ${{ inputs.appName }}
+      EXPO_PUBLIC_APP_NAME: ${{ inputs.appName }}
+      APP_SLUG: ${{ inputs.storeSlug }}
+      ICON_IMAGE_URL: ${{ inputs.iconUrl }}
+      SPLASH_IMAGE_URL: ${{ inputs.splashUrl }}
+    params:
+      platform: ios
+      profile: preview
+      message: Cartaisy store ${{ inputs.storeId }} (ios)
+
+  build_android:
+    name: Build Android
+    type: build
+    if: ${{ inputs.platform == 'android' }}
+    environment: preview
+    env:
+      EXPO_PUBLIC_STORE_ID: ${{ inputs.storeId }}
+      APP_NAME: ${{ inputs.appName }}
+      EXPO_PUBLIC_APP_NAME: ${{ inputs.appName }}
+      APP_SLUG: ${{ inputs.storeSlug }}
+      ICON_IMAGE_URL: ${{ inputs.iconUrl }}
+      SPLASH_IMAGE_URL: ${{ inputs.splashUrl }}
+    params:
+      platform: android
+      profile: preview
+      message: Cartaisy store ${{ inputs.storeId }} (android)
