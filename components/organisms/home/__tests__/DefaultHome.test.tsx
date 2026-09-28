@@ -86,6 +86,8 @@ describe("DefaultHome", () => {
       storeName: "Northwind Goods",
       isLoaded: true,
       logoUrl: "https://cdn.example/logo.png",
+      iconUrl: undefined,
+      splashUrl: undefined,
       primaryColor: "#123456",
     });
     useInitialSearch.mockReturnValue({
@@ -197,7 +199,13 @@ describe("DefaultHome", () => {
   });
 
   it("uses a generic welcome title when the store name is not loaded", () => {
-    useStoreConfigStore.setState({ storeName: "", isLoaded: false, logoUrl: undefined });
+    useStoreConfigStore.setState({
+      storeName: "",
+      isLoaded: false,
+      logoUrl: undefined,
+      iconUrl: undefined,
+      splashUrl: undefined,
+    });
 
     const { getByText, queryByText } = renderWithTamagui(
       <DefaultHome onRefreshHomescreen={onRefreshHomescreen} />

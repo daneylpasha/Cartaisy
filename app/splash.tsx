@@ -1,18 +1,59 @@
+import { mobileConfig } from "@/api/config/mobileConfig";
 import { BrandMark } from "@/components/molecules/BrandMark";
+import { MerchantSplashImage } from "@/components/molecules/MerchantSplashImage";
 import useAuthStore from "@/store/useAuthStore";
+import useStoreConfigStore from "@/store/useStoreConfigStore";
+import { isValidPublicBrandImageUrl } from "@/utils/brandingValidation";
+import { cachedSplashMatchesConfiguredStore } from "@/utils/merchantSplash";
 import {
   resetDeepLinkState,
   wasDeepLinkHandled,
 } from "@/utils/navigationState";
+import * as SplashScreen from "expo-splash-screen";
 import { router } from "expo-router";
-import React, { useEffect, useRef } from "react";
-import { StatusBar } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Dimensions, StatusBar } from "react-native";
 import { YStack } from "tamagui";
 
 const SPLASH_DURATION = 3000;
+const SPLASH_LOAD_TIMEOUT = 2500;
 
 const Splash = () => {
   const hasNavigated = useRef(false);
+  const splashReadyRef = useRef(false);
+  const hydrated = useStoreConfigStore((state) => state._hasHydrated);
+  const splashUrl = useStoreConfigStore((state) => state.splashUrl);
+  const cachedStoreId = useStoreConfigStore((state) => state.storeId);
+  const safeSplash = isValidPublicBrandImageUrl(splashUrl)
+    ? splashUrl.trim()
+    : "";
+  const splashBelongsToStore = cachedSplashMatchesConfiguredStore(
+    cachedStoreId,
+    mobileConfig.storeId,
+  );
+  const [splashFailed, setSplashFailed] = useState(false);
+  const showMerchantSplash =
+    Boolean(safeSplash) && splashBelongsToStore && !splashFailed;
+
+  useEffect(() => {
+    splashReadyRef.current = false;
+    setSplashFailed(false);
+
+    if (!hydrated || !safeSplash || !splashBelongsToStore) return;
+
+    const timer = setTimeout(() => {
+      if (!splashReadyRef.current) {
+        setSplashFailed(true);
+      }
+    }, SPLASH_LOAD_TIMEOUT);
+
+    return () => clearTimeout(timer);
+  }, [hydrated, safeSplash, splashBelongsToStore]);
+
+  useEffect(() => {
+    if (!hydrated || showMerchantSplash) return;
+    SplashScreen.hideAsync().catch(() => {});
+  }, [hydrated, showMerchantSplash]);
 
   useEffect(() => {
     // Only navigate once on initial mount
@@ -56,15 +97,43 @@ const Splash = () => {
     return () => clearTimeout(timer);
   }, []); // Empty dependency - only run once on mount
 
+  const { width, height } = Dimensions.get("window");
+
+  if (!hydrated) {
+    return (
+      <YStack
+        width={width}
+        height={height}
+        backgroundColor="$white"
+        testID="splash-pending"
+      >
+        <StatusBar hidden={true} />
+      </YStack>
+    );
+  }
+
   return (
     <YStack
-      flex={1}
+      width={width}
+      height={height}
       backgroundColor="$white"
       justifyContent="center"
       alignItems="center"
+      overflow="hidden"
     >
       <StatusBar hidden={true} />
-      <BrandMark size="hero" tone="onLight" />
+      {showMerchantSplash ? (
+        <MerchantSplashImage
+          uri={safeSplash}
+          onLoad={() => {
+            splashReadyRef.current = true;
+            SplashScreen.hideAsync().catch(() => {});
+          }}
+          onError={() => setSplashFailed(true)}
+        />
+      ) : (
+        <BrandMark size="hero" tone="onLight" />
+      )}
     </YStack>
   );
 };

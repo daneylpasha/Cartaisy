@@ -52,6 +52,8 @@ describe("Login screen — runtime logo", () => {
       primaryColor: undefined,
       secondaryColor: undefined,
       logoUrl: undefined,
+      iconUrl: undefined,
+      splashUrl: undefined,
       storeName: "",
       isLoaded: false,
     });

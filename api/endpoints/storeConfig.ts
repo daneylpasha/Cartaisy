@@ -13,6 +13,14 @@ export interface StoreConfig {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  // App icon and splash, flat on `data` like the other branding fields.
+  // `appIconUrl` and `splashImageUrl` are read aliases of the same values.
+  // Omitted (not null) when unset or rejected by the backend. Callers still
+  // validate before persisting — see utils/brandingValidation.ts.
+  iconUrl?: string;
+  appIconUrl?: string;
+  splashUrl?: string;
+  splashImageUrl?: string;
 }
 
 // Note: this throws on fetch failure rather than swallowing the error and
@@ -27,6 +35,9 @@ export interface StoreConfig {
 // for catching and falling back to defaults.
 export const getStoreConfig = async (): Promise<StoreConfig> => {
   const response = await axiosInstance.get("/store/config");
-  console.log("[StoreConfig] Fetched successfully:", response.data.data);
+  // Do not log the payload. Branding URLs are public, but a malformed
+  // response could still carry a token-shaped string and this log runs
+  // before validation.
+  console.log("[StoreConfig] Fetched successfully");
   return response.data.data;
 };

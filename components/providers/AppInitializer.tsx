@@ -151,6 +151,10 @@ export const AppInitializer = () => {
           primaryColor: config.primaryColor,
           secondaryColor: config.secondaryColor,
           logoUrl: config.logoUrl,
+          iconUrl: config.iconUrl,
+          appIconUrl: config.appIconUrl,
+          splashUrl: config.splashUrl,
+          splashImageUrl: config.splashImageUrl,
         });
         useStoreConfigStore.getState().setConfig({
           currency: config.currency || "USD",

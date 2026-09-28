@@ -13,21 +13,41 @@ jest.mock("expo-router", () => ({
   router: { replace: jest.fn() },
 }));
 
+jest.mock("expo-splash-screen", () => ({
+  preventAutoHideAsync: jest.fn(() => Promise.resolve(true)),
+  hideAsync: jest.fn(() => Promise.resolve(true)),
+}));
+
+jest.mock("@/api/config/mobileConfig", () => ({
+  mobileConfig: {
+    apiBaseUrl: "https://api.example.test/api/v1",
+    storeId: "507f1f77bcf86cd799439011",
+  },
+}));
+
 import React from "react";
 import { Image } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
 
 import Splash from "@/app/splash";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
+const CONFIGURED_STORE_ID = "507f1f77bcf86cd799439011";
+
 describe("Splash", () => {
   beforeEach(() => {
+    jest.mocked(SplashScreen.hideAsync).mockClear();
     useStoreConfigStore.setState({
       primaryColor: undefined,
       secondaryColor: undefined,
       logoUrl: undefined,
+      iconUrl: undefined,
+      splashUrl: undefined,
+      storeId: undefined,
       storeName: "",
       isLoaded: false,
+      _hasHydrated: true,
     });
   });
 
@@ -89,6 +109,145 @@ describe("Splash", () => {
     });
 
     expect(getByText("Acme Outfitters")).toBeTruthy();
+    expect(queryByText(/cartaisy/i)).toBeNull();
+  });
+
+  it("shows the merchant splash and no Cartaisy mark when splashUrl is set", () => {
+    const splashUrl = "https://cdn.example.com/stores/acme/splash.png";
+    useStoreConfigStore.setState({
+      splashUrl,
+      storeId: CONFIGURED_STORE_ID,
+      logoUrl: "https://cdn.example.com/stores/acme/logo.png",
+      iconUrl: "https://cdn.example.com/stores/acme/icon.png",
+      storeName: "Acme Outfitters",
+      isLoaded: true,
+      _hasHydrated: true,
+    });
+
+    const { getByTestId, queryByTestId, queryByText, UNSAFE_getAllByType } =
+      renderWithTamagui(<Splash />);
+    const splash = UNSAFE_getAllByType(Image).find(
+      (img) => img.props.source?.uri === splashUrl
+    );
+
+    expect(getByTestId("merchant-splash")).toBeTruthy();
+    expect(splash).toBeTruthy();
+    expect(splash!.props.resizeMode).toBe("cover");
+    expect(queryByTestId("brand-mark")).toBeNull();
+    expect(queryByTestId("brand-mark-logo")).toBeNull();
+    expect(queryByText(/cartaisy/i)).toBeNull();
+    expect(SplashScreen.hideAsync).not.toHaveBeenCalled();
+
+    const { act } = require("@testing-library/react-native");
+    act(() => {
+      splash!.props.onLoad();
+    });
+
+    expect(SplashScreen.hideAsync).toHaveBeenCalled();
+  });
+
+  it("accepts an http splash URL and ignores a token-shaped one", () => {
+    useStoreConfigStore.setState({
+      splashUrl: "http://cdn.example.com/stores/acme/splash.png",
+      storeId: CONFIGURED_STORE_ID,
+      storeName: "Acme Outfitters",
+      isLoaded: true,
+      _hasHydrated: true,
+    });
+
+    const { getByTestId, queryByTestId, rerender } = renderWithTamagui(
+      <Splash />
+    );
+    expect(getByTestId("merchant-splash")).toBeTruthy();
+
+    useStoreConfigStore.setState({
+      splashUrl: "https://cdn.example.com/splash.png?access_token=shpat_secret",
+    });
+    rerender(<Splash />);
+
+    expect(queryByTestId("merchant-splash")).toBeNull();
+    expect(getByTestId("brand-mark")).toBeTruthy();
+    expect(queryByTestId("brand-mark")).not.toBeNull();
+  });
+
+  it("falls back to the store mark when the merchant splash fails to load", () => {
+    const splashUrl = "https://cdn.example.com/stores/acme/missing-splash.png";
+    useStoreConfigStore.setState({
+      splashUrl,
+      storeId: CONFIGURED_STORE_ID,
+      storeName: "Acme Outfitters",
+      isLoaded: true,
+      _hasHydrated: true,
+    });
+
+    const { getByText, getByTestId, queryByTestId, UNSAFE_getAllByType } =
+      renderWithTamagui(<Splash />);
+    const splash = UNSAFE_getAllByType(Image).find(
+      (img) => img.props.source?.uri === splashUrl
+    );
+
+    const { act } = require("@testing-library/react-native");
+    act(() => {
+      splash!.props.onError();
+    });
+
+    expect(queryByTestId("merchant-splash")).toBeNull();
+    expect(getByTestId("brand-mark")).toBeTruthy();
+    expect(getByText("Acme Outfitters")).toBeTruthy();
+    expect(SplashScreen.hideAsync).toHaveBeenCalled();
+  });
+
+  it("falls back to the mark when the cached splash is for a different store", () => {
+    useStoreConfigStore.setState({
+      splashUrl: "https://cdn.example.com/stores/other/splash.png",
+      storeId: "aaaaaaaaaaaaaaaaaaaaaaaa",
+      storeName: "Acme Outfitters",
+      isLoaded: true,
+      _hasHydrated: true,
+    });
+
+    const { getByTestId, queryByTestId } = renderWithTamagui(<Splash />);
+
+    expect(queryByTestId("merchant-splash")).toBeNull();
+    expect(getByTestId("brand-mark")).toBeTruthy();
+    expect(SplashScreen.hideAsync).toHaveBeenCalled();
+  });
+
+  it("uses the app icon on the splash mark when no splash image or logo is set", () => {
+    const iconUrl = "https://cdn.example.com/stores/acme/icon.png";
+    useStoreConfigStore.setState({
+      iconUrl,
+      storeName: "Acme Outfitters",
+      isLoaded: true,
+      _hasHydrated: true,
+    });
+
+    const { getByTestId, queryByTestId, UNSAFE_getAllByType } =
+      renderWithTamagui(<Splash />);
+    const icon = UNSAFE_getAllByType(Image).find(
+      (img) => img.props.source?.uri === iconUrl
+    );
+
+    expect(queryByTestId("merchant-splash")).toBeNull();
+    expect(getByTestId("brand-mark-icon")).toBeTruthy();
+    expect(icon!.props.tintColor).toBeUndefined();
+  });
+
+  it("holds a blank field until store config hydrates", () => {
+    useStoreConfigStore.setState({
+      _hasHydrated: false,
+      splashUrl: "https://cdn.example.com/stores/acme/splash.png",
+      storeName: "Acme Outfitters",
+      isLoaded: true,
+    });
+
+    const { getByTestId, queryByTestId, queryByText } = renderWithTamagui(
+      <Splash />
+    );
+
+    expect(getByTestId("splash-pending")).toBeTruthy();
+    expect(queryByTestId("merchant-splash")).toBeNull();
+    expect(queryByTestId("brand-mark")).toBeNull();
     expect(queryByText(/cartaisy/i)).toBeNull();
   });
 });

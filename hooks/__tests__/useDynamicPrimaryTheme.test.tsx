@@ -60,6 +60,8 @@ describe("useDynamicPrimaryTheme", () => {
       primaryColor: undefined,
       secondaryColor: undefined,
       logoUrl: undefined,
+      iconUrl: undefined,
+      splashUrl: undefined,
     });
   });
 
