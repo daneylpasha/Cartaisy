@@ -63,7 +63,40 @@ Do not place Shopify Admin, Storefront, or custom-app tokens in `ICON_IMAGE_URL`
 
 The fictional Acme sample sets `ICON_IMAGE_PATH` to `./assets/images/acme-outfitters-logo.png` and `SPLASH_IMAGE_URL` to `https://cdn.example.com/stores/acme-outfitters/splash.png`. That splash URL does not resolve, so sample config evaluation uses the neutral splash. Replace either value for a real merchant. No additional EAS release pipeline is required for this wiring.
 
-Manual today: yes (values gathered from the merchant by hand). The download itself runs inside config evaluation once the URL or file env is set.
+### Handoff from Cartaisy ops queue
+
+Use this when a merchant has uploaded branding and you are about to set env on that merchant's EAS project. The queue is the copy source. It does not start an EAS build. Self-serve EAS is not built; Step 8 is still a manual `eas build` after the dry run below.
+
+**Where the URLs are (current, 2026-09-28).** Open `/dashboard/admin/build-requests` as a platform operator. That page is recorded in the `cartaisy-dashboard` repo's `docs/STATUS.md` and in `docs/DECISIONS.md` under "The ops build queue shows public icon and splash URLs" (dashboard issue #43, PR #44). A store owner, including `super_admin`, gets a 403 empty state and is not a source for these URLs.
+
+Each row shows the merchant icon and splash when `GET /api/v1/admin/build-requests` includes them. `store.iconUrl` and `store.splashUrl` are optional. That contract is cartaisy-backend issue #177, in the `cartaisy-backend` repo's `docs/cartaisy/BUILD_REQUEST_API.md`. The list returns a URL only when it is absolute `https` and not token-shaped. Missing or unsafe branding is null. The API does not invent a Cartaisy CDN URL and does not select Shopify tokens. The same stored fields are on admin branding GET (`iconUrl` / `appIconUrl`, `splashUrl` / `splashImageUrl`) if you need to confirm a row. Prefer the queue so you do not open Settings or Mongo to find the URL.
+
+**Copy shape — current vs target.**
+
+- Splash, current: the splash button copies `SPLASH_IMAGE_URL=<url>`. Paste that assignment.
+- Icon, current: the icon button copies the bare `https` URL. It does not copy `ICON_IMAGE_URL=<url>`. On the merchant EAS project, set the variable name to `ICON_IMAGE_URL` and the value to that URL. Do not paste the bare URL into a different variable.
+- Icon, target: `cartaisy-dashboard` issue #45 (open) changes the icon button so it copies `ICON_IMAGE_URL=<url>`, matching splash. After that issue lands, paste the assignment the same way as splash. Until it lands, do not expect an `ICON_IMAGE_URL=` prefix on the icon clipboard.
+
+**Paste.**
+
+1. On the merchant's row, copy splash when the splash button is present. Set `SPLASH_IMAGE_URL` on the merchant EAS project (plain visibility). The value is the public `https` URL only.
+2. Copy the icon when the icon button is present. Set `ICON_IMAGE_URL` using the current copy shape above.
+3. If a button is absent, that asset has no public `https` URL. Supply `ICON_IMAGE_PATH` or `SPLASH_IMAGE_PATH` (repo file or EAS file env), or write on the Merchant Build Record that the neutral image is intentional (`assets/images/neutral-icon.png` or `assets/images/neutral-splash.png`). Do not substitute the Cartaisy wordmark.
+4. Leave `ICON_IMAGE_PATH` unset when `ICON_IMAGE_URL` should win, and leave `SPLASH_IMAGE_PATH` unset when `SPLASH_IMAGE_URL` should win. A set path that is missing or is not a PNG or JPEG resolves to the neutral image and does not continue on to the URL.
+5. Do not copy either URL into an `EXPO_PUBLIC_*` variable. Do not put Shopify Admin, Storefront, or custom-app tokens in these variables or anywhere else in mobile env. Do not commit the real URL.
+
+**Dry run before `eas build`.** Export the merchant env in a file kept outside the repo (use `docs/examples/sample-merchant.env` only as the shape) and run Step 7. For a non-default identity, `icon` and the `expo-splash-screen` plugin `image` must be the downloaded merchant file or `./assets/images/neutral-icon.png` / `./assets/images/neutral-splash.png`. They must not be `./assets/images/icon.png`, `./assets/images/adaptive-icon.png`, or `./assets/images/cartaisy-color-logo.png`. The same check is a checkbox in `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`.
+
+Fictional shape only:
+
+```
+ICON_IMAGE_URL=https://cdn.example.com/stores/acme-outfitters/icon.png
+SPLASH_IMAGE_URL=https://cdn.example.com/stores/acme-outfitters/splash.png
+```
+
+The Acme sample splash host does not serve an image, so sample config evaluation uses the neutral splash. That is expected for the sample. A merchant who uploaded branding should show the downloaded file instead.
+
+Manual today: yes. The queue does not push EAS env. The rest of Step 0 is still gathered by hand. The download itself runs inside config evaluation once the URL or file env is set.
 
 ## Step 1 — Confirm the Backend Store Record
 
@@ -84,7 +117,7 @@ Account ownership: merchant EAS projects live under a **Cartaisy-managed Expo or
 1. Log in to the owning Expo account: `eas login` / verify with `eas whoami`. Two org requirements apply before you do, per the same 2026-07-23 decision: the Cartaisy Expo organization requires **hardware-key 2FA** on accounts that can reach it, and any automation touching the org must authenticate with a **scoped organization token**, never full-account credentials. Sort both out before starting this step rather than discovering them mid-provisioning.
 2. Create the project (Expo dashboard, or `eas project:init` run with `APP_SLUG`/`EXPO_OWNER` exported so it initializes against the merchant identity, from a checkout you do not commit). Use a disposable checkout because `eas project:init` may write the generated project ID into an `app.json`; this repo reads `EAS_PROJECT_ID` from the environment via `app.config.ts`, and a committed `app.json` carrying one merchant's project ID would silently override that for anyone building without the merchant env exported.
 3. Record the generated project ID as `EAS_PROJECT_ID` and the owning account as `EXPO_OWNER`.
-4. Set every identity variable from Step 0 as an EAS environment variable on the merchant project (plain visibility is fine — they are non-secret). Locally exported shell values are NOT forwarded to EAS build workers; only EAS environment variables or an `eas.json` profile `env` block reach the worker where `app.config.ts` is re-evaluated during prebuild.
+4. Set every identity variable from Step 0 as an EAS environment variable on the merchant project (plain visibility is fine — they are non-secret). Take `ICON_IMAGE_URL` and `SPLASH_IMAGE_URL` from "Handoff from Cartaisy ops queue" in Step 0; do not type those URLs from memory. Locally exported shell values are NOT forwarded to EAS build workers; only EAS environment variables or an `eas.json` profile `env` block reach the worker where `app.config.ts` is re-evaluated during prebuild.
 
 Manual today: yes. Automation opportunity: a provisioning script that creates the EAS project and pushes the env set from a merchant record.
 
@@ -174,7 +207,7 @@ npx expo config --type public
 
 (Use `docs/examples/sample-merchant.env` as the template for the merchant env file; keep real merchant env files outside the repo.)
 
-Confirm in the output: `name`, `slug`, `scheme`, `version`, `ios.bundleIdentifier`, `ios.buildNumber`, `android.package`, `android.versionCode`, the Firebase file paths, the Apple Pay merchant ID in both the entitlements and the Stripe plugin block, `extra.eas.projectId` / `owner`, the launcher `icon`, and the `expo-splash-screen` plugin `image`. For a merchant build the icon is the local icon file, the downloaded file, or `./assets/images/neutral-icon.png`. The splash image is the local splash file, the downloaded file, or `./assets/images/neutral-splash.png`.
+Confirm in the output: `name`, `slug`, `scheme`, `version`, `ios.bundleIdentifier`, `ios.buildNumber`, `android.package`, `android.versionCode`, the Firebase file paths, the Apple Pay merchant ID in both the entitlements and the Stripe plugin block, `extra.eas.projectId` / `owner`, the launcher `icon`, and the `expo-splash-screen` plugin `image`. For a merchant build the icon is the local icon file, the downloaded file, or `./assets/images/neutral-icon.png`. The splash image is the local splash file, the downloaded file, or `./assets/images/neutral-splash.png`. On a non-default identity those two paths must not be the Cartaisy assets `./assets/images/icon.png`, `./assets/images/adaptive-icon.png`, or `./assets/images/cartaisy-color-logo.png`. If the ops queue had no public URL for one of them, the matching `neutral-*` file is the expected result and should already be recorded as intentional in the handoff above. This check is the dry run; it is not an EAS build.
 
 Manual today: yes. Automation opportunity: a script that diffs this output against the merchant record and fails on mismatch.
 
@@ -223,7 +256,7 @@ A dry run of this runbook using the fictional merchant in `docs/examples/sample-
 
 Manual today (every step, in practice):
 
-- Collecting merchant identity inputs and recording the build record (Step 0).
+- Collecting merchant identity inputs and recording the build record (Step 0), including the ops-queue paste for `ICON_IMAGE_URL` and `SPLASH_IMAGE_URL`.
 - Confirming the backend store record (Step 1).
 - Creating the EAS project and entering its env variables (Step 2).
 - First-run interactive credential generation (Step 3).
@@ -249,4 +282,6 @@ No longer blocked on decisions: both ownership questions are settled and recorde
 - `docs/DECISIONS.md`
 - `docs/examples/sample-merchant.env`
 - `app.config.ts`
-- GitHub issues #60, #61
+- `cartaisy-dashboard` `docs/STATUS.md` and `docs/DECISIONS.md` ("The ops build queue shows public icon and splash URLs", issue #43 / PR #44; icon assignment parity is open issue #45)
+- `cartaisy-backend` `docs/cartaisy/BUILD_REQUEST_API.md` (issue #177)
+- GitHub issues #60, #61, #133, #135, #137
