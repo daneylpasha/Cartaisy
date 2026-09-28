@@ -298,12 +298,14 @@ describe("downloadPublicIcon", () => {
 
   it("writes a PNG from a public https response without an auth header", async () => {
     const cacheDir = await mkdtemp(path.join(os.tmpdir(), "icon-cache-"));
-    const fetchMock = jest.fn(async () => {
-      return new Response(TINY_PNG, {
-        status: 200,
-        headers: { "content-type": "image/png" },
-      });
-    });
+    const fetchMock = jest.fn<Promise<Response>, [string, RequestInit?]>(
+      async () => {
+        return new Response(TINY_PNG, {
+          status: 200,
+          headers: { "content-type": "image/png" },
+        });
+      }
+    );
     global.fetch = fetchMock as typeof fetch;
 
     const downloaded = await downloadPublicIcon(
@@ -321,9 +323,11 @@ describe("downloadPublicIcon", () => {
         headers: { Accept: "image/png,image/jpeg" },
       })
     );
-    const init = fetchMock.mock.calls[0]?.[1] as { headers?: Record<string, string> };
-    expect(init.headers?.Authorization).toBeUndefined();
-    expect(JSON.stringify(init.headers).toLowerCase()).not.toContain("authorization");
+    const init = fetchMock.mock.calls[0][1];
+    expect(init?.headers).toEqual({ Accept: "image/png,image/jpeg" });
+    expect(JSON.stringify(init?.headers).toLowerCase()).not.toContain(
+      "authorization"
+    );
   });
 
   it("rejects an HTML response body", async () => {
@@ -356,6 +360,10 @@ describe("downloadPublicIcon", () => {
 describe("app.config native icon", () => {
   const envSnapshot = { ...process.env };
   const originalFetch = global.fetch;
+
+  beforeEach(() => {
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+  });
 
   afterEach(() => {
     for (const key of Object.keys(process.env)) {
@@ -394,7 +402,6 @@ describe("app.config native icon", () => {
   };
 
   it("points a merchant build with no usable icon at the neutral asset", async () => {
-    jest.spyOn(console, "warn").mockImplementation(() => {});
     process.env.APP_NAME = "Acme Outfitters";
     process.env.APP_SLUG = "acme-outfitters";
     process.env.IOS_BUNDLE_IDENTIFIER = "com.example.acmeoutfitters";
