@@ -250,6 +250,18 @@ Impact: Ops → EAS handoff documentation only. No runtime change. Public displa
 
 Related docs: `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md`, `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`, `docs/MOBILE_ENV_VARIABLES.md`, `docs/STATUS.md`, `docs/TESTING.md`, `docs/RELEASE_CHECKLIST.md`, GitHub issue #141, cartaisy-dashboard issue #49 / PR #50.
 
+### Merchant Store Id Is the Pasted EXPO_PUBLIC_STORE_ID
+
+Date: 2026-09-28.
+
+Decision: Operators paste `EXPO_PUBLIC_STORE_ID=<24-character hex store id>` from `/dashboard/admin/build-requests` onto the merchant EAS project together with `APP_NAME`, `ICON_IMAGE_URL`, and `SPLASH_IMAGE_URL`. The control is labeled `EXPO_PUBLIC_STORE_ID=…`. A valid 24-character hex `store.id` copies as `EXPO_PUBLIC_STORE_ID=<that exact id>` with no quotes. A missing or invalid id has no copy control. The queue does not invent an id and does not fall back to the build-request id, the shop domain, or the app name. `api/config/mobileConfig.ts` already reads `EXPO_PUBLIC_STORE_ID` and requires a 24-character Mongo ObjectId. The value is public client configuration; backend tenant isolation stays authoritative. `npx expo config` does not print the store id. The queue does not start EAS. This does not add an environment variable.
+
+Reason: Dashboard #51 / PR #52. A wrong or missing store id ships a binary that cannot talk to the merchant tenant. The store ObjectId is already on the ops queue as `store.id`.
+
+Impact: Ops → EAS handoff documentation only. No runtime change. Public store id only. No Shopify token is copied or bundled.
+
+Related docs: `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md`, `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`, `docs/MOBILE_ENV_VARIABLES.md`, `docs/STATUS.md`, `docs/TESTING.md`, `docs/RELEASE_CHECKLIST.md`, GitHub issue #143, cartaisy-dashboard issue #51 / PR #52.
+
 ## Related Docs And Issues
 
 - `CARTAISY_CONTEXT.md`
