@@ -36,9 +36,10 @@ Everything downstream depends on these values. Record them in the "Merchant Buil
 | Android package | `ANDROID_PACKAGE` | Reverse-DNS. Permanent once the app ships. Usually equal to the iOS bundle ID. |
 | Android version code | `ANDROID_VERSION_CODE` | Positive integer. |
 | Apple Pay merchant ID | `IOS_APPLE_PAY_MERCHANT_ID` | `merchant.`-prefixed reverse-DNS; only if wallet payments are in scope (Step 5). |
-| App icon | `APP_ICON_PATH` | Merchant-approved asset committed under `assets/` or supplied through the build pipeline. |
+| App icon | `ICON_IMAGE_PATH` or `ICON_IMAGE_URL` | PNG/JPEG. Path may be a repo file or an EAS file env. URL must be public `https` with no credentials (scripted download in `app.config.ts`, no auth header, not `EXPO_PUBLIC_*`). A missing asset resolves to `assets/images/neutral-icon.png`. |
+| Web favicon | `APP_ICON_PATH` | Separate from the native launcher icon. |
 | Notification icon / color | `APP_NOTIFICATION_ICON_PATH`, `APP_NOTIFICATION_COLOR` | Only if push is in scope. |
-| Adaptive icon | `ANDROID_ADAPTIVE_ICON_PATH`, `ANDROID_ADAPTIVE_ICON_BACKGROUND` | Merchant-approved. Repo path or EAS file env. |
+| Adaptive icon | `ANDROID_ADAPTIVE_ICON_PATH`, `ANDROID_ADAPTIVE_ICON_BACKGROUND` | Merchant-approved foreground, or omit the path to reuse the resolved launcher icon. Naming `assets/images/adaptive-icon.png` on a merchant build does not keep the Cartaisy wordmark. |
 | Native splash image | `SPLASH_IMAGE_PATH` or `SPLASH_IMAGE_URL` | PNG/JPEG. Path may be a repo file or an EAS file env. URL must be public `https` with no credentials (scripted download in `app.config.ts`). A missing asset resolves to `assets/images/neutral-splash.png`. |
 | Native splash background | `SPLASH_BACKGROUND_COLOR` | Merchant-approved. Shown behind the splash image, including the neutral fallback. |
 | EAS project | `EAS_PROJECT_ID`, `EXPO_OWNER` | Produced by Step 2, not chosen by the merchant. |
@@ -52,13 +53,15 @@ All of these are non-secret build-time values. Anything not in this table — to
 
 ### How splash and icon files reach the build
 
-Icons (`APP_ICON_PATH`, `APP_ICON_SQUARE_PATH`, `ANDROID_ADAPTIVE_ICON_PATH`, `APP_NOTIFICATION_ICON_PATH`) are local files. Commit a merchant-approved placeholder only for non-production samples, or upload the real file as an EAS file-type environment variable with the same name. The worker exposes that variable as a filesystem path.
+The native launcher icon uses the same two inputs as the pre-JS splash. Set `ICON_IMAGE_PATH` to a PNG or JPEG in the repo, or upload that file as an EAS file-type environment variable with the same name (the worker exposes it as an absolute path). To take the image from merchant branding without committing it, set `ICON_IMAGE_URL` to the public `https` URL the Cartaisy backend already publishes for that icon. `app.config.ts` downloads it during config evaluation (local `npx expo config` and the EAS worker's prebuild). The request sends no auth header. Do not copy the URL into an `EXPO_PUBLIC_*` variable. Rejected URLs — anything other than public `https`, plus URLs with userinfo or token-like query parameters — and failed downloads resolve to `assets/images/neutral-icon.png` so the Cartaisy wordmark is not compiled into the launcher. `ICON_IMAGE_PATH` wins when it is set; a path that does not point at a PNG or JPEG also resolves to the neutral image and does not continue on to the URL.
+
+`ANDROID_ADAPTIVE_ICON_PATH` is still a local file (repo path or EAS file env) when the merchant has a separate adaptive foreground. If it is unset, or it names `assets/images/adaptive-icon.png`, a merchant build uses the resolved launcher icon instead. Notification icons (`APP_NOTIFICATION_ICON_PATH`) stay local files. `APP_ICON_PATH` is the web favicon only. `APP_ICON_SQUARE_PATH` is not read.
 
 The pre-JS native splash uses the same file-env pattern when you set `SPLASH_IMAGE_PATH`. To take the image from merchant branding without committing it, set `SPLASH_IMAGE_URL` to the public `https` URL the Cartaisy backend already publishes for that splash. `app.config.ts` downloads it during config evaluation (local `npx expo config` and the EAS worker's prebuild). The request sends no auth header. Rejected URLs — anything other than public `https`, plus URLs with userinfo or token-like query parameters — and failed downloads resolve to `assets/images/neutral-splash.png` so the Cartaisy wordmark is not compiled into the pre-JS frame. `SPLASH_IMAGE_PATH` wins when it is set; a path that does not point at a PNG or JPEG also resolves to the neutral image and does not continue on to the URL.
 
-Do not place Shopify Admin, Storefront, or custom-app tokens in `SPLASH_IMAGE_URL`, in any other mobile env var, or on the device. The runtime JS splash (`app/splash.tsx`) still loads store branding after JavaScript starts; this step does not change that path.
+Do not place Shopify Admin, Storefront, or custom-app tokens in `ICON_IMAGE_URL`, `SPLASH_IMAGE_URL`, in any other mobile env var, or on the device. The runtime JS icon and splash (`BrandMark`, `app/splash.tsx`) still load store branding after JavaScript starts; this step does not change that path.
 
-The fictional Acme sample sets `SPLASH_IMAGE_URL` to `https://cdn.example.com/stores/acme-outfitters/splash.png`. That URL does not resolve, so sample config evaluation uses the neutral splash. Replace it for a real merchant. No additional EAS release pipeline is required for this wiring.
+The fictional Acme sample sets `ICON_IMAGE_PATH` to `./assets/images/acme-outfitters-logo.png` and `SPLASH_IMAGE_URL` to `https://cdn.example.com/stores/acme-outfitters/splash.png`. That splash URL does not resolve, so sample config evaluation uses the neutral splash. Replace either value for a real merchant. No additional EAS release pipeline is required for this wiring.
 
 Manual today: yes (values gathered from the merchant by hand). The download itself runs inside config evaluation once the URL or file env is set.
 
@@ -171,7 +174,7 @@ npx expo config --type public
 
 (Use `docs/examples/sample-merchant.env` as the template for the merchant env file; keep real merchant env files outside the repo.)
 
-Confirm in the output: `name`, `slug`, `scheme`, `version`, `ios.bundleIdentifier`, `ios.buildNumber`, `android.package`, `android.versionCode`, the Firebase file paths, the Apple Pay merchant ID in both the entitlements and the Stripe plugin block, `extra.eas.projectId` / `owner`, and the `expo-splash-screen` plugin `image`. For a merchant build that image is the local splash file, the downloaded file, or `./assets/images/neutral-splash.png`.
+Confirm in the output: `name`, `slug`, `scheme`, `version`, `ios.bundleIdentifier`, `ios.buildNumber`, `android.package`, `android.versionCode`, the Firebase file paths, the Apple Pay merchant ID in both the entitlements and the Stripe plugin block, `extra.eas.projectId` / `owner`, the launcher `icon`, and the `expo-splash-screen` plugin `image`. For a merchant build the icon is the local icon file, the downloaded file, or `./assets/images/neutral-icon.png`. The splash image is the local splash file, the downloaded file, or `./assets/images/neutral-splash.png`.
 
 Manual today: yes. Automation opportunity: a script that diffs this output against the merchant record and fails on mismatch.
 

@@ -226,6 +226,18 @@ Impact: `utils/brandingValidation.ts`, `store/useStoreConfigStore.ts`, and `AppI
 
 Related docs: `docs/MOBILE_RUNTIME_BRANDING_CONTRACT.md`, `docs/STATUS.md`, GitHub issue #131.
 
+### Native Launcher Icon Comes From Build-Time Merchant Branding
+
+Date: 2026-09-28.
+
+Decision: The iOS and Android launcher icon is chosen while `app.config.ts` evaluates. `ICON_IMAGE_PATH` (a repo file or an EAS file environment variable) wins over `ICON_IMAGE_URL`. `ICON_IMAGE_URL` must be public `https` with no userinfo and no credential query. The config download sends no `Authorization` header. The URL is not an `EXPO_PUBLIC_*` variable. A missing, rejected, or failed asset on any build that is not the default Cartaisy identity resolves to `assets/images/neutral-icon.png`. The Cartaisy square icon (`assets/images/icon.png`) and the Cartaisy adaptive wordmark (`assets/images/adaptive-icon.png`) are used only for the default Cartaisy identity when no merchant icon asset is set. An explicit `ANDROID_ADAPTIVE_ICON_PATH` that is a different PNG or JPEG still supplies the Android adaptive foreground. The runtime JS icon (`iconUrl` / `BrandMark`) and the native splash resolver are unchanged.
+
+Reason: A branded binary must not ship the Cartaisy wordmark as the merchant's launcher icon. Merchants already publish a public icon URL. The build can read a local file or that URL without putting a Shopify token on the device.
+
+Impact: `scripts/resolveNativeIcon.js` and `app.config.ts` select the native icon. `APP_ICON_PATH` remains the web favicon. No Shopify token is sent or bundled.
+
+Related docs: `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`, `docs/MOBILE_ENV_VARIABLES.md`, `docs/STATUS.md`, GitHub issue #135.
+
 ## Related Docs And Issues
 
 - `CARTAISY_CONTEXT.md`
