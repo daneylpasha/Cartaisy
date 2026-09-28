@@ -287,7 +287,7 @@ describe("cross-repo backend smoke (issue #62)", () => {
       .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
       .catch(errText);
     record({
-      flow: "checkout init (generated client)",
+      flow: "legacy checkout init (generated client, not a shopper path)",
       endpoint: "POST /checkout/init",
       testData: "fabricated Shopify cart ID",
       expected:

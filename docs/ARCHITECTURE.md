@@ -4,7 +4,7 @@ This document describes the mobile repo as inspected for GitHub issue #40. Verif
 
 ## Current State
 
-Current state: The app is an Expo SDK 53 / React Native 0.79 app using Expo Router (`app/`), TypeScript, Tamagui, React Query, Zustand, Axios, Orval-generated API hooks, Firebase messaging, and Stripe React Native.
+Current state: The app is an Expo SDK 53 / React Native 0.79 app using Expo Router (`app/`), TypeScript, Tamagui, React Query, Zustand, Axios, Orval-generated API hooks, and Firebase messaging. Shopper checkout does not initialize Stripe.
 
 Current state: Main module boundaries include:
 
@@ -31,7 +31,7 @@ Current state: Home screen content is loaded from the backend through the genera
 
 Current state: Product detail and related catalog flows use generated backend clients such as `/products/{productId}`, recommendations, search, and collection endpoints. Shopify IDs appear in data models and route handling, but catalog calls should continue to flow through the Cartaisy backend.
 
-Current state: Cart state is persisted in `store/useCartStore.ts`; the private-beta cart-to-checkout path uses the generated `/cart/*` Storefront cart client plus generated `POST /checkout/handoff` to open a Shopify-hosted checkout URL. Cart and product Buy Now show a one-line note that secure checkout continues on the store's page. Unified cart API calls live in `api/endpoints/unifiedCart.ts` for the existing local guest/customer cart surface, but `/unified-cart` is not the private-beta cart-to-checkout surface. The legacy native checkout screen still exists only behind a default-disabled beta gate; direct `/checkout` visits render a disabled state, and checkout deep links route back to the cart entry.
+Current state: Cart state is persisted in `store/useCartStore.ts`; the cart-to-checkout path uses the generated `/cart/*` Storefront cart client plus generated `POST /checkout/handoff` to open a Shopify-hosted checkout URL. Cart and product Buy Now show a one-line note that secure checkout continues on the store's page. Unified cart API calls live in `api/endpoints/unifiedCart.ts` for the existing local guest/customer cart surface, but `/unified-cart` is not the cart-to-checkout surface. Native Stripe checkout, card entry, Platform Pay, and in-app payment confirmation are removed. Direct `/checkout` visits render a disabled state that returns to the cart, and checkout deep links route to the cart entry. `utils/checkoutFlowGate.ts` stays fail-closed and does not read an environment flag.
 
 Current state: Customer account/auth flows include auth routes under `app/(auth)/`, `api/endpoints/auth.ts`, `api/hooks/useAuth.ts`, `store/useAuthStore.ts`, and startup refresh logic in `api/apiClient.ts` and `components/providers/AppInitializer.tsx`. Auth refresh is high-risk and should not be changed for docs-only work.
 

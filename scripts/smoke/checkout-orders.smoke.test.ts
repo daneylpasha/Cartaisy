@@ -1,8 +1,8 @@
 /**
  * Checkout, payment, and orders private-beta smoke suite (GitHub issue #63).
  *
- * Drives the mobile app's real cart/checkout/orders API surface — the
- * generated Orval client used by useCartManager and app/checkout.tsx,
+ * Drives the mobile app's cart/checkout/orders API surface — the
+ * generated Orval client used by useCartManager and cart handoff,
  * plus the hand-written unified-cart and orders endpoints — against a
  * seeded local backend sandbox. Results and the full scenario checklist
  * (including the UI/manual and payment scenarios this suite cannot
@@ -100,8 +100,9 @@ afterAll(() => {
 
 describe("checkout/payment/orders smoke (issue #63)", () => {
   // ---------------------------------------------------------------------
-  // The app's PRIMARY cart/checkout pipeline (useCartManager +
-  // app/checkout.tsx) runs on the generated /cart and /checkout clients.
+  // Shopper checkout calls POST /checkout/handoff only. Rows for
+  // /checkout/init, shipping rates, and /checkout/complete probe the
+  // generated client; they are not a shopper payment path.
   // ---------------------------------------------------------------------
 
   it("KNOWN MISMATCH: app's primary add-to-cart path targets an unregistered route", async () => {
@@ -164,10 +165,11 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
       .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
       .catch(errText);
     record({
-      flow: "checkout init (app path, generated client)",
+      flow: "legacy checkout init (generated client, not a shopper path)",
       endpoint: "POST /checkout/init",
       testData: "fabricated Shopify cart ID",
-      expected: "checkout session per spec; backend HEAD returns 404",
+      expected:
+        "legacy native checkout session; shopper UI does not call this route. Backend HEAD returns 404",
       actual,
       mismatch: true,
       pass: actual.startsWith("404"),
@@ -195,10 +197,11 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
       .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
       .catch(errText);
     record({
-      flow: "shipping step (app path, generated client)",
+      flow: "legacy shipping step (generated client, not a shopper path)",
       endpoint: "GET /checkout/shipping-rates",
       testData: "fabricated checkout session ID",
-      expected: "shipping rates per spec; backend HEAD returns 404",
+      expected:
+        "legacy shipping rates; shopper UI does not call this route. Backend HEAD returns 404",
       actual,
       mismatch: true,
       pass: actual.startsWith("404"),
@@ -210,11 +213,11 @@ describe("checkout/payment/orders smoke (issue #63)", () => {
       .then((r: any) => `unexpected 200: ${JSON.stringify(r).slice(0, 120)}`)
       .catch(errText);
     record({
-      flow: "payment step / order completion (app path, generated client)",
+      flow: "legacy payment completion (generated client, not a shopper path)",
       endpoint: "POST /checkout/complete",
       testData: "fabricated checkout session ID",
       expected:
-        "payment/complete per spec; backend HEAD returns 404 — payment success/failure paths and the order success screen are unreachable",
+        "legacy in-app payment completion; shopper UI does not call this route. Backend HEAD returns 404",
       actual,
       mismatch: true,
       pass: actual.startsWith("404"),

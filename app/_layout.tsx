@@ -8,7 +8,6 @@ import { AuthGuardProvider } from "@/contexts/AuthGuardContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import config from "@/tamagui.config";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { StripeProvider } from "@stripe/stripe-react-native";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
@@ -834,24 +833,13 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <AppInitializer />
-          <StripeProvider
-            publishableKey={
-              process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
-            }
-            urlScheme={process.env.EXPO_PUBLIC_APP_SCHEME || "cartaisy"}
-            merchantIdentifier={
-              process.env.EXPO_PUBLIC_STRIPE_MERCHANT_ID ||
-              "merchant.com.cartaisy"
-            }
-          >
-            <TamaguiProvider config={config} defaultTheme="light">
-              <BottomSheetModalProvider>
-                <AuthGuardProvider>
-                  <ShopperNavigator />
-                </AuthGuardProvider>
-              </BottomSheetModalProvider>
-            </TamaguiProvider>
-          </StripeProvider>
+          <TamaguiProvider config={config} defaultTheme="light">
+            <BottomSheetModalProvider>
+              <AuthGuardProvider>
+                <ShopperNavigator />
+              </AuthGuardProvider>
+            </BottomSheetModalProvider>
+          </TamaguiProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
@@ -880,7 +868,6 @@ function ShopperNavigator() {
         name="notificationSettings"
         options={HEADER_CONFIGS.notificationSettings}
       />
-      <Stack.Screen name="paymentMethod" options={HEADER_CONFIGS.paymentMethod} />
       <Stack.Screen
         name="securitySettings"
         options={HEADER_CONFIGS.securitySettings}
@@ -891,10 +878,6 @@ function ShopperNavigator() {
       />
       <Stack.Screen name="newPassword" options={HEADER_CONFIGS.newPassword} />
       <Stack.Screen
-        name="addNewCardDetails"
-        options={HEADER_CONFIGS.addNewCardDetails}
-      />
-      <Stack.Screen
         name="checkout"
         options={{
           ...HEADER_CONFIGS.checkout,
@@ -902,10 +885,6 @@ function ShopperNavigator() {
           headerTintColor: "#FFFFFF",
           headerTitleStyle: { color: "#FFFFFF" },
         }}
-      />
-      <Stack.Screen
-        name="order-success"
-        options={{ presentation: "modal", headerShown: false }}
       />
       <Stack.Screen name="orders" options={HEADER_CONFIGS.orders} />
       <Stack.Screen

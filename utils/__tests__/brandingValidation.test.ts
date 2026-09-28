@@ -219,9 +219,9 @@ describe("brandingValidation", () => {
   describe("validateBranding — secondaryColor vs $primarylight cross-field guardrail", () => {
     // Caught in Codex review: $secondary also renders directly on top of
     // $primarylight (a translucent overlay derived from the *other*
-    // merchant color) on app/paymentMethod.tsx's default-card "Expires"
-    // text and AddressCard's selected-address state. A secondaryColor that
-    // clears the flat $background check alone can still be illegible
+    // merchant color) on AddressCard's selected-address state. A
+    // secondaryColor that clears the flat $background check alone can still
+    // be illegible
     // against a particular primaryColor's derived overlay — see
     // hasSufficientContrastAgainstPrimaryLight in colorUtils.ts.
     const devWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});

@@ -1081,7 +1081,7 @@ const ProductDetailsScreen = () => {
     }
   };
 
-  // Handle Buy Now - Add to cart and navigate to checkout
+  // Handle Buy Now - add to cart, then open Shopify-hosted checkout.
   const handleBuyNow = async () => {
     // Check if user is authenticated, show login modal if not
     const canProceed = requireAuth({

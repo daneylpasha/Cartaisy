@@ -11,10 +11,7 @@ import { Spacer } from "@/components/atoms/Spacer";
 import { AddressCard } from "@/components/molecules/AddressCard";
 import { PrimaryButton } from "@/components/molecules/buttons";
 import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
-import {
-  BETA_CHECKOUT_ENTRY_ROUTE,
-  isLegacyNativeCheckoutEnabled,
-} from "@/utils/checkoutFlowGate";
+import { BETA_CHECKOUT_ENTRY_ROUTE } from "@/utils/checkoutFlowGate";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -169,19 +166,9 @@ const SelectAddressScreen = () => {
           router.back();
         });
     } else if (params.sessionId) {
-      // Legacy native checkout is preserved only behind the beta gate.
-      if (isLegacyNativeCheckoutEnabled()) {
-        router.push({
-          pathname: "/checkout",
-          params: {
-            sessionId: params.sessionId as string,
-            selectedAddressId: selectedAddress.toString(),
-          },
-        });
-      } else {
-        router.dismissAll();
-        router.replace(BETA_CHECKOUT_ENTRY_ROUTE);
-      }
+      // A leftover native-checkout session returns to Shopify handoff on the cart.
+      router.dismissAll();
+      router.replace(BETA_CHECKOUT_ENTRY_ROUTE);
     } else {
       // Default: just go back
       router.back();

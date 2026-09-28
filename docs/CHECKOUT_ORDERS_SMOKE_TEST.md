@@ -8,6 +8,25 @@ Historical run date: 2026-07-03 (GitHub issue #63).
 
 This is the repeatable smoke checklist for cart, checkout, payment, and orders on mobile, plus the results of its first run. The automated harness is `scripts/smoke/checkout-orders.smoke.test.ts`; scenarios it cannot reach are listed as manual/blocked checklist items with the exact blocker.
 
+## Shopper checkout path (2026-09-28, GitHub issue #147)
+
+Shopify owns settlement. The only live shopper path is hosted handoff:
+
+1. Cart **Proceed to Checkout** (and product **Buy Now**) call generated `POST /checkout/handoff` with the current cart id.
+2. On success the app opens `checkoutUrl`. The button shows a loading state while the request is in flight.
+3. A missing URL, a handoff error, or a failure to open the URL shows an error and leaves the shopper on the cart. A catalog-unavailable handoff error replaces the cart with the existing unavailable state.
+4. Direct `/checkout` visits show "Checkout unavailable" and **Go to Cart**. Checkout deep links, including screen links to `/checkout`, `/addNewCardDetails`, `/paymentMethod`, and `/order-success`, go to the cart. Profile has no Payment Method entry.
+
+There is no shopper path to Stripe card collection, Platform Pay, or an in-app payment confirmation. `isLegacyNativeCheckoutEnabled` is a fail-closed constant and does not read an environment flag.
+
+Verify without a device:
+
+```bash
+npx jest __tests__/cart-screen.test.tsx __tests__/checkout-screen.test.tsx utils/__tests__/deepLinkHandler.test.ts utils/__tests__/shopperCheckoutSurface.test.ts __tests__/all-address-list.test.tsx
+```
+
+The smoke harness rows for `POST /checkout/init`, `GET /checkout/shipping-rates`, and `POST /checkout/complete` still probe the generated client against the backend. They are not shopper UI. Backend deletion of those routes is out of scope for issue #147.
+
 ## Verified Staging Cart/Checkout Attempt (2026-07-13, GitHub issue #87)
 
 Goal: run the cart, checkout handoff, and orders smoke suite against verified backend staging with safe Store A / Store B test data where available.
@@ -168,7 +187,7 @@ Re-run this smoke process against a reachable sandbox with store-scoped Shopify 
 ## Blockers
 
 1. **Root blocker (backend, critical):** tsoa route registration fails at backend startup and is swallowed, so the app's entire primary cart → checkout → payment → order pipeline 404s at the first call. Found and documented in issue #62 (`docs/CROSS_REPO_SMOKE_TEST.md`); until fixed, payment and order-success scenarios cannot be smoke tested by any means.
-2. **No sandbox payment:** the backend has no Stripe test-mode configuration in the sandbox (and provisioning one is backend/env work — no secrets in this repo). Payment success/failure paths stay blocked even after the tsoa fix until test keys exist.
+2. **No sandbox payment (historical):** the 2026-07-03 sandbox had no Stripe test-mode configuration. As of GitHub issue #147 the shopper app does not collect cards or confirm payment in Cartaisy. Shopify-hosted checkout is the payment surface, so Stripe test keys are not part of shopper verification.
 3. **No deployed staging backend:** all runtime findings are against backend HEAD run locally; there is no deployed environment to compare.
 4. **UI-level (simulator) smoke deferred:** the checkout screen's first API call 404s, so a device/simulator run would only re-demonstrate the API blocker. The manual UI checklist below is ready for when the backend is fixed.
 
@@ -182,9 +201,9 @@ Re-run this smoke process against a reachable sandbox with store-scoped Shopify 
    - [ ] Add to cart from PDP; badge/count updates.
    - [ ] Update quantity and remove item from the cart tab.
    - [ ] Kill and relaunch the app; cart state recovers.
-   - [ ] Enter checkout; shipping step accepts a test address and shows rates.
-   - [ ] Payment step renders Stripe test payment sheet; test card succeeds → order success screen shows order number.
-   - [ ] Payment failure (declined test card) and cancel both return to a recoverable checkout state.
+   - [ ] Cart **Proceed to Checkout** calls `POST /checkout/handoff` and opens `checkoutUrl`. The button shows a loading state. A missing URL or open failure shows an error on the cart and does not open an in-app payment sheet.
+   - [ ] Product **Buy Now** uses the same handoff.
+   - [ ] A direct `/checkout` visit shows the disabled state and returns to the cart. Profile has no add-card or saved-card entry.
    - [ ] New order appears in orders list; detail matches; store-unavailable state renders the controlled unavailable UI (`utils/catalogUnavailableError.ts`) instead of a spinner or crash.
 
 ## Follow-Up Issues Recommended
@@ -194,7 +213,7 @@ Re-run this smoke process against a reachable sandbox with store-scoped Shopify 
 - Backend: enforce the store-mismatch check on `/customer/orders` (cross-store header currently ignored), same class as the `/customer/auth/profile` finding in issue #62.
 - Mobile: align `api/endpoints/unifiedCart.ts` types with the real backend response shape (`status`/`data.cart`/`itemCount`, items keyed by `productId` with no `_id`) — completed in mobile issue #74.
 - Mobile: decision made in issue #72 — private beta uses generated `/cart/*` plus `/checkout/handoff`. Re-run this suite against a reachable sandbox with store-scoped Shopify Storefront credentials to record the first passing hosted-checkout handoff result.
-- Backend/env: provision Stripe test-mode keys for the sandbox so payment success/failure paths become smokeable; then run the manual UI checklist end-to-end.
+- Backend/env: Stripe test-mode keys are not required for the shopper path after GitHub issue #147. Re-run hosted checkout handoff against a reachable sandbox with store-scoped Shopify Storefront credentials.
 
 ## Related Docs
 

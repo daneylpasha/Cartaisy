@@ -32,4 +32,22 @@ describe("deep link handler checkout routing", () => {
     expect(router.replace).not.toHaveBeenCalledWith("/checkout");
     expect(router.push).not.toHaveBeenCalled();
   });
+
+  it.each([
+    "/checkout",
+    "/addNewCardDetails",
+    "/paymentMethod",
+    "order-success",
+    "/order-success?orderId=1",
+  ])("sends legacy payment screen deep link %s to the cart", (screen) => {
+    const router = createRouter();
+
+    handleDeepLink({ type: "screen", screen }, router);
+
+    expect(router.push).toHaveBeenCalledWith(BETA_CHECKOUT_ENTRY_ROUTE);
+    expect(router.push).not.toHaveBeenCalledWith(screen);
+    expect(router.push).not.toHaveBeenCalledWith(
+      expect.stringContaining("/checkout")
+    );
+  });
 });

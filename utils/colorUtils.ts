@@ -212,8 +212,7 @@ export function compositeOverBackground(
 // Caught in Codex review on this PR: checking secondaryColor against a
 // flat $background alone misses that $secondary also renders directly on
 // top of $primarylight — a translucent overlay DERIVED FROM THE MERCHANT'S
-// OWN primaryColor — on the payment-method screen's default-card "Expires"
-// text (app/paymentMethod.tsx) and AddressCard's selected-address state
+// OWN primaryColor — on AddressCard's selected-address state
 // (components/molecules/AddressCard.tsx, backgroundColor="$primarylight"
 // when selected, with its $secondary address-line text rendered inside).
 // $primarylight isn't a fixed color like $background — it depends on

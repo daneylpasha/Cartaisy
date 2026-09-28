@@ -12,7 +12,7 @@ import { getPrimaryLight } from "@/utils/colorUtils";
  * reference resolved through a Tamagui style prop (`backgroundColor="$primary"`,
  * `color="$primary"`, etc.) reflects the merchant's brand color — not just
  * the handful of components that manually read the store and pass an inline
- * override (HomeHeader, LoginBottomSheet, login/signUp, addNewCardDetails).
+ * override (HomeHeader, LoginBottomSheet, login/signUp).
  *
  * This is Tamagui's own public runtime-theming API (`updateTheme`, exported
  * from `@tamagui/theme` and re-exported by `tamagui`), not a workaround: it
