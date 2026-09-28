@@ -22,7 +22,6 @@ import { GeneralListItems } from "@/components/organisms/profile/GeneralListItem
 import { useCustomerGetProfile } from "@/api/generated/customer-authentication/customer-authentication";
 import { useAuthenticatedAddresses } from "@/api/hooks/useAddresses";
 import { useOrders } from "@/api/hooks/useOrders";
-import { PaymentListItem } from "@/components/organisms/profile/PaymentListItems";
 import { SecurityListItem } from "@/components/organisms/profile/SecurityListItems";
 import { WishlistCarousel } from "@/components/organisms/profile/WishListCarousel";
 import { SHADOW_STYLES } from "@/constants/styles";
@@ -332,7 +331,7 @@ const ProfileScreen = () => {
           },
         ]
       : []),
-    // Only show General, Payment, Security, and Danger Zone for logged in users
+    // Only show General, Security, and Danger Zone for logged in users
     ...(isLoggedIn
       ? [
           {
@@ -344,18 +343,6 @@ const ProfileScreen = () => {
                 <SectionHeader title="General" showImage={false} />
                 <Spacer size="$reg" />
                 <GeneralListItems />
-              </>
-            ),
-          },
-          {
-            id: "payment",
-            type: "payment",
-            content: (
-              <>
-                <Spacer size="$lg" />
-                <SectionHeader title="Payment" showImage={false} />
-                <Spacer size="$reg" />
-                <PaymentListItem />
               </>
             ),
           },

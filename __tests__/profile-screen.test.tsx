@@ -88,9 +88,6 @@ jest.mock("@/components/organisms/profile/DangerZoneListItems", () => ({
 jest.mock("@/components/organisms/profile/GeneralListItems", () => ({
   GeneralListItems: () => null,
 }));
-jest.mock("@/components/organisms/profile/PaymentListItems", () => ({
-  PaymentListItem: () => null,
-}));
 jest.mock("@/components/organisms/profile/SecurityListItems", () => ({
   SecurityListItem: () => null,
 }));

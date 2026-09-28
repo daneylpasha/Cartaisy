@@ -138,7 +138,7 @@ Decision: The private-beta mobile cart-to-checkout pipeline uses the generated `
 
 Reason: Backend checkout handoff expects a Shopify Storefront cart ID and uses store-scoped Storefront credentials. The generated cart client returns that cart ID and line item IDs, while the hand-written `/unified-cart` response is a local product-cart shape (`status`, `data.cart`, `itemCount`) and does not expose the Shopify cart ID required for hosted checkout.
 
-Impact: `useCartManager` remains on generated `/cart/*` for add to cart, quantity updates, remove item, saved-cart recovery, and local store sync. Cart and Buy Now actions use `/checkout/handoff` instead of native `/checkout/init`. The legacy native checkout route remains in the repo only as future high-risk checkout/payment code that requires a dedicated issue and human review; private beta keeps it unreachable through a default-disabled gate, and checkout deep links return shoppers to the cart entry instead of `/checkout`. `/unified-cart` is not the private-beta cart-to-checkout surface unless a future backend/mobile contract adds a Shopify cart conversion or cart ID. Mobile still sends only public store context and must not expose Shopify credentials.
+Impact: `useCartManager` remains on generated `/cart/*` for add to cart, quantity updates, remove item, saved-cart recovery, and local store sync. Cart and Buy Now actions use `/checkout/handoff` instead of native `/checkout/init`. Checkout deep links return shoppers to the cart entry instead of `/checkout`. `/unified-cart` is not the private-beta cart-to-checkout surface unless a future backend/mobile contract adds a Shopify cart conversion or cart ID. Mobile still sends only public store context and must not expose Shopify credentials. The sentence that kept the native checkout screen behind a disabled gate was superseded on 2026-09-28 by GitHub issue #147: that screen was deleted.
 
 Related docs: `docs/STATUS.md`, `docs/CHECKOUT_ORDERS_SMOKE_TEST.md`, `api-spec/swagger.json`, `api/generated/checkout/checkout.ts`, backend repo `docs/DECISIONS.md`.
 
@@ -150,9 +150,21 @@ Decision: The premium shopper pass does not restore native Stripe checkout. Cart
 
 Reason: Hosted checkout is the private-beta path. Reopening the native checkout screen would put payment and credential handling back in the app without a dedicated issue.
 
-Impact: Presentation on browse, product, and cart. The handoff request and the auth gate are unchanged.
+Impact: Presentation on browse, product, and cart. The handoff request and the auth gate are unchanged. GitHub issue #147 later deleted the unreachable native checkout screen so it cannot be switched back on.
 
 Related docs: `utils/hostedCheckoutCopy.ts`, `app/(tabs)/cart.tsx`, `app/products/[id].tsx`, GitHub issue #122.
+
+### Shopify Owns Settlement; Native Stripe Checkout Is Removed
+
+Date: 2026-09-28.
+
+Decision: The only shopper checkout path is Shopify-hosted handoff. Cart "Proceed to Checkout" and product "Buy Now" call generated `POST /checkout/handoff` and open the returned `checkoutUrl`. Native checkout steps, Stripe card entry, Platform Pay, saved-card management, and in-app payment confirmation are deleted. Direct `/checkout` visits show a disabled state that returns to the cart. `isLegacyNativeCheckoutEnabled` remains a fail-closed constant: it does not read environment variables and there is no shopper branch that mounts Stripe when it changes.
+
+Reason: Shopify owns settlement. Leaving the native payment UI behind a function someone could flip would let a SaaS or production build collect cards inside Cartaisy.
+
+Impact: Shopper UI and navigation. Generated checkout clients for legacy `/checkout/init` and `/checkout/complete` stay in the repo because backend route deletion is a separate change. The Stripe native config plugin and `EXPO_PUBLIC_STRIPE_*` build values are unchanged; shopper JavaScript does not initialize Stripe. Handoff failure keeps a loading state and an error. Guest checkout still uses the existing auth gate.
+
+Related docs: `utils/checkoutFlowGate.ts`, `app/(tabs)/cart.tsx`, `app/checkout.tsx`, `docs/CHECKOUT_ORDERS_SMOKE_TEST.md`, GitHub issue #147.
 
 ### EAS Builds Regenerate Native Projects From app.config.ts
 

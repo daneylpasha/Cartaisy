@@ -63,12 +63,34 @@ jest.mock("@/components/molecules/cart/CartLineItem", () => ({
   default: () => null,
 }));
 jest.mock("@/components/molecules/ProductCard", () => ({ ProductCard: () => null }));
-jest.mock("@/components/organisms/ErrorModal", () => ({ __esModule: true, default: () => null }));
+jest.mock("@/components/organisms/ErrorModal", () => {
+  const { Text } = require("react-native");
+  return {
+    __esModule: true,
+    default: ({
+      visible,
+      title,
+      message,
+    }: {
+      visible: boolean;
+      title: string;
+      message: string;
+    }) =>
+      visible ? (
+        <>
+          <Text>{title}</Text>
+          <Text>{message}</Text>
+        </>
+      ) : null,
+  };
+});
 
 import CartScreen from "@/app/(tabs)/cart";
 import useCartStore from "@/store/useCartStore";
 import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 import { HOSTED_CHECKOUT_NOTE } from "@/utils/hostedCheckoutCopy";
+
+const { router } = jest.requireMock("expo-router");
 
 const catalogUnavailableError = {
   response: { status: 503, data: { code: "STORE_UNAVAILABLE" } },
@@ -216,5 +238,100 @@ describe("cart screen unavailable state", () => {
       { data: { cartId: "cart-after-login" } },
       expect.any(Object)
     );
+  });
+
+  it("shows a loading state and does not open a URL until handoff returns", () => {
+    mockSyncCart.mockResolvedValue(true);
+    mockCheckoutHandoffMutation.mockImplementation(() => {});
+
+    const { getByText, queryByText } = renderWithTamagui(<CartScreen />);
+
+    fireEvent.press(getByText(/Proceed to Checkout/));
+
+    expect(queryByText(/Proceed to Checkout/)).toBeNull();
+    expect(Linking.openURL).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalledWith("/checkout");
+  });
+
+  it("shows a checkout error when handoff returns no URL", async () => {
+    mockSyncCart.mockResolvedValue(true);
+    mockCheckoutHandoffMutation.mockImplementation((_variables, options) => {
+      options.onSuccess({
+        success: true,
+        data: { checkoutUrl: "", cartId: "cart-1" },
+      });
+    });
+
+    const { getByText } = renderWithTamagui(<CartScreen />);
+
+    fireEvent.press(getByText(/Proceed to Checkout/));
+
+    await waitFor(() =>
+      expect(getByText("Checkout URL not found. Please try again.")).toBeTruthy()
+    );
+    expect(getByText(/Proceed to Checkout/)).toBeTruthy();
+    expect(Linking.openURL).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it("shows the handoff error message and does not open native checkout", async () => {
+    mockSyncCart.mockResolvedValue(true);
+    mockCheckoutHandoffMutation.mockImplementation((_variables, options) => {
+      options.onError({
+        response: { data: { error: { message: "Cart expired" } } },
+      });
+    });
+
+    const { getByText } = renderWithTamagui(<CartScreen />);
+
+    fireEvent.press(getByText(/Proceed to Checkout/));
+
+    await waitFor(() => expect(getByText("Cart expired")).toBeTruthy());
+    expect(getByText("Checkout Error")).toBeTruthy();
+    expect(Linking.openURL).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalledWith("/checkout");
+    expect(router.replace).not.toHaveBeenCalledWith("/checkout");
+  });
+
+  it("shows an error when the hosted checkout URL cannot be opened", async () => {
+    mockSyncCart.mockResolvedValue(true);
+    jest.spyOn(Linking, "openURL").mockRejectedValue(new Error("no browser"));
+    mockCheckoutHandoffMutation.mockImplementation((_variables, options) => {
+      options.onSuccess({
+        success: true,
+        data: {
+          checkoutUrl: "https://store.example.com/checkouts/abc",
+          cartId: "cart-1",
+        },
+      });
+    });
+
+    const { getByText } = renderWithTamagui(<CartScreen />);
+
+    fireEvent.press(getByText(/Proceed to Checkout/));
+
+    await waitFor(() =>
+      expect(
+        getByText("Failed to open checkout. Please try again.")
+      ).toBeTruthy()
+    );
+    expect(router.push).not.toHaveBeenCalledWith("/checkout");
+  });
+
+  it("replaces the cart when handoff reports the catalog unavailable", async () => {
+    mockSyncCart.mockResolvedValue(true);
+    mockCheckoutHandoffMutation.mockImplementation((_variables, options) => {
+      options.onError(catalogUnavailableError);
+    });
+
+    const { getByText, queryByText } = renderWithTamagui(<CartScreen />);
+    await waitFor(() => expect(mockSyncCart).toHaveBeenCalled());
+    await act(async () => {});
+
+    fireEvent.press(getByText(/Proceed to Checkout/));
+
+    await waitFor(() => expect(getByText("Cart unavailable")).toBeTruthy());
+    expect(queryByText(/Proceed to Checkout/)).toBeNull();
+    expect(Linking.openURL).not.toHaveBeenCalled();
   });
 });

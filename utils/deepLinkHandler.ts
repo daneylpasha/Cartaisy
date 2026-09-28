@@ -1,7 +1,7 @@
 import { Router } from "expo-router";
 import {
   BETA_CHECKOUT_ENTRY_ROUTE,
-  isLegacyNativeCheckoutEnabled,
+  isLegacyPaymentScreen,
 } from "@/utils/checkoutFlowGate";
 
 /**
@@ -165,11 +165,7 @@ export function handleDeepLink(
         break;
 
       case "checkout":
-        navigationMethod(
-          isLegacyNativeCheckoutEnabled()
-            ? "/checkout"
-            : BETA_CHECKOUT_ENTRY_ROUTE
-        );
+        navigationMethod(BETA_CHECKOUT_ENTRY_ROUTE);
         break;
 
       case "search":
@@ -180,6 +176,10 @@ export function handleDeepLink(
         break;
 
       case "screen":
+        if (deepLink.screen && isLegacyPaymentScreen(deepLink.screen)) {
+          navigationMethod(BETA_CHECKOUT_ENTRY_ROUTE);
+          break;
+        }
         if (deepLink.screen) {
           try {
             // Validate the screen path starts with /

@@ -60,20 +60,6 @@ export const HEADER_CONFIGS = {
       backgroundColor: tokens.color.background,
     },
   },
-  paymentMethod: {
-    headerBackVisible: false,
-    headerTitle: "",
-    headerShown: true,
-    headerLeft: () => (
-      <OpTouch onPress={() => router.back()}>
-        <AppImage name={"arrowBack"} size={16} />
-      </OpTouch>
-    ),
-    headerShadowVisible: false,
-    headerStyle: {
-      backgroundColor: tokens.color.background,
-    },
-  },
   changePassword: {
     headerBackVisible: false,
     headerTitle: "",
@@ -103,20 +89,6 @@ export const HEADER_CONFIGS = {
     },
   },
   newPassword: {
-    headerBackVisible: false,
-    headerTitle: "",
-    headerShown: true,
-    headerLeft: () => (
-      <OpTouch onPress={() => router.back()}>
-        <AppImage name={"arrowBack"} size={16} />
-      </OpTouch>
-    ),
-    headerShadowVisible: false,
-    headerStyle: {
-      backgroundColor: tokens.color.background,
-    },
-  },
-  addNewCardDetails: {
     headerBackVisible: false,
     headerTitle: "",
     headerShown: true,

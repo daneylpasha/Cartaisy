@@ -162,8 +162,8 @@ export function validateBranding(raw: RawBranding): ValidatedBranding {
     // looks like.
     //
     // Also checked against $primarylight — caught in Codex review: $secondary
-    // also renders directly on $primarylight (app/paymentMethod.tsx's
-    // default-card "Expires" text, AddressCard's selected-address state),
+    // also renders directly on $primarylight (AddressCard's selected-address
+    // state),
     // and $primarylight is derived from the *other* merchant color, so a
     // secondaryColor that's fine against the flat $background can still be
     // illegible against a particular primaryColor's derived overlay. Uses

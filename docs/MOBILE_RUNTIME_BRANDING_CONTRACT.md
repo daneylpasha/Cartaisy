@@ -34,7 +34,6 @@ Static logo and brand assets:
 - Auth screens render the bundled `cartaisyColorlogo`.
 - `components/organisms/home/HomeHeader.tsx` renders the bundled `cartaisyWhitelogo`.
 - `app/(tabs)/profile.tsx` renders the bundled `cartaisyColorlogo`.
-- `app/addNewCardDetails.tsx` renders the bundled `cartaisyColorlogo`.
 - `components/atoms/AppImage.tsx` can already render remote image URLs via its `source` prop, but no runtime logo field is currently wired into branding surfaces.
 
 Native/build branding sources:
@@ -160,7 +159,7 @@ Likely mobile implementation files for a follow-up:
 - `app/splash.tsx`: choose between runtime logo and bundled fallback for the React splash route.
 - `components/organisms/home/HomeHeader.tsx`: choose runtime light/dark logo where appropriate.
 - `app/(auth)/login.tsx`, `app/(auth)/signUp.tsx`, and `components/organisms/auth/LoginBottomSheet.tsx`: choose runtime logo for auth branding surfaces.
-- `app/(tabs)/profile.tsx` and `app/addNewCardDetails.tsx`: choose runtime logo for current in-app logo placements.
+- `app/(tabs)/profile.tsx`: choose runtime logo for the current in-app logo placement.
 - Components that read `tokens.color.primary` directly, such as buttons, loaders, steppers, inputs, calendars, and tab accents: migrate gradually to a runtime-aware brand color source only where the UI contract requires it.
 
 ## Backend Requirements

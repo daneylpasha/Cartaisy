@@ -72,8 +72,8 @@ These values may be included in branded mobile build configuration when they con
 | `EXPO_PUBLIC_APP_SCHEME` | Public deep-link URL scheme used by client integrations that read it from JavaScript. Also used as an `APP_SCHEME` compatibility fallback by `app.config.ts`. | Build-time value for the shipped app bundle. |
 | `EXPO_PUBLIC_IOS_BUNDLE_ID` | Public iOS bundle identifier for build/release tracking when used by build tooling. Also used as an `IOS_BUNDLE_IDENTIFIER` compatibility fallback by `app.config.ts`. | Build-time value for the shipped app bundle. |
 | `EXPO_PUBLIC_ANDROID_PACKAGE` | Public Android application ID for build/release tracking when used by build tooling. Also used as an `ANDROID_PACKAGE` compatibility fallback by `app.config.ts`. | Build-time value for the shipped app bundle. |
-| `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key, if the branded build uses client-side Stripe initialization. | Build-time public value; tenant-specific but not secret. |
-| `EXPO_PUBLIC_STRIPE_MERCHANT_ID` | Apple Pay merchant identifier, if wallet payments are configured for the branded build. | Build-time public value that must match native payment configuration. |
+| `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Not read by shopper JavaScript. Shopify-hosted checkout is the only shopper payment path. | Build-time public value; tenant-specific but not secret. |
+| `EXPO_PUBLIC_STRIPE_MERCHANT_ID` | Apple Pay merchant identifier for the native Stripe config plugin in `app.config.ts`. Shopper JavaScript does not use it to collect payment. | Build-time public value that must match native payment configuration. |
 
 If a value would be unsafe to paste into a public issue or support ticket, it is unsafe for an `EXPO_PUBLIC_*` variable.
 

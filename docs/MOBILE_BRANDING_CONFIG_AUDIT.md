@@ -6,6 +6,8 @@ This is a documentation-only audit. It does not change app behavior.
 
 Status update (2026-07-02): This audit was written against static `app.json`, which has since been replaced by dynamic `app.config.ts` (static `app.json` was removed). References to `app.json` values below correspond to `app.config.ts` defaults, and app identity env values (`APP_NAME`, `IOS_BUNDLE_IDENTIFIER`, `ANDROID_PACKAGE`, and their `EXPO_PUBLIC_*` fallbacks) now do drive Expo config — see `docs/MOBILE_ENV_VARIABLES.md`. The native identity mismatch risks flagged below (checked-in iOS project, Firebase iOS config, Apple Pay entitlements) still require verification before release. Migration details: `docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md`.
 
+Status update (2026-09-28, GitHub issue #147): Shopper JavaScript no longer mounts `StripeProvider` or wallet payment buttons. `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` is not read by the app. `EXPO_PUBLIC_STRIPE_MERCHANT_ID` is still a native plugin input in `app.config.ts`. The Stripe config plugin itself was left in place; removing it is a native build change.
+
 ## Executive Summary
 
 Cartaisy is currently configured as a branded Expo/React Native mobile app with native iOS and Android projects checked in. Most app identity and launch-surface branding is build-time only: app name, icons, splash assets, bundle IDs/package names, notification icons/colors, Firebase app files, Apple Pay merchant entitlement, and Android package metadata all require a native rebuild and store submission.
@@ -79,10 +81,10 @@ Because this is static JSON, the app identity values listed in `.env.example` ar
 | --- | --- | --- |
 | `EXPO_PUBLIC_API_BASE_URL` | Used by API clients and `AppInitializer`. | Build-time JS constant for a shipped binary. |
 | `EXPO_PUBLIC_STORE_ID` | Sent as `X-Store-ID` by API clients. | Build-time JS constant for a shipped binary. |
-| `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Passed to `StripeProvider`. | Build-time JS constant; publishable but tenant-specific. |
-| `EXPO_PUBLIC_STRIPE_MERCHANT_ID` | Passed to `StripeProvider`; logged by wallet payment buttons. | Build-time JS constant and must match native Apple Pay entitlement. |
-| `EXPO_PUBLIC_APP_SCHEME` | Passed to `StripeProvider` `urlScheme`. | Build-time JS constant; native deep link schemes still require native config. |
-| `EXPO_PUBLIC_APP_NAME` | Used as wallet payment label/merchant name. | Build-time JS constant. |
+| `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Not read by shopper JavaScript after GitHub issue #147. | Build-time public value; tenant-specific but not secret. |
+| `EXPO_PUBLIC_STRIPE_MERCHANT_ID` | Native Stripe plugin merchant identifier in `app.config.ts`. Not used to collect payment in the app. | Build-time value that must match native Apple Pay entitlement. |
+| `EXPO_PUBLIC_APP_SCHEME` | Deep-link scheme fallback for `app.config.ts`. | Build-time JS constant; native deep link schemes still require native config. |
+| `EXPO_PUBLIC_APP_NAME` | App name fallback for `app.config.ts`. | Build-time JS constant. |
 | `EXPO_PUBLIC_IOS_BUNDLE_ID` | Defined in example only. | Not currently consumed by app config or native project. |
 | `EXPO_PUBLIC_ANDROID_PACKAGE` | Defined in example only. | Not currently consumed by app config or native project. |
 
@@ -225,12 +227,11 @@ Build-time/native Stripe config:
 - `app.json` also declares iOS in-app payment entitlement `merchant.com.cartaisy`.
 - Android manifest includes `com.google.android.gms.wallet.api.enabled = true`.
 
-Runtime JS Stripe values:
+Runtime JS Stripe values (updated 2026-09-28, GitHub issue #147):
 
-- `app/_layout.tsx` passes `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` to `StripeProvider`.
-- `app/_layout.tsx` passes `EXPO_PUBLIC_APP_SCHEME` to `StripeProvider`.
-- `app/_layout.tsx` passes `EXPO_PUBLIC_STRIPE_MERCHANT_ID` to `StripeProvider`, defaulting to `merchant.com.cartaisy`.
-- Checkout wallet payment labels use `EXPO_PUBLIC_APP_NAME`.
+- Shopper JavaScript does not import `@stripe/stripe-react-native` or mount `StripeProvider`.
+- `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` is not read by the app.
+- `app.config.ts` still passes `EXPO_PUBLIC_STRIPE_MERCHANT_ID` into the native Stripe plugin. That plugin is not a shopper card-collection path.
 
 Native entitlement note:
 
