@@ -227,7 +227,7 @@ These values are packaged into the binary or native project. Changing them requi
 
 ### App Identity
 
-- [ ] Confirm the merchant-facing app display name.
+- [ ] Confirm the merchant-facing app display name. When `/dashboard/admin/build-requests` shows the `APP_NAME=…` control, that name is the pasted `APP_NAME` value (no quotes). A blank control stays empty; do not substitute Cartaisy.
 - [ ] Confirm the Expo app name and slug for the branded build.
 - [ ] Confirm the iOS bundle identifier.
 - [ ] Confirm the Android package/application ID.
@@ -288,7 +288,7 @@ Set `ANDROID_ADAPTIVE_ICON_PATH` when the merchant has a separate adaptive foreg
 
 The sample profile `sample-merchant-development` sets `ICON_IMAGE_PATH` to `./assets/images/acme-outfitters-logo.png` (the existing square Acme placeholder) and `ANDROID_ADAPTIVE_ICON_PATH` to `./assets/images/acme-outfitters-adaptive-icon.png`. A real merchant replaces the path or sets `ICON_IMAGE_URL`. This slice does not require a new EAS cloud build; sample Android signing stays as already recorded in this checklist.
 
-Before a real merchant EAS build, copy the public icon and splash URLs from the ops queue and dry-run them. The steps are "Handoff from Cartaisy ops queue" in `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md`. The checkbox is under Release Verification.
+Before a real merchant EAS build, copy `APP_NAME` with the public icon and splash URLs from the ops queue and dry-run them. The steps are "Handoff from Cartaisy ops queue" in `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md`. The checkbox is under Release Verification.
 
 ### Firebase and Push
 
@@ -308,7 +308,7 @@ Before a real merchant EAS build, copy the public icon and splash URLs from the 
 
 ### Build Environment Values
 
-- [ ] `APP_NAME`
+- [ ] `APP_NAME` (ops queue copies `APP_NAME=<merchant display name>` with no quotes when the `APP_NAME=…` control is present; a blank name is not filled with `cartaisy`)
 - [ ] `APP_SLUG`
 - [ ] `APP_SCHEME`
 - [ ] `APP_VERSION`
@@ -369,8 +369,8 @@ These values should be loaded from the backend at runtime through the existing s
 
 - [ ] Confirm `.easignore` still excludes `/ios` and `/android` so the EAS build regenerates native projects from `app.config.ts`; builds from the checked-in Cartaisy projects (including local `expo run:*`) ignore merchant identity values.
 - [ ] Confirm the merchant identity env values are set on the EAS build (EAS environment variables or `eas.json` profile `env`), not only in a local shell.
-- [ ] Dry run icon and splash before a real merchant EAS build. From `/dashboard/admin/build-requests`, copy `ICON_IMAGE_URL=<public https URL>` when the icon button is present and `SPLASH_IMAGE_URL=<public https URL>` when the splash button is present. Paste both assignments onto the merchant EAS project as plain-visibility env, or record that `assets/images/neutral-icon.png` / `assets/images/neutral-splash.png` is intentional when a button is absent. A set path wins over the matching URL. Do not put the URLs in `EXPO_PUBLIC_*`. Do not put Shopify tokens in mobile env. Steps: `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md` ("Handoff from Cartaisy ops queue").
-- [ ] Run `npx expo config --type public` with the merchant environment set and verify name, slug, scheme, bundle ID, package, Firebase file paths, payment merchant ID, the launcher `icon` (merchant file, downloaded file, or `assets/images/neutral-icon.png`), and the `expo-splash-screen` image (merchant file, downloaded file, or `assets/images/neutral-splash.png`). For a non-default identity, those paths must not be `assets/images/icon.png`, `assets/images/adaptive-icon.png`, or `assets/images/cartaisy-color-logo.png`.
+- [ ] Dry run the display name, icon, and splash before a real merchant EAS build. From `/dashboard/admin/build-requests`, copy `APP_NAME=<merchant display name>` with no quotes when the `APP_NAME=…` control is present, `ICON_IMAGE_URL=<public https URL>` when the icon button is present, and `SPLASH_IMAGE_URL=<public https URL>` when the splash button is present. Paste those assignments onto the merchant EAS project as plain-visibility env. A blank name stays empty: do not invent a name and do not paste `cartaisy`. Record that `assets/images/neutral-icon.png` / `assets/images/neutral-splash.png` is intentional when an image button is absent. A set path wins over the matching URL. Do not put the URLs in `EXPO_PUBLIC_*`. Do not put Shopify tokens in mobile env. Steps: `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md` ("Handoff from Cartaisy ops queue").
+- [ ] Run `npx expo config --type public` with the merchant environment set and verify name, slug, scheme, bundle ID, package, Firebase file paths, payment merchant ID, the launcher `icon` (merchant file, downloaded file, or `assets/images/neutral-icon.png`), and the `expo-splash-screen` image (merchant file, downloaded file, or `assets/images/neutral-splash.png`). When `APP_NAME` is set, `name` equals that merchant name and is not `cartaisy`. For a non-default identity, the icon and splash paths must not be `assets/images/icon.png`, `assets/images/adaptive-icon.png`, or `assets/images/cartaisy-color-logo.png`.
 - [ ] Build iOS with the merchant bundle identifier and Firebase file.
 - [ ] Build Android with the merchant package name and Firebase file.
 - [ ] Install each build on a clean device or simulator.
