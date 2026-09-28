@@ -29,6 +29,7 @@
         "APP_NOTIFICATION_COLOR": "#1E90FF",
         "ANDROID_ADAPTIVE_ICON_PATH": "./assets/images/acme-outfitters-adaptive-icon.png",
         "ANDROID_ADAPTIVE_ICON_BACKGROUND": "#0A2540",
+        "SPLASH_IMAGE_URL": "https://cdn.example.com/stores/acme-outfitters/splash.png",
         "SPLASH_BACKGROUND_COLOR": "#0A2540",
         "EAS_PROJECT_ID": "a9a1dd2e-adfe-4020-9f10-6b561859f119",
         "EXPO_OWNER": "rendernext",

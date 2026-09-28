@@ -1,4 +1,5 @@
 import type { ExpoConfig } from "@expo/config-types";
+import { resolveNativeSplashImage } from "./scripts/resolveNativeSplash";
 
 const readEnv = (names: string[], fallback: string) => {
   for (const name of names) {
@@ -37,10 +38,11 @@ const appIconPath = readEnv(
 // non-square source instead of fitting it — appIconPath's wide 422x100
 // wordmark was getting cropped into an unreadable fragment ("rta") on a real
 // device. A square source is immune to cover-crop entirely, since there's no
-// aspect-ratio mismatch to crop away. Splash (`fit: "contain"`, no cropping)
-// and web favicon keep using the original wide wordmark unchanged below —
-// only the two surfaces that were actually broken are repointed here. Fixed
-// in the sample-merchant placeholder-branding investigation (PR #112).
+// aspect-ratio mismatch to crop away. Web favicon keeps using the original
+// wide wordmark below. Fixed in the sample-merchant placeholder-branding
+// investigation (PR #112). The native splash is resolved separately
+// (scripts/resolveNativeSplash.js) so a branded build does not inherit this
+// wordmark on the pre-JS frame.
 //
 // Falls back to APP_ICON_PATH (not straight to the hardcoded default) before
 // the Cartaisy default, so a profile that already sets its own square
@@ -104,6 +106,7 @@ const easProjectId = readEnv(
   "eabf3411-284b-4bd8-88eb-8d89a8a4ee14"
 );
 const expoOwner = readEnv(["EXPO_OWNER"], "rendernext");
+const splashImagePath = resolveNativeSplashImage(process.env);
 
 const config: ExpoConfig = {
   name: appName,
@@ -152,7 +155,7 @@ const config: ExpoConfig = {
     [
       "expo-splash-screen",
       {
-        image: appIconPath,
+        image: splashImagePath,
         backgroundColor: splashBackgroundColor,
         android: {
           backgroundColor: splashBackgroundColor,

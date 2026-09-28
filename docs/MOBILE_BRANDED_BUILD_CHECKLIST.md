@@ -245,10 +245,28 @@ These values are packaged into the binary or native project. Changing them requi
 
 - [ ] Provide the iOS AppIcon asset set at all required sizes.
 - [ ] Provide the Android launcher and adaptive icon assets.
-- [ ] Provide the native splash screen logo and background color.
+- [ ] Provide the native splash image and background color (see below).
 - [ ] Provide any in-app bundled logo assets needed before runtime config loads.
 - [ ] Provide notification icon assets and notification color, if push notifications are enabled.
 - [ ] Verify assets are merchant-approved and do not include another merchant's branding.
+
+### Native splash (pre-JS frame)
+
+The native splash is the frame before JavaScript loads. It is configured by the `expo-splash-screen` plugin in `app.config.ts`. The runtime JS splash (`app/splash.tsx`, via `BrandMark` and store config) is a separate path and is not changed by this checklist.
+
+Supply the image at build time in one of these ways:
+
+1. **Env path.** Set `SPLASH_IMAGE_PATH` to a PNG or JPEG in the repo (for example `./assets/images/merchant-splash.png`).
+2. **EAS file env.** Upload the PNG or JPEG as a file-type EAS environment variable named `SPLASH_IMAGE_PATH`. On the worker the value is an absolute file path, which `app.config.ts` accepts. This is the same pattern as `IOS_GOOGLE_SERVICES_FILE` / `ANDROID_GOOGLE_SERVICES_FILE`.
+3. **Public branding URL.** Set `SPLASH_IMAGE_URL` to a public `https` URL (a Cartaisy backend branding CDN URL is the expected source). `app.config.ts` downloads it when config is evaluated on the EAS worker. No authorization header is sent. Do not copy the URL into an `EXPO_PUBLIC_*` variable, and do not put Shopify tokens, signed secrets, or other credentials in the URL.
+
+Also set `SPLASH_BACKGROUND_COLOR`.
+
+Launcher icons stay on `APP_ICON_PATH`, `APP_ICON_SQUARE_PATH`, and `ANDROID_ADAPTIVE_ICON_PATH` (repo path or EAS file env). They are not downloaded from `SPLASH_IMAGE_URL`.
+
+If the splash file is missing, the URL is rejected, or the download fails, a merchant build uses `assets/images/neutral-splash.png` with `SPLASH_BACKGROUND_COLOR`. That image has no Cartaisy wordmark. The wordmark is used only for the default Cartaisy identity when no splash path or URL is set.
+
+The sample profile `sample-merchant-development` sets `SPLASH_IMAGE_URL` to `https://cdn.example.com/stores/acme-outfitters/splash.png`. That host does not serve an image, so config evaluation uses the neutral splash. A real merchant replaces the URL or sets `SPLASH_IMAGE_PATH`. This slice does not require a new EAS cloud build; sample Android signing stays as already recorded in this checklist.
 
 ### Firebase and Push
 
@@ -284,6 +302,7 @@ These values are packaged into the binary or native project. Changing them requi
 - [ ] `APP_NOTIFICATION_COLOR`
 - [ ] `ANDROID_ADAPTIVE_ICON_PATH`
 - [ ] `ANDROID_ADAPTIVE_ICON_BACKGROUND`
+- [ ] `SPLASH_IMAGE_PATH` or `SPLASH_IMAGE_URL` (public https only; no credentials)
 - [ ] `SPLASH_BACKGROUND_COLOR`
 - [ ] `EAS_PROJECT_ID`
 - [ ] `EXPO_OWNER`
@@ -327,11 +346,11 @@ These values should be loaded from the backend at runtime through the existing s
 
 - [ ] Confirm `.easignore` still excludes `/ios` and `/android` so the EAS build regenerates native projects from `app.config.ts`; builds from the checked-in Cartaisy projects (including local `expo run:*`) ignore merchant identity values.
 - [ ] Confirm the merchant identity env values are set on the EAS build (EAS environment variables or `eas.json` profile `env`), not only in a local shell.
-- [ ] Run `npx expo config --type public` with the merchant environment set and verify name, slug, scheme, bundle ID, package, Firebase file paths, and payment merchant ID.
+- [ ] Run `npx expo config --type public` with the merchant environment set and verify name, slug, scheme, bundle ID, package, Firebase file paths, payment merchant ID, and the `expo-splash-screen` image (merchant file, downloaded file, or `assets/images/neutral-splash.png`).
 - [ ] Build iOS with the merchant bundle identifier and Firebase file.
 - [ ] Build Android with the merchant package name and Firebase file.
 - [ ] Install each build on a clean device or simulator.
-- [ ] Verify launcher name, launcher icon, and splash screen.
+- [ ] Verify launcher name, launcher icon, and the pre-JS native splash (merchant splash or the neutral splash on a merchant build).
 - [ ] Verify the app connects to the intended backend API URL.
 - [ ] Verify the app loads data for the intended store ID only.
 - [ ] Verify currency, timezone, and store name display from runtime config where those fields are used.
