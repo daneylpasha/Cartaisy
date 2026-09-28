@@ -27,7 +27,7 @@ Everything downstream depends on these values. Record them in the "Merchant Buil
 
 | Input | Environment variable (consumed by `app.config.ts`) | Rules |
 | --- | --- | --- |
-| App display name | `APP_NAME` | Merchant-approved; also the store listing name later. When the ops queue shows `APP_NAME=…`, paste `APP_NAME=<exact name>` with no quotes. A blank control is not filled with `cartaisy`. |
+| App display name | `APP_NAME` | Merchant-approved; also the store listing name later. Prefer the `APP_NAME` line from **Copy all EAS env** (see Handoff below). The `APP_NAME=…` control is the single-field fallback and pastes `APP_NAME=<exact name>` with no quotes. A blank control is not filled with `cartaisy`. |
 | Expo slug | `APP_SLUG` | Lowercase, hyphenated, unique within the Expo owner account. |
 | Deep-link URL scheme | `APP_SCHEME` | Lowercase alphanumeric, unique enough to avoid collisions with other installed apps. |
 | Marketing version | `APP_VERSION` | Semver-style string. |
@@ -44,7 +44,7 @@ Everything downstream depends on these values. Record them in the "Merchant Buil
 | Native splash background | `SPLASH_BACKGROUND_COLOR` | Merchant-approved. Shown behind the splash image, including the neutral fallback. |
 | EAS project | `EAS_PROJECT_ID`, `EXPO_OWNER` | Produced by Step 2, not chosen by the merchant. |
 | Backend API URL | `EXPO_PUBLIC_API_BASE_URL` | Public; must point at the intended Cartaisy backend environment. |
-| Store ID | `EXPO_PUBLIC_STORE_ID` | Public; the merchant's 24-character hex Mongo ObjectId (validated by `api/config/mobileConfig.ts`). Not a security boundary — backend tenant isolation is authoritative. When the ops queue shows `EXPO_PUBLIC_STORE_ID=…`, paste `EXPO_PUBLIC_STORE_ID=<exact store.id>` with no quotes. A missing or invalid id stays empty. |
+| Store ID | `EXPO_PUBLIC_STORE_ID` | Public; the merchant's 24-character hex Mongo ObjectId (validated by `api/config/mobileConfig.ts`). Not a security boundary — backend tenant isolation is authoritative. Prefer the `EXPO_PUBLIC_STORE_ID` line from **Copy all EAS env** (see Handoff below). The `EXPO_PUBLIC_STORE_ID=…` control is the single-field fallback and pastes `EXPO_PUBLIC_STORE_ID=<exact store.id>` with no quotes. A missing or invalid id stays empty. |
 | Public app name/scheme mirrors | `EXPO_PUBLIC_APP_NAME`, `EXPO_PUBLIC_APP_SCHEME` | Same values as `APP_NAME`/`APP_SCHEME`, readable from app JavaScript. |
 | Stripe publishable key | `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Public by design; per-merchant; only if Stripe is in scope. |
 | Stripe merchant ID mirror | `EXPO_PUBLIC_STRIPE_MERCHANT_ID` | Same value as `IOS_APPLE_PAY_MERCHANT_ID`. |
@@ -65,36 +65,45 @@ The fictional Acme sample sets `ICON_IMAGE_PATH` to `./assets/images/acme-outfit
 
 ### Handoff from Cartaisy ops queue
 
-Use this when a merchant has a display name, a store id, and uploaded branding and you are about to set env on that merchant's EAS project. The queue is the copy source for `APP_NAME`, `EXPO_PUBLIC_STORE_ID`, the icon URL, and the splash URL. It does not start an EAS build. Self-serve EAS is not built; Step 8 is still a manual `eas build` after the dry run below.
+Use this when a merchant has a display name, a store id, and uploaded branding and you are about to set env on that merchant's EAS project. The queue is the copy source for `APP_NAME`, `EXPO_PUBLIC_STORE_ID`, the icon URL, and the splash URL. Prefer **Copy all EAS env** and paste that one block. The four single-field controls are the fallback when you need a single assignment. The queue does not start an EAS build. Self-serve EAS is not built; Step 8 is still a manual `eas build` after the dry run below.
 
-**Where the copy controls are.** Open `/dashboard/admin/build-requests` as a platform operator. That page is recorded in the `cartaisy-dashboard` repo's `docs/STATUS.md` and in `docs/DECISIONS.md` under "The ops build queue shows public icon and splash URLs" (dashboard issue #43, PR #44), "Ops copies the icon as ICON_IMAGE_URL" (dashboard issue #45, PR #47), "Ops copies the merchant display name as APP_NAME" (dashboard issue #49, PR #50), and "Ops copies the merchant store id as EXPO_PUBLIC_STORE_ID" (dashboard issue #51, PR #52). A store owner, including `super_admin`, gets a 403 empty state and is not a source for these values.
+**Where the copy controls are.** Open `/dashboard/admin/build-requests` as a platform operator. That page is recorded in the `cartaisy-dashboard` repo's `docs/STATUS.md` and in `docs/DECISIONS.md` under "The ops build queue shows public icon and splash URLs" (dashboard issue #43, PR #44), "Ops copies the icon as ICON_IMAGE_URL" (dashboard issue #45, PR #47), "Ops copies the merchant display name as APP_NAME" (dashboard issue #49, PR #50), "Ops copies the merchant store id as EXPO_PUBLIC_STORE_ID" (dashboard issue #51, PR #52), and "Ops copies every launcher assignment as one EAS env block" (dashboard issue #55, PR #57). A store owner, including `super_admin`, gets a 403 empty state and is not a source for these values.
 
 Each row shows the merchant name, icon, and splash when `GET /api/v1/admin/build-requests` includes them. `store.appName`, `store.iconUrl`, and `store.splashUrl` are optional. That contract is cartaisy-backend issue #177, in the `cartaisy-backend` repo's `docs/cartaisy/BUILD_REQUEST_API.md`. The list returns a URL only when it is absolute `https` and not token-shaped. Missing or unsafe branding is null. The API does not invent a Cartaisy CDN URL, does not invent an app name, and does not select Shopify tokens. The same stored image fields are on admin branding GET (`iconUrl` / `appIconUrl`, `splashUrl` / `splashImageUrl`) if you need to confirm a row. The same list already includes `store.id`, the merchant store ObjectId. Prefer the queue so you do not open Settings or Mongo to find the name, the store id, or the URL.
 
 **Copy shape.**
 
-Each control copies an env assignment. Paste each assignment onto the merchant EAS project. Do not strip the variable name, and do not add quotes.
+**Copy all EAS env** is the primary paste. When at least one launcher assignment is copyable, the control labeled `Copy all EAS env` copies every available assignment as one multiline block. One assignment per line, `KEY=value`, no quotes, LF newlines. Omit any line whose single-field control would already be absent. Do not leave a blank line for a missing field. The order is fixed:
 
-- App name: when `store.appName` is a non-empty trimmed string, the control labeled `APP_NAME=…` copies `APP_NAME=<that exact name>` with no quotes. The value is the trimmed name only.
+```
+APP_NAME=<trimmed store.appName>
+ICON_IMAGE_URL=<public https icon>
+SPLASH_IMAGE_URL=<public https splash>
+EXPO_PUBLIC_STORE_ID=<24-char hex store.id>
+```
+
+A row with all four present copies those four lines. A row with a subset copies only the lines that qualify, in that same order. If zero lines qualify, there is no Copy all control. The queue shows the calm empty states for the missing fields and does not invent a name, a URL, or a store id. It does not fall back to Cartaisy, the shop domain, or the build-request id.
+
+The four single-field controls stay as the fallback. Use one when you need a single assignment, or when Copy all is absent because nothing on the row qualifies. Each control copies one env assignment. Paste that assignment onto the merchant EAS project. Do not strip the variable name, and do not add quotes.
+
+- App name: when `store.appName` is a non-empty trimmed string, the control labeled `APP_NAME=…` copies `APP_NAME=<that exact name>` with no quotes. The value is the trimmed name only. That same line is the `APP_NAME` line inside Copy all.
 - Icon: the icon button copies `ICON_IMAGE_URL=<url>`.
 - Splash: the splash button copies `SPLASH_IMAGE_URL=<url>`.
 - Store id: when `store.id` is a valid 24-character hex Mongo ObjectId, the control labeled `EXPO_PUBLIC_STORE_ID=…` copies `EXPO_PUBLIC_STORE_ID=<that exact id>` with no quotes. The value is that id only.
 
 **Paste.**
 
-1. On the merchant's row, copy the app name when the `APP_NAME=…` control is present. Paste `APP_NAME=<exact name>` as `APP_NAME` on the merchant EAS project (plain visibility). Do not wrap the name in quotes. Do not retype it from memory.
-2. Copy the icon when the icon button is present. Paste `ICON_IMAGE_URL=<url>` as `ICON_IMAGE_URL` (plain visibility). The value is the public `https` URL only.
-3. Copy splash when the splash button is present. Paste `SPLASH_IMAGE_URL=<url>` as `SPLASH_IMAGE_URL` the same way.
-4. Copy the store id when the `EXPO_PUBLIC_STORE_ID=…` control is present. Paste `EXPO_PUBLIC_STORE_ID=<exact 24-character hex>` as `EXPO_PUBLIC_STORE_ID` (plain visibility). Do not wrap the id in quotes. Do not retype it from memory.
-5. If the `APP_NAME=…` control is absent, the name is missing, blank, or whitespace-only. The queue shows a calm empty state and no copy button. It does not invent a name and does not fall back to Cartaisy, the shop domain, or a store id. Do not set `APP_NAME` to `cartaisy` or `Cartaisy` to fill that gap. Record on the Merchant Build Record that the display name is still required, and set `APP_NAME` only from a merchant-approved name before the build. Leaving `APP_NAME` unset, with `EXPO_PUBLIC_APP_NAME` also unset, makes `app.config.ts` resolve `name` to `cartaisy`.
-6. If an icon or splash button is absent, that asset has no public `https` URL. Supply `ICON_IMAGE_PATH` or `SPLASH_IMAGE_PATH` (repo file or EAS file env), or write on the Merchant Build Record that the neutral image is intentional (`assets/images/neutral-icon.png` or `assets/images/neutral-splash.png`). Do not substitute the Cartaisy wordmark.
-7. If the `EXPO_PUBLIC_STORE_ID=…` control is absent, `store.id` is missing or is not a 24-character hex Mongo ObjectId. The queue shows a calm empty state and no copy button. It does not invent an id and does not fall back to the build-request id, the shop domain, or the app name. Do not set `EXPO_PUBLIC_STORE_ID` from any of those. Record on the Merchant Build Record that the store id is still required, and set it only from the merchant's real store ObjectId before the build.
-8. Leave `ICON_IMAGE_PATH` unset when `ICON_IMAGE_URL` should win, and leave `SPLASH_IMAGE_PATH` unset when `SPLASH_IMAGE_URL` should win. A set path that is missing or is not a PNG or JPEG resolves to the neutral image and does not continue on to the URL.
-9. The queue does not copy `EXPO_PUBLIC_APP_NAME`. If you also set that public mirror, use the same merchant name as `APP_NAME`. `EXPO_PUBLIC_STORE_ID` is the store-id assignment the queue does copy. Do not copy either URL into an `EXPO_PUBLIC_*` variable. Do not put Shopify Admin, Storefront, or custom-app tokens in these variables or anywhere else in mobile env. Do not commit the real URL or a real store id.
+1. On the merchant's row, use **Copy all EAS env** when that control is present. Paste the whole block onto the merchant EAS project as plain-visibility env. Keep each `KEY=value` line, the fixed order, and the LF newlines. Do not add quotes. Do not retype the values from memory.
+2. To paste one field, use the matching single-field control. Copy the app name when the `APP_NAME=…` control is present and paste `APP_NAME=<exact name>` as `APP_NAME`. Copy the icon when the icon button is present and paste `ICON_IMAGE_URL=<url>` as `ICON_IMAGE_URL`. The value is the public `https` URL only. Copy splash when the splash button is present and paste `SPLASH_IMAGE_URL=<url>` as `SPLASH_IMAGE_URL` the same way. Copy the store id when the `EXPO_PUBLIC_STORE_ID=…` control is present and paste `EXPO_PUBLIC_STORE_ID=<exact 24-character hex>` as `EXPO_PUBLIC_STORE_ID`. Do not wrap the name or the id in quotes. Do not retype either from memory.
+3. If the `APP_NAME=…` control is absent, Copy all omits the `APP_NAME` line. The name is missing, blank, or whitespace-only. The queue shows a calm empty state and no copy button for that field. It does not invent a name and does not fall back to Cartaisy, the shop domain, or a store id. Do not set `APP_NAME` to `cartaisy` or `Cartaisy` to fill that gap. Record on the Merchant Build Record that the display name is still required, and set `APP_NAME` only from a merchant-approved name before the build. Leaving `APP_NAME` unset, with `EXPO_PUBLIC_APP_NAME` also unset, makes `app.config.ts` resolve `name` to `cartaisy`.
+4. If an icon or splash button is absent, Copy all omits that line. That asset has no public `https` URL. Supply `ICON_IMAGE_PATH` or `SPLASH_IMAGE_PATH` (repo file or EAS file env), or write on the Merchant Build Record that the neutral image is intentional (`assets/images/neutral-icon.png` or `assets/images/neutral-splash.png`). Do not substitute the Cartaisy wordmark.
+5. If the `EXPO_PUBLIC_STORE_ID=…` control is absent, Copy all omits that line. `store.id` is missing or is not a 24-character hex Mongo ObjectId. The queue shows a calm empty state and no copy button for that field. It does not invent an id and does not fall back to the build-request id, the shop domain, or the app name. Do not set `EXPO_PUBLIC_STORE_ID` from any of those. Record on the Merchant Build Record that the store id is still required, and set it only from the merchant's real store ObjectId before the build.
+6. Leave `ICON_IMAGE_PATH` unset when `ICON_IMAGE_URL` should win, and leave `SPLASH_IMAGE_PATH` unset when `SPLASH_IMAGE_URL` should win. A set path that is missing or is not a PNG or JPEG resolves to the neutral image and does not continue on to the URL.
+7. The queue does not copy `EXPO_PUBLIC_APP_NAME`, and Copy all does not include it. If you also set that public mirror, use the same merchant name as `APP_NAME`. `EXPO_PUBLIC_STORE_ID` is the store-id assignment the queue does copy, either as its own line in Copy all or from the single-field control. Do not copy either URL into an `EXPO_PUBLIC_*` variable. Do not put Shopify Admin, Storefront, or custom-app tokens in these variables or anywhere else in mobile env. Do not commit the real URL or a real store id.
 
 **Dry run before `eas build`.** Export the merchant env in a file kept outside the repo (use `docs/examples/sample-merchant.env` only as the shape) and run Step 7 (`npx expo config --type public`). When `APP_NAME` is set, `name` equals that merchant display name. It must not be `cartaisy`. For a non-default identity, `icon` and the `expo-splash-screen` plugin `image` must be the downloaded merchant file or `./assets/images/neutral-icon.png` / `./assets/images/neutral-splash.png`. They must not be `./assets/images/icon.png`, `./assets/images/adaptive-icon.png`, or `./assets/images/cartaisy-color-logo.png`. The same checks are checkboxes in `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`. `EXPO_PUBLIC_STORE_ID` is not in that Expo config output. With it set, `api/config/mobileConfig.ts` reads that same value and requires a 24-character hex Mongo ObjectId (`docs/MOBILE_ENV_VARIABLES.md`). Do not treat `npx expo config` as a store-id check.
 
-Fictional clipboard shape only (no quotes around the name or the store id):
+Fictional clipboard shape only (no quotes around the name or the store id). This is the block **Copy all EAS env** writes when all four lines qualify. A missing line is omitted; the lines that remain stay in this order:
 
 ```
 APP_NAME=Acme Outfitters
@@ -105,11 +114,11 @@ EXPO_PUBLIC_STORE_ID=507f1f77bcf86cd799439011
 
 The Acme sample splash host does not serve an image, so sample config evaluation uses the neutral splash. That is expected for the sample. A merchant who uploaded branding should show the downloaded file instead. With `APP_NAME=Acme Outfitters`, the same dry run shows `name` as `Acme Outfitters`, not `cartaisy`. The store id in the block above is the fictional id already in `docs/examples/sample-merchant.env`. `npx expo config` does not print it. `api/config/mobileConfig.ts` accepts that 24-character hex shape.
 
-Manual today: yes. The queue does not push EAS env. The rest of Step 0 is still gathered by hand. The download itself runs inside config evaluation once the URL or file env is set.
+Manual today: yes. The queue does not push EAS env. Copy all is a clipboard paste, and the rest of Step 0 is still gathered by hand. The download itself runs inside config evaluation once the URL or file env is set.
 
 ## Step 1 — Confirm the Backend Store Record
 
-1. Confirm the merchant's store exists in the target Cartaisy backend environment. Its store ID is `EXPO_PUBLIC_STORE_ID`, pasted from "Handoff from Cartaisy ops queue" in Step 0 when the `EXPO_PUBLIC_STORE_ID=…` control is present. Do not look the id up in Mongo, and do not use the build-request id, the shop domain, or the app name.
+1. Confirm the merchant's store exists in the target Cartaisy backend environment. Its store ID is `EXPO_PUBLIC_STORE_ID`, pasted from "Handoff from Cartaisy ops queue" in Step 0: the matching line in **Copy all EAS env**, or the `EXPO_PUBLIC_STORE_ID=…` control when you paste that field alone. Do not look the id up in Mongo, and do not use the build-request id, the shop domain, or the app name.
 2. Confirm the backend environment URL that the branded app should use (`EXPO_PUBLIC_API_BASE_URL`).
 3. Confirm the store's runtime config endpoint (`/store/config`) returns the merchant's currency, timezone, and name.
 
@@ -126,7 +135,7 @@ Account ownership: merchant EAS projects live under a **Cartaisy-managed Expo or
 1. Log in to the owning Expo account: `eas login` / verify with `eas whoami`. Two org requirements apply before you do, per the same 2026-07-23 decision: the Cartaisy Expo organization requires **hardware-key 2FA** on accounts that can reach it, and any automation touching the org must authenticate with a **scoped organization token**, never full-account credentials. Sort both out before starting this step rather than discovering them mid-provisioning.
 2. Create the project (Expo dashboard, or `eas project:init` run with `APP_SLUG`/`EXPO_OWNER` exported so it initializes against the merchant identity, from a checkout you do not commit). Use a disposable checkout because `eas project:init` may write the generated project ID into an `app.json`; this repo reads `EAS_PROJECT_ID` from the environment via `app.config.ts`, and a committed `app.json` carrying one merchant's project ID would silently override that for anyone building without the merchant env exported.
 3. Record the generated project ID as `EAS_PROJECT_ID` and the owning account as `EXPO_OWNER`.
-4. Set every identity variable from Step 0 as an EAS environment variable on the merchant project (plain visibility is fine — they are non-secret). Take `APP_NAME`, `ICON_IMAGE_URL`, `SPLASH_IMAGE_URL`, and `EXPO_PUBLIC_STORE_ID` from "Handoff from Cartaisy ops queue" in Step 0; do not type the display name, those URLs, or the store id from memory. Locally exported shell values are NOT forwarded to EAS build workers; only EAS environment variables or an `eas.json` profile `env` block reach the worker where `app.config.ts` is re-evaluated during prebuild.
+4. Set every identity variable from Step 0 as an EAS environment variable on the merchant project (plain visibility is fine — they are non-secret). Take `APP_NAME`, `ICON_IMAGE_URL`, `SPLASH_IMAGE_URL`, and `EXPO_PUBLIC_STORE_ID` from "Handoff from Cartaisy ops queue" in Step 0. Prefer **Copy all EAS env**. The four single-field controls are the fallback. Do not type the display name, those URLs, or the store id from memory. Locally exported shell values are NOT forwarded to EAS build workers; only EAS environment variables or an `eas.json` profile `env` block reach the worker where `app.config.ts` is re-evaluated during prebuild.
 
 Manual today: yes. Automation opportunity: a provisioning script that creates the EAS project and pushes the env set from a merchant record.
 
@@ -265,7 +274,7 @@ A dry run of this runbook using the fictional merchant in `docs/examples/sample-
 
 Manual today (every step, in practice):
 
-- Collecting merchant identity inputs and recording the build record (Step 0), including the ops-queue paste for `APP_NAME`, `ICON_IMAGE_URL`, `SPLASH_IMAGE_URL`, and `EXPO_PUBLIC_STORE_ID`.
+- Collecting merchant identity inputs and recording the build record (Step 0), including the ops-queue paste. Prefer **Copy all EAS env** for `APP_NAME`, `ICON_IMAGE_URL`, `SPLASH_IMAGE_URL`, and `EXPO_PUBLIC_STORE_ID`. The four single-field controls are the fallback.
 - Confirming the backend store record (Step 1).
 - Creating the EAS project and entering its env variables (Step 2).
 - First-run interactive credential generation (Step 3).
@@ -291,6 +300,6 @@ No longer blocked on decisions: both ownership questions are settled and recorde
 - `docs/DECISIONS.md`
 - `docs/examples/sample-merchant.env`
 - `app.config.ts`
-- `cartaisy-dashboard` `docs/STATUS.md` and `docs/DECISIONS.md` ("The ops build queue shows public icon and splash URLs", issue #43 / PR #44; "Ops copies the icon as ICON_IMAGE_URL", issue #45 / PR #47; "Ops copies the merchant display name as APP_NAME", issue #49 / PR #50; "Ops copies the merchant store id as EXPO_PUBLIC_STORE_ID", issue #51 / PR #52)
+- `cartaisy-dashboard` `docs/STATUS.md` and `docs/DECISIONS.md` ("The ops build queue shows public icon and splash URLs", issue #43 / PR #44; "Ops copies the icon as ICON_IMAGE_URL", issue #45 / PR #47; "Ops copies the merchant display name as APP_NAME", issue #49 / PR #50; "Ops copies the merchant store id as EXPO_PUBLIC_STORE_ID", issue #51 / PR #52; "Ops copies every launcher assignment as one EAS env block", issue #55 / PR #57)
 - `cartaisy-backend` `docs/cartaisy/BUILD_REQUEST_API.md` (issue #177)
-- GitHub issues #60, #61, #133, #135, #137, #139, #141, #143
+- GitHub issues #60, #61, #133, #135, #137, #139, #141, #143, #145
