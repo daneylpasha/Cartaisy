@@ -1,8 +1,10 @@
+import { mobileConfig } from "@/api/config/mobileConfig";
 import { BrandMark } from "@/components/molecules/BrandMark";
 import { MerchantSplashImage } from "@/components/molecules/MerchantSplashImage";
 import useAuthStore from "@/store/useAuthStore";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { isValidPublicBrandImageUrl } from "@/utils/brandingValidation";
+import { cachedSplashMatchesConfiguredStore } from "@/utils/merchantSplash";
 import {
   resetDeepLinkState,
   wasDeepLinkHandled,
@@ -21,16 +23,23 @@ const Splash = () => {
   const splashReadyRef = useRef(false);
   const hydrated = useStoreConfigStore((state) => state._hasHydrated);
   const splashUrl = useStoreConfigStore((state) => state.splashUrl);
+  const cachedStoreId = useStoreConfigStore((state) => state.storeId);
   const safeSplash = isValidPublicBrandImageUrl(splashUrl)
     ? splashUrl.trim()
     : "";
+  const splashBelongsToStore = cachedSplashMatchesConfiguredStore(
+    cachedStoreId,
+    mobileConfig.storeId,
+  );
   const [splashFailed, setSplashFailed] = useState(false);
+  const showMerchantSplash =
+    Boolean(safeSplash) && splashBelongsToStore && !splashFailed;
 
   useEffect(() => {
     splashReadyRef.current = false;
     setSplashFailed(false);
 
-    if (!hydrated || !safeSplash) return;
+    if (!hydrated || !safeSplash || !splashBelongsToStore) return;
 
     const timer = setTimeout(() => {
       if (!splashReadyRef.current) {
@@ -39,12 +48,12 @@ const Splash = () => {
     }, SPLASH_LOAD_TIMEOUT);
 
     return () => clearTimeout(timer);
-  }, [hydrated, safeSplash]);
+  }, [hydrated, safeSplash, splashBelongsToStore]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || showMerchantSplash) return;
     SplashScreen.hideAsync().catch(() => {});
-  }, [hydrated]);
+  }, [hydrated, showMerchantSplash]);
 
   useEffect(() => {
     // Only navigate once on initial mount
@@ -88,7 +97,6 @@ const Splash = () => {
     return () => clearTimeout(timer);
   }, []); // Empty dependency - only run once on mount
 
-  const showMerchantSplash = Boolean(safeSplash) && !splashFailed;
   const { width, height } = Dimensions.get("window");
 
   if (!hydrated) {
@@ -119,6 +127,7 @@ const Splash = () => {
           uri={safeSplash}
           onLoad={() => {
             splashReadyRef.current = true;
+            SplashScreen.hideAsync().catch(() => {});
           }}
           onError={() => setSplashFailed(true)}
         />

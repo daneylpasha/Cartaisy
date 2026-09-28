@@ -116,7 +116,7 @@ Contract notes:
 - Keep the existing `name`, `currency`, and `timezone` fields stable.
 - `primaryColor`, `secondaryColor`, `logoUrl`, `iconUrl`, `appIconUrl`, `splashUrl`, and `splashImageUrl` are optional, flat fields — add them without breaking older clients that don't read them yet.
 - The backend already validates before returning: malformed hex colors are omitted (not nulled), and brand image URLs are omitted unless they parse as absolute `http:`/`https:` URLs and are not token-shaped. The mobile app should still validate independently rather than trust the response shape blindly (see Recommended Mobile Fallback Behavior below).
-- Mobile renders `splashUrl` on the JS splash (`app/splash.tsx`) and uses `iconUrl` for the in-app mark when `logoUrl` is absent. Native launcher icons and the Expo splash asset in `app.config.ts` stay build-time.
+- Mobile renders `splashUrl` on the JS splash (`app/splash.tsx`) and uses `iconUrl` for the in-app mark when `logoUrl` is absent. A persisted splash is shown only when it was saved for the current `EXPO_PUBLIC_STORE_ID`. The native splash stays up until that image loads, or until the in-app mark is the fallback. Native launcher icons and the Expo splash asset in `app.config.ts` stay build-time.
 - Use six-digit hex colors, such as `#A82A50`, to keep validation and accessibility checks simple.
 - Use public CDN HTTPS URLs for logos; do not embed credentials or signed URLs that expose private storage.
 - Keep backend tenant scoping authoritative through the existing store context. The mobile app should not choose arbitrary tenant branding by URL.

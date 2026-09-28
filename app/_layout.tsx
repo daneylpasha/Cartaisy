@@ -744,14 +744,18 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
-  // The splash route hides the native splash once store config has hydrated.
-  // This is the backup for a launch that never mounts that route.
+  // The splash route hides the native splash after the merchant image loads,
+  // or when the in-app mark is the fallback. This backup starts only after
+  // fonts load, so it cannot uncover a blank field while EarlyMerchantSplash
+  // is still waiting on that image. It covers a launch that never mounts
+  // the splash route.
   useEffect(() => {
+    if (!loaded) return;
     const timer = setTimeout(() => {
       SplashScreen.hideAsync().catch(() => {});
     }, 4000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [loaded]);
 
   // Process pending notification from killed state AFTER fonts are loaded and navigation is ready
   useEffect(() => {

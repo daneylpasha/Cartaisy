@@ -1,3 +1,4 @@
+import { mobileConfig } from "@/api/config/mobileConfig";
 import { zustandStorage } from "@/utils/storage";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
@@ -19,6 +20,11 @@ interface StoreConfigState {
   // `splashImageUrl`) are resolved before they reach this store.
   iconUrl?: string;
   splashUrl?: string;
+  // Store the splash and the rest of the persisted branding were fetched
+  // for. The early splash compares this to the current EXPO_PUBLIC_STORE_ID
+  // and stays hidden when they differ. Absent on caches written before this
+  // field existed — those fail closed until the next successful fetch.
+  storeId?: string;
   isLoaded: boolean;
   // True once zustand's persist middleware has finished its async
   // AsyncStorage read and merged any previously-persisted state in. Until
@@ -68,6 +74,7 @@ const useStoreConfigStore = create<StoreConfigState>()(
       logoUrl: undefined,
       iconUrl: undefined,
       splashUrl: undefined,
+      storeId: undefined,
       isLoaded: false,
       _hasHydrated: false,
       setHasHydrated: (state) => set({ _hasHydrated: state }),
@@ -106,6 +113,12 @@ const useStoreConfigStore = create<StoreConfigState>()(
           logoUrl: fetchSucceeded ? config.logoUrl : state.logoUrl,
           iconUrl: fetchSucceeded ? config.iconUrl : state.iconUrl,
           splashUrl: fetchSucceeded ? config.splashUrl : state.splashUrl,
+          // Stamp the store this client just requested. A failed fetch must
+          // not retag the previous tenant's splash with the new id — that
+          // would make a store-id change look like a match.
+          storeId: fetchSucceeded
+            ? mobileConfig.storeId.trim() || undefined
+            : state.storeId,
           isLoaded: true,
         };
       }),
@@ -119,6 +132,7 @@ const useStoreConfigStore = create<StoreConfigState>()(
         logoUrl: undefined,
         iconUrl: undefined,
         splashUrl: undefined,
+        storeId: undefined,
         isLoaded: false,
       }),
     }),

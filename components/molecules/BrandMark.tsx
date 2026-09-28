@@ -54,12 +54,10 @@ export const BrandMark = ({
 
   useEffect(() => {
     setLogoFailed(false);
-    setLoaded(false);
   }, [safeLogo]);
 
   useEffect(() => {
     setIconFailed(false);
-    setLoaded(false);
   }, [safeIcon]);
 
   const defaults = SIZE_DEFAULTS[size];

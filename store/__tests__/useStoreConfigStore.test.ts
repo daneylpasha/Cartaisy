@@ -7,10 +7,19 @@
  * persisted branding instead of clearing it.
  */
 jest.mock("@react-native-async-storage/async-storage", () =>
-  require("@react-native-async-storage/async-storage/jest/async-storage-mock")
+    require("@react-native-async-storage/async-storage/jest/async-storage-mock")
 );
 
+jest.mock("@/api/config/mobileConfig", () => ({
+  mobileConfig: {
+    apiBaseUrl: "https://api.example.test/api/v1",
+    storeId: "507f1f77bcf86cd799439011",
+  },
+}));
+
 import useStoreConfigStore from "@/store/useStoreConfigStore";
+
+const CONFIGURED_STORE_ID = "507f1f77bcf86cd799439011";
 
 const baseState = {
   currency: "USD",
@@ -21,6 +30,7 @@ const baseState = {
   logoUrl: undefined,
   iconUrl: undefined,
   splashUrl: undefined,
+  storeId: undefined,
   isLoaded: false,
   _hasHydrated: false,
 };
@@ -307,8 +317,32 @@ describe("useStoreConfigStore", () => {
     expect(state.logoUrl).toBeUndefined();
     expect(state.iconUrl).toBeUndefined();
     expect(state.splashUrl).toBeUndefined();
+    expect(state.storeId).toBeUndefined();
     expect(state.currency).toBe("USD");
     expect(state.isLoaded).toBe(false);
+  });
+
+  it("stamps the configured store id on a successful fetch and keeps it when a later fetch fails", () => {
+    useStoreConfigStore.getState().setConfig({
+      currency: "USD",
+      timezone: "UTC",
+      storeName: "Acme Outfitters",
+      splashUrl: "https://cdn.example.com/stores/acme/splash.png",
+    });
+
+    expect(useStoreConfigStore.getState().storeId).toBe(CONFIGURED_STORE_ID);
+
+    useStoreConfigStore.getState().setConfig({
+      currency: "USD",
+      timezone: "UTC",
+      storeName: "",
+      fetchSucceeded: false,
+    });
+
+    expect(useStoreConfigStore.getState().storeId).toBe(CONFIGURED_STORE_ID);
+    expect(useStoreConfigStore.getState().splashUrl).toBe(
+      "https://cdn.example.com/stores/acme/splash.png"
+    );
   });
 
   it("persists splashUrl and iconUrl, clears them on a later successful fetch, and keeps them when that fetch fails", () => {

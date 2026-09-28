@@ -4,6 +4,7 @@ jest.mock("@react-native-async-storage/async-storage", () =>
 
 import React from "react";
 import { Image } from "react-native";
+import { act } from "@testing-library/react-native";
 
 import { BrandMark } from "@/components/molecules/BrandMark";
 import useStoreConfigStore from "@/store/useStoreConfigStore";
@@ -103,5 +104,44 @@ describe("BrandMark", () => {
 
     expect(queryByTestId("brand-mark-icon")).toBeNull();
     expect(getByText("Acme Outfitters")).toBeTruthy();
+  });
+
+  it("keeps a loaded logo visible when only the unused icon URL changes", () => {
+    const logoUrl = "https://cdn.example.com/stores/acme/logo.png";
+    useStoreConfigStore.setState({
+      logoUrl,
+      iconUrl: "https://cdn.example.com/stores/acme/icon.png",
+    });
+
+    const { getByTestId, queryByTestId, UNSAFE_getAllByType } =
+      renderWithTamagui(<BrandMark />);
+    const logo = UNSAFE_getAllByType(Image).find(
+      (img) => img.props.source?.uri === logoUrl
+    );
+
+    act(() => {
+      logo!.props.onLoad();
+    });
+
+    expect(getByTestId("brand-mark-logo").props.style).toEqual(
+      expect.arrayContaining([expect.objectContaining({ opacity: 1 })])
+    );
+
+    act(() => {
+      useStoreConfigStore.setState({
+        iconUrl: "https://cdn.example.com/stores/acme/icon-v2.png",
+      });
+    });
+
+    const logoAfter = UNSAFE_getAllByType(Image).find(
+      (img) => img.props.source?.uri === logoUrl
+    );
+
+    expect(getByTestId("brand-mark-logo")).toBeTruthy();
+    expect(queryByTestId("brand-mark-icon")).toBeNull();
+    expect(queryByTestId("brand-mark-name")).toBeNull();
+    expect(logoAfter!.props.style).toEqual(
+      expect.arrayContaining([expect.objectContaining({ opacity: 1 })])
+    );
   });
 });
