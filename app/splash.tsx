@@ -10,7 +10,7 @@ import {
 import * as SplashScreen from "expo-splash-screen";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { StatusBar } from "react-native";
+import { Dimensions, StatusBar } from "react-native";
 import { YStack } from "tamagui";
 
 const SPLASH_DURATION = 3000;
@@ -89,10 +89,16 @@ const Splash = () => {
   }, []); // Empty dependency - only run once on mount
 
   const showMerchantSplash = Boolean(safeSplash) && !splashFailed;
+  const { width, height } = Dimensions.get("window");
 
   if (!hydrated) {
     return (
-      <YStack flex={1} backgroundColor="$white" testID="splash-pending">
+      <YStack
+        width={width}
+        height={height}
+        backgroundColor="$white"
+        testID="splash-pending"
+      >
         <StatusBar hidden={true} />
       </YStack>
     );
@@ -100,10 +106,12 @@ const Splash = () => {
 
   return (
     <YStack
-      flex={1}
+      width={width}
+      height={height}
       backgroundColor="$white"
       justifyContent="center"
       alignItems="center"
+      overflow="hidden"
     >
       <StatusBar hidden={true} />
       {showMerchantSplash ? (

@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, StyleSheet } from "react-native";
+import { Dimensions, Image, StyleSheet } from "react-native";
 
 type MerchantSplashImageProps = {
   uri: string;
@@ -17,6 +17,8 @@ export function MerchantSplashImage({
   onError,
   onLoad,
 }: MerchantSplashImageProps) {
+  const { width, height } = Dimensions.get("window");
+
   return (
     <Image
       testID="merchant-splash"
@@ -27,7 +29,15 @@ export function MerchantSplashImage({
       fadeDuration={0}
       onError={onError}
       onLoad={onLoad}
-      style={StyleSheet.absoluteFillObject}
+      style={[styles.image, { width, height }]}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  image: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+  },
+});

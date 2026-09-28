@@ -3,7 +3,7 @@ import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { isValidPublicBrandImageUrl } from "@/utils/brandingValidation";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
+import { Dimensions, StatusBar, StyleSheet, View } from "react-native";
 
 /**
  * Painted before fonts finish loading, while the native splash is still up.
@@ -34,8 +34,10 @@ export function EarlyMerchantSplash() {
     return null;
   }
 
+  const { width, height } = Dimensions.get("window");
+
   return (
-    <View style={styles.fill}>
+    <View style={[styles.fill, { width, height }]}>
       <StatusBar hidden />
       <MerchantSplashImage uri={safeSplash} onError={() => setFailed(true)} />
     </View>
@@ -44,7 +46,7 @@ export function EarlyMerchantSplash() {
 
 const styles = StyleSheet.create({
   fill: {
-    flex: 1,
     backgroundColor: "#FFFFFF",
+    overflow: "hidden",
   },
 });
