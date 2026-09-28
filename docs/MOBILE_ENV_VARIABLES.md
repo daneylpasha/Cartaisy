@@ -57,6 +57,8 @@ The pre-JS native splash is separate from the icon and from the runtime JS splas
 
 The runtime JS icon and splash still come from store config through `BrandMark`. These downloads do not change that path and do not put Shopify tokens on the device.
 
+Operators copy the public URLs from the Cartaisy ops build queue (`/dashboard/admin/build-requests`) and paste them into the merchant EAS project. Splash copies as `SPLASH_IMAGE_URL=<url>` today. The icon button still copies the bare https URL until cartaisy-dashboard #45, so the EAS variable name is `ICON_IMAGE_URL` and the value is that URL. Paste steps, the intentional-neutral case, and the `npx expo config` dry run are in `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md` under "Handoff from Cartaisy ops queue". The queue does not start EAS.
+
 ## Safe Public Build Variables
 
 These values may be included in branded mobile build configuration when they contain only public, non-sensitive data.
