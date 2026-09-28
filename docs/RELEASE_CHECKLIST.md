@@ -12,6 +12,8 @@ Current state: Existing release-oriented docs include `docs/MOBILE_MERCHANT_PROV
 
 Current state: Public build-time values such as API URL, store ID, app name/scheme, Stripe publishable key, and native identity placeholders are documented in `.env.example` and `docs/MOBILE_ENV_VARIABLES.md`.
 
+Current state: As of 2026-09-28 (GitHub issue #143), operators paste `EXPO_PUBLIC_STORE_ID` from `/dashboard/admin/build-requests` with `APP_NAME` and the icon and splash assignments (cartaisy-dashboard #51 / PR #52). The copy is `EXPO_PUBLIC_STORE_ID=<24-character hex>` with no quotes when `store.id` is a valid Mongo ObjectId. A missing or invalid id is not filled from the build-request id, the shop domain, or the app name. `api/config/mobileConfig.ts` reads that value; `npx expo config` does not print it. See `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md`.
+
 Current state: As of 2026-09-28 (GitHub issue #141), operators paste `APP_NAME` from `/dashboard/admin/build-requests` with the icon and splash assignments (cartaisy-dashboard #49 / PR #50). With `APP_NAME` set, `npx expo config --type public` must show `name` equal to the merchant name, not `cartaisy`. A blank name on the queue is not filled with Cartaisy. See `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md`.
 
 Current state: As of 2026-07-13 (GitHub issue #86), `eas.json` includes a non-secret `sample-merchant-development` profile for the fictional Acme sample in `docs/examples/sample-merchant.env` and points it at the real internal sample EAS project `@rendernext/acme-outfitters` (`a9a1dd2e-adfe-4020-9f10-6b561859f119`). Local Expo config verification resolves the Acme app identity, and `eas build:inspect` confirms the Android sample profile archive excludes the checked-in native projects and unrelated untracked local report artifacts. No remote EAS artifact exists yet: the attempted Android development build reached the sample project but was blocked because Android remote credentials/keystore are not initialized and EAS cannot generate a new keystore in `--non-interactive` mode.
@@ -59,7 +61,7 @@ Target state: Checkout/payment behavior, native payment capabilities, signing, c
 ### API URL / Store ID / Config Checks
 
 - Confirm `EXPO_PUBLIC_API_BASE_URL` points at the intended Cartaisy backend.
-- Confirm `EXPO_PUBLIC_STORE_ID` is the intended store ID and is safe to expose publicly.
+- Confirm `EXPO_PUBLIC_STORE_ID` was pasted from `/dashboard/admin/build-requests` as `EXPO_PUBLIC_STORE_ID=<24-character hex>` with no quotes, next to `APP_NAME`, `ICON_IMAGE_URL`, and `SPLASH_IMAGE_URL`, when the `EXPO_PUBLIC_STORE_ID=…` control is present. It is public client configuration. A missing or invalid id is a calm empty state. Do not invent an id and do not use the build-request id, the shop domain, or the app name. `api/config/mobileConfig.ts` reads that value. `npx expo config` does not print it.
 - Confirm requests include tenant/store identity such as `X-Store-ID`.
 - Confirm runtime store config loads expected public fields and falls back safely.
 

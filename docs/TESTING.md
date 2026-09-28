@@ -113,6 +113,8 @@ Those EAS commands are examples to verify against project policy before running.
 
 Current state: Merchant display-name dry run (an operator check, not a CI job): with `APP_NAME` set to the merchant name, `npx expo config --type public` shows `name` equal to that value and not `cartaisy`. The value is the ops-queue assignment from `/dashboard/admin/build-requests` (`APP_NAME=<exact name>`, no quotes). A blank queue control is not a reason to set `APP_NAME` to `cartaisy`. Steps: `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md` ("Handoff from Cartaisy ops queue" and Step 7). Docs-only pull requests still use the `git diff --check` commands above and do not need to run Expo.
 
+Current state: Store-id paste (an operator paste, not a new check and not an Expo config field): the ops queue copies `EXPO_PUBLIC_STORE_ID=<24-character hex>` with no quotes when `store.id` is a valid Mongo ObjectId (control labeled `EXPO_PUBLIC_STORE_ID=…`). `api/config/mobileConfig.ts` already reads that value and requires that shape. `npx expo config` does not print the store id. A missing or invalid id on the queue is not filled from the build-request id, the shop domain, or the app name. Steps: `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md` ("Handoff from Cartaisy ops queue"). Docs-only pull requests still use the `git diff --check` commands above and do not need to run Expo.
+
 ## Related Docs And Issues
 
 - `package.json`
