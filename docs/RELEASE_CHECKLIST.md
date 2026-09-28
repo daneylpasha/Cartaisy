@@ -12,6 +12,8 @@ Current state: Existing release-oriented docs include `docs/MOBILE_MERCHANT_PROV
 
 Current state: Public build-time values such as API URL, store ID, app name/scheme, Stripe publishable key, and native identity placeholders are documented in `.env.example` and `docs/MOBILE_ENV_VARIABLES.md`.
 
+Current state: As of 2026-09-28 (GitHub issue #141), operators paste `APP_NAME` from `/dashboard/admin/build-requests` with the icon and splash assignments (cartaisy-dashboard #49 / PR #50). With `APP_NAME` set, `npx expo config --type public` must show `name` equal to the merchant name, not `cartaisy`. A blank name on the queue is not filled with Cartaisy. See `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md`.
+
 Current state: As of 2026-07-13 (GitHub issue #86), `eas.json` includes a non-secret `sample-merchant-development` profile for the fictional Acme sample in `docs/examples/sample-merchant.env` and points it at the real internal sample EAS project `@rendernext/acme-outfitters` (`a9a1dd2e-adfe-4020-9f10-6b561859f119`). Local Expo config verification resolves the Acme app identity, and `eas build:inspect` confirms the Android sample profile archive excludes the checked-in native projects and unrelated untracked local report artifacts. No remote EAS artifact exists yet: the attempted Android development build reached the sample project but was blocked because Android remote credentials/keystore are not initialized and EAS cannot generate a new keystore in `--non-interactive` mode.
 
 Current state: Existing audits identify native identity and payment/push readiness risks. Verify them before release.
@@ -37,7 +39,8 @@ Target state: Checkout/payment behavior, native payment capabilities, signing, c
 ### App Identity Checks
 
 - Confirm Expo app name, slug, scheme, iOS bundle identifier, Android package/application ID, and app store listing names.
-- Run `npx expo config --type public` with the merchant's environment values set and confirm the generated identity matches the intended merchant.
+- Confirm `APP_NAME` was pasted from `/dashboard/admin/build-requests` as `APP_NAME=<merchant display name>` with no quotes, next to `ICON_IMAGE_URL` and `SPLASH_IMAGE_URL`, when the `APP_NAME=…` control is present. A blank control is a calm empty state. Do not invent a name and do not set `APP_NAME` to `cartaisy` to fill it.
+- Run `npx expo config --type public` with the merchant's environment values set and confirm the generated identity matches the intended merchant. When `APP_NAME` is set, `name` equals that merchant name and is not `cartaisy`.
 - Confirm `.easignore` still excludes `/ios` and `/android` so the EAS build regenerates native projects from `app.config.ts`, and confirm merchant identity env values are configured on the EAS build itself (EAS environment variables or `eas.json` profile `env`).
 - Confirm checked-in native iOS and Android identifiers match the intended build path for local (`expo run:*`) builds; merchant builds must not use the checked-in projects.
 - Confirm any known mismatches from `docs/MOBILE_BRANDING_CONFIG_AUDIT.md` and `docs/DYNAMIC_APP_CONFIG_MIGRATION_AUDIT.md` are resolved or explicitly accepted for the release.

@@ -238,6 +238,18 @@ Impact: `scripts/resolveNativeIcon.js` and `app.config.ts` select the native ico
 
 Related docs: `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`, `docs/MOBILE_ENV_VARIABLES.md`, `docs/STATUS.md`, GitHub issue #135.
 
+### Merchant Native Display Name Is the Pasted APP_NAME
+
+Date: 2026-09-28.
+
+Decision: Operators paste `APP_NAME=<merchant display name>` from `/dashboard/admin/build-requests` onto the merchant EAS project together with `ICON_IMAGE_URL` and `SPLASH_IMAGE_URL`. The control is labeled `APP_NAME=…`. A non-empty trimmed `store.appName` copies as `APP_NAME=<that exact name>` with no quotes. A missing, blank, or whitespace-only name has no copy control. The queue does not invent a name and does not fall back to Cartaisy, the shop domain, or a store id. `app.config.ts` already sets Expo `name` from `APP_NAME`, then `EXPO_PUBLIC_APP_NAME`, then `cartaisy`. With `APP_NAME` set, `npx expo config --type public` must show `name` equal to that merchant name, not `cartaisy`. The queue does not start EAS. This does not add an environment variable.
+
+Reason: Dashboard #49 / PR #50. Leaving the `cartaisy` default on a merchant build ships Cartaisy chrome as the native display name. The public name is already on the ops queue as `store.appName`.
+
+Impact: Ops → EAS handoff documentation only. No runtime change. Public display name only. No Shopify token is copied or bundled.
+
+Related docs: `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md`, `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`, `docs/MOBILE_ENV_VARIABLES.md`, `docs/STATUS.md`, `docs/TESTING.md`, `docs/RELEASE_CHECKLIST.md`, GitHub issue #141, cartaisy-dashboard issue #49 / PR #50.
+
 ## Related Docs And Issues
 
 - `CARTAISY_CONTEXT.md`

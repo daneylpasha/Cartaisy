@@ -10,7 +10,7 @@ Use mobile environment variables only for values that are safe for customers, ap
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
-| `APP_NAME` | Native and Expo app display name. Falls back to `EXPO_PUBLIC_APP_NAME` when unset. | `cartaisy` |
+| `APP_NAME` | Native and Expo app display name. Falls back to `EXPO_PUBLIC_APP_NAME` when unset. Merchant builds paste `APP_NAME=<name>` from the ops queue (see below). | `cartaisy` |
 | `APP_SLUG` | Expo slug for the branded build. | `cartaisy` |
 | `APP_SCHEME` | Native deep-link URL scheme. Falls back to `EXPO_PUBLIC_APP_SCHEME` when unset. | `cartaisy` |
 | `APP_VERSION` | App marketing version. | `1.0.0` |
@@ -57,7 +57,7 @@ The pre-JS native splash is separate from the icon and from the runtime JS splas
 
 The runtime JS icon and splash still come from store config through `BrandMark`. These downloads do not change that path and do not put Shopify tokens on the device.
 
-Operators copy the public URLs from the Cartaisy ops build queue (`/dashboard/admin/build-requests`) and paste them into the merchant EAS project. The icon button copies `ICON_IMAGE_URL=<url>`. The splash button copies `SPLASH_IMAGE_URL=<url>`. Both values must be public `https` with no credentials. `ICON_IMAGE_PATH` wins over `ICON_IMAGE_URL` when it is set, and `SPLASH_IMAGE_PATH` wins over `SPLASH_IMAGE_URL` when it is set. Paste steps, the intentional-neutral case, and the `npx expo config` dry run are in `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md` under "Handoff from Cartaisy ops queue". The queue does not start EAS.
+Operators copy the merchant display name and the public URLs from the Cartaisy ops build queue (`/dashboard/admin/build-requests`) and paste them into the merchant EAS project. When `store.appName` is a non-empty trimmed string, the control labeled `APP_NAME=…` copies `APP_NAME=<that exact name>` with no quotes (cartaisy-dashboard #49 / PR #50). A missing, blank, or whitespace-only name is a calm empty state with no copy control; do not invent a name and do not fall back to Cartaisy. The icon button copies `ICON_IMAGE_URL=<url>`. The splash button copies `SPLASH_IMAGE_URL=<url>`. Both URL values must be public `https` with no credentials. `ICON_IMAGE_PATH` wins over `ICON_IMAGE_URL` when it is set, and `SPLASH_IMAGE_PATH` wins over `SPLASH_IMAGE_URL` when it is set. With `APP_NAME` set, `npx expo config --type public` shows `name` equal to that merchant name, not `cartaisy`. Paste steps, the blank-name case, the intentional-neutral image case, and the dry run are in `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md` under "Handoff from Cartaisy ops queue". The queue does not start EAS.
 
 ## Safe Public Build Variables
 

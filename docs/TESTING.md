@@ -111,6 +111,8 @@ npx eas build --profile development --platform ios
 
 Those EAS commands are examples to verify against project policy before running. They can consume build credits, require credentials, or depend on signing configuration.
 
+Current state: Merchant display-name dry run (an operator check, not a CI job): with `APP_NAME` set to the merchant name, `npx expo config --type public` shows `name` equal to that value and not `cartaisy`. The value is the ops-queue assignment from `/dashboard/admin/build-requests` (`APP_NAME=<exact name>`, no quotes). A blank queue control is not a reason to set `APP_NAME` to `cartaisy`. Steps: `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md` ("Handoff from Cartaisy ops queue" and Step 7). Docs-only pull requests still use the `git diff --check` commands above and do not need to run Expo.
+
 ## Related Docs And Issues
 
 - `package.json`
