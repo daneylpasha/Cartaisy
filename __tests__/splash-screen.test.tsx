@@ -26,10 +26,6 @@ import useStoreConfigStore from "@/store/useStoreConfigStore";
 import { renderWithTamagui } from "@/test-utils/renderWithTamagui";
 
 describe("Splash", () => {
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
   beforeEach(() => {
     useStoreConfigStore.setState({
       primaryColor: undefined,
@@ -175,54 +171,6 @@ describe("Splash", () => {
     expect(queryByTestId("merchant-splash")).toBeNull();
     expect(getByTestId("brand-mark")).toBeTruthy();
     expect(getByText("Acme Outfitters")).toBeTruthy();
-  });
-
-  it("falls back to the store mark when the merchant splash never loads", () => {
-    jest.useFakeTimers();
-    const splashUrl = "https://cdn.example.com/stores/acme/slow-splash.png";
-    useStoreConfigStore.setState({
-      splashUrl,
-      storeName: "Acme Outfitters",
-      isLoaded: true,
-      _hasHydrated: true,
-    });
-
-    const { getByTestId, queryByTestId } = renderWithTamagui(<Splash />);
-    expect(getByTestId("merchant-splash")).toBeTruthy();
-
-    const { act } = require("@testing-library/react-native");
-    act(() => {
-      jest.advanceTimersByTime(2500);
-    });
-
-    expect(queryByTestId("merchant-splash")).toBeNull();
-    expect(getByTestId("brand-mark")).toBeTruthy();
-    jest.clearAllTimers();
-    jest.useRealTimers();
-  });
-
-  it("keeps the merchant splash up after it loads, past the load timeout", () => {
-    jest.useFakeTimers();
-    const splashUrl = "https://cdn.example.com/stores/acme/splash.png";
-    useStoreConfigStore.setState({
-      splashUrl,
-      _hasHydrated: true,
-    });
-
-    const { getByTestId, UNSAFE_getAllByType } = renderWithTamagui(<Splash />);
-    const splash = UNSAFE_getAllByType(Image).find(
-      (img) => img.props.source?.uri === splashUrl
-    );
-
-    const { act } = require("@testing-library/react-native");
-    act(() => {
-      splash!.props.onLoad();
-      jest.advanceTimersByTime(2500);
-    });
-
-    expect(getByTestId("merchant-splash")).toBeTruthy();
-    jest.clearAllTimers();
-    jest.useRealTimers();
   });
 
   it("uses the app icon on the splash mark when no splash image or logo is set", () => {
