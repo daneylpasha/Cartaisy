@@ -10,16 +10,18 @@ import {
 } from "@/components/atoms";
 import { AppImage } from "@/components/atoms/AppImage";
 import { Divider } from "@/components/atoms/Divider";
-import { Loader } from "@/components/atoms/Loader";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { ParagraphSM } from "@/components/atoms/texts/ParagraphSM";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
 import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import OrderLineItem from "@/components/molecules/orders/OrderLineItem";
+import { ShopperSkeleton } from "@/components/molecules/ShopperSkeleton";
+import { ShopperState } from "@/components/molecules/ShopperState";
 import CancelOrderModal from "@/components/organisms/order-details/CancelOrderModal";
 import HelpOrderModal from "@/components/organisms/order-details/HelpOrderModal";
 import { SHADOW_STYLES } from "@/constants/styles";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { formatPrice } from "@/utils/formatPrice";
 import { useLocalSearchParams } from "expo-router";
@@ -31,6 +33,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTokenValue, XStack, YStack } from "tamagui";
 
 const OrdersDetails = () => {
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
   const { orderId } = useLocalSearchParams();
 
   // Fetch order details
@@ -174,13 +178,8 @@ const OrdersDetails = () => {
   // Loading state
   if (isLoading) {
     return (
-      <YStack
-        flex={1}
-        justifyContent="center"
-        alignItems="center"
-        backgroundColor="$background"
-      >
-        <Loader size="large" color="$primary" />
+      <YStack flex={1} backgroundColor="$background">
+        <ShopperSkeleton variant="results" />
       </YStack>
     );
   }
@@ -200,17 +199,14 @@ const OrdersDetails = () => {
 
   if (error || !order) {
     return (
-      <YStack
-        flex={1}
-        justifyContent="center"
-        alignItems="center"
-        backgroundColor="$background"
-      >
-        <TextMDSemiBold color="$error">
-          Failed to load order details
-        </TextMDSemiBold>
-        <Spacer size="$sm" />
-        <TextSMRegular color="$secondary">Please try again later</TextSMRegular>
+      <YStack flex={1} backgroundColor="$background">
+        <ShopperState
+          icon="warningIcon"
+          title="Order unavailable"
+          message="We couldn't load this order. Check your connection and try again."
+          actionLabel="Try again"
+          onAction={() => refetch()}
+        />
       </YStack>
     );
   }
@@ -247,6 +243,7 @@ const OrdersDetails = () => {
               alignItems="center"
             >
               <AppImage
+                // White is a static design token, not a merchant brand color.
                 tintColor={getTokenValue("$white")}
                 name="hourGlass"
                 width={14}
@@ -346,7 +343,7 @@ const OrdersDetails = () => {
             <XStack>
               <AppImage
                 name="locationUnfilled"
-                tintColor={getTokenValue("$primary")}
+                tintColor={primaryTint}
                 width={16}
                 height={20}
               />
@@ -375,6 +372,7 @@ const OrdersDetails = () => {
                   >
                     <AppImage
                       name="check"
+                      // White is a static design token, not a merchant brand color.
                       tintColor={getTokenValue("$white")}
                       width={7}
                       height={7}

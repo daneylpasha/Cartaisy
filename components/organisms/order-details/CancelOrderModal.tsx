@@ -1,6 +1,7 @@
 import { AppImage } from "@/components/atoms/AppImage";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import React, { useState } from "react";
-import { getTokenValue, XStack, YStack } from "tamagui";
+import { XStack, YStack } from "tamagui";
 
 import Icons from "@/assets/Icons";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
@@ -33,6 +34,8 @@ export default function CancelOrderModal({
   onCancel,
   loading = false,
 }: Props) {
+  const getReactiveColor = useReactiveTokenColor();
+  const secondaryTint = getReactiveColor("secondary");
   const [selected, setSelected] = useState<number>(0);
 
   const CancelData = [
@@ -78,7 +81,7 @@ export default function CancelOrderModal({
         <XStack alignItems="center">
           <AppImage
             name={item.image}
-            tintColor={getTokenValue("$secondary")}
+            tintColor={secondaryTint}
             width={20}
             height={15}
           />

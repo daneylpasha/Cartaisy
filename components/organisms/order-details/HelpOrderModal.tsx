@@ -1,6 +1,7 @@
 import { AppImage } from "@/components/atoms/AppImage";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import React, { useState } from "react";
-import { getTokenValue, XStack, YStack } from "tamagui";
+import { XStack, YStack } from "tamagui";
 
 import Icons from "@/assets/Icons";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
@@ -87,6 +88,9 @@ export default function HelpOrderModal({
   onCancel,
   loading = false,
 }: Props) {
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
+  const secondaryTint = getReactiveColor("secondary");
   const [selected, setSelected] = useState<number>(0);
   const [otherText, setOtherText] = useState<string>("");
 
@@ -123,7 +127,7 @@ export default function HelpOrderModal({
         <XStack alignItems="center" flex={1}>
           <AppImage
             name={item.image}
-            tintColor={getTokenValue("$secondary")}
+            tintColor={secondaryTint}
             width={20}
             height={15}
           />
@@ -188,7 +192,7 @@ export default function HelpOrderModal({
                 name="recommend"
                 width={24}
                 height={24}
-                tintColor={getTokenValue("$primary")}
+                tintColor={primaryTint}
               />
             </YStack>
             <Spacer size={"$lg"} />
@@ -231,6 +235,7 @@ export default function HelpOrderModal({
                     value={otherText}
                     onChangeText={setOtherText}
                     placeholder="Enter your issue here..."
+                    // textgrey and darkgrey are static design tokens, not brand colors.
                     placeholderTextColor={tokens.color.textgrey}
                     multiline
                     numberOfLines={3}
