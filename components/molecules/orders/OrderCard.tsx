@@ -9,10 +9,11 @@ import { Divider } from "@/components/atoms/Divider";
 import { OpTouch } from "@/components/atoms/OpTouch";
 import { Spacer } from "@/components/atoms/Spacer";
 import { SHADOW_STYLES } from "@/constants/styles";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { formatPrice } from "@/utils/formatPrice";
 import { router } from "expo-router";
 import React from "react";
-import { getTokenValue, XStack, YStack } from "tamagui";
+import { XStack, YStack } from "tamagui";
 
 type OrderCardProps = {
   item: {
@@ -29,6 +30,9 @@ type OrderCardProps = {
 };
 
 const OrderCard = ({ item }: OrderCardProps) => {
+  const getReactiveColor = useReactiveTokenColor();
+  const secondaryTint = getReactiveColor("secondary");
+
   const handlePress = () => {
     if (item.onPress) {
       item.onPress();
@@ -85,7 +89,7 @@ const OrderCard = ({ item }: OrderCardProps) => {
                 name="calendar"
                 width={14}
                 height={14}
-                tintColor={getTokenValue("$secondary")}
+                tintColor={secondaryTint}
               />
               <Spacer size={"$xs"} />
               <TextSMRegular color={"$secondary"}>{displayDate}</TextSMRegular>

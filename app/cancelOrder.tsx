@@ -3,12 +3,14 @@ import { AppImage } from "@/components/atoms/AppImage";
 import { ScreenContainer } from "@/components/atoms/ScreenContainer";
 import { Spacer } from "@/components/atoms/Spacer";
 import { PrimaryButton, SecondaryButton } from "@/components/molecules/buttons";
-import { tokens } from "@/tamagui/token";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { router } from "expo-router";
 import React from "react";
 import { XStack, YStack } from "tamagui";
 
 const CancelOrder = () => {
+  const getReactiveColor = useReactiveTokenColor();
+  const primaryTint = getReactiveColor("primary");
   const imageData = ["product1", "productForyou2", "productForyou1"];
   return (
     <ScreenContainer backgroundColor={"background"}>
@@ -18,7 +20,7 @@ const CancelOrder = () => {
           name="cancelOrderFrame"
           width={343}
           height={203}
-          tintColor={tokens.color.primary}
+          tintColor={primaryTint}
         />
         <Spacer size={"$xl"} />
         <HeadingSMBold>{"Order Cancelled"}</HeadingSMBold>

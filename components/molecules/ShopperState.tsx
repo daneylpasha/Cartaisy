@@ -25,7 +25,7 @@ type ShopperStateProps = {
 };
 
 /**
- * Shared empty and error chrome for browse, product, cart, and account.
+ * Shared empty and error chrome for browse, product, cart, account, and orders.
  * Brand color comes from the live theme. Copy is passed in so no surface
  * falls back to a Cartaisy wordmark.
  */

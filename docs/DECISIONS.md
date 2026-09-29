@@ -274,6 +274,18 @@ Impact: Ops → EAS handoff documentation only. No runtime change. Public store 
 
 Related docs: `docs/MOBILE_MERCHANT_PROVISIONING_RUNBOOK.md`, `docs/MOBILE_BRANDED_BUILD_CHECKLIST.md`, `docs/MOBILE_ENV_VARIABLES.md`, `docs/STATUS.md`, `docs/TESTING.md`, `docs/RELEASE_CHECKLIST.md`, GitHub issue #143, cartaisy-dashboard issue #51 / PR #52.
 
+### Orders Screens Use Live Brand Colors
+
+Date: 2026-09-29.
+
+Decision: Post-purchase orders resolve merchant `primary` and `secondary` through `useReactiveTokenColor`, the same hook as the rest of the shopper path. That covers the orders list refresh tint, order cards, order details, the cancellation confirmation, and the help and cancel modals. Loading, empty, and retryable error chrome on the list and the detail screen uses `ShopperState` and `ShopperSkeleton`. White, text grey, and dark grey on those screens stay static design tokens. Native checkout, Stripe, Platform Pay, and saved cards stay removed.
+
+Reason: A merchant who changes brand colors in the dashboard should see those colors on orders after relaunch, without a rebuild. Orders were the remaining shopper surface still reading the bundled token snapshot.
+
+Impact: Presentation only. Order fetch, cancel, and help requests are unchanged. No checkout or payment path is restored.
+
+Related docs: `hooks/useReactiveTokenColor.ts`, `docs/STATUS.md`, `docs/MOBILE_BRANDING_SPLIT_MATRIX.md`, GitHub issue #151.
+
 ## Related Docs And Issues
 
 - `CARTAISY_CONTEXT.md`

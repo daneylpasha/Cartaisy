@@ -1,29 +1,27 @@
 import { useOrders } from "@/api/hooks/useOrders";
-import { TextMDSemiBold } from "@/components/atoms";
 import { Divider } from "@/components/atoms/Divider";
-import { Loader } from "@/components/atoms/Loader";
 import { CatalogUnavailableState } from "@/components/molecules/CatalogUnavailableState";
 import OrderCard from "@/components/molecules/orders/OrderCard";
+import { ShopperSkeleton } from "@/components/molecules/ShopperSkeleton";
+import { ShopperState } from "@/components/molecules/ShopperState";
+import { useReactiveTokenColor } from "@/hooks/useReactiveTokenColor";
 import { tokens } from "@/tamagui/token";
 import { getCatalogUnavailableMessage } from "@/utils/catalogUnavailableError";
 import { router } from "expo-router";
 import React from "react";
 import { FlatList, RefreshControl } from "react-native";
-import { getTokenValue, Spacer, YStack } from "tamagui";
+import { YStack } from "tamagui";
 
 const OrdersListItem = () => {
+  const getReactiveColor = useReactiveTokenColor();
+  const refreshTint = getReactiveColor("primary");
   const { data, isLoading, error, refetch, isRefetching } = useOrders();
   const unavailableMessage = getCatalogUnavailableMessage(error);
 
   if (isLoading) {
     return (
-      <YStack
-        flex={1}
-        justifyContent="center"
-        alignItems="center"
-        minHeight={600}
-      >
-        <Loader size="large" color="$primary" />
+      <YStack minHeight={600}>
+        <ShopperSkeleton variant="results" />
       </YStack>
     );
   }
@@ -41,18 +39,14 @@ const OrdersListItem = () => {
 
   if (error) {
     return (
-      <YStack
-        flex={1}
-        justifyContent="center"
-        alignItems="center"
+      <ShopperState
+        icon="warningIcon"
+        title="Orders unavailable"
+        message="We couldn't load your orders. Check your connection and try again."
+        actionLabel="Try again"
+        onAction={() => refetch()}
         minHeight={600}
-      >
-        <TextMDSemiBold color="$error">Failed to load orders</TextMDSemiBold>
-        <Spacer size="$sm" />
-        <TextMDSemiBold color="$primary" onPress={() => refetch()}>
-          Tap to retry
-        </TextMDSemiBold>
-      </YStack>
+      />
     );
   }
 
@@ -61,14 +55,14 @@ const OrdersListItem = () => {
 
   if (orders.length === 0) {
     return (
-      <YStack
-        flex={1}
-        justifyContent="center"
-        alignItems="center"
+      <ShopperState
+        icon="package"
+        title="No orders yet"
+        message="When you place an order, it will show up here."
+        actionLabel="Start shopping"
+        onAction={() => router.push("/(tabs)")}
         minHeight={600}
-      >
-        <TextMDSemiBold color="$secondary">No orders found</TextMDSemiBold>
-      </YStack>
+      />
     );
   }
 
@@ -177,8 +171,8 @@ const OrdersListItem = () => {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={getTokenValue("$primary")}
-            colors={[getTokenValue("$primary")]}
+            tintColor={refreshTint}
+            colors={refreshTint ? [refreshTint] : undefined}
           />
         }
       />
